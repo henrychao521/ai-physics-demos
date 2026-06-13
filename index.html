@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>AI 協作物理互動模擬 ｜ 展示集</title>
+<style>
+  :root{--bg:#0b0e14;--panel:#151a23;--panel2:#1d2430;--line:#2a3340;
+    --txt:#e6edf3;--muted:#93a1b0;--accent:#4cc2ff;}
+  *{box-sizing:border-box}
+  html,body{margin:0;background:
+    radial-gradient(1200px 600px at 50% -10%,#16202e 0%,var(--bg) 60%);color:var(--txt);
+    font-family:"Noto Sans TC","PingFang TC","Microsoft JhengHei",system-ui,sans-serif;min-height:100%}
+  a{text-decoration:none;color:inherit}
+  .wrap{max-width:980px;margin:0 auto;padding:48px 18px 70px}
+  .badge{display:inline-block;background:var(--panel2);border:1px solid var(--line);
+    color:var(--muted);font-size:.74rem;padding:3px 10px;border-radius:99px;margin-right:6px}
+  h1{font-size:2rem;margin:.4em 0 .2em;letter-spacing:.5px}
+  .lead{color:var(--muted);line-height:1.8;max-width:680px;margin:.4em 0 0}
+  .cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:18px;margin-top:34px}
+  .card{display:block;background:var(--panel);border:1px solid var(--line);border-radius:16px;
+    overflow:hidden;transition:.18s;cursor:pointer}
+  .card:hover{transform:translateY(-4px);border-color:var(--accent);box-shadow:0 12px 40px rgba(0,0,0,.4)}
+  .thumb{height:150px;display:flex;align-items:center;justify-content:center;position:relative;overflow:hidden}
+  .card h3{margin:14px 16px 4px;font-size:1.12rem}
+  .card p{margin:0 16px 16px;color:var(--muted);font-size:.86rem;line-height:1.6}
+  .tag{margin:0 16px 12px}
+  .go{margin:0 16px 16px;color:var(--accent);font-size:.85rem;font-weight:700}
+  footer{color:var(--muted);font-size:.8rem;margin-top:42px;line-height:1.8;border-top:1px solid var(--line);padding-top:18px}
+  /* thumbnails (pure CSS) */
+  .t-diff{background:#05070b}
+  .t-diff i{position:absolute;top:0;bottom:0;width:3px;background:#4cff8a;filter:blur(.3px)}
+  .t-moire{background:repeating-linear-gradient(8deg,#fff 0 5px,#000 5px 10px)}
+  .t-moire::after{content:"";position:absolute;inset:0;background:repeating-linear-gradient(-8deg,#fff 0 5px,#000 5px 10px);mix-blend-mode:multiply}
+  .t-lamp{background:radial-gradient(120px 120px at 50% 0,#fff7d6 0,rgba(255,247,214,0) 70%),#05070b}
+  .t-lamp b{position:absolute;left:50%;top:54%;transform:translateX(-50%);width:42px;height:42px;border-radius:50%;background:#2a3340;border:2px solid #566275}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <span class="badge">AI 協作專案成果</span><span class="badge">物理・光學</span><span class="badge">純前端互動</span>
+  <h1>AI 協作物理互動模擬</h1>
+  <p class="lead">這些互動模擬源自我與 AI 的物理討論，將原本的理論分析重建為可在瀏覽器中即時操作的網頁。
+     全部為純前端 HTML / Canvas，無外部相依，可直接用於教學演示。點擊任一卡片開始體驗。</p>
+
+  <div class="cards">
+    <a class="card" href="diffraction/">
+      <div class="thumb t-diff">
+        <i style="left:34%"></i><i style="left:42%;opacity:.6"></i><i style="left:50%"></i>
+        <i style="left:58%;opacity:.6"></i><i style="left:66%"></i>
+      </div>
+      <div class="tag"><span class="badge">波動光學</span></div>
+      <h3>繞射成像模擬</h3>
+      <p>雙狹縫 / 單狹縫的干涉與繞射；可調相位差與「前後距離差 ΔL」，觀察主峰偏移與非對稱條紋。</p>
+      <div class="go">開始體驗 →</div>
+    </a>
+
+    <a class="card" href="moire/">
+      <div class="thumb t-moire"></div>
+      <div class="tag"><span class="badge">取樣・拍頻</span></div>
+      <h3>摩爾紋（Moiré）</h3>
+      <p>兩組光柵疊加產生低頻摩爾條紋；調整間距與角度、或開啟旋轉動畫，感受微小差異被放大的現象。</p>
+      <div class="go">開始體驗 →</div>
+    </a>
+
+    <a class="card" href="shadowless-lamp/">
+      <div class="thumb t-lamp"><b></b></div>
+      <div class="tag"><span class="badge">幾何光學</span></div>
+      <h3>外科無影燈光學</h3>
+      <p>多光源從不同角度照射同一術區；增加光源數量，觀察遮擋物的陰影如何被互補填補、趨近無影。</p>
+      <div class="go">開始體驗 →</div>
+    </a>
+  </div>
+
+  <footer>
+    依 AI 物理討論重建的可執行互動模擬 · 純前端 HTML/Canvas · 適合課堂演示<br>
+    參數為教學示意，數值尺度已調整以利觀察現象。
+  </footer>
+</div>
+</body>
+</html>

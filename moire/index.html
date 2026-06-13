@@ -1,0 +1,143 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>摩爾紋（Moiré）互動模擬</title>
+<style>
+  :root{--bg:#0b0e14;--panel:#151a23;--panel2:#1d2430;--line:#2a3340;
+    --txt:#e6edf3;--muted:#93a1b0;--accent:#ff7ad9;--accent2:#4cc2ff;}
+  *{box-sizing:border-box}
+  html,body{margin:0;background:var(--bg);color:var(--txt);
+    font-family:"Noto Sans TC","PingFang TC","Microsoft JhengHei",system-ui,sans-serif}
+  a{color:var(--accent2)}
+  .wrap{max-width:1000px;margin:0 auto;padding:18px 16px 60px}
+  h1{font-size:1.5rem;margin:.2em 0}
+  header p{color:var(--muted);line-height:1.6;margin:.2em 0 1em}
+  .badge{display:inline-block;background:var(--panel2);border:1px solid var(--line);
+    color:var(--muted);font-size:.72rem;padding:2px 8px;border-radius:99px;margin-right:6px}
+  .stage{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:14px;margin-bottom:16px;text-align:center}
+  canvas{width:min(560px,100%);aspect-ratio:1;display:block;margin:0 auto;border-radius:10px;background:#fff}
+  .grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:14px}
+  .ctrl{background:var(--panel2);border:1px solid var(--line);border-radius:10px;padding:10px 12px}
+  .ctrl label{display:flex;justify-content:space-between;font-size:.85rem;margin-bottom:6px}
+  .ctrl .val{color:var(--accent);font-variant-numeric:tabular-nums}
+  input[type=range]{width:100%;accent-color:var(--accent)}
+  .row{display:flex;gap:8px;flex-wrap:wrap;margin:6px 0 14px;align-items:center}
+  button{background:var(--panel2);color:var(--txt);border:1px solid var(--line);padding:8px 14px;border-radius:9px;cursor:pointer;font-size:.85rem}
+  button.on{background:var(--accent);color:#1a0613;border-color:var(--accent);font-weight:700}
+  button:hover{border-color:var(--accent)}
+  .note{background:var(--panel);border-left:3px solid var(--accent);border-radius:8px;padding:12px 14px;color:var(--muted);font-size:.86rem;line-height:1.7;margin-top:18px}
+  .note b{color:var(--txt)}
+  footer{color:var(--muted);font-size:.78rem;margin-top:24px;text-align:center;line-height:1.7}
+  .seg{display:flex;gap:6px}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <span class="badge">AI 協作物理模擬</span><span class="badge">光學・取樣</span>
+    <h1>摩爾紋（Moiré）互動模擬</h1>
+    <p>兩組規則圖樣疊加，因空間頻率或角度的微小差異，產生肉眼可見的低頻<b>摩爾條紋</b>。
+       調整下方兩組光柵的間距與角度，或按「旋轉動畫」感受摩爾紋如何被放大。</p>
+  </header>
+
+  <div class="row">
+    <span style="color:var(--muted);font-size:.85rem">圖樣：</span>
+    <div class="seg">
+      <button id="pLines" class="on">平行線</button>
+      <button id="pCircles">同心圓</button>
+      <button id="pDots">點陣</button>
+    </div>
+    <button id="anim" style="margin-left:auto">▶ 旋轉動畫</button>
+    <button id="reset">重設</button>
+  </div>
+
+  <div class="stage">
+    <canvas id="cv" width="700" height="700"></canvas>
+  </div>
+
+  <div class="grid" id="controls"></div>
+
+  <div class="note">
+    <b>原理：</b>當兩個頻率分別為 f₁、f₂ 的週期圖樣疊加，會出現頻率為 |f₁−f₂| 的<b>拍頻（beat）</b>條紋；
+    兩組同間距但夾角為 θ 的光柵，摩爾紋間距約為 <b>p / (2·sin(θ/2))</b>——夾角越小、條紋越寬越明顯。
+    這也是螢幕翻拍出現波紋、印刷網點疊印、以及精密位移量測（摩爾尺）的物理基礎。
+  </div>
+
+  <footer>純前端 HTML/Canvas 即時運算，無外部相依。</footer>
+</div>
+
+<script>
+const sliders=[
+  {id:'p1',name:'光柵A 間距',min:4,max:40,step:.5,val:12,unit:'px'},
+  {id:'a1',name:'光柵A 角度',min:-90,max:90,step:.5,val:0,unit:'°'},
+  {id:'p2',name:'光柵B 間距',min:4,max:40,step:.5,val:12,unit:'px'},
+  {id:'a2',name:'光柵B 角度',min:-90,max:90,step:.5,val:6,unit:'°'},
+];
+const state={};
+const ctrl=document.getElementById('controls');
+sliders.forEach(s=>{state[s.id]=s.val;
+  const b=document.createElement('div');b.className='ctrl';
+  b.innerHTML=`<label><span>${s.name}</span><span class="val" id="v_${s.id}">${s.val} ${s.unit}</span></label>
+    <input type="range" id="r_${s.id}" min="${s.min}" max="${s.max}" step="${s.step}" value="${s.val}">`;
+  ctrl.appendChild(b);
+  b.querySelector('input').addEventListener('input',e=>{state[s.id]=parseFloat(e.target.value);
+    document.getElementById('v_'+s.id).textContent=`${state[s.id]} ${s.unit}`;if(!running)draw();});
+});
+
+let pattern='lines';
+const btns={lines:document.getElementById('pLines'),circles:document.getElementById('pCircles'),dots:document.getElementById('pDots')};
+Object.entries(btns).forEach(([k,b])=>b.onclick=()=>{pattern=k;
+  Object.values(btns).forEach(x=>x.classList.remove('on'));b.classList.add('on');draw();});
+
+const cv=document.getElementById('cv'), g=cv.getContext('2d');
+const W=cv.width, H=cv.height;
+
+function grating(angleDeg,p,phase){
+  g.save();
+  g.translate(W/2,H/2); g.rotate(angleDeg*Math.PI/180); g.translate(-W/2,-H/2);
+  g.fillStyle='#000';
+  const D=Math.ceil(Math.hypot(W,H));
+  if(pattern==='lines'){
+    for(let x=-D;x<D*2;x+=p){ g.fillRect(x+phase- p*0.25, -D, p*0.5, D*3); }
+  }else if(pattern==='circles'){
+    g.strokeStyle='#000'; g.lineWidth=p*0.5;
+    for(let r=p;r<D;r+=p){ g.beginPath(); g.arc(W/2,H/2,r+phase,0,7); g.stroke(); }
+  }else{ // dots
+    for(let x=-D;x<D*2;x+=p)for(let y=-D;y<D*2;y+=p){
+      g.beginPath(); g.arc(x+phase,y,p*0.28,0,7); g.fill(); }
+  }
+  g.restore();
+}
+
+let phaseAnim=0;
+function draw(){
+  g.fillStyle='#fff'; g.fillRect(0,0,W,H);
+  g.globalCompositeOperation='source-over';
+  grating(state.a1,state.p1,0);
+  g.globalCompositeOperation='multiply';
+  grating(state.a2+(running?phaseAnim:0),state.p2,0);
+  g.globalCompositeOperation='source-over';
+}
+
+let running=false, raf=null;
+const animBtn=document.getElementById('anim');
+animBtn.onclick=()=>{running=!running;
+  animBtn.classList.toggle('on',running);
+  animBtn.textContent=running?'⏸ 暫停':'▶ 旋轉動畫';
+  if(running)loop(); else cancelAnimationFrame(raf);
+};
+function loop(){ phaseAnim=(phaseAnim+0.12)%360; draw(); raf=requestAnimationFrame(loop); }
+
+document.getElementById('reset').onclick=()=>{
+  sliders.forEach(s=>{state[s.id]=s.val;document.getElementById('r_'+s.id).value=s.val;
+    document.getElementById('v_'+s.id).textContent=`${s.val} ${s.unit}`;});
+  pattern='lines';Object.values(btns).forEach(x=>x.classList.remove('on'));btns.lines.classList.add('on');
+  if(running)animBtn.click(); phaseAnim=0; draw();
+};
+
+draw();
+</script>
+</body>
+</html>

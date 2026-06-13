@@ -1,0 +1,224 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>外科無影燈光學互動模擬</title>
+<style>
+  :root{--bg:#0b0e14;--panel:#151a23;--panel2:#1d2430;--line:#2a3340;
+    --txt:#e6edf3;--muted:#93a1b0;--accent:#7CFFB2;--accent2:#ffce54;}
+  *{box-sizing:border-box}
+  html,body{margin:0;background:var(--bg);color:var(--txt);
+    font-family:"Noto Sans TC","PingFang TC","Microsoft JhengHei",system-ui,sans-serif}
+  a{color:var(--accent)}
+  .wrap{max-width:1040px;margin:0 auto;padding:18px 16px 60px}
+  h1{font-size:1.5rem;margin:.2em 0}
+  header p{color:var(--muted);line-height:1.6;margin:.2em 0 1em}
+  .badge{display:inline-block;background:var(--panel2);border:1px solid var(--line);
+    color:var(--muted);font-size:.72rem;padding:2px 8px;border-radius:99px;margin-right:6px}
+  .stage{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:14px;margin-bottom:16px}
+  canvas{width:100%;display:block;border-radius:10px;background:#04060a}
+  .grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:14px}
+  .ctrl{background:var(--panel2);border:1px solid var(--line);border-radius:10px;padding:10px 12px}
+  .ctrl label{display:flex;justify-content:space-between;font-size:.85rem;margin-bottom:6px}
+  .ctrl .val{color:var(--accent);font-variant-numeric:tabular-nums}
+  input[type=range]{width:100%;accent-color:var(--accent)}
+  .row{display:flex;gap:8px;flex-wrap:wrap;margin:6px 0 14px;align-items:center}
+  button{background:var(--panel2);color:var(--txt);border:1px solid var(--line);padding:8px 14px;border-radius:9px;cursor:pointer;font-size:.85rem}
+  button:hover{border-color:var(--accent)}
+  .note{background:var(--panel);border-left:3px solid var(--accent2);border-radius:8px;padding:12px 14px;color:var(--muted);font-size:.86rem;line-height:1.7;margin-top:18px}
+  .note b{color:var(--txt)}
+  .legend{color:var(--muted);font-size:.8rem;margin-top:4px}
+  footer{color:var(--muted);font-size:.78rem;margin-top:24px;text-align:center;line-height:1.7}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <span class="badge">AI 協作物理模擬</span><span class="badge">幾何光學・光線追蹤</span>
+    <h1>外科無影燈光學互動模擬</h1>
+    <p>手術無影燈以<b>多顆光源</b>從不同角度照射同一術區。當器械或人手遮擋部分光線時，
+       其他角度的光源仍能照亮被遮處，使陰影被「填補」。拖動下方滑桿改變<b>光源數量</b>，
+       觀察手術檯面的陰影如何從濃黑變淡、趨近無影。</p>
+  </header>
+
+  <div class="row">
+    <button id="drag" >🟠 點此切換：拖曳遮擋物</button>
+    <button id="reset" style="margin-left:auto">重設</button>
+  </div>
+
+  <div class="stage">
+    <canvas id="cv" width="1000" height="560"></canvas>
+    <div class="legend">side view：上方弧形為燈具（多光源），中央圓為遮擋物，底部為手術檯面（顏色＝照度，下方曲線為檯面照度分佈）。</div>
+  </div>
+
+  <div class="grid" id="controls"></div>
+
+  <div class="note">
+    <b>無影原理：</b>單一光源時，遮擋物在檯面投下邊界銳利的<b>本影</b>（全黑）。
+    增加光源數量並讓它們分佈在較大張角後，任一遮擋物只會擋住部分光源，
+    其餘光源從不同方向補光，使原本全黑的本影縮小、轉為較淡的<b>半影</b>，最終接近<b>無影</b>。
+    真實無影燈再以多反射面 / 子燈陣列強化此效果，並用濾光控制色溫與紅外熱量。
+  </div>
+
+  <footer>純前端 HTML/Canvas 即時光線遮蔽運算，無外部相依。</footer>
+</div>
+
+<script>
+const sliders=[
+  {id:'n',   name:'光源數量', min:1, max:24, step:1, val:1, unit:'顆'},
+  {id:'spread',name:'燈具張角', min:20, max:160, step:1, val:110, unit:'°'},
+  {id:'obR', name:'遮擋物大小', min:15, max:90, step:1, val:48, unit:'px'},
+  {id:'obH', name:'遮擋物高度', min:120, max:380, step:1, val:300, unit:'px'},
+];
+const state={obX:500};
+const ctrl=document.getElementById('controls');
+sliders.forEach(s=>{state[s.id]=s.val;
+  const b=document.createElement('div');b.className='ctrl';
+  b.innerHTML=`<label><span>${s.name}</span><span class="val" id="v_${s.id}">${s.val} ${s.unit}</span></label>
+    <input type="range" id="r_${s.id}" min="${s.min}" max="${s.max}" step="${s.step}" value="${s.val}">`;
+  ctrl.appendChild(b);
+  b.querySelector('input').addEventListener('input',e=>{state[s.id]=parseFloat(e.target.value);
+    document.getElementById('v_'+s.id).textContent=`${state[s.id]} ${s.unit}`;draw();});
+});
+
+const cv=document.getElementById('cv'), g=cv.getContext('2d');
+const W=cv.width,H=cv.height;
+const tableY=H-70;            // 檯面 y
+const lampCx=W/2, lampCy=70, lampR=300; // 燈具弧中心與半徑
+
+function lights(){
+  const n=state.n, arr=[], spread=state.spread*Math.PI/180;
+  for(let i=0;i<n;i++){
+    const t=n===1?0:(i/(n-1)-0.5)*spread;
+    arr.push({x:lampCx+Math.sin(t)*lampR, y:lampCy+ (1-Math.cos(t))*lampR*0.35});
+  }
+  return arr;
+}
+function obstacle(){ return {x:state.obX, y:state.obH, r:state.obR}; }
+
+// 線段(p->q) 是否被圓(c,r)遮擋
+function blocked(px,py,qx,qy,c){
+  const dx=qx-px, dy=qy-py;
+  const fx=px-c.x, fy=py-c.y;
+  const a=dx*dx+dy*dy, b=2*(fx*dx+fy*dy), cc=fx*fx+fy*fy-c.r*c.r;
+  let disc=b*b-4*a*cc; if(disc<0)return false;
+  disc=Math.sqrt(disc);
+  const t1=(-b-disc)/(2*a), t2=(-b+disc)/(2*a);
+  return (t1>0.001&&t1<0.999)||(t2>0.001&&t2<0.999);
+}
+
+function draw(){
+  g.fillStyle='#04060a'; g.fillRect(0,0,W,H);
+  const L=lights(), ob=obstacle();
+  const n=L.length;
+
+  // illumination along table
+  const cols=W, I=new Float64Array(cols); let Imax=1e-9;
+  for(let i=0;i<cols;i++){
+    const x=i; let sum=0;
+    for(const s of L){
+      if(!blocked(s.x,s.y,x,tableY,ob)){
+        const dx=x-s.x, dy=tableY-s.y, r2=dx*dx+dy*dy;
+        const cosF=Math.max(0,(tableY-s.y))/Math.sqrt(r2); // incidence on horizontal surface
+        sum += cosF/(r2)*1e5;
+      }
+    }
+    I[i]=sum; if(sum>Imax)Imax=sum;
+  }
+  // normalise to "all lights, unblocked at centre" baseline so adding lights brightens then evens
+  let base=0;
+  for(const s of L){const dx=0,dy=tableY-s.y,r2=(lampCx-s.x)**2+dy*dy;base+=Math.max(0,(tableY-s.y))/Math.sqrt(r2)/r2*1e5;}
+  const norm=base>0?base:Imax;
+
+  // light cones (visual)
+  g.globalCompositeOperation='lighter';
+  for(const s of L){
+    const grd=g.createRadialGradient(s.x,s.y,2,s.x,s.y,lampR*1.4);
+    grd.addColorStop(0,'rgba(255,250,225,0.20)');
+    grd.addColorStop(1,'rgba(255,250,225,0)');
+    g.fillStyle=grd;
+    g.beginPath();g.moveTo(s.x,s.y);
+    g.lineTo(-50,tableY+40);g.lineTo(W+50,tableY+40);g.closePath();g.fill();
+  }
+  g.globalCompositeOperation='source-over';
+
+  // table shaded by illumination
+  const th=46;
+  for(let i=0;i<cols;i++){
+    const v=Math.min(1.15,I[i]/norm);
+    const b=Math.round(20+200*Math.min(1,v));
+    g.fillStyle=`rgb(${b},${Math.round(b*0.96)},${Math.round(b*0.82)})`;
+    g.fillRect(i,tableY,1,th);
+  }
+  // table edge
+  g.strokeStyle='#3a4756';g.lineWidth=2;g.strokeRect(0,tableY,W,th);
+
+  // illumination curve (below table)
+  g.beginPath();
+  for(let i=0;i<cols;i++){const y=H-2-(Math.min(1.15,I[i]/norm))*(H-tableY-th-6);
+    if(i===0)g.moveTo(i,y);else g.lineTo(i,y);}
+  g.strokeStyle='#7CFFB2';g.lineWidth=2;g.stroke();
+
+  // rays from each light to a few table points (visual), dim if blocked
+  for(const s of L){
+    for(let k=0;k<=6;k++){
+      const tx=120+k*(W-240)/6;
+      const blk=blocked(s.x,s.y,tx,tableY,ob);
+      g.strokeStyle=blk?'rgba(120,140,160,0.05)':'rgba(255,244,200,0.10)';
+      g.lineWidth=1;g.beginPath();g.moveTo(s.x,s.y);g.lineTo(tx,tableY);g.stroke();
+    }
+  }
+
+  // obstacle
+  g.fillStyle='#2a3340';g.strokeStyle='#566275';g.lineWidth=2;
+  g.beginPath();g.arc(ob.x,ob.y,ob.r,0,7);g.fill();g.stroke();
+  g.fillStyle='#93a1b0';g.font='12px sans-serif';
+  g.fillText('遮擋物',ob.x-18,ob.y+4);
+
+  // lamp housing + sources
+  g.strokeStyle='#33404e';g.lineWidth=10;
+  g.beginPath();g.arc(lampCx,lampCy+lampR*0.35,lampR,Math.PI*1.15,Math.PI*1.85);g.stroke();
+  for(const s of L){
+    const gl=g.createRadialGradient(s.x,s.y,1,s.x,s.y,16);
+    gl.addColorStop(0,'#fffbe6');gl.addColorStop(1,'rgba(255,251,230,0)');
+    g.fillStyle=gl;g.beginPath();g.arc(s.x,s.y,16,0,7);g.fill();
+    g.fillStyle='#fff7d6';g.beginPath();g.arc(s.x,s.y,4.5,0,7);g.fill();
+  }
+
+  // labels
+  g.fillStyle='#6b7785';g.font='13px sans-serif';
+  g.fillText(`光源數：${n}`,16,24);
+  // shadow darkness metric: min illumination under obstacle vs max
+  let minU=Infinity; for(let i=ob.x-ob.r;i<ob.x+ob.r;i++){if(i>=0&&i<cols)minU=Math.min(minU,I[i]);}
+  const darkness=Math.max(0,100-Math.round(minU/norm*100));
+  g.fillStyle=darkness>60?'#ff8a8a':(darkness>25?'#ffce54':'#7CFFB2');
+  g.fillText(`遮擋物正下方陰影濃度：約 ${darkness}%`,16,44);
+}
+
+// drag obstacle
+let dragMode=false, dragging=false;
+document.getElementById('drag').onclick=()=>{dragMode=!dragMode;
+  document.getElementById('drag').textContent=dragMode?'✋ 拖曳中（再按關閉）':'🟠 點此切換：拖曳遮擋物';};
+function pos(e){const r=cv.getBoundingClientRect();const sx=cv.width/r.width,sy=cv.height/r.height;
+  const cx=(e.touches?e.touches[0].clientX:e.clientX), cy=(e.touches?e.touches[0].clientY:e.clientY);
+  return {x:(cx-r.left)*sx,y:(cy-r.top)*sy};}
+cv.addEventListener('pointerdown',e=>{const p=pos(e);const ob=obstacle();
+  if(dragMode||Math.hypot(p.x-ob.x,p.y-ob.y)<ob.r+10){dragging=true;state.obX=p.x;state.obH=Math.max(120,Math.min(380,p.y));
+    document.getElementById('r_obH').value=Math.round(state.obH);draw();}});
+cv.addEventListener('pointermove',e=>{if(!dragging)return;const p=pos(e);
+  state.obX=Math.max(0,Math.min(W,p.x));state.obH=Math.max(120,Math.min(380,p.y));
+  document.getElementById('r_obH').value=Math.round(state.obH);
+  document.getElementById('v_obH').textContent=`${Math.round(state.obH)} px`;draw();});
+window.addEventListener('pointerup',()=>dragging=false);
+
+document.getElementById('reset').onclick=()=>{
+  sliders.forEach(s=>{state[s.id]=s.val;document.getElementById('r_'+s.id).value=s.val;
+    document.getElementById('v_'+s.id).textContent=`${s.val} ${s.unit}`;});
+  state.obX=500;draw();
+};
+
+draw();
+</script>
+</body>
+</html>

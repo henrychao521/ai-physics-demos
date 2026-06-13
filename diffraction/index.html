@@ -1,0 +1,274 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>繞射成像互動模擬 ｜ 雙狹縫・單狹縫・前後距離差</title>
+<style>
+  :root{
+    --bg:#0b0e14; --panel:#151a23; --panel2:#1d2430; --line:#2a3340;
+    --txt:#e6edf3; --muted:#93a1b0; --accent:#4cc2ff; --accent2:#ffce54;
+  }
+  *{box-sizing:border-box}
+  html,body{margin:0;padding:0;background:var(--bg);color:var(--txt);
+    font-family:"Noto Sans TC","PingFang TC","Microsoft JhengHei",system-ui,sans-serif}
+  a{color:var(--accent)}
+  .wrap{max-width:1100px;margin:0 auto;padding:18px 16px 60px}
+  header h1{font-size:1.5rem;margin:.2em 0}
+  header p{color:var(--muted);margin:.2em 0 1em;line-height:1.6}
+  .badge{display:inline-block;background:var(--panel2);border:1px solid var(--line);
+    color:var(--muted);font-size:.72rem;padding:2px 8px;border-radius:99px;margin-right:6px}
+  .stage{background:var(--panel);border:1px solid var(--line);border-radius:14px;
+    padding:14px;margin-bottom:16px}
+  canvas{width:100%;display:block;border-radius:8px;background:#05070b}
+  .label{font-size:.8rem;color:var(--muted);margin:0 0 6px}
+  .grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(230px,1fr));gap:14px}
+  .ctrl{background:var(--panel2);border:1px solid var(--line);border-radius:10px;padding:10px 12px}
+  .ctrl label{display:flex;justify-content:space-between;font-size:.85rem;margin-bottom:6px}
+  .ctrl .val{color:var(--accent);font-variant-numeric:tabular-nums}
+  input[type=range]{width:100%;accent-color:var(--accent)}
+  .modes{display:flex;gap:8px;margin:6px 0 14px;flex-wrap:wrap}
+  .modes button,.btn{background:var(--panel2);color:var(--txt);border:1px solid var(--line);
+    padding:8px 14px;border-radius:9px;cursor:pointer;font-size:.85rem}
+  .modes button.on{background:var(--accent);color:#04121c;border-color:var(--accent);font-weight:700}
+  .btn:hover,.modes button:hover{border-color:var(--accent)}
+  .note{background:var(--panel);border-left:3px solid var(--accent2);border-radius:8px;
+    padding:12px 14px;color:var(--muted);font-size:.86rem;line-height:1.7;margin-top:18px}
+  .note b{color:var(--txt)}
+  footer{color:var(--muted);font-size:.78rem;margin-top:26px;text-align:center;line-height:1.7}
+  .swatch{display:inline-block;width:12px;height:12px;border-radius:3px;vertical-align:middle;margin-right:5px}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <span class="badge">AI 協作物理模擬</span>
+    <span class="badge">波動光學</span>
+    <h1>繞射成像互動模擬</h1>
+    <p>雙狹縫 / 單狹縫的干涉與繞射，並可調整 <b>左右光相位差</b> 與 <b>兩側前後距離差 ΔL</b>，
+       即時觀察成像峰值偏移與<b>非對稱條紋</b>。模型以惠更斯子波（孔徑離散點源）疊加實際光程計算。</p>
+  </header>
+
+  <div class="modes">
+    <button id="mDouble" class="on">雙狹縫</button>
+    <button id="mSingle">單狹縫</button>
+    <button class="btn" id="reset" style="margin-left:auto">重設</button>
+  </div>
+
+  <div class="stage">
+    <div class="label">狹縫配置示意（俯視，光由左向右）</div>
+    <canvas id="schem" width="1040" height="180"></canvas>
+  </div>
+
+  <div class="stage">
+    <div class="label">螢幕上的光強分佈 I(y) 與模擬條紋</div>
+    <canvas id="plot" width="1040" height="320"></canvas>
+  </div>
+
+  <div class="grid" id="controls"></div>
+
+  <div class="note">
+    <b>物理重點：</b>標準雙狹縫條紋左右對稱。當你加入<b>相位差 Δφ</b>，整組條紋會平移（中央亮紋不再在正中央）。
+    當左右狹縫存在<b>前後縱向距離差 ΔL</b>（縱向分離狹縫），兩側到螢幕各點的光程差出現非線性畸變，
+    條紋寬度與強度在左右兩側不再對稱，形成<b>非對稱繞射干涉圖樣</b>。單狹縫模式下，把單一狹縫的左右擋板做出前後差，
+    其「自干涉」envelope 也會傾斜變形。此即原 Gemini 研究探討的核心現象。
+  </div>
+
+  <footer>
+    本頁為依 AI 研究討論重建的可執行互動模擬，純前端 HTML/Canvas、無外部相依。<br>
+    參數為教學示意用途，已調整尺度以利觀察條紋。
+  </footer>
+</div>
+
+<script>
+const sliders = [
+  {id:'lambda', name:'波長 λ', min:380, max:750, step:1, val:530, unit:'nm'},
+  {id:'d',      name:'狹縫間距 d', min:20, max:300, step:1, val:120, unit:'µm'},
+  {id:'a',      name:'狹縫寬度 a', min:5,  max:120, step:1, val:30,  unit:'µm'},
+  {id:'L',      name:'螢幕距離 L', min:200,max:2000,step:10,val:1000,unit:'mm'},
+  {id:'phi',    name:'相位差 Δφ', min:-180,max:180, step:1, val:0,  unit:'°'},
+  {id:'dz',     name:'前後距離差 ΔL', min:-400, max:400, step:1, val:0, unit:'µm'},
+];
+const state = {};
+const ctrl = document.getElementById('controls');
+sliders.forEach(s=>{
+  state[s.id]=s.val;
+  const box=document.createElement('div'); box.className='ctrl';
+  box.innerHTML=`<label><span>${s.name}</span><span class="val" id="v_${s.id}">${s.val} ${s.unit}</span></label>
+    <input type="range" id="r_${s.id}" min="${s.min}" max="${s.max}" step="${s.step}" value="${s.val}">`;
+  ctrl.appendChild(box);
+  box.querySelector('input').addEventListener('input',e=>{
+    state[s.id]=parseFloat(e.target.value);
+    document.getElementById('v_'+s.id).textContent=`${state[s.id]} ${s.unit}`;
+    draw();
+  });
+});
+
+let mode='double';
+const bD=document.getElementById('mDouble'), bS=document.getElementById('mSingle');
+bD.onclick=()=>{mode='double';bD.classList.add('on');bS.classList.remove('on');draw();};
+bS.onclick=()=>{mode='single';bS.classList.add('on');bD.classList.remove('on');draw();};
+document.getElementById('reset').onclick=()=>{
+  sliders.forEach(s=>{state[s.id]=s.val;document.getElementById('r_'+s.id).value=s.val;
+    document.getElementById('v_'+s.id).textContent=`${s.val} ${s.unit}`;});
+  mode='double';bD.classList.add('on');bS.classList.remove('on');draw();
+};
+
+// wavelength (nm) -> approximate RGB
+function wl2rgb(wl){
+  let r,g,b;
+  if(wl<440){r=-(wl-440)/(440-380);g=0;b=1;}
+  else if(wl<490){r=0;g=(wl-440)/(490-440);b=1;}
+  else if(wl<510){r=0;g=1;b=-(wl-510)/(510-490);}
+  else if(wl<580){r=(wl-510)/(580-510);g=1;b=0;}
+  else if(wl<645){r=1;g=-(wl-645)/(645-580);b=0;}
+  else {r=1;g=0;b=0;}
+  let f=1; if(wl<420)f=.3+.7*(wl-380)/40; else if(wl>700)f=.3+.7*(750-wl)/50;
+  const C=v=>Math.round(255*Math.pow(Math.max(0,v)*f,.8));
+  return [C(r),C(g),C(b)];
+}
+
+// build aperture point sources (in metres): {x, z, amp, phi}
+function buildSources(){
+  const a=state.a*1e-6, d=state.d*1e-6, dz=state.dz*1e-6, phi=state.phi*Math.PI/180;
+  const N=121; const pts=[];
+  if(mode==='double'){
+    for(let s=0;s<2;s++){
+      const cx=(s===0?-1:1)*d/2;
+      const zc=(s===0?0:dz);           // 第二狹縫整體前後位移 dz
+      const ph=(s===0?0:phi);          // 相位差加在第二狹縫
+      for(let k=0;k<N;k++){
+        const u=(k/(N-1)-0.5);
+        pts.push({x:cx+u*a, z:zc, amp:1/N, phi:ph});
+      }
+    }
+  } else {
+    // 單狹縫：左右擋板前後差 → 沿縫寬線性傾斜 (z 由 -dz/2 → +dz/2)
+    for(let k=0;k<N;k++){
+      const u=(k/(N-1)-0.5);
+      pts.push({x:u*a, z:u*dz, amp:1/N, phi:0});
+    }
+  }
+  return pts;
+}
+
+function draw(){
+  const lam=state.lambda*1e-9, L=state.L*1e-3;
+  const pts=buildSources();
+  const plot=document.getElementById('plot'), pc=plot.getContext('2d');
+  const W=plot.width, H=plot.height;
+  pc.clearRect(0,0,W,H);
+
+  // screen half-range chosen ~ to show a useful span of fringes
+  const fringe = lam*L/Math.max(state.d*1e-6, 1e-6);   // double-slit spacing
+  const half = Math.max(fringe*9, lam*L/(state.a*1e-6)*1.2);
+  const n=W;
+  const I=new Float64Array(n); let Imax=1e-9;
+  for(let i=0;i<n;i++){
+    const Y=(i/(n-1)-0.5)*2*half;
+    // reference path to aperture centre (x=0,z=0) to keep phase numbers small
+    let re=0,im=0;
+    for(const p of pts){
+      const dx=Y-p.x, dzz=L-p.z;
+      const r=Math.sqrt(dx*dx+dzz*dzz);
+      const r0=Math.sqrt(Y*Y+L*L);
+      const ph=2*Math.PI*(r-r0)/lam + p.phi;
+      re+=p.amp*Math.cos(ph); im+=p.amp*Math.sin(ph);
+    }
+    const v=re*re+im*im; I[i]=v; if(v>Imax)Imax=v;
+  }
+
+  const [R,G,B]=wl2rgb(state.lambda);
+  // fringe strip
+  const stripH=70, stripY=H-stripH;
+  const img=pc.createImageData(W,stripH);
+  for(let i=0;i<n;i++){
+    const inten=Math.min(1,I[i]/Imax);
+    for(let y=0;y<stripH;y++){
+      const o=(y*W+i)*4;
+      img.data[o]=R*inten; img.data[o+1]=G*inten; img.data[o+2]=B*inten; img.data[o+3]=255;
+    }
+  }
+  pc.putImageData(img,0,stripY);
+
+  // axis + center line
+  pc.strokeStyle='#2a3340'; pc.lineWidth=1;
+  pc.beginPath(); pc.moveTo(W/2,0); pc.lineTo(W/2,stripY); pc.stroke();
+  pc.fillStyle='#6b7785'; pc.font='12px sans-serif';
+  pc.fillText('y = 0（光軸）', W/2+6, 14);
+
+  // intensity curve
+  pc.beginPath();
+  for(let i=0;i<n;i++){
+    const y=stripY-4-(I[i]/Imax)*(stripY-16);
+    if(i===0)pc.moveTo(i,y); else pc.lineTo(i,y);
+  }
+  pc.lineWidth=2; pc.strokeStyle=`rgb(${R},${G},${B})`; pc.stroke();
+
+  // peak marker
+  let pk=0; for(let i=0;i<n;i++) if(I[i]>I[pk])pk=i;
+  const pkY=(pk/(n-1)-0.5)*2*half*1000; // mm
+  pc.fillStyle='#ffce54';
+  pc.beginPath(); pc.arc(pk, stripY-4-(I[pk]/Imax)*(stripY-16), 4,0,7); pc.fill();
+  pc.fillText(`主峰偏移 ≈ ${pkY.toFixed(2)} mm`, 10, 18);
+  pc.fillStyle='#93a1b0';
+  pc.fillText(`螢幕寬度 ≈ ±${(half*1000).toFixed(1)} mm`, 10, 36);
+
+  drawSchem();
+}
+
+function drawSchem(){
+  const c=document.getElementById('schem'), x=c.getContext('2d');
+  const W=c.width,H=c.height; x.clearRect(0,0,W,H);
+  // incoming plane wave
+  x.strokeStyle='#1f2a36'; x.lineWidth=2;
+  for(let i=0;i<8;i++){const px=20+i*22; x.beginPath();x.moveTo(px,20);x.lineTo(px,H-20);x.stroke();}
+  const [R,G,B]=wl2rgb(state.lambda); const col=`rgb(${R},${G},${B})`;
+  // barrier
+  const bx=W*0.42, cy=H/2;
+  const d=state.d, a=state.a, dz=state.dz;
+  const sc=0.32; // px per µm for vertical
+  x.fillStyle='#2a3340'; x.fillRect(bx-6,10,12,H-20);
+  // open slits (cut out)
+  function slit(cyy,zoff){
+    const yy=cyy, h=Math.max(4,a*sc);
+    const xoff=zoff*0.12; // px per µm horizontally for front/back offset
+    x.clearRect(bx-6+xoff,yy-h/2,12,h);
+    x.fillStyle=col; x.globalAlpha=.9;
+    x.fillRect(bx-6+xoff,yy-h/2,12,h); x.globalAlpha=1;
+  }
+  if(mode==='double'){
+    slit(cy-d*sc/2,0);
+    slit(cy+d*sc/2,dz);
+    x.fillStyle='#93a1b0';x.font='12px sans-serif';
+    x.fillText('狹縫1 (z=0)', bx+16, cy-d*sc/2);
+    x.fillText('狹縫2 (z=ΔL)', bx+16, cy+d*sc/2+4);
+  }else{
+    // single slit, tilted edges
+    const h=Math.max(6,a*sc);
+    x.fillStyle=col;x.globalAlpha=.9;
+    x.beginPath();
+    x.moveTo(bx-6-dz*0.12, cy-h/2);
+    x.lineTo(bx+6-dz*0.12, cy-h/2);
+    x.lineTo(bx+6+dz*0.12, cy+h/2);
+    x.lineTo(bx-6+dz*0.12, cy+h/2);
+    x.closePath();x.fill();x.globalAlpha=1;
+    x.fillStyle='#93a1b0';x.font='12px sans-serif';
+    x.fillText('單狹縫（左右擋板前後差 ΔL）', bx+16, cy);
+  }
+  // screen
+  x.strokeStyle='#3a4756';x.lineWidth=3;
+  x.beginPath();x.moveTo(W-30,18);x.lineTo(W-30,H-18);x.stroke();
+  x.fillStyle='#6b7785';x.fillText('螢幕', W-58, 14);
+  // rays
+  x.strokeStyle=col;x.globalAlpha=.25;x.lineWidth=1;
+  const srcs = mode==='double'?[cy-d*sc/2,cy+d*sc/2]:[cy];
+  srcs.forEach(sy=>{for(let k=-2;k<=2;k++){x.beginPath();x.moveTo(bx,sy);x.lineTo(W-30,cy+k*22);x.stroke();}});
+  x.globalAlpha=1;
+}
+
+draw();
+window.addEventListener('resize',draw);
+</script>
+</body>
+</html>
