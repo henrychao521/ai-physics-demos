@@ -1,0 +1,261 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>RC 氣墊船工程開發模擬器</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<script src="https://unpkg.com/@babel/standalone@7.25.6/babel.min.js"></script>
+<script type="importmap">
+{
+  "imports": {
+    "react": "https://esm.sh/react@18.3.1",
+    "react-dom": "https://esm.sh/react-dom@18.3.1",
+    "react-dom/client": "https://esm.sh/react-dom@18.3.1/client",
+    "react/jsx-runtime": "https://esm.sh/react@18.3.1/jsx-runtime",
+    "lucide-react": "https://esm.sh/lucide-react@0.460.0?external=react"
+  }
+}
+</script>
+<style>html,body{margin:0;background:#020617}</style>
+</head>
+<body>
+<div id="root" class="text-slate-300 text-sm p-10 font-sans">載入中…（首次載入需從 CDN 取得 React 函式庫，請稍候）</div>
+
+<script type="text/babel" data-type="module" data-presets="react">
+import React, { useState, useMemo } from 'react';
+import { createRoot } from 'react-dom/client';
+import {
+  Settings, Cpu, Battery, Info, Activity, Weight, Gauge, Search,
+  Ruler, ExternalLink, Wind, Layers, Box
+} from 'lucide-react';
+
+const App = () => {
+  const hardwareDB = {
+    motors: [
+      { id: 'rs2205', name: 'EMAX RS2205 (2300KV)', weight: 29, thrust: 1024, stator: '2205', poles: '12N14P', dims: { d: 28, h: 18 } },
+      { id: 'v2306', name: 'T-Motor Velox V3', weight: 32, thrust: 1250, stator: '2306', poles: '12N14P', dims: { d: 28, h: 19 } },
+      { id: 'x1408', name: 'iFlight XING2 1408', weight: 16, thrust: 580, stator: '1408', poles: '9N12P', dims: { d: 19, h: 15 } },
+      { id: 'eco2807', name: 'EMAX ECO II 2807', weight: 48, thrust: 1880, stator: '2807', poles: '12N14P', dims: { d: 34, h: 20 } }
+    ],
+    batteries: [
+      { id: '4s1300', name: 'Tattu 4S 1300mAh', weight: 150, voltage: 14.8, size: '74x35x29mm' },
+      { id: '3s1500', name: 'CNHL 3S 1500mAh', weight: 135, voltage: 11.1, size: '75x34x25mm' },
+      { id: '4s2200', name: 'Ovonic 4S 2200mAh', weight: 212, voltage: 14.8, size: '105x34x32mm' }
+    ],
+    materials: [
+      { id: 'xps', name: '5mm XPS 珍珠板', baseWeight: 65, desc: '極輕量但抗扭剛度低' },
+      { id: 'lwpla', name: 'LW-PLA (發泡列印)', baseWeight: 145, desc: '最佳結構與重量平衡方案' },
+      { id: 'petg', name: 'PETG (3D 列印)', baseWeight: 310, desc: '耐撞擊但對升力要求極高' }
+    ]
+  };
+
+  const [liftMotor, setLiftMotor] = useState(hardwareDB.motors[3]);
+  const [thrustMotor, setThrustMotor] = useState(hardwareDB.motors[1]);
+  const [thrustCount, setThrustCount] = useState(1);
+  const [vaneAngle, setVaneAngle] = useState(0);
+  const [battery, setBattery] = useState(hardwareDB.batteries[0]);
+  const [material, setMaterial] = useState(hardwareDB.materials[1]);
+  const [throttle, setThrottle] = useState({ lift: 45, thrust: 0 });
+
+  const physics = useMemo(() => {
+    const fixedW = 95;
+    const escW = 12 * (1 + thrustCount);
+    const totalMass = liftMotor.weight + (thrustMotor.weight * thrustCount) + battery.weight + material.baseWeight + escW + fixedW;
+    const voltFactor = battery.voltage / 14.8;
+    const totalLiftF = liftMotor.thrust * (throttle.lift / 100) * voltFactor;
+    const isHovering = totalLiftF > (totalMass * 0.76);
+    const hoverH = isHovering ? Math.min(10, (totalLiftF - (totalMass * 0.76)) / 25) : 0;
+    const rawThrust = (thrustMotor.thrust * thrustCount) * (throttle.thrust / 100) * voltFactor;
+    const rad = (vaneAngle * Math.PI) / 180;
+    const fForward = rawThrust * Math.cos(rad);
+    const fSide = rawThrust * Math.sin(rad);
+    return {
+      totalMass, isHovering, hoverH, fForward, fSide,
+      twr: (fForward / totalMass).toFixed(2),
+      liftUtil: ((totalLiftF / totalMass) * 100).toFixed(1)
+    };
+  }, [liftMotor, thrustMotor, thrustCount, battery, material, throttle, vaneAngle]);
+
+  return (
+    <div className="min-h-screen bg-slate-950 text-slate-100 font-sans p-4 lg:p-8">
+      <div className="max-w-7xl mx-auto space-y-6">
+        <div className="grid grid-cols-1 md:grid-cols-5 gap-4 bg-slate-900 p-6 rounded-3xl border border-slate-800 shadow-2xl">
+          <div className="md:col-span-2 flex flex-col justify-center">
+            <h1 className="text-xl font-black flex items-center gap-2 tracking-tight">
+              <Gauge size={22} className="text-blue-500" /> 工程開發模擬器 <span className="text-[10px] bg-blue-500/20 text-blue-400 px-2 py-1 rounded">V6.0 RESEARCH</span>
+            </h1>
+            <p className="text-slate-500 text-[10px] uppercase font-bold tracking-widest mt-1">Integrated Analysis System for RC Hovercraft</p>
+          </div>
+          <div className="bg-slate-950/50 p-3 rounded-2xl border border-slate-800">
+            <span className="text-[9px] text-slate-500 font-bold uppercase">系統總重 (W)</span>
+            <div className="text-xl font-mono font-bold text-blue-400">{physics.totalMass}g</div>
+          </div>
+          <div className="bg-slate-950/50 p-3 rounded-2xl border border-slate-800">
+            <span className="text-[9px] text-slate-500 font-bold uppercase">推重比 (TWR)</span>
+            <div className={`text-xl font-mono font-bold ${parseFloat(physics.twr) > 1 ? 'text-green-400' : 'text-slate-500'}`}>{physics.twr}</div>
+          </div>
+          <div className="bg-slate-950/50 p-3 rounded-2xl border border-slate-800">
+            <span className="text-[9px] text-slate-500 font-bold uppercase">升力餘裕 (Margin)</span>
+            <div className="text-xl font-mono font-bold text-amber-400">{physics.liftUtil}%</div>
+          </div>
+        </div>
+
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
+          <div className="lg:col-span-4 space-y-6">
+            <div className="bg-slate-900 p-6 rounded-3xl border border-slate-800">
+              <h2 className="text-[10px] font-black text-slate-500 uppercase tracking-widest mb-5 flex items-center gap-2">
+                <Settings size={14} /> 硬體清單與結構參數
+              </h2>
+              <div className="space-y-4">
+                <div className="space-y-1">
+                  <label className="text-[9px] text-slate-500 font-bold ml-1 uppercase">升力系統 (Lift Motor)</label>
+                  <select className="w-full bg-slate-950 border border-slate-800 rounded-xl p-3 text-xs" value={liftMotor.id} onChange={(e) => setLiftMotor(hardwareDB.motors.find(m => m.id === e.target.value))}>
+                    {hardwareDB.motors.map(m => <option key={m.id} value={m.id}>{m.name}</option>)}
+                  </select>
+                </div>
+                <div className="grid grid-cols-2 gap-2 pt-2">
+                   <button onClick={() => setThrustCount(1)} className={`py-2 rounded-xl text-[10px] font-bold transition ${thrustCount === 1 ? 'bg-blue-600 text-white' : 'bg-slate-800 text-slate-500'}`}>單馬達推力</button>
+                   <button onClick={() => setThrustCount(2)} className={`py-2 rounded-xl text-[10px] font-bold transition ${thrustCount === 2 ? 'bg-blue-600 text-white' : 'bg-slate-800 text-slate-500'}`}>雙馬達推力</button>
+                </div>
+                <div className="space-y-1">
+                  <label className="text-[9px] text-slate-500 font-bold ml-1 uppercase">推力系統 (Thrust Motor)</label>
+                  <select className="w-full bg-slate-950 border border-slate-800 rounded-xl p-3 text-xs" value={thrustMotor.id} onChange={(e) => setThrustMotor(hardwareDB.motors.find(m => m.id === e.target.value))}>
+                    {hardwareDB.motors.map(m => <option key={m.id} value={m.id}>{m.name}</option>)}
+                  </select>
+                </div>
+                <div className="space-y-1">
+                  <label className="text-[9px] text-slate-500 font-bold ml-1 uppercase">船體材料 (Main Hull)</label>
+                  <select className="w-full bg-slate-950 border border-slate-800 rounded-xl p-3 text-xs" value={material.id} onChange={(e) => setMaterial(hardwareDB.materials.find(m => m.id === e.target.value))}>
+                    {hardwareDB.materials.map(m => <option key={m.id} value={m.id}>{m.name}</option>)}
+                  </select>
+                </div>
+              </div>
+            </div>
+
+            <div className="bg-slate-900 p-6 rounded-3xl border border-slate-800">
+              <h2 className="text-[10px] font-black text-slate-500 uppercase tracking-widest mb-4 flex items-center gap-2">
+                <Layers size={14} /> 組件詳細規格表
+              </h2>
+              <div className="space-y-2 text-[10px] font-mono">
+                <div className="flex justify-between border-b border-slate-800 pb-1">
+                  <span className="text-slate-500">馬達安裝孔 (Mount)</span>
+                  <span>{liftMotor.mount || '16x19mm'}</span>
+                </div>
+                <div className="flex justify-between border-b border-slate-800 pb-1">
+                  <span className="text-slate-500">電池尺寸 (Size)</span>
+                  <span>{battery.size}</span>
+                </div>
+                <div className="flex justify-between border-b border-slate-800 pb-1">
+                  <span className="text-slate-500">磁極對數 (Poles)</span>
+                  <span>{liftMotor.poles}</span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-slate-500">材料特性</span>
+                  <span className="text-blue-400">{material.desc}</span>
+                </div>
+                <button onClick={() => window.open(`https://www.google.com/search?q=${liftMotor.name}+technical+specs`, '_blank')} className="w-full mt-4 py-2 bg-slate-800 hover:bg-slate-700 rounded-xl text-[10px] font-bold flex items-center justify-center gap-2">
+                  搜尋外部原始數據 <ExternalLink size={12} />
+                </button>
+              </div>
+            </div>
+          </div>
+
+          <div className="lg:col-span-8 space-y-6">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <div className="bg-slate-900 h-64 rounded-3xl border border-slate-800 relative overflow-hidden flex flex-col justify-end p-6">
+                <div className="absolute top-4 left-4 text-[9px] font-black text-slate-500 uppercase flex items-center gap-2">
+                   <Box size={12}/> Side View (側視圖)
+                </div>
+                <div className="relative w-full h-24">
+                  <div className="absolute bottom-0 w-full h-px bg-slate-800"></div>
+                  <div className="absolute left-1/2 -translate-x-1/2 w-48 transition-all duration-300"
+                    style={{ bottom: `${2 + physics.hoverH * 3}px`, transform: `translateX(-50%) rotate(${throttle.thrust * 0.05}deg)` }}>
+                    {physics.isHovering && <div className="absolute -bottom-8 left-0 right-0 h-8 bg-blue-500/10 blur-xl animate-pulse"></div>}
+                    <div className="h-4 bg-blue-700 rounded-t-lg border-t border-blue-400/30"></div>
+                    <div className={`h-8 bg-slate-800 rounded-b-xl border-x border-slate-700 transition-all ${physics.isHovering ? 'scale-y-100' : 'scale-y-75'}`}></div>
+                    <div className="absolute -top-10 left-2 w-8 h-12 bg-red-600 rounded flex items-center justify-center">
+                       {throttle.thrust > 0 && <div className="absolute -left-8 text-red-400/50 animate-pulse"><Wind size={16}/></div>}
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <div className="bg-slate-900 h-64 rounded-3xl border border-slate-800 relative overflow-hidden flex flex-col justify-end p-6">
+                <div className="absolute top-4 left-4 text-[9px] font-black text-slate-500 uppercase flex items-center gap-2">
+                   <Box size={12}/> Front View (前視圖)
+                </div>
+                <div className="relative w-full h-24">
+                  <div className="absolute bottom-0 w-full h-px bg-slate-800"></div>
+                  <div className="absolute left-1/2 -translate-x-1/2 w-56 transition-all duration-300" style={{ bottom: `${2 + physics.hoverH * 3}px` }}>
+                    <div className="h-8 bg-slate-800 rounded-2xl border border-slate-700 relative flex items-center justify-center">
+                       <div className="absolute -top-10 w-full flex justify-center gap-8">
+                          {thrustCount === 1 ? (
+                            <div className="w-10 h-12 border-2 border-red-500/50 rounded-lg relative transition-transform" style={{ transform: `rotate(${-vaneAngle}deg)` }}>
+                               <div className="absolute inset-0 flex items-center justify-center"><div className="w-0.5 h-full bg-red-500/30"></div></div>
+                            </div>
+                          ) : (
+                            <>
+                              <div className="w-10 h-12 border-2 border-red-500/50 rounded-lg relative"></div>
+                              <div className="w-10 h-12 border-2 border-red-500/50 rounded-lg relative"></div>
+                            </>
+                          )}
+                       </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <div className="bg-slate-900 p-6 rounded-3xl border border-slate-800 space-y-6">
+                <h3 className="text-[10px] font-black text-slate-500 uppercase tracking-widest flex items-center gap-2">
+                  <Activity size={14} className="text-blue-500" /> 動力輸出與轉向控制
+                </h3>
+                <div className="space-y-6">
+                  <div className="space-y-2">
+                    <div className="flex justify-between text-[10px] font-bold">
+                      <span className="text-blue-400">CH1: 升力輸出 (Lift)</span>
+                      <span className="font-mono">{throttle.lift}%</span>
+                    </div>
+                    <input type="range" className="w-full accent-blue-500 bg-slate-950 h-1.5 rounded-lg appearance-none cursor-pointer" value={throttle.lift} onChange={(e) => setThrottle({...throttle, lift: parseInt(e.target.value)})} />
+                  </div>
+                  <div className="space-y-2">
+                    <div className="flex justify-between text-[10px] font-bold">
+                      <span className="text-red-400">CH2: 推力輸出 (Thrust)</span>
+                      <span className="font-mono">{throttle.thrust}%</span>
+                    </div>
+                    <input type="range" className="w-full accent-red-500 bg-slate-950 h-1.5 rounded-lg appearance-none cursor-pointer" value={throttle.thrust} onChange={(e) => setThrottle({...throttle, thrust: parseInt(e.target.value)})} />
+                  </div>
+                  <div className="space-y-2">
+                    <div className="flex justify-between text-[10px] font-bold">
+                      <span className="text-amber-400">CH3: 導風板角度 (Rudder)</span>
+                      <span className="font-mono">{vaneAngle}°</span>
+                    </div>
+                    <input type="range" min="-30" max="30" step="5" className="w-full accent-amber-500 bg-slate-950 h-1.5 rounded-lg appearance-none cursor-pointer" value={vaneAngle} onChange={(e) => setVaneAngle(parseInt(e.target.value))} />
+                  </div>
+                </div>
+              </div>
+
+              <div className="bg-slate-900 p-6 rounded-3xl border border-slate-800">
+                <h3 className="text-[10px] font-black text-slate-500 uppercase tracking-widest mb-4 flex items-center gap-2">
+                  <Info size={14} className="text-blue-500" /> 工程設計建議 (Research Notes)
+                </h3>
+                <div className="space-y-3 text-[11px] text-slate-400 leading-relaxed font-medium">
+                  <p><b className="text-slate-200">● 轉向向量分析：</b> 導風板偏轉 <b>{vaneAngle}°</b> 時，有效推力將損失約 <b>{(100 - Math.cos(vaneAngle*Math.PI/180)*100).toFixed(1)}%</b>，並轉化為側向轉向力 <b>{physics.fSide.toFixed(0)}g</b>。</p>
+                  <p><b className="text-slate-200">● 結構冗餘設計：</b> 選用 <b>{material.name}</b> 時，建議在推力馬達座（Thrust Mount）加入額外的支撐肋，以應對 <b>{thrustCount > 1 ? '雙馬達' : '單馬達'}</b> 帶來的振動頻率。</p>
+                  <p><b className="text-slate-200">● 能源管理 (Energy Density)：</b> 目前電池佔總重 <b>{((battery.weight / physics.totalMass) * 100).toFixed(1)}%</b>。建議在實際行駛中，升力油門保持在臨界值上方 10% 即可，以最大化航行時間。</p>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+createRoot(document.getElementById('root')).render(<App />);
+</script>
+</body>
+</html>

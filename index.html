@@ -42,14 +42,21 @@
     radial-gradient(60px 60px at 50% 50%,rgba(255,255,255,.55) 0,transparent 60%);
     filter:blur(2px)}
   .feat{outline:1px solid #e11d4855}
+  .t-hover{background:radial-gradient(120px 80px at 50% 95%,rgba(59,130,246,.5) 0,transparent 70%),#0b1220}
+  .t-hover b{position:absolute;left:50%;top:42%;transform:translateX(-50%);width:90px;height:26px;border-radius:8px;background:#1e3a8a;border-top:3px solid #60a5fa}
+  .t-house{background:#f8fafc;display:flex;align-items:flex-end;justify-content:center;gap:5px;padding:24px}
+  .t-house i{display:block;width:9px;background:#cbd5e1;border-radius:2px}
+  .t-house i:nth-child(1){height:30%}.t-house i:nth-child(2){height:55%}.t-house i:nth-child(3){height:45%}
+  .t-house i:nth-child(4){height:70%}.t-house i:nth-child(5){height:60%}.t-house i:nth-child(6){height:90%}
+  .t-house i:nth-child(7){height:48%;background:#ef4444}
 </style>
 </head>
 <body>
 <div class="wrap">
-  <span class="badge">AI 協作專案成果</span><span class="badge">物理・光學</span><span class="badge">純前端互動</span>
-  <h1>AI 協作物理互動模擬</h1>
-  <p class="lead">這些互動模擬源自我與 AI 的物理討論，將原本的理論分析重建為可在瀏覽器中即時操作的網頁。
-     全部為純前端 HTML / Canvas，無外部相依，可直接用於教學演示。點擊任一卡片開始體驗。</p>
+  <span class="badge">AI 協作專案成果</span><span class="badge">物理・工程・資料</span><span class="badge">瀏覽器即時互動</span>
+  <h1>AI 協作互動作品集</h1>
+  <p class="lead">這些互動作品源自我與 AI 的討論，從物理理論、工程設計到資料分析，皆重建為可在瀏覽器中即時操作的網頁。
+     可直接用於教學與成果展示。點擊任一卡片開始體驗。</p>
 
   <div class="cards">
     <a class="card feat" href="spectral-lab/">
@@ -84,6 +91,22 @@
       <div class="tag"><span class="badge">幾何光學</span></div>
       <h3>外科無影燈光學</h3>
       <p>多光源從不同角度照射同一術區；增加光源數量，觀察遮擋物的陰影如何被互補填補、趨近無影。</p>
+      <div class="go">開始體驗 →</div>
+    </a>
+
+    <a class="card" href="hovercraft/">
+      <div class="thumb t-hover"><b></b></div>
+      <div class="tag"><span class="badge">工程・動力分析</span></div>
+      <h3>RC 氣墊船工程模擬器</h3>
+      <p>選配升力/推力馬達、電池與船體材料，即時計算總重、推重比與升力餘裕，並模擬導風板向量轉向。</p>
+      <div class="go">開始體驗 →</div>
+    </a>
+
+    <a class="card" href="housing/">
+      <div class="thumb t-house"><i></i><i></i><i></i><i></i><i></i><i></i><i></i></div>
+      <div class="tag"><span class="badge">資料・圖表工具</span></div>
+      <h3>全台房市實證數據系統</h3>
+      <p>34 個縣市/行政區、44 季價量軌跡與跨週期對比的互動儀表板（Chart.js）。</p>
       <div class="go">開始體驗 →</div>
     </a>
   </div>
