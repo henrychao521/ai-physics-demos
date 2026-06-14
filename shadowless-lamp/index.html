@@ -4,9 +4,11 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>外科無影燈光學互動模擬</title>
+<link rel="icon" href="../assets/favicon.svg" type="image/svg+xml">
+<link rel="stylesheet" href="../assets/site.css">
+<script defer src="../assets/nav.js"></script>
 <style>
-  :root{--bg:#0b0e14;--panel:#151a23;--panel2:#1d2430;--line:#2a3340;
-    --txt:#e6edf3;--muted:#93a1b0;--accent:#7CFFB2;--accent2:#ffce54;}
+  :root{--accent:#7CFFB2}
   *{box-sizing:border-box}
   html,body{margin:0;background:var(--bg);color:var(--txt);
     font-family:"Noto Sans TC","PingFang TC","Microsoft JhengHei",system-ui,sans-serif}
@@ -32,10 +34,10 @@
   footer{color:var(--muted);font-size:.78rem;margin-top:24px;text-align:center;line-height:1.7}
 </style>
 </head>
-<body>
+<body data-demo="外科無影燈光學">
 <div class="wrap">
   <header>
-    <span class="badge">AI 協作物理模擬</span><span class="badge">幾何光學・光線追蹤</span>
+    <span class="badge">幾何光學・光線追蹤</span>
     <h1>外科無影燈光學互動模擬</h1>
     <p>手術無影燈以<b>多顆光源</b>從不同角度照射同一術區。當器械或人手遮擋部分光線時，
        其他角度的光源仍能照亮被遮處，使陰影被「填補」。拖動下方滑桿改變<b>光源數量</b>，
@@ -43,7 +45,8 @@
   </header>
 
   <div class="row">
-    <button id="drag" >🟠 點此切換：拖曳遮擋物</button>
+    <button id="sweep">▶ 光源 1→24 掃描</button>
+    <button id="drag">🟠 點此切換：拖曳遮擋物</button>
     <button id="reset" style="margin-left:auto">重設</button>
   </div>
 
@@ -216,6 +219,21 @@ document.getElementById('reset').onclick=()=>{
   sliders.forEach(s=>{state[s.id]=s.val;document.getElementById('r_'+s.id).value=s.val;
     document.getElementById('v_'+s.id).textContent=`${s.val} ${s.unit}`;});
   state.obX=500;draw();
+};
+
+// 光源數量掃描動畫：示範陰影如何被多光源填補
+let sweeping=false, sweepTimer=null;
+const sweepBtn=document.getElementById('sweep');
+function setN(n){state.n=n;document.getElementById('r_n').value=n;document.getElementById('v_n').textContent=`${n} 顆`;draw();}
+sweepBtn.onclick=()=>{
+  if(sweeping){clearInterval(sweepTimer);sweeping=false;sweepBtn.textContent='▶ 光源 1→24 掃描';return;}
+  sweeping=true;sweepBtn.classList.add('on');sweepBtn.textContent='⏸ 停止掃描';
+  let n=1;setN(n);
+  sweepTimer=setInterval(()=>{
+    n++;
+    if(n>24){clearInterval(sweepTimer);sweeping=false;sweepBtn.classList.remove('on');sweepBtn.textContent='▶ 光源 1→24 掃描';return;}
+    setN(n);
+  },200);
 };
 
 draw();

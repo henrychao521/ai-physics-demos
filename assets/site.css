@@ -1,0 +1,72 @@
+/* ===== AI 協作互動作品集 — 共用深色科技風設計系統 ===== */
+:root{
+  --bg:#0a0e17;
+  --bg2:#070a12;
+  --panel:#121826;
+  --panel2:#1a2233;
+  --line:#28324a;
+  --txt:#e8eef6;
+  --muted:#8a99ad;
+  --faint:#5b6880;
+  --accent:#4cc2ff;     /* 主色 cyan */
+  --accent2:#ffce54;    /* 警示/數值 amber */
+  --rose:#ff6b9d;
+  --green:#7CFFB2;
+  --indigo:#8b9cff;
+  --radius:16px;
+  --maxw:1180px;
+  --font:"Noto Sans TC","PingFang TC","Microsoft JhengHei",system-ui,-apple-system,sans-serif;
+}
+*{box-sizing:border-box}
+html,body{margin:0;padding:0}
+body{
+  background:radial-gradient(1100px 520px at 50% -8%,#13203a 0%,var(--bg) 58%) fixed,var(--bg);
+  color:var(--txt);font-family:var(--font);-webkit-font-smoothing:antialiased;
+}
+a{color:var(--accent)}
+
+/* ---- 頂部導覽列 ---- */
+.site-nav{
+  position:sticky;top:0;z-index:200;display:flex;align-items:center;gap:14px;
+  flex:none;height:54px;padding:0 clamp(12px,3vw,22px);
+  background:rgba(8,11,18,.82);backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);
+  border-bottom:1px solid var(--line);
+}
+.site-nav .brand{display:flex;align-items:center;gap:9px;font-weight:800;color:var(--txt);
+  text-decoration:none;font-size:.95rem;white-space:nowrap;letter-spacing:.2px}
+.site-nav .brand svg{width:22px;height:22px;flex:none}
+.site-nav .brand .b2{color:var(--accent)}
+.site-nav .cur{color:var(--muted);font-size:.85rem;border-left:1px solid var(--line);
+  padding-left:14px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;flex:1;min-width:0}
+.site-nav .back{margin-left:auto;color:var(--accent);text-decoration:none;font-size:.83rem;
+  border:1px solid var(--line);padding:7px 13px;border-radius:99px;white-space:nowrap;transition:.15s}
+.site-nav .back:hover{border-color:var(--accent);background:rgba(76,194,255,.1)}
+@media(max-width:600px){
+  .site-nav{height:50px;gap:10px}
+  .site-nav .brand{font-size:.88rem}
+  .site-nav .brand .b1-long{display:none}
+  .site-nav .cur{display:none}
+  .site-nav .back{padding:6px 11px;font-size:.8rem}
+}
+
+/* ---- 共用元件 ---- */
+.badge{display:inline-block;background:var(--panel2);border:1px solid var(--line);
+  color:var(--muted);font-size:.72rem;padding:3px 10px;border-radius:99px}
+.panel{background:var(--panel);border:1px solid var(--line);border-radius:var(--radius)}
+.btn{background:var(--panel2);color:var(--txt);border:1px solid var(--line);
+  padding:8px 14px;border-radius:10px;cursor:pointer;font-size:.85rem;font-family:var(--font);transition:.15s}
+.btn:hover{border-color:var(--accent)}
+.btn.on{background:var(--accent);color:#04121c;border-color:var(--accent);font-weight:700}
+
+input[type=range]{accent-color:var(--accent)}
+::-webkit-scrollbar{width:9px;height:9px}
+::-webkit-scrollbar-track{background:var(--bg2)}
+::-webkit-scrollbar-thumb{background:#2f3b56;border-radius:5px}
+::-webkit-scrollbar-thumb:hover{background:#3c4a6b}
+
+/* 載入 spinner（React 頁共用） */
+.app-loading{display:flex;flex-direction:column;align-items:center;justify-content:center;
+  min-height:70vh;gap:14px;color:var(--muted);font-size:.85rem}
+.app-loading .ring{width:34px;height:34px;border:3px solid rgba(255,255,255,.1);
+  border-top-color:var(--accent);border-radius:50%;animation:spin .8s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}

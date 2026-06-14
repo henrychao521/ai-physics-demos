@@ -4,11 +4,10 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>繞射成像互動模擬 ｜ 雙狹縫・單狹縫・前後距離差</title>
+<link rel="icon" href="../assets/favicon.svg" type="image/svg+xml">
+<link rel="stylesheet" href="../assets/site.css">
+<script defer src="../assets/nav.js"></script>
 <style>
-  :root{
-    --bg:#0b0e14; --panel:#151a23; --panel2:#1d2430; --line:#2a3340;
-    --txt:#e6edf3; --muted:#93a1b0; --accent:#4cc2ff; --accent2:#ffce54;
-  }
   *{box-sizing:border-box}
   html,body{margin:0;padding:0;background:var(--bg);color:var(--txt);
     font-family:"Noto Sans TC","PingFang TC","Microsoft JhengHei",system-ui,sans-serif}
@@ -39,10 +38,9 @@
   .swatch{display:inline-block;width:12px;height:12px;border-radius:3px;vertical-align:middle;margin-right:5px}
 </style>
 </head>
-<body>
+<body data-demo="繞射成像模擬">
 <div class="wrap">
   <header>
-    <span class="badge">AI 協作物理模擬</span>
     <span class="badge">波動光學</span>
     <h1>繞射成像互動模擬</h1>
     <p>雙狹縫 / 單狹縫的干涉與繞射，並可調整 <b>左右光相位差</b> 與 <b>兩側前後距離差 ΔL</b>，
@@ -53,6 +51,14 @@
     <button id="mDouble" class="on">雙狹縫</button>
     <button id="mSingle">單狹縫</button>
     <button class="btn" id="reset" style="margin-left:auto">重設</button>
+  </div>
+
+  <div class="modes" style="margin-top:-6px">
+    <span style="color:var(--muted);font-size:.8rem;align-self:center">教學情境：</span>
+    <button class="btn" data-preset="std">標準雙縫</button>
+    <button class="btn" data-preset="phase">相位偏移 Δφ</button>
+    <button class="btn" data-preset="asym">縱向非對稱 ΔL</button>
+    <button class="btn" data-preset="single">單縫繞射</button>
   </div>
 
   <div class="stage">
@@ -113,6 +119,23 @@ document.getElementById('reset').onclick=()=>{
     document.getElementById('v_'+s.id).textContent=`${s.val} ${s.unit}`;});
   mode='double';bD.classList.add('on');bS.classList.remove('on');draw();
 };
+
+// 教學情境預設
+const PRESETS={
+  std:   {mode:'double',lambda:530,d:120,a:30,L:1000,phi:0,  dz:0},
+  phase: {mode:'double',lambda:530,d:120,a:30,L:1000,phi:120,dz:0},
+  asym:  {mode:'double',lambda:530,d:120,a:30,L:1000,phi:0,  dz:300},
+  single:{mode:'single',lambda:530,d:120,a:60,L:1000,phi:0,  dz:0}
+};
+document.querySelectorAll('[data-preset]').forEach(b=>b.addEventListener('click',()=>{
+  const p=PRESETS[b.dataset.preset]; if(!p)return;
+  mode=p.mode; bD.classList.toggle('on',mode==='double'); bS.classList.toggle('on',mode==='single');
+  ['lambda','d','a','L','phi','dz'].forEach(k=>{
+    state[k]=p[k]; const r=document.getElementById('r_'+k); if(r)r.value=p[k];
+    const s=sliders.find(x=>x.id===k); document.getElementById('v_'+k).textContent=`${p[k]} ${s.unit}`;
+  });
+  draw();
+}));
 
 // wavelength (nm) -> approximate RGB
 function wl2rgb(wl){
@@ -213,6 +236,12 @@ function draw(){
   pc.fillText(`主峰偏移 ≈ ${pkY.toFixed(2)} mm`, 10, 18);
   pc.fillStyle='#93a1b0';
   pc.fillText(`螢幕寬度 ≈ ±${(half*1000).toFixed(1)} mm`, 10, 36);
+  if(mode==='double'){
+    pc.fillText(`理論條紋間距 Δy = λL/d ≈ ${(fringe*1000).toFixed(2)} mm`, 10, 54);
+  } else {
+    const w = lam*L/(state.a*1e-6);
+    pc.fillText(`中央亮紋半寬 ≈ λL/a ≈ ${(w*1000).toFixed(2)} mm`, 10, 54);
+  }
 
   drawSchem();
 }

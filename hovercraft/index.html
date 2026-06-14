@@ -4,6 +4,9 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>RC 氣墊船工程開發模擬器</title>
+<link rel="icon" href="../assets/favicon.svg" type="image/svg+xml">
+<link rel="stylesheet" href="../assets/site.css">
+<script defer src="../assets/nav.js"></script>
 <script src="https://cdn.tailwindcss.com"></script>
 <script src="https://unpkg.com/@babel/standalone@7.25.6/babel.min.js"></script>
 <script type="importmap">
@@ -19,8 +22,8 @@
 </script>
 <style>html,body{margin:0;background:#020617}</style>
 </head>
-<body>
-<div id="root" class="text-slate-300 text-sm p-10 font-sans">載入中…（首次載入需從 CDN 取得 React 函式庫，請稍候）</div>
+<body data-demo="RC 氣墊船工程模擬器">
+<div id="root"><div class="app-loading"><div class="ring"></div>載入中…（首次載入需從 CDN 取得 React 函式庫，請稍候）</div></div>
 
 <script type="text/babel" data-type="module" data-presets="react">
 import React, { useState, useMemo } from 'react';

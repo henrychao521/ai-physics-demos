@@ -4,66 +4,77 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>AI 協作互動作品集 ｜ 物理・工程・資料</title>
+<meta name="description" content="與 AI 協作的瀏覽器互動作品集：繞射成像、摩爾紋、無影燈光學、3D 光譜干涉、RC 氣墊船工程模擬、全台房市數據系統。可直接用於教學與成果展示。">
+<link rel="icon" href="assets/favicon.svg" type="image/svg+xml">
+<link rel="stylesheet" href="assets/site.css">
+<meta property="og:title" content="AI 協作互動作品集">
+<meta property="og:description" content="物理・工程・資料：6 個可在瀏覽器即時操作的互動作品，適合教學與成果展示。">
+<meta property="og:type" content="website">
+<meta property="og:url" content="https://henrychao521.github.io/ai-physics-demos/">
+<meta property="og:image" content="https://henrychao521.github.io/ai-physics-demos/assets/og.png">
+<meta name="twitter:card" content="summary_large_image">
 <style>
-  :root{--bg:#0b0e14;--panel:#151a23;--panel2:#1d2430;--line:#2a3340;
-    --txt:#e6edf3;--muted:#93a1b0;--accent:#4cc2ff;}
-  *{box-sizing:border-box}
-  html,body{margin:0;background:
-    radial-gradient(1200px 600px at 50% -10%,#16202e 0%,var(--bg) 60%);color:var(--txt);
-    font-family:"Noto Sans TC","PingFang TC","Microsoft JhengHei",system-ui,sans-serif;min-height:100%}
-  a{text-decoration:none;color:inherit}
-  .wrap{max-width:980px;margin:0 auto;padding:48px 18px 70px}
-  .badge{display:inline-block;background:var(--panel2);border:1px solid var(--line);
-    color:var(--muted);font-size:.74rem;padding:3px 10px;border-radius:99px;margin-right:6px}
-  h1{font-size:2rem;margin:.4em 0 .2em;letter-spacing:.5px}
-  .lead{color:var(--muted);line-height:1.8;max-width:680px;margin:.4em 0 0}
-  .cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:18px;margin-top:34px}
-  .card{display:block;background:var(--panel);border:1px solid var(--line);border-radius:16px;
-    overflow:hidden;transition:.18s;cursor:pointer}
-  .card:hover{transform:translateY(-4px);border-color:var(--accent);box-shadow:0 12px 40px rgba(0,0,0,.4)}
-  .thumb{height:150px;display:flex;align-items:center;justify-content:center;position:relative;overflow:hidden}
-  .card h3{margin:14px 16px 4px;font-size:1.12rem}
-  .card p{margin:0 16px 16px;color:var(--muted);font-size:.86rem;line-height:1.6}
-  .tag{margin:0 16px 12px}
-  .go{margin:0 16px 16px;color:var(--accent);font-size:.85rem;font-weight:700}
-  footer{color:var(--muted);font-size:.8rem;margin-top:42px;line-height:1.8;border-top:1px solid var(--line);padding-top:18px}
-  /* thumbnails (pure CSS) */
-  .t-diff{background:#05070b}
-  .t-diff i{position:absolute;top:0;bottom:0;width:3px;background:#4cff8a;filter:blur(.3px)}
-  .t-moire{background:repeating-linear-gradient(8deg,#fff 0 5px,#000 5px 10px)}
-  .t-moire::after{content:"";position:absolute;inset:0;background:repeating-linear-gradient(-8deg,#fff 0 5px,#000 5px 10px);mix-blend-mode:multiply}
-  .t-lamp{background:radial-gradient(120px 120px at 50% 0,#fff7d6 0,rgba(255,247,214,0) 70%),#05070b}
-  .t-lamp b{position:absolute;left:50%;top:54%;transform:translateX(-50%);width:42px;height:42px;border-radius:50%;background:#2a3340;border:2px solid #566275}
+  .wrap{max-width:var(--maxw);margin:0 auto;padding:34px 18px 70px}
+  .intro h1{font-size:clamp(1.6rem,4vw,2.1rem);margin:.5em 0 .25em;letter-spacing:.5px}
+  .lead{color:var(--muted);line-height:1.85;max-width:680px;margin:.4em 0 0;font-size:clamp(.9rem,2.4vw,1rem)}
+  .cards{display:grid;grid-template-columns:repeat(auto-fill,minmax(min(100%,300px),1fr));gap:18px;margin-top:32px}
+  .card{display:flex;flex-direction:column;background:var(--panel);border:1px solid var(--line);
+    border-radius:var(--radius);overflow:hidden;transition:.18s;cursor:pointer;text-decoration:none;color:inherit}
+  .card:hover{transform:translateY(-4px);border-color:var(--accent);box-shadow:0 14px 44px rgba(0,0,0,.5)}
+  .thumb{height:152px;position:relative;overflow:hidden;border-bottom:1px solid var(--line)}
+  .card h3{margin:14px 16px 4px;font-size:1.1rem}
+  .card p{margin:0 16px 14px;color:var(--muted);font-size:.86rem;line-height:1.65;flex:1}
+  .tag{margin:14px 16px 0}
+  .go{margin:6px 16px 18px;color:var(--accent);font-size:.85rem;font-weight:700}
+  .feat{outline:1px solid #ff6b9d55}
+  /* thumbnails */
   .t-spec{background:#000}
   .t-spec::before{content:"";position:absolute;inset:0;background:
     radial-gradient(28px 28px at 38% 42%,#ff3b3b 0,transparent 70%),
     radial-gradient(30px 30px at 60% 40%,#34d399 0,transparent 70%),
     radial-gradient(30px 30px at 50% 60%,#3b82f6 0,transparent 70%),
-    radial-gradient(60px 60px at 50% 50%,rgba(255,255,255,.55) 0,transparent 60%);
-    filter:blur(2px)}
-  .feat{outline:1px solid #e11d4855}
+    radial-gradient(64px 64px at 50% 50%,rgba(255,255,255,.6) 0,transparent 60%);filter:blur(2px)}
+  .t-diff{background:#05070b}
+  .t-diff i{position:absolute;top:0;bottom:0;width:3px;background:#4cff8a;filter:blur(.3px)}
+  .t-moire{background:repeating-linear-gradient(8deg,#fff 0 5px,#000 5px 10px)}
+  .t-moire::after{content:"";position:absolute;inset:0;background:repeating-linear-gradient(-8deg,#fff 0 5px,#000 5px 10px);mix-blend-mode:multiply}
+  .t-lamp{background:radial-gradient(120px 120px at 50% 0,#fff7d6 0,rgba(255,247,214,0) 70%),#05070b}
+  .t-lamp b{position:absolute;left:50%;top:54%;transform:translateX(-50%);width:42px;height:42px;border-radius:50%;background:#1a2233;border:2px solid #3a4660}
   .t-hover{background:radial-gradient(120px 80px at 50% 95%,rgba(59,130,246,.5) 0,transparent 70%),#0b1220}
   .t-hover b{position:absolute;left:50%;top:42%;transform:translateX(-50%);width:90px;height:26px;border-radius:8px;background:#1e3a8a;border-top:3px solid #60a5fa}
-  .t-house{background:#f8fafc;display:flex;align-items:flex-end;justify-content:center;gap:5px;padding:24px}
-  .t-house i{display:block;width:9px;background:#cbd5e1;border-radius:2px}
+  .t-house{background:#0e1626;display:flex;align-items:flex-end;justify-content:center;gap:5px;padding:24px}
+  .t-house i{display:block;width:9px;background:#2f4063;border-radius:2px}
   .t-house i:nth-child(1){height:30%}.t-house i:nth-child(2){height:55%}.t-house i:nth-child(3){height:45%}
-  .t-house i:nth-child(4){height:70%}.t-house i:nth-child(5){height:60%}.t-house i:nth-child(6){height:90%}
-  .t-house i:nth-child(7){height:48%;background:#ef4444}
+  .t-house i:nth-child(4){height:70%}.t-house i:nth-child(5){height:60%}.t-house i:nth-child(6){height:90%;background:#4cc2ff}
+  .t-house i:nth-child(7){height:48%;background:#ff6b9d}
+  footer{color:var(--muted);font-size:.8rem;margin-top:42px;line-height:1.8;border-top:1px solid var(--line);padding-top:18px}
+  footer a{color:var(--accent)}
 </style>
 </head>
 <body>
+<header class="site-nav">
+  <a class="brand" href="./">
+    <svg viewBox="0 0 32 32"><rect width="32" height="32" rx="7" fill="#101828"/><polygon points="8,23 16,7 24,23" fill="none" stroke="#4cc2ff" stroke-width="2" stroke-linejoin="round"/><line x1="16.5" y1="14" x2="28" y2="12.5" stroke="#ff6b9d" stroke-width="1.8" stroke-linecap="round"/><line x1="16.5" y1="16" x2="28" y2="16" stroke="#ffce54" stroke-width="1.8" stroke-linecap="round"/><line x1="16.5" y1="18" x2="28" y2="19.5" stroke="#7CFFB2" stroke-width="1.8" stroke-linecap="round"/></svg>
+    <span><span class="b2">AI</span> 協作互動作品集</span>
+  </a>
+  <a class="back" href="https://github.com/henrychao521/ai-physics-demos" target="_blank" rel="noopener">GitHub ↗</a>
+</header>
+
 <div class="wrap">
-  <span class="badge">AI 協作專案成果</span><span class="badge">物理・工程・資料</span><span class="badge">瀏覽器即時互動</span>
-  <h1>AI 協作互動作品集</h1>
-  <p class="lead">這些互動作品源自我與 AI 的討論，從物理理論、工程設計到資料分析，皆重建為可在瀏覽器中即時操作的網頁。
-     可直接用於教學與成果展示。點擊任一卡片開始體驗。</p>
+  <div class="intro">
+    <span class="badge">物理・工程・資料</span>
+    <span class="badge">瀏覽器即時互動</span>
+    <h1>AI 協作互動作品集</h1>
+    <p class="lead">這些互動作品源自我與 AI 的討論，從物理理論、工程設計到資料分析，皆重建為可在瀏覽器中即時操作的網頁。
+       可直接用於教學與成果展示。點擊任一卡片開始體驗。</p>
+  </div>
 
   <div class="cards">
     <a class="card feat" href="spectral-lab/">
       <div class="thumb t-spec"></div>
       <div class="tag"><span class="badge">3D・光譜干涉</span></div>
       <h3>光譜干涉實驗室（歐幾里得視角）</h3>
-      <p>三維光場的三原色建設性干涉，可調頻率、晶格夾角與色散，並切換有理數視線比例（1:1、1:2…）觀察「視覺走廊」與紅藍色散。</p>
+      <p>三維光場的三原色建設性干涉，可調頻率、晶格夾角與色散，並切換有理數視線比例觀察「視覺走廊」與紅藍色散。</p>
       <div class="go">開始體驗 →</div>
     </a>
 
@@ -112,8 +123,8 @@
   </div>
 
   <footer>
-    依 AI 物理討論重建的可執行互動模擬 · 純前端 HTML/Canvas · 適合課堂演示<br>
-    參數為教學示意，數值尺度已調整以利觀察現象。
+    依 AI 協作討論重建／收錄的可執行互動作品 · 適合課堂與成果展示<br>
+    原始碼：<a href="https://github.com/henrychao521/ai-physics-demos" target="_blank" rel="noopener">github.com/henrychao521/ai-physics-demos</a>
   </footer>
 </div>
 </body>

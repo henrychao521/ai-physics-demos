@@ -4,6 +4,9 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>全台房市實證數據系統</title>
+<link rel="icon" href="../assets/favicon.svg" type="image/svg+xml">
+<link rel="stylesheet" href="../assets/site.css">
+<script defer src="../assets/nav.js"></script>
 <script src="https://cdn.tailwindcss.com"></script>
 <script src="https://unpkg.com/@babel/standalone@7.25.6/babel.min.js"></script>
 <script type="importmap">
@@ -18,10 +21,33 @@
   }
 }
 </script>
-<style>html,body{margin:0}</style>
+<style>
+html,body{margin:0}
+/* === 深色皮膚：將房市頁的 Tailwind 淺色重映射為深色科技風 === */
+body{background:var(--bg)!important}
+.bg-slate-50{background:#0e1626!important}
+.bg-white{background:var(--panel)!important}
+.text-slate-900,.text-slate-800{color:var(--txt)!important}
+.text-slate-700{color:#c7d2e0!important}
+.text-slate-600{color:#aebccd!important}
+.text-slate-500,.text-slate-400{color:var(--muted)!important}
+.text-slate-300{color:#9fb0c2!important}
+.border-slate-200,.border-slate-100,.border-slate-50,.border-b{border-color:var(--line)!important}
+.divide-slate-50>:not([hidden])~:not([hidden]){border-color:var(--line)!important}
+.border-slate-800{border-color:#3a4660!important}
+.text-blue-700,.text-blue-800{color:#6db4ff!important}
+.text-indigo-700{color:#8b9cff!important}
+.text-indigo-500{color:#7c8cff!important}
+.bg-slate-900{background:#0b111d!important}
+.hover\:bg-blue-50:hover{background:rgba(76,194,255,.08)!important}
+.hover\:bg-slate-100:hover{background:var(--panel2)!important}
+.hover\:shadow-md:hover,.shadow-sm,.shadow-2xl{box-shadow:0 8px 30px rgba(0,0,0,.45)!important}
+select,optgroup,option{background:var(--panel2)!important;color:var(--txt)!important}
+.focus\:ring-blue-100:focus{--tw-ring-color:rgba(76,194,255,.25)!important}
+</style>
 </head>
-<body>
-<div id="root" class="text-slate-500 text-sm p-10 font-sans">載入中…（首次載入需從 CDN 取得 React / Chart.js，請稍候）</div>
+<body data-demo="全台房市實證數據系統">
+<div id="root"><div class="app-loading"><div class="ring"></div>載入中…（首次載入需從 CDN 取得 React / Chart.js，請稍候）</div></div>
 
 <script type="text/babel" data-type="module" data-presets="react">
 import React, { useState, useMemo } from 'react';
@@ -36,6 +62,9 @@ ChartJS.register(
   CategoryScale, LinearScale, PointElement, LineElement, BarElement,
   LineController, BarController, Title, Tooltip, Legend
 );
+ChartJS.defaults.color = '#8a99ad';
+ChartJS.defaults.borderColor = 'rgba(255,255,255,0.07)';
+const GRID = 'rgba(255,255,255,0.07)';
 
 const REAL_DATA = {
   'NTP': { name: '新北市', v2025: 48510, p2015: 31.5, p2020: 34.2, p2025: 48.6 },
@@ -153,7 +182,7 @@ function App() {
         { label: `${yearA_num} 年度買氣`, data: currentData.v.slice(startIdxA, startIdxA + 4),
           backgroundColor: 'rgba(148, 163, 184, 0.7)', borderColor: '#64748b', borderWidth: 1, borderRadius: 4 },
         { label: `${yearB_num} 年度買氣`, data: currentData.v.slice(startIdxB, startIdxB + 4),
-          backgroundColor: 'rgba(30, 58, 138, 0.85)', borderColor: '#1e3a8a', borderWidth: 1, borderRadius: 4 }
+          backgroundColor: 'rgba(76, 194, 255, 0.7)', borderColor: '#4cc2ff', borderWidth: 1, borderRadius: 4 }
       ]
     };
   }, [currentData, yearA_num, yearB_num]);
@@ -162,14 +191,14 @@ function App() {
     responsive: true, maintainAspectRatio: false,
     plugins: { legend: { position: 'bottom', labels: { font: { size: 12, weight: 'bold' } } },
       tooltip: { backgroundColor: '#0f172a', padding: 10 } },
-    scales: { y: { grid: { color: '#f1f5f9' }, title: { display: true, text: '單季成交棟數' } }, x: { grid: { display: false } } }
+    scales: { y: { grid: { color: GRID }, title: { display: true, text: '單季成交棟數' } }, x: { grid: { display: false } } }
   };
 
   const chartData = {
     labels: QUARTERS,
     datasets: [
-      { type: 'line', label: '平均單價 (萬/坪)', data: currentData.p, borderColor: '#1e3a8a',
-        backgroundColor: '#1e3a8a', borderWidth: 2.5, pointRadius: 0, yAxisID: 'yP', tension: 0.25 },
+      { type: 'line', label: '平均單價 (萬/坪)', data: currentData.p, borderColor: '#4cc2ff',
+        backgroundColor: '#4cc2ff', borderWidth: 2.5, pointRadius: 0, yAxisID: 'yP', tension: 0.25 },
       { type: 'bar', label: '單季成交量 (棟)', data: currentData.v,
         backgroundColor: QUARTERS.map((_, i) => i >= 42 ? 'rgba(239, 68, 68, 0.75)' : 'rgba(203, 213, 225, 0.85)'),
         yAxisID: 'yV', borderRadius: 4 }
@@ -180,7 +209,7 @@ function App() {
     responsive: true, maintainAspectRatio: false, interaction: { mode: 'index', intersect: false },
     plugins: { legend: { display: false }, tooltip: { backgroundColor: 'rgba(15, 23, 42, 0.9)', padding: 12, titleFont: { size: 14 } } },
     scales: {
-      yP: { type: 'linear', position: 'left', title: { display: true, text: '實價單價 (萬/坪)' }, grid: { color: '#f1f5f9' } },
+      yP: { type: 'linear', position: 'left', title: { display: true, text: '實價單價 (萬/坪)' }, grid: { color: GRID } },
       yV: { type: 'linear', position: 'right', grid: { display: false }, title: { display: true, text: '買賣移轉棟數' } },
       x: { grid: { display: false }, ticks: { font: { size: 9 }, maxRotation: 45, autoSkip: true, maxTicksLimit: 22 } }
     }

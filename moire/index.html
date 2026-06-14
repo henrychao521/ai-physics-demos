@@ -4,9 +4,11 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>摩爾紋（Moiré）互動模擬</title>
+<link rel="icon" href="../assets/favicon.svg" type="image/svg+xml">
+<link rel="stylesheet" href="../assets/site.css">
+<script defer src="../assets/nav.js"></script>
 <style>
-  :root{--bg:#0b0e14;--panel:#151a23;--panel2:#1d2430;--line:#2a3340;
-    --txt:#e6edf3;--muted:#93a1b0;--accent:#ff7ad9;--accent2:#4cc2ff;}
+  :root{--accent:#ff7ad9}
   *{box-sizing:border-box}
   html,body{margin:0;background:var(--bg);color:var(--txt);
     font-family:"Noto Sans TC","PingFang TC","Microsoft JhengHei",system-ui,sans-serif}
@@ -33,10 +35,10 @@
   .seg{display:flex;gap:6px}
 </style>
 </head>
-<body>
+<body data-demo="摩爾紋（Moiré）">
 <div class="wrap">
   <header>
-    <span class="badge">AI 協作物理模擬</span><span class="badge">光學・取樣</span>
+    <span class="badge">光學・取樣</span>
     <h1>摩爾紋（Moiré）互動模擬</h1>
     <p>兩組規則圖樣疊加，因空間頻率或角度的微小差異，產生肉眼可見的低頻<b>摩爾條紋</b>。
        調整下方兩組光柵的間距與角度，或按「旋轉動畫」感受摩爾紋如何被放大。</p>
@@ -53,8 +55,17 @@
     <button id="reset">重設</button>
   </div>
 
+  <div class="row">
+    <span style="color:var(--muted);font-size:.85rem">教學情境：</span>
+    <button class="btn" data-preset="angle">微角度線柵</button>
+    <button class="btn" data-preset="beat">等角不等距(拍頻)</button>
+    <button class="btn" data-preset="circle">同心圓拍頻</button>
+    <button class="btn" data-preset="dot">點陣轉角</button>
+  </div>
+
   <div class="stage">
     <canvas id="cv" width="700" height="700"></canvas>
+    <div id="readout" style="margin-top:10px;color:var(--accent);font-size:.85rem;font-family:monospace"></div>
   </div>
 
   <div class="grid" id="controls"></div>
@@ -112,6 +123,25 @@ function grating(angleDeg,p,phase){
 }
 
 let phaseAnim=0;
+const readoutEl=document.getElementById('readout');
+function updateReadout(){
+  const a2eff=state.a2+(running?phaseAnim:0);
+  const dth=(a2eff-state.a1)*Math.PI/180;
+  if(pattern==='lines'){
+    const inv=1/(state.p1*state.p1)+1/(state.p2*state.p2)-2*Math.cos(dth)/(state.p1*state.p2);
+    if(inv<=1e-9){ readoutEl.textContent='兩光柵完全重合 → 摩爾條紋間距 → ∞（無條紋）'; }
+    else{
+      const pm=1/Math.sqrt(inv);
+      readoutEl.innerHTML=`摩爾條紋間距 p<sub>M</sub> = 1/√(1/p₁²+1/p₂²−2cosΔθ/p₁p₂) ≈ <b>${pm.toFixed(0)} px</b>　（Δθ=${(a2eff-state.a1).toFixed(1)}°）`;
+    }
+  }else if(pattern==='circles'){
+    const dp=Math.abs(state.p1-state.p2);
+    readoutEl.innerHTML = dp<0.01 ? '兩組同心圓間距相同 → 調整其中一組間距即可產生放射狀拍頻摩爾紋'
+      : `同心圓拍頻間距 ≈ p₁p₂/|p₁−p₂| ≈ <b>${(state.p1*state.p2/dp).toFixed(0)} px</b>`;
+  }else{
+    readoutEl.textContent='點陣摩爾：調整角度差或間距差，觀察大尺度的點團週期。';
+  }
+}
 function draw(){
   g.fillStyle='#fff'; g.fillRect(0,0,W,H);
   g.globalCompositeOperation='source-over';
@@ -119,6 +149,7 @@ function draw(){
   g.globalCompositeOperation='multiply';
   grating(state.a2+(running?phaseAnim:0),state.p2,0);
   g.globalCompositeOperation='source-over';
+  updateReadout();
 }
 
 let running=false, raf=null;
@@ -136,6 +167,22 @@ document.getElementById('reset').onclick=()=>{
   pattern='lines';Object.values(btns).forEach(x=>x.classList.remove('on'));btns.lines.classList.add('on');
   if(running)animBtn.click(); phaseAnim=0; draw();
 };
+
+// 教學情境預設
+const MPRESETS={
+  angle: {pattern:'lines',  p1:12,a1:0,p2:12,a2:6},
+  beat:  {pattern:'lines',  p1:12,a1:0,p2:15,a2:0},
+  circle:{pattern:'circles',p1:10,a1:0,p2:11,a2:0},
+  dot:   {pattern:'dots',   p1:16,a1:0,p2:16,a2:5}
+};
+document.querySelectorAll('[data-preset]').forEach(b=>b.addEventListener('click',()=>{
+  const p=MPRESETS[b.dataset.preset]; if(!p)return;
+  if(running) animBtn.click();
+  pattern=p.pattern; Object.values(btns).forEach(x=>x.classList.remove('on')); btns[pattern].classList.add('on');
+  ['p1','a1','p2','a2'].forEach(k=>{state[k]=p[k]; const r=document.getElementById('r_'+k); if(r)r.value=p[k];
+    const s=sliders.find(x=>x.id===k); document.getElementById('v_'+k).textContent=`${p[k]} ${s.unit}`;});
+  draw();
+}));
 
 draw();
 </script>
