@@ -34,6 +34,14 @@
   .t-moire::after{content:"";position:absolute;inset:0;background:repeating-linear-gradient(-8deg,#fff 0 5px,#000 5px 10px);mix-blend-mode:multiply}
   .t-lamp{background:radial-gradient(120px 120px at 50% 0,#fff7d6 0,rgba(255,247,214,0) 70%),#05070b}
   .t-lamp b{position:absolute;left:50%;top:54%;transform:translateX(-50%);width:42px;height:42px;border-radius:50%;background:#2a3340;border:2px solid #566275}
+  .t-spec{background:#000}
+  .t-spec::before{content:"";position:absolute;inset:0;background:
+    radial-gradient(28px 28px at 38% 42%,#ff3b3b 0,transparent 70%),
+    radial-gradient(30px 30px at 60% 40%,#34d399 0,transparent 70%),
+    radial-gradient(30px 30px at 50% 60%,#3b82f6 0,transparent 70%),
+    radial-gradient(60px 60px at 50% 50%,rgba(255,255,255,.55) 0,transparent 60%);
+    filter:blur(2px)}
+  .feat{outline:1px solid #e11d4855}
 </style>
 </head>
 <body>
@@ -44,6 +52,14 @@
      全部為純前端 HTML / Canvas，無外部相依，可直接用於教學演示。點擊任一卡片開始體驗。</p>
 
   <div class="cards">
+    <a class="card feat" href="spectral-lab/">
+      <div class="thumb t-spec"></div>
+      <div class="tag"><span class="badge">3D・光譜干涉</span></div>
+      <h3>光譜干涉實驗室（歐幾里得視角）</h3>
+      <p>三維光場的三原色建設性干涉，可調頻率、晶格夾角與色散，並切換有理數視線比例（1:1、1:2…）觀察「視覺走廊」與紅藍色散。</p>
+      <div class="go">開始體驗 →</div>
+    </a>
+
     <a class="card" href="diffraction/">
       <div class="thumb t-diff">
         <i style="left:34%"></i><i style="left:42%;opacity:.6"></i><i style="left:50%"></i>
