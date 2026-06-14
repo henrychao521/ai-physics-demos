@@ -63,6 +63,15 @@
     <button class="btn" data-preset="dot">點陣轉角</button>
   </div>
 
+  <div class="row">
+    <span style="color:var(--muted);font-size:.85rem">配色：</span>
+    <div class="seg">
+      <button id="cMono" class="on">黑白</button>
+      <button id="cDuo">雙色疊加</button>
+      <button id="cRgb">彩虹 RGB</button>
+    </div>
+  </div>
+
   <div class="stage">
     <canvas id="cv" width="700" height="700"></canvas>
     <div id="readout" style="margin-top:10px;color:var(--accent);font-size:.85rem;font-family:monospace"></div>
@@ -102,22 +111,27 @@ const btns={lines:document.getElementById('pLines'),circles:document.getElementB
 Object.entries(btns).forEach(([k,b])=>b.onclick=()=>{pattern=k;
   Object.values(btns).forEach(x=>x.classList.remove('on'));b.classList.add('on');draw();});
 
+let colorMode='mono';
+const cbtns={mono:document.getElementById('cMono'),duo:document.getElementById('cDuo'),rgb:document.getElementById('cRgb')};
+Object.entries(cbtns).forEach(([k,b])=>b.onclick=()=>{colorMode=k;
+  Object.values(cbtns).forEach(x=>x.classList.remove('on'));b.classList.add('on');draw();});
+
 const cv=document.getElementById('cv'), g=cv.getContext('2d');
 const W=cv.width, H=cv.height;
 
-function grating(angleDeg,p,phase){
+function grating(angleDeg,p,color){
   g.save();
   g.translate(W/2,H/2); g.rotate(angleDeg*Math.PI/180); g.translate(-W/2,-H/2);
-  g.fillStyle='#000';
+  g.fillStyle=color; g.strokeStyle=color;
   const D=Math.ceil(Math.hypot(W,H));
   if(pattern==='lines'){
-    for(let x=-D;x<D*2;x+=p){ g.fillRect(x+phase- p*0.25, -D, p*0.5, D*3); }
+    for(let x=-D;x<D*2;x+=p){ g.fillRect(x - p*0.25, -D, p*0.5, D*3); }
   }else if(pattern==='circles'){
-    g.strokeStyle='#000'; g.lineWidth=p*0.5;
-    for(let r=p;r<D;r+=p){ g.beginPath(); g.arc(W/2,H/2,r+phase,0,7); g.stroke(); }
+    g.lineWidth=p*0.5;
+    for(let r=p;r<D;r+=p){ g.beginPath(); g.arc(W/2,H/2,r,0,7); g.stroke(); }
   }else{ // dots
     for(let x=-D;x<D*2;x+=p)for(let y=-D;y<D*2;y+=p){
-      g.beginPath(); g.arc(x+phase,y,p*0.28,0,7); g.fill(); }
+      g.beginPath(); g.arc(x,y,p*0.28,0,7); g.fill(); }
   }
   g.restore();
 }
@@ -143,11 +157,25 @@ function updateReadout(){
   }
 }
 function draw(){
-  g.fillStyle='#fff'; g.fillRect(0,0,W,H);
-  g.globalCompositeOperation='source-over';
-  grating(state.a1,state.p1,0);
-  g.globalCompositeOperation='multiply';
-  grating(state.a2+(running?phaseAnim:0),state.p2,0);
+  const a2eff=state.a2+(running?phaseAnim:0);
+  if(colorMode==='mono'){
+    g.fillStyle='#fff'; g.fillRect(0,0,W,H);
+    g.globalCompositeOperation='source-over'; grating(state.a1,state.p1,'#000');
+    g.globalCompositeOperation='multiply';    grating(a2eff,state.p2,'#000');
+  }else if(colorMode==='duo'){
+    g.fillStyle='#000'; g.fillRect(0,0,W,H);
+    g.globalCompositeOperation='lighter';
+    grating(state.a1,state.p1,'#00e5ff');   // 青
+    grating(a2eff,state.p2,'#ff2bd6');       // 洋紅
+  }else{ // rgb 彩虹（色像差式：第二組光柵依 R/G/B 微幅錯角，產生彩虹摩爾紋）
+    g.fillStyle='#000'; g.fillRect(0,0,W,H);
+    g.globalCompositeOperation='lighter';
+    grating(state.a1,state.p1,'#ffffff');    // 參考光柵（白）
+    const s=2.2;
+    grating(a2eff-s,state.p2,'#ff0033');     // R
+    grating(a2eff,  state.p2,'#00ff66');     // G
+    grating(a2eff+s,state.p2,'#2b6bff');     // B
+  }
   g.globalCompositeOperation='source-over';
   updateReadout();
 }
@@ -165,6 +193,7 @@ document.getElementById('reset').onclick=()=>{
   sliders.forEach(s=>{state[s.id]=s.val;document.getElementById('r_'+s.id).value=s.val;
     document.getElementById('v_'+s.id).textContent=`${s.val} ${s.unit}`;});
   pattern='lines';Object.values(btns).forEach(x=>x.classList.remove('on'));btns.lines.classList.add('on');
+  colorMode='mono';Object.values(cbtns).forEach(x=>x.classList.remove('on'));cbtns.mono.classList.add('on');
   if(running)animBtn.click(); phaseAnim=0; draw();
 };
 
