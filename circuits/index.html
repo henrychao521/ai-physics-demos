@@ -1,0 +1,177 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>電路：串聯與並聯 ｜ 歐姆定律・燈泡亮度</title>
+<link rel="icon" href="../assets/favicon.svg" type="image/svg+xml">
+<link rel="stylesheet" href="../assets/site.css">
+<script defer src="../assets/nav.js"></script>
+<style>
+  *{box-sizing:border-box}
+  html,body{margin:0;padding:0;background:var(--bg);color:var(--txt);
+    font-family:"Noto Sans TC","PingFang TC","Microsoft JhengHei",system-ui,sans-serif}
+  a{color:var(--accent)}
+  .wrap{max-width:1100px;margin:0 auto;padding:18px 16px 60px}
+  header h1{font-size:1.5rem;margin:.2em 0}
+  header p{color:var(--muted);margin:.2em 0 1em;line-height:1.6}
+  .badge{display:inline-block;background:var(--panel2);border:1px solid var(--line);
+    color:var(--muted);font-size:.72rem;padding:2px 8px;border-radius:99px;margin-right:6px}
+  .stage{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:14px;margin-bottom:16px}
+  canvas{width:100%;display:block;border-radius:8px;background:#05070b}
+  .label{font-size:.8rem;color:var(--muted);margin:0 0 6px;display:flex;justify-content:space-between;flex-wrap:wrap;gap:8px}
+  .grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(210px,1fr));gap:14px}
+  .ctrl{background:var(--panel2);border:1px solid var(--line);border-radius:10px;padding:10px 12px}
+  .ctrl label{display:flex;justify-content:space-between;font-size:.85rem;margin-bottom:6px}
+  .ctrl .val{color:var(--accent);font-variant-numeric:tabular-nums}
+  input[type=range]{width:100%;accent-color:var(--accent)}
+  .modes{display:flex;gap:8px;margin:6px 0 14px;flex-wrap:wrap;align-items:center}
+  .modes button,.btn{background:var(--panel2);color:var(--txt);border:1px solid var(--line);
+    padding:8px 14px;border-radius:9px;cursor:pointer;font-size:.85rem;font-family:inherit}
+  .modes button.on{background:var(--accent);color:#04121c;border-color:var(--accent);font-weight:700}
+  .btn:hover,.modes button:hover{border-color:var(--accent)}
+  .stat{display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:10px;margin:2px 0}
+  .stat .box{background:var(--panel2);border:1px solid var(--line);border-radius:10px;padding:9px 11px}
+  .stat .box .k{font-size:.72rem;color:var(--muted)}
+  .stat .box .v{font-size:1.02rem;font-variant-numeric:tabular-nums;font-weight:700}
+  .note{background:var(--panel);border-left:3px solid var(--accent2);border-radius:8px;
+    padding:12px 14px;color:var(--muted);font-size:.86rem;line-height:1.7;margin-top:18px}
+  .note b{color:var(--txt)}.note code{background:var(--bg2);padding:1px 6px;border-radius:5px;color:var(--green);font-size:.85em}
+  footer{color:var(--muted);font-size:.78rem;margin-top:26px;text-align:center;line-height:1.7}
+</style>
+</head>
+<body data-demo="電路：串聯與並聯">
+<div class="wrap">
+  <header>
+    <span class="badge">電磁・電路</span>
+    <h1>電路：串聯與並聯</h1>
+    <p>用電池點亮燈泡。<b>串聯</b>：電流同一條路、處處相等，電壓被分掉，燈越多越暗；斷一顆全滅。
+       <b>並聯</b>：每顆燈兩端都是全電壓、一樣亮，電流各走各的、總電流變大；斷一顆其他照亮。遵守 <b>V = IR</b>。</p>
+  </header>
+
+  <div class="modes">
+    <button class="btn on" id="mSeries">串聯</button>
+    <button class="btn" id="mParallel">並聯</button>
+    <span style="color:var(--muted);font-size:.8rem;margin-left:6px">情境：</span>
+    <button class="btn" data-preset="s3">串聯3燈</button>
+    <button class="btn" data-preset="p3">並聯3燈</button>
+  </div>
+
+  <div class="stage">
+    <div class="label"><span>電路圖（燈泡越亮＝功率越大；箭頭＝電流方向）</span><span id="sub"></span></div>
+    <canvas id="cv" width="1040" height="320"></canvas>
+  </div>
+
+  <div class="stat" id="stats"></div>
+  <div class="grid" id="controls" style="margin-top:14px"></div>
+
+  <div class="note">
+    <b>物理重點：</b>歐姆定律 <code>V = IR</code>。<b>串聯</b>等效電阻 <code>R總 = R₁+R₂+…</code>（越串越大），
+    電流 <code>I = V/R總</code> 在每顆燈相同，電壓按電阻比例分配。<b>並聯</b>等效電阻 <code>1/R總 = 1/R₁+1/R₂+…</code>（越並越小），
+    每顆燈兩端電壓都等於電源電壓、亮度不變，但總電流 <code>I總 = I₁+I₂+…</code> 變大（電池消耗更快）。
+    燈泡亮度由功率 <code>P = VI = I²R</code> 決定——這就是家裡電器都<b>並聯</b>的原因：各自獨立、互不影響、都拿到 110V。
+  </div>
+
+  <footer>純前端 HTML / Canvas，無外部相依。理想電池與電阻（燈泡視為定值電阻）。</footer>
+</div>
+
+<script>
+const sliders=[
+  {id:'V',name:'電池電壓 V',min:1.5,max:12,step:.5,val:6,unit:'V'},
+  {id:'R',name:'每顆燈電阻 R',min:2,max:20,step:1,val:6,unit:'Ω'},
+  {id:'N',name:'燈泡數 N',min:1,max:4,step:1,val:3,unit:'顆'},
+];
+const state={}; let series=true;
+const ctrl=document.getElementById('controls');
+sliders.forEach(s=>{
+  state[s.id]=s.val;
+  const box=document.createElement('div');box.className='ctrl';
+  box.innerHTML=`<label><span>${s.name}</span><span class="val" id="v_${s.id}">${fmt(s.val)} ${s.unit}</span></label>
+    <input type="range" id="r_${s.id}" min="${s.min}" max="${s.max}" step="${s.step}" value="${s.val}">`;
+  ctrl.appendChild(box);
+  box.querySelector('input').addEventListener('input',e=>{
+    state[s.id]=parseFloat(e.target.value);
+    document.getElementById('v_'+s.id).textContent=`${fmt(state[s.id])} ${s.unit}`;draw();
+  });
+});
+function fmt(x){return (Math.round(x*100)/100).toString();}
+function setSlider(id,val){state[id]=val;const r=document.getElementById('r_'+id);if(r)r.value=val;
+  const s=sliders.find(z=>z.id===id);if(s)document.getElementById('v_'+id).textContent=`${fmt(val)} ${s.unit}`;}
+
+function calc(){
+  const V=state.V,R=state.R,N=state.N;
+  let Rtot,Itot,Vb,Ib,Pb;
+  if(series){Rtot=N*R;Itot=V/Rtot;Ib=Itot;Vb=Ib*R;Pb=Ib*Ib*R;}
+  else{Rtot=R/N;Itot=V/Rtot;Vb=V;Ib=V/R;Pb=Vb*Ib;}
+  const Pref=V*V/R;                            // 滿電壓單燈功率(亮度標準化基準)
+  return {Rtot,Itot,Vb,Ib,Pb,bright:Math.min(1,Pb/Pref)};
+}
+const cv=document.getElementById('cv'),cc=cv.getContext('2d');
+function bulb(x,y,r,bright){
+  if(bright>0.02){const g=cc.createRadialGradient(x,y,2,x,y,r*2.6);
+    g.addColorStop(0,`rgba(255,240,180,${0.9*bright})`);g.addColorStop(1,'rgba(255,240,180,0)');
+    cc.fillStyle=g;cc.beginPath();cc.arc(x,y,r*2.6,0,7);cc.fill();}
+  cc.fillStyle=`rgb(${40+bright*215},${40+bright*200},${40+bright*120})`;
+  cc.strokeStyle='#8a99ad';cc.lineWidth=2;cc.beginPath();cc.arc(x,y,r,0,7);cc.fill();cc.stroke();
+  // 燈絲
+  cc.strokeStyle=bright>0.1?'#fff':'#5b6880';cc.lineWidth=1.5;cc.beginPath();
+  cc.moveTo(x-r*.5,y);cc.lineTo(x-r*.2,y-r*.4);cc.lineTo(x+r*.2,y+r*.4);cc.lineTo(x+r*.5,y);cc.stroke();
+}
+function battery(x,y){
+  cc.strokeStyle='#7CFFB2';cc.lineWidth=3;
+  cc.beginPath();cc.moveTo(x,y-16);cc.lineTo(x,y+16);cc.stroke();          // 長(+)
+  cc.lineWidth=6;cc.beginPath();cc.moveTo(x+10,y-9);cc.lineTo(x+10,y+9);cc.stroke();// 短(-)
+  cc.fillStyle='#7CFFB2';cc.font='12px sans-serif';cc.fillText('+',x-12,y-18);cc.fillText(state.V+'V',x-8,y+34);
+}
+function wire(x1,y1,x2,y2){cc.strokeStyle='#4c8cc8';cc.lineWidth=2.5;cc.beginPath();cc.moveTo(x1,y1);cc.lineTo(x2,y2);cc.stroke();}
+function curArrow(x,y,dir){cc.fillStyle='#ffce54';cc.beginPath();
+  cc.moveTo(x+dir*7,y);cc.lineTo(x-dir*5,y-5);cc.lineTo(x-dir*5,y+5);cc.closePath();cc.fill();}
+function draw(){
+  const W=cv.width,H=cv.height;cc.clearRect(0,0,W,H);
+  const c=calc();const N=state.N;
+  if(series){
+    const top=90,bot=H-70,left=80,right=W-80;
+    wire(left,top,right,top);wire(left,bot,right,bot);wire(left,top,left,bot);wire(right,top,right,bot);
+    battery(left,(top+bot)/2);
+    for(let i=0;i<N;i++){const x=left+ (right-left)*(i+1)/(N+1);bulb(x,top,20,c.bright);}
+    // 電流箭頭
+    for(let i=0;i<5;i++){curArrow(left+(right-left)*(i+0.5)/5,top,1);}
+    curArrow(right,(top+bot)/2,1);curArrow(left+(right-left)*0.5,bot,-1);
+    cc.fillStyle='#8a99ad';cc.font='12px sans-serif';cc.fillText('串聯：同一條路，電流處處相等',left,H-30);
+  } else {
+    const top=80,bot=H-60,railL=180,railR=W-120;
+    battery(120,(top+bot)/2);
+    wire(120,top+0,120,(top+bot)/2-16);wire(120,(top+bot)/2+16,120,bot);
+    wire(120,top,railL,top);wire(120,bot,railL,bot);
+    wire(railL,top,railL,bot);wire(railR,top,railR,bot);wire(railL,top,railR,top);wire(railL,bot,railR,bot);
+    for(let i=0;i<N;i++){const y=top+(bot-top)*(i+1)/(N+1);
+      wire(railL,y,railR,y);bulb((railL+railR)/2,y,18,c.bright);curArrow((railL+railR)/2-60,y,1);}
+    cc.fillStyle='#8a99ad';cc.font='12px sans-serif';cc.fillText('並聯：各走各的支路，每顆都拿到全電壓',railL,H-26);
+  }
+  document.getElementById('sub').textContent=series?'串聯':'並聯';
+  drawStats(c);
+}
+function drawStats(c){
+  const rows=[
+    ['等效總電阻',c.Rtot.toFixed(2)+' Ω','#4cc2ff'],
+    ['電池總電流',c.Itot.toFixed(2)+' A','#ffce54'],
+    ['每燈電壓',c.Vb.toFixed(2)+' V','#7CFFB2'],
+    ['每燈電流',c.Ib.toFixed(2)+' A','#8b9cff'],
+    ['每燈功率(亮度)',c.Pb.toFixed(2)+' W','#ff6b9d'],
+    ['亮度(相對)',(c.bright*100).toFixed(0)+' %','#e8eef6'],
+  ];
+  document.getElementById('stats').innerHTML=rows.map(r=>
+    `<div class="box"><div class="k">${r[0]}</div><div class="v" style="color:${r[2]}">${r[1]}</div></div>`).join('');
+}
+const mS=document.getElementById('mSeries'),mP=document.getElementById('mParallel');
+mS.onclick=()=>{series=true;mS.classList.add('on');mP.classList.remove('on');draw();};
+mP.onclick=()=>{series=false;mP.classList.add('on');mS.classList.remove('on');draw();};
+const PRE={s3:{ser:true,V:6,R:6,N:3},p3:{ser:false,V:6,R:6,N:3}};
+document.querySelectorAll('[data-preset]').forEach(b=>b.onclick=()=>{const p=PRE[b.dataset.preset];if(!p)return;
+  series=p.ser;mS.classList.toggle('on',series);mP.classList.toggle('on',!series);
+  ['V','R','N'].forEach(k=>setSlider(k,p[k]));draw();});
+draw();
+window.addEventListener('resize',draw);
+</script>
+</body>
+</html>

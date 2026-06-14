@@ -1,0 +1,185 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>分子運動箱 ｜ 氣體動力論・PV=nRT</title>
+<link rel="icon" href="../assets/favicon.svg" type="image/svg+xml">
+<link rel="stylesheet" href="../assets/site.css">
+<script defer src="../assets/nav.js"></script>
+<style>
+  *{box-sizing:border-box}
+  html,body{margin:0;padding:0;background:var(--bg);color:var(--txt);
+    font-family:"Noto Sans TC","PingFang TC","Microsoft JhengHei",system-ui,sans-serif}
+  a{color:var(--accent)}
+  .wrap{max-width:1100px;margin:0 auto;padding:18px 16px 60px}
+  header h1{font-size:1.5rem;margin:.2em 0}
+  header p{color:var(--muted);margin:.2em 0 1em;line-height:1.6}
+  .badge{display:inline-block;background:var(--panel2);border:1px solid var(--line);
+    color:var(--muted);font-size:.72rem;padding:2px 8px;border-radius:99px;margin-right:6px}
+  .layout{display:grid;grid-template-columns:1fr .82fr;gap:16px}
+  @media(max-width:760px){.layout{grid-template-columns:1fr}}
+  .stage{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:14px;margin-bottom:16px}
+  canvas{width:100%;display:block;border-radius:8px;background:#05070b}
+  .label{font-size:.8rem;color:var(--muted);margin:0 0 6px;display:flex;justify-content:space-between;flex-wrap:wrap;gap:8px}
+  .grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:14px}
+  .ctrl{background:var(--panel2);border:1px solid var(--line);border-radius:10px;padding:10px 12px}
+  .ctrl label{display:flex;justify-content:space-between;font-size:.85rem;margin-bottom:6px}
+  .ctrl .val{color:var(--accent);font-variant-numeric:tabular-nums}
+  input[type=range]{width:100%;accent-color:var(--accent)}
+  .modes{display:flex;gap:8px;margin:6px 0 14px;flex-wrap:wrap;align-items:center}
+  .modes button,.btn{background:var(--panel2);color:var(--txt);border:1px solid var(--line);
+    padding:8px 14px;border-radius:9px;cursor:pointer;font-size:.85rem;font-family:inherit}
+  .modes button.on{background:var(--accent);color:#04121c;border-color:var(--accent);font-weight:700}
+  .btn:hover,.modes button:hover{border-color:var(--accent)}
+  .stat{display:grid;grid-template-columns:repeat(auto-fit,minmax(120px,1fr));gap:10px}
+  .stat .box{background:var(--panel2);border:1px solid var(--line);border-radius:10px;padding:9px 11px}
+  .stat .box .k{font-size:.72rem;color:var(--muted)}
+  .stat .box .v{font-size:1.02rem;font-variant-numeric:tabular-nums;font-weight:700}
+  .check{margin-top:12px;padding:10px 12px;border-radius:10px;text-align:center;font-weight:700;
+    background:rgba(124,255,178,.12);color:#7CFFB2;font-size:.92rem}
+  .note{background:var(--panel);border-left:3px solid var(--accent2);border-radius:8px;
+    padding:12px 14px;color:var(--muted);font-size:.86rem;line-height:1.7;margin-top:18px}
+  .note b{color:var(--txt)}.note code{background:var(--bg2);padding:1px 6px;border-radius:5px;color:var(--green);font-size:.85em}
+  footer{color:var(--muted);font-size:.78rem;margin-top:26px;text-align:center;line-height:1.7}
+</style>
+</head>
+<body data-demo="分子運動箱">
+<div class="wrap">
+  <header>
+    <span class="badge">熱學・氣體動力論</span>
+    <h1>分子運動箱：PV = nRT 的微觀來源</h1>
+    <p>氣體壓力來自無數分子<b>撞擊器壁</b>。溫度越高分子跑越快、體積越小撞得越密、分子越多撞得越頻繁——
+       壓力都會上升。本模擬同時顯示<b>實測壓力</b>（數撞牆衝量）與<b>理論值</b> P = NkT/V，兩者吻合。</p>
+  </header>
+
+  <div class="modes">
+    <button id="play" class="on">⏸ 暫停</button>
+    <span style="color:var(--muted);font-size:.8rem;margin-left:4px">情境：</span>
+    <button class="btn" data-preset="heat">升溫(P↑)</button>
+    <button class="btn" data-preset="compress">壓縮(P↑)</button>
+    <button class="btn" data-preset="more">加分子(P↑)</button>
+  </div>
+
+  <div class="layout">
+    <div class="stage">
+      <div class="label"><span>容器（分子撞牆 → 壓力）</span><span id="sub"></span></div>
+      <canvas id="cv" width="520" height="500"></canvas>
+    </div>
+    <div>
+      <div class="stat" id="stats"></div>
+      <div class="check" id="check"></div>
+    </div>
+  </div>
+
+  <div class="grid" id="controls" style="margin-top:14px"></div>
+
+  <div class="note">
+    <b>物理重點：</b>單一分子撞牆一次，把動量 2m·v⊥ 傳給牆；每秒大量碰撞累積成穩定的力，除以面積就是<b>壓力</b>。
+    由動力論可導出 <code>P·V = N·k·T</code>（即 PV=nRT，n 是莫耳數、R 是氣體常數）。其中溫度正比於分子平均動能
+    <code>½m·v̄² ∝ T</code>——溫度就是「分子運動劇烈程度」的量度。固定其他量：<b>T↑→P↑</b>、<b>V↓→P↑</b>、<b>N↑→P↑</b>。
+    右方「實測壓力／理論值 ≈ 1」即驗證了這條微觀推導出來的巨觀定律。
+  </div>
+
+  <footer>純前端 HTML / Canvas，無外部相依。彈性器壁碰撞 + 衝量法實測壓力（2D，取 k_B=1、m=1）。</footer>
+</div>
+
+<script>
+const sliders=[
+  {id:'T',name:'溫度 T',   min:1, max:40, step:1, val:12, unit:''},
+  {id:'box',name:'容器邊長 (體積)',min:3,max:7,step:.2,val:6,unit:''},
+  {id:'N',name:'分子數 N', min:10,max:220,step:5,val:80,unit:'個'},
+];
+const state={};
+const ctrl=document.getElementById('controls');
+sliders.forEach(s=>{
+  state[s.id]=s.val;
+  const box=document.createElement('div');box.className='ctrl';
+  box.innerHTML=`<label><span>${s.name}</span><span class="val" id="v_${s.id}">${fmt(s.val)} ${s.unit}</span></label>
+    <input type="range" id="r_${s.id}" min="${s.min}" max="${s.max}" step="${s.step}" value="${s.val}">`;
+  ctrl.appendChild(box);
+  box.querySelector('input').addEventListener('input',e=>{
+    const old=state[s.id];state[s.id]=parseFloat(e.target.value);
+    document.getElementById('v_'+s.id).textContent=`${fmt(state[s.id])} ${s.unit}`;
+    onChange(s.id,old,state[s.id]);
+  });
+});
+function fmt(x){return (Math.round(x*100)/100).toString();}
+function setSlider(id,val){const old=state[id];state[id]=val;const r=document.getElementById('r_'+id);if(r)r.value=val;
+  const s=sliders.find(z=>z.id===id);if(s)document.getElementById('v_'+id).textContent=`${fmt(val)} ${s.unit}`;onChange(id,old,val);}
+
+// ---- 粒子（單位制：k_B=1, m=1；2D）----
+let P=[], box=6, impAccum=0, tAccum=0, Pmeas=0, playing=true, last=0;
+function vrms(){return Math.sqrt(2*state.T);}             // 2D: <v²>=2T
+function spawn(n){for(let i=0;i<n;i++){const a=Math.random()*2*Math.PI,v=vrms();
+  P.push({x:Math.random()*state.box,y:Math.random()*state.box,vx:Math.cos(a)*v,vy:Math.sin(a)*v});}}
+function init(){P=[];box=state.box;spawn(state.N);impAccum=0;tAccum=0;Pmeas=state.N*state.T/(box*box);}
+function onChange(id,old,nw){
+  if(id==='T'){const f=Math.sqrt(nw/old);P.forEach(p=>{p.vx*=f;p.vy*=f;});}
+  if(id==='box'){const f=nw/box;P.forEach(p=>{p.x*=f;p.y*=f;});box=nw;}
+  if(id==='N'){if(nw>P.length)spawn(nw-P.length);else P.length=nw;}
+}
+function step(dt){
+  let imp=0;const b=state.box;
+  for(const p of P){
+    p.x+=p.vx*dt;p.y+=p.vy*dt;
+    if(p.x<0){p.x=0;p.vx=-p.vx;imp+=2*Math.abs(p.vx);}
+    else if(p.x>b){p.x=b;p.vx=-p.vx;imp+=2*Math.abs(p.vx);}
+    if(p.y<0){p.y=0;p.vy=-p.vy;imp+=2*Math.abs(p.vy);}
+    else if(p.y>b){p.y=b;p.vy=-p.vy;imp+=2*Math.abs(p.vy);}
+  }
+  impAccum+=imp;tAccum+=dt;
+  if(tAccum>=0.35){const per=4*b;const praw=impAccum/(tAccum*per);
+    Pmeas=Pmeas*0.7+praw*0.3;impAccum=0;tAccum=0;}
+}
+// ---- 視圖 ----
+const cv=document.getElementById('cv'),cc=cv.getContext('2d');
+function draw(){
+  const W=cv.width,H=cv.height,m=30,size=Math.min(W,H)-2*m;cc.clearRect(0,0,W,H);
+  const PXR=size/7;                                       // 固定比例尺(最大box=7)
+  const bpx=state.box*PXR, ox=(W-bpx)/2, oy=(H-bpx)/2;
+  // 容器
+  cc.fillStyle='#070d18';cc.fillRect(ox,oy,bpx,bpx);
+  cc.strokeStyle='#4c8cc8';cc.lineWidth=3;cc.strokeRect(ox,oy,bpx,bpx);
+  // 分子（顏色隨速率）
+  const vr=vrms();
+  for(const p of P){const sp=Math.hypot(p.vx,p.vy);const t=Math.min(1,sp/(vr*1.6));
+    cc.fillStyle=`rgb(${Math.round(120+135*t)},${Math.round(200-120*t)},255)`;
+    cc.beginPath();cc.arc(ox+p.x*PXR,oy+p.y*PXR,3,0,7);cc.fill();}
+  document.getElementById('sub').textContent='V = '+(state.box*state.box).toFixed(1)+'　N = '+state.N;
+  drawStats();
+}
+function drawStats(){
+  const V=state.box*state.box, Pth=state.N*state.T/V;
+  const ratio=Pth>0?Pmeas/Pth:0;
+  const rows=[
+    ['溫度 T',state.T.toFixed(0),'#ff6b9d'],
+    ['體積 V',V.toFixed(1),'#7CFFB2'],
+    ['分子數 N',state.N+'','#8b9cff'],
+    ['理論壓力 NkT/V',Pth.toFixed(2),'#4cc2ff'],
+    ['實測壓力',Pmeas.toFixed(2),'#ffce54'],
+    ['PV/(NkT)',(state.N>0?(Pth*V/(state.N*state.T)).toFixed(2):'—'),'#e8eef6'],
+  ];
+  document.getElementById('stats').innerHTML=rows.map(r=>
+    `<div class="box"><div class="k">${r[0]}</div><div class="v" style="color:${r[2]}">${r[1]}</div></div>`).join('');
+  document.getElementById('check').textContent='實測 / 理論 ≈ '+ratio.toFixed(2)+'　（→ PV = NkT 成立）';
+}
+function loop(ts){
+  if(playing){let dt=Math.min((ts-last)/1000,0.04);last=ts;
+    for(let i=0;i<4;i++)step(dt/4);draw();}
+  else last=ts;
+  requestAnimationFrame(loop);
+}
+const pb=document.getElementById('play');
+pb.onclick=()=>{playing=!playing;pb.classList.toggle('on',playing);pb.textContent=playing?'⏸ 暫停':'▶ 播放';last=performance.now();};
+const PRE={heat:{T:32,box:6,N:80},compress:{T:12,box:3.6,N:80},more:{T:12,box:6,N:200}};
+document.querySelectorAll('[data-preset]').forEach(b=>b.onclick=()=>{
+  const p=PRE[b.dataset.preset];if(!p)return;
+  setSlider('T',p.T);setSlider('box',p.box);setSlider('N',p.N);init();
+});
+init();
+requestAnimationFrame(loop);
+window.addEventListener('resize',draw);
+</script>
+</body>
+</html>

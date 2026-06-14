@@ -13,7 +13,7 @@
   nav.className = 'site-nav';
   nav.innerHTML =
     '<a class="brand" href="' + base + '">' + svg +
-      '<span><span class="b2">AI</span> <span class="b1-long">協作</span>互動作品集</span></a>' +
+      '<span><span class="b2">物理</span> <span class="b1-long">互動</span>模擬平台</span></a>' +
     (title ? '<span class="cur">' + title + '</span>' : '') +
     '<a class="back" href="' + base + '">← 返回作品集</a>';
   b.insertBefore(nav, b.firstChild);

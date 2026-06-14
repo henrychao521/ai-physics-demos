@@ -1,0 +1,208 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>光電效應 ｜ 光量子・功函數・遏止電壓</title>
+<link rel="icon" href="../assets/favicon.svg" type="image/svg+xml">
+<link rel="stylesheet" href="../assets/site.css">
+<script defer src="../assets/nav.js"></script>
+<style>
+  *{box-sizing:border-box}
+  html,body{margin:0;padding:0;background:var(--bg);color:var(--txt);
+    font-family:"Noto Sans TC","PingFang TC","Microsoft JhengHei",system-ui,sans-serif}
+  a{color:var(--accent)}
+  .wrap{max-width:1100px;margin:0 auto;padding:18px 16px 60px}
+  header h1{font-size:1.5rem;margin:.2em 0}
+  header p{color:var(--muted);margin:.2em 0 1em;line-height:1.6}
+  .badge{display:inline-block;background:var(--panel2);border:1px solid var(--line);
+    color:var(--muted);font-size:.72rem;padding:2px 8px;border-radius:99px;margin-right:6px}
+  .layout{display:grid;grid-template-columns:1fr .82fr;gap:16px}
+  @media(max-width:760px){.layout{grid-template-columns:1fr}}
+  .stage{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:14px;margin-bottom:16px}
+  canvas{width:100%;display:block;border-radius:8px;background:#05070b}
+  .label{font-size:.8rem;color:var(--muted);margin:0 0 6px;display:flex;justify-content:space-between;flex-wrap:wrap;gap:8px}
+  .grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:14px}
+  .ctrl{background:var(--panel2);border:1px solid var(--line);border-radius:10px;padding:10px 12px}
+  .ctrl label{display:flex;justify-content:space-between;font-size:.85rem;margin-bottom:6px}
+  .ctrl .val{color:var(--accent);font-variant-numeric:tabular-nums}
+  input[type=range]{width:100%;accent-color:var(--accent)}
+  .modes{display:flex;gap:8px;margin:6px 0 14px;flex-wrap:wrap;align-items:center}
+  .modes button,.btn{background:var(--panel2);color:var(--txt);border:1px solid var(--line);
+    padding:8px 14px;border-radius:9px;cursor:pointer;font-size:.85rem;font-family:inherit}
+  .modes button.on{background:var(--accent);color:#04121c;border-color:var(--accent);font-weight:700}
+  .btn:hover,.modes button:hover{border-color:var(--accent)}
+  .stat{display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:10px;margin:2px 0}
+  .stat .box{background:var(--panel2);border:1px solid var(--line);border-radius:10px;padding:9px 11px}
+  .stat .box .k{font-size:.72rem;color:var(--muted)}
+  .stat .box .v{font-size:1.02rem;font-variant-numeric:tabular-nums;font-weight:700}
+  .state{margin-top:12px;padding:10px 12px;border-radius:10px;text-align:center;font-weight:700}
+  .note{background:var(--panel);border-left:3px solid var(--accent2);border-radius:8px;
+    padding:12px 14px;color:var(--muted);font-size:.86rem;line-height:1.7;margin-top:18px}
+  .note b{color:var(--txt)}.note code{background:var(--bg2);padding:1px 6px;border-radius:5px;color:var(--green);font-size:.85em}
+  footer{color:var(--muted);font-size:.78rem;margin-top:26px;text-align:center;line-height:1.7}
+</style>
+</head>
+<body data-demo="光電效應">
+<div class="wrap">
+  <header>
+    <span class="badge">近代物理・量子</span>
+    <h1>光電效應</h1>
+    <p>光照射金屬會打出電子，但有個<b>反直覺</b>的事實：頻率（顏色）不夠高時，<b>光再強也打不出半個電子</b>；
+       頻率夠高才會發射，且電子最大動能 <b>KE = hf − W</b> 只跟<b>頻率</b>有關、跟強度無關。這逼出了「光是一顆顆光量子」的結論。</p>
+  </header>
+
+  <div class="modes">
+    <span style="color:var(--muted);font-size:.8rem">金屬：</span>
+    <button class="btn metal on" data-w="2.1">銫 Cs (2.1)</button>
+    <button class="btn metal" data-w="2.3">鈉 Na (2.3)</button>
+    <button class="btn metal" data-w="4.3">鋅 Zn (4.3)</button>
+    <span style="color:var(--muted);font-size:.8rem;margin-left:6px">情境：</span>
+    <button class="btn" data-preset="redfail">紅光無效</button>
+    <button class="btn" data-preset="brightfail">強紅光也無效</button>
+    <button class="btn" data-preset="uv">紫外發射</button>
+  </div>
+
+  <div class="layout">
+    <div class="stage">
+      <div class="label"><span>光打金屬（光子→，電子⊖ 飛出）</span><span id="sub"></span></div>
+      <canvas id="cv" width="560" height="380"></canvas>
+    </div>
+    <div>
+      <div class="stat" id="stats"></div>
+      <div class="state" id="stateBar"></div>
+      <div class="stage" style="margin-top:12px">
+        <div class="label"><span>最大動能 KE 對 頻率 f（愛因斯坦關係，斜率＝h）</span></div>
+        <canvas id="plot" width="470" height="200"></canvas>
+      </div>
+    </div>
+  </div>
+
+  <div class="grid" id="controls" style="margin-top:6px"></div>
+
+  <div class="note">
+    <b>物理重點：</b>古典波動說預測「光越強能量越大、總能打出電子」，但實驗發現：低於<b>臨界頻率</b> <code>f₀ = W/h</code> 時，
+    無論多強都<b>沒有</b>光電子；高於 f₀ 才有，且光電子最大動能 <code>KE = hf − W</code>（h 為普朗克常數，W 為功函數）。
+    <b>光強度只決定電子的數量（電流），不影響每顆電子的能量</b>。愛因斯坦用「光由能量為 hf 的<b>光量子（光子）</b>組成、
+    一顆光子打一顆電子」完美解釋，並因此獲 1921 年諾貝爾獎，開啟量子物理。遏止電壓 <code>eV_s = KE</code>。
+  </div>
+
+  <footer>純前端 HTML / Canvas，無外部相依。能量以 eV 計，h=4.136×10⁻¹⁵ eV·s。</footer>
+</div>
+
+<script>
+const sliders=[
+  {id:'f',name:'光頻率 f',min:1,max:16,step:.1,val:5,unit:'×10¹⁴ Hz'},
+  {id:'I',name:'光強度',min:0,max:100,step:5,val:60,unit:'%'},
+  {id:'W',name:'功函數 W',min:1.5,max:5,step:.1,val:2.1,unit:'eV'},
+];
+const state={};
+const ctrl=document.getElementById('controls');
+sliders.forEach(s=>{
+  state[s.id]=s.val;
+  const box=document.createElement('div');box.className='ctrl';
+  box.innerHTML=`<label><span>${s.name}</span><span class="val" id="v_${s.id}">${fmt(s.val)} ${s.unit}</span></label>
+    <input type="range" id="r_${s.id}" min="${s.min}" max="${s.max}" step="${s.step}" value="${s.val}">`;
+  ctrl.appendChild(box);
+  box.querySelector('input').addEventListener('input',e=>{state[s.id]=parseFloat(e.target.value);
+    document.getElementById('v_'+s.id).textContent=`${fmt(state[s.id])} ${s.unit}`;});
+});
+function fmt(x){return (Math.round(x*100)/100).toString();}
+function setSlider(id,val){state[id]=val;const r=document.getElementById('r_'+id);if(r)r.value=val;
+  const s=sliders.find(z=>z.id===id);if(s)document.getElementById('v_'+id).textContent=`${fmt(val)} ${s.unit}`;}
+
+const HEV=0.4136;                                       // hf(eV) = 0.4136 * f(×10^14)
+function Ephoton(){return HEV*state.f;}
+function f0(){return state.W/HEV;}                       // 臨界頻率(×10^14)
+function KEmax(){return Math.max(0,Ephoton()-state.W);}
+function emits(){return Ephoton()>state.W;}
+function wl2rgb(f){const lam=2998/f;let r,g,b;          // λ(nm)=2998/f
+  if(lam<380)return [200,160,255];if(lam>720)return [120,40,40];
+  if(lam<440){r=-(lam-440)/60;g=0;b=1;}else if(lam<490){r=0;g=(lam-440)/50;b=1;}
+  else if(lam<510){r=0;g=1;b=-(lam-510)/20;}else if(lam<580){r=(lam-510)/70;g=1;b=0;}
+  else if(lam<645){r=1;g=-(lam-645)/65;b=0;}else{r=1;g=0;b=0;}
+  return [Math.round(r*255),Math.round(g*255),Math.round(b*255)];}
+
+const cv=document.getElementById('cv'),cc=cv.getContext('2d');
+const plot=document.getElementById('plot'),pc=plot.getContext('2d');
+let photons=[],electrons=[],last=0;
+function spawn(){
+  const rate=state.I/100;
+  if(Math.random()<rate*0.8){const y=120+Math.random()*180;photons.push({x:0,y,life:0});}
+}
+function step(dt){
+  spawn();
+  const [R,G,B]=wl2rgb(state.f);
+  photons.forEach(p=>{p.x+=320*dt;});
+  // 光子到金屬(x≈360) → 若發射則生電子
+  for(let i=photons.length-1;i>=0;i--){if(photons[i].x>=360){
+    if(emits()&&Math.random()<0.9){const v=80+KEmax()*60;
+      electrons.push({x:360,y:photons[i].y,vx:60+Math.random()*40,vy:(Math.random()-0.5)*40,ke:KEmax()});}
+    photons.splice(i,1);}}
+  electrons.forEach(e=>{e.x+=(60+e.ke*50)*dt;e.y+=e.vy*dt;});
+  electrons=electrons.filter(e=>e.x<cv.width+20);
+  if(photons.length>200)photons.splice(0,photons.length-200);
+}
+function draw(){
+  const W=cv.width,H=cv.height;cc.clearRect(0,0,W,H);
+  // 金屬板
+  cc.fillStyle='#3a4756';cc.fillRect(360,40,30,H-80);
+  cc.fillStyle='#46566b';cc.font='12px sans-serif';cc.fillText('金屬',362,30);cc.fillText('W='+state.W+'eV',330,H-26);
+  // 光源
+  cc.fillStyle='#8a99ad';cc.fillText('光源',8,30);
+  const [R,G,B]=wl2rgb(state.f);
+  // 光子
+  photons.forEach(p=>{cc.fillStyle=`rgb(${R},${G},${B})`;cc.globalAlpha=.9;cc.beginPath();cc.arc(p.x,p.y,3,0,7);cc.fill();});
+  cc.globalAlpha=1;
+  // 電子
+  electrons.forEach(e=>{cc.fillStyle='#4cc2ff';cc.beginPath();cc.arc(e.x,e.y,4,0,7);cc.fill();
+    cc.fillStyle='#fff';cc.font='9px sans-serif';cc.fillText('−',e.x-2,e.y+3);});
+  document.getElementById('sub').textContent=emits()?'發射光電子':'無光電子';
+  drawStats();drawPlot();
+}
+function drawPlot(){
+  const W=plot.width,H=plot.height,mL=36,mR=12,mT=12,mB=24;pc.clearRect(0,0,W,H);
+  const fMax=16,keMax=HEV*fMax-1.5;
+  const X=f=>mL+f/fMax*(W-mL-mR),Y=ke=>H-mB-ke/Math.max(keMax,1)*(H-mT-mB);
+  pc.strokeStyle='#16202f';pc.beginPath();pc.moveTo(mL,Y(0));pc.lineTo(W-mR,Y(0));pc.stroke();
+  pc.fillStyle='#46566b';pc.font='10px sans-serif';pc.fillText('f',W-mR-8,Y(0)+14);pc.fillText('KE',mL-2,mT+6);
+  // KE=hf-W: 低於 f0 為 0, 之上線性
+  pc.strokeStyle='#7CFFB2';pc.lineWidth=2.5;pc.beginPath();
+  let started=false;
+  for(let f=0;f<=fMax;f+=0.2){const ke=Math.max(0,HEV*f-state.W);const x=X(f),y=Y(ke);started?pc.lineTo(x,y):pc.moveTo(x,y);started=true;}
+  pc.stroke();
+  // f0 標記
+  pc.strokeStyle='#ff6b9d';pc.setLineDash([3,3]);pc.beginPath();pc.moveTo(X(f0()),mT);pc.lineTo(X(f0()),H-mB);pc.stroke();pc.setLineDash([]);
+  pc.fillStyle='#ff6b9d';pc.fillText('f₀',X(f0())-6,H-9);
+  // 目前點
+  pc.fillStyle='#fff';pc.beginPath();pc.arc(X(state.f),Y(KEmax()),4,0,7);pc.fill();
+}
+function drawStats(){
+  const rows=[
+    ['光子能量 hf',Ephoton().toFixed(2)+' eV','#ffce54'],
+    ['功函數 W',state.W.toFixed(1)+' eV','#8b9cff'],
+    ['臨界頻率 f₀',f0().toFixed(1)+'×10¹⁴','#ff6b9d'],
+    ['最大動能 KE',KEmax().toFixed(2)+' eV','#7CFFB2'],
+    ['遏止電壓 V_s',KEmax().toFixed(2)+' V','#4cc2ff'],
+    ['光電流(相對)',emits()?state.I+' %':'0（無發射）','#e8eef6'],
+  ];
+  document.getElementById('stats').innerHTML=rows.map(r=>
+    `<div class="box"><div class="k">${r[0]}</div><div class="v" style="color:${r[2]}">${r[1]}</div></div>`).join('');
+  const sb=document.getElementById('stateBar');
+  if(emits()){sb.textContent='✓ hf > W：發射光電子，KE='+KEmax().toFixed(2)+'eV（加強度只增數量、不增能量）';sb.style.background='rgba(124,255,178,.15)';sb.style.color='#7CFFB2';}
+  else{sb.textContent='✗ hf < W：頻率不足，光再強也打不出電子（古典物理無法解釋！）';sb.style.background='rgba(255,107,157,.13)';sb.style.color='#ff6b9d';}
+}
+function loop(ts){const dt=Math.min((ts-last)/1000,0.05)||0.016;last=ts;step(dt);draw();requestAnimationFrame(loop);}
+document.querySelectorAll('.metal').forEach(b=>b.onclick=()=>{
+  document.querySelectorAll('.metal').forEach(x=>x.classList.toggle('on',x===b));setSlider('W',parseFloat(b.dataset.w));});
+const PRE={
+  redfail:{f:4.5,I:60,W:2.1},brightfail:{f:4.5,I:100,W:2.1},uv:{f:9,I:60,W:2.1},
+};
+document.querySelectorAll('[data-preset]').forEach(b=>b.onclick=()=>{const p=PRE[b.dataset.preset];if(!p)return;
+  ['f','I','W'].forEach(k=>setSlider(k,p[k]));
+  document.querySelectorAll('.metal').forEach(x=>x.classList.toggle('on',parseFloat(x.dataset.w)===p.W));});
+requestAnimationFrame(loop);
+window.addEventListener('resize',draw);
+</script>
+</body>
+</html>

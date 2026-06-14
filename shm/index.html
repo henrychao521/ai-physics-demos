@@ -1,0 +1,212 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>簡諧運動三表徵 ｜ 圓周投影・彈簧・單擺</title>
+<link rel="icon" href="../assets/favicon.svg" type="image/svg+xml">
+<link rel="stylesheet" href="../assets/site.css">
+<script defer src="../assets/nav.js"></script>
+<style>
+  *{box-sizing:border-box}
+  html,body{margin:0;padding:0;background:var(--bg);color:var(--txt);
+    font-family:"Noto Sans TC","PingFang TC","Microsoft JhengHei",system-ui,sans-serif}
+  a{color:var(--accent)}
+  .wrap{max-width:1100px;margin:0 auto;padding:18px 16px 60px}
+  header h1{font-size:1.5rem;margin:.2em 0}
+  header p{color:var(--muted);margin:.2em 0 1em;line-height:1.6}
+  .badge{display:inline-block;background:var(--panel2);border:1px solid var(--line);
+    color:var(--muted);font-size:.72rem;padding:2px 8px;border-radius:99px;margin-right:6px}
+  .stage{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:14px;margin-bottom:16px}
+  canvas{width:100%;display:block;border-radius:8px;background:#05070b}
+  .label{font-size:.8rem;color:var(--muted);margin:0 0 6px;display:flex;justify-content:space-between;flex-wrap:wrap;gap:8px}
+  .grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:14px}
+  .ctrl{background:var(--panel2);border:1px solid var(--line);border-radius:10px;padding:10px 12px}
+  .ctrl label{display:flex;justify-content:space-between;font-size:.85rem;margin-bottom:6px}
+  .ctrl .val{color:var(--accent);font-variant-numeric:tabular-nums}
+  .ctrl.cs .val{color:#4cc2ff}.ctrl.cp .val{color:#ff6b9d}
+  input[type=range]{width:100%;accent-color:var(--accent)}
+  .modes{display:flex;gap:8px;margin:6px 0 14px;flex-wrap:wrap;align-items:center}
+  .modes button,.btn{background:var(--panel2);color:var(--txt);border:1px solid var(--line);
+    padding:8px 14px;border-radius:9px;cursor:pointer;font-size:.85rem;font-family:inherit}
+  .modes button.on{background:var(--accent);color:#04121c;border-color:var(--accent);font-weight:700}
+  .btn:hover,.modes button:hover{border-color:var(--accent)}
+  .stat{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px;margin:2px 0}
+  .stat .box{background:var(--panel2);border:1px solid var(--line);border-radius:10px;padding:9px 11px}
+  .stat .box .k{font-size:.72rem;color:var(--muted)}
+  .stat .box .v{font-size:1.02rem;font-variant-numeric:tabular-nums;font-weight:700}
+  .note{background:var(--panel);border-left:3px solid var(--accent2);border-radius:8px;
+    padding:12px 14px;color:var(--muted);font-size:.86rem;line-height:1.7;margin-top:18px}
+  .note b{color:var(--txt)}.note code{background:var(--bg2);padding:1px 6px;border-radius:5px;color:var(--green);font-size:.85em}
+  footer{color:var(--muted);font-size:.78rem;margin-top:26px;text-align:center;line-height:1.7}
+</style>
+</head>
+<body data-demo="簡諧運動三表徵">
+<div class="wrap">
+  <header>
+    <span class="badge">力學・簡諧運動</span>
+    <h1>簡諧運動的三種表徵</h1>
+    <p>同一種「簡諧運動（SHM）」的三張臉：<b>等速圓周運動的投影</b>（左）＝<b>彈簧振子</b>（中），兩者高度時刻相同；
+       右邊的<b>單擺</b>在小角度下也是 SHM。它們的位置對時間都是<b>正弦/餘弦曲線</b>。</p>
+  </header>
+
+  <div class="modes">
+    <button id="play" class="on">⏸ 暫停</button>
+    <button class="btn" id="reset">↺ 重設</button>
+    <span style="color:var(--muted);font-size:.8rem;margin-left:4px">情境：</span>
+    <button class="btn" data-preset="match">彈簧≈單擺同步</button>
+    <button class="btn" data-preset="stiff">硬彈簧(快)</button>
+    <button class="btn" data-preset="longL">長擺(慢)</button>
+  </div>
+
+  <div class="stage">
+    <div class="label"><span>左：圓周投影＝彈簧（藍，共用 ω=√(k/m)）　右：單擺（紅，ω=√(g/L)）</span><span id="tlabel"></span></div>
+    <canvas id="scene" width="1040" height="340"></canvas>
+  </div>
+
+  <div class="stat" id="stats"></div>
+
+  <div class="stage">
+    <div class="label"><span>位置對時間（正規化）— 兩者都是正弦曲線 → 都是簡諧運動</span><span>右端＝現在</span></div>
+    <canvas id="plot" width="1040" height="200"></canvas>
+  </div>
+
+  <div class="grid" id="controls"></div>
+
+  <div class="note">
+    <b>物理重點：</b>簡諧運動的回復力與位移成正比、方向相反（<code>F = −kx</code>），所以位置 <code>x = A·cos(ωt)</code> 是正弦曲線。
+    <b>圓周投影</b>：等速圓周運動投影到一軸，恰好就是 SHM——這就是左圖圓上的點與中間彈簧高度永遠一致的原因。
+    <b>彈簧</b>週期 <code>T = 2π√(m/k)</code>（與振幅無關）；<b>單擺</b>（小角度）<code>T = 2π√(L/g)</code>（與質量、振幅都無關，即等時性）。
+    調硬彈簧（k 大）或短擺（L 小）→ 振動變快。
+  </div>
+
+  <footer>純前端 HTML / Canvas，無外部相依。單擺採小角度近似（SHM）。</footer>
+</div>
+
+<script>
+const sliders=[
+  {id:'A',name:'振幅 A',     min:.3,max:2, step:.1, val:1,  unit:'m'},
+  {id:'k',name:'彈性係數 k', min:2, max:40,step:1,  val:12, unit:'N/m',cls:'cs'},
+  {id:'m',name:'彈簧質量 m', min:.5,max:5, step:.5, val:1.5,unit:'kg', cls:'cs'},
+  {id:'L',name:'擺長 L',     min:.3,max:3, step:.1, val:1,  unit:'m',  cls:'cp'},
+  {id:'g',name:'重力 g',     min:1, max:20,step:.1, val:9.8,unit:'m/s²',cls:'cp'},
+];
+const state={};
+const ctrl=document.getElementById('controls');
+sliders.forEach(s=>{
+  state[s.id]=s.val;
+  const box=document.createElement('div');box.className='ctrl '+(s.cls||'');
+  box.innerHTML=`<label><span>${s.name}</span><span class="val" id="v_${s.id}">${fmt(s.val)} ${s.unit}</span></label>
+    <input type="range" id="r_${s.id}" min="${s.min}" max="${s.max}" step="${s.step}" value="${s.val}">`;
+  ctrl.appendChild(box);
+  box.querySelector('input').addEventListener('input',e=>{
+    state[s.id]=parseFloat(e.target.value);
+    document.getElementById('v_'+s.id).textContent=`${fmt(state[s.id])} ${s.unit}`;
+    draw();
+  });
+});
+function fmt(x){return (Math.round(x*100)/100).toString();}
+function setSlider(id,val){state[id]=val;const r=document.getElementById('r_'+id);if(r)r.value=val;
+  const s=sliders.find(z=>z.id===id);if(s)document.getElementById('v_'+id).textContent=`${fmt(val)} ${s.unit}`;}
+
+let simT=0, playing=true, last=0;
+const TH0=18*Math.PI/180;                          // 單擺振幅(小角度)
+function wS(){return Math.sqrt(state.k/state.m);}   // 彈簧角頻率
+function wP(){return Math.sqrt(state.g/state.L);}   // 單擺角頻率
+
+const sc=document.getElementById('scene'),cc=sc.getContext('2d');
+const plot=document.getElementById('plot'),pc=plot.getContext('2d');
+function spring(x0,yTop,yMass,w){                    // 畫彈簧(zigzag)
+  cc.strokeStyle='#3a6ea5';cc.lineWidth=2;cc.beginPath();cc.moveTo(x0,yTop);
+  const coils=10,seg=(yMass-yTop)/coils;
+  for(let i=0;i<coils;i++){const y=yTop+seg*(i+.5);cc.lineTo(x0+(i%2?w:-w),y);}
+  cc.lineTo(x0,yMass);cc.stroke();
+}
+function draw(){
+  const W=sc.width,H=sc.height;cc.clearRect(0,0,W,H);
+  const cyc=H/2, A=state.A;
+  const phi=wS()*simT;                              // 彈簧/圓周相位
+  const disp=A*Math.cos(phi);                        // 位移(以最大位移起始)
+  const PXR=110/2;                                   // m→px(振幅最大2m → 110px)
+  // ===== 左：參考圓 + 相量 =====
+  const ccx=150, R=A*PXR;
+  cc.strokeStyle='#26303f';cc.lineWidth=2;cc.setLineDash([5,5]);cc.beginPath();cc.arc(ccx,cyc,R,0,7);cc.stroke();cc.setLineDash([]);
+  cc.fillStyle='#5b6880';cc.beginPath();cc.arc(ccx,cyc,3,0,7);cc.fill();
+  const px=ccx+Math.sin(phi)*R, py=cyc-Math.cos(phi)*R;   // 投影到鉛直=cos
+  cc.strokeStyle='#1f2937';cc.beginPath();cc.moveTo(ccx,cyc);cc.lineTo(px,py);cc.stroke();
+  cc.fillStyle='#4cc2ff';cc.beginPath();cc.arc(px,py,7,0,7);cc.fill();
+  // 投影虛線到彈簧
+  cc.strokeStyle='#46566b';cc.setLineDash([4,4]);cc.beginPath();cc.moveTo(px,py);cc.lineTo(430,py);cc.stroke();cc.setLineDash([]);
+  cc.fillStyle='#46566b';cc.font='11px sans-serif';cc.fillText('圓周運動',ccx-26,cyc+R+22);cc.fillText('鉛直投影 →',px+8,py-8);
+  // ===== 中：彈簧 =====
+  const sx=430, anchorY=cyc-A*PXR-30, massY=cyc-disp*PXR;
+  cc.strokeStyle='#3a4756';cc.lineWidth=4;cc.beginPath();cc.moveTo(sx-30,anchorY);cc.lineTo(sx+30,anchorY);cc.stroke();
+  spring(sx,anchorY,massY,11);
+  cc.fillStyle='#1b2740';cc.strokeStyle='#4cc2ff';cc.lineWidth=2;cc.fillRect(sx-20,massY-16,40,32);cc.strokeRect(sx-20,massY-16,40,32);
+  cc.fillStyle='#8a99ad';cc.fillText(state.m+'kg',sx-14,massY+5);
+  // 平衡線
+  cc.strokeStyle='#26303f';cc.setLineDash([3,4]);cc.beginPath();cc.moveTo(sx-60,cyc);cc.lineTo(sx+60,cyc);cc.stroke();cc.setLineDash([]);
+  cc.fillStyle='#46566b';cc.fillText('平衡位置',sx+36,cyc+4);cc.fillText('彈簧振子',sx-24,anchorY-8);
+  // ===== 右：單擺 =====
+  const pivX=800, pivY=cyc-A*PXR-10, Lpx=Math.min(200,A*PXR+120);
+  const th=TH0*Math.cos(wP()*simT);
+  const bobX=pivX+Math.sin(th)*Lpx, bobY=pivY+Math.cos(th)*Lpx;
+  cc.fillStyle='#3a4756';cc.fillRect(pivX-26,pivY-6,52,6);
+  cc.strokeStyle='#5a7bb0';cc.lineWidth=2;cc.beginPath();cc.moveTo(pivX,pivY);cc.lineTo(bobX,bobY);cc.stroke();
+  cc.strokeStyle='#26303f';cc.setLineDash([4,4]);cc.beginPath();cc.moveTo(pivX,pivY);cc.lineTo(pivX,pivY+Lpx+10);cc.stroke();cc.setLineDash([]);
+  cc.fillStyle='#ff6b9d';cc.strokeStyle='#fff';cc.lineWidth=2;cc.beginPath();cc.arc(bobX,bobY,13,0,7);cc.fill();cc.stroke();
+  cc.fillStyle='#46566b';cc.font='11px sans-serif';cc.fillText('單擺',pivX-12,pivY-12);
+  document.getElementById('tlabel').textContent='t = '+simT.toFixed(2)+' s';
+  drawStats();drawPlot();
+}
+function drawStats(){
+  const Ts=2*Math.PI/wS(), Tp=2*Math.PI/wP();
+  const rows=[
+    ['彈簧 ω=√(k/m)',wS().toFixed(2)+' rad/s','#4cc2ff'],
+    ['彈簧週期 T=2π√(m/k)',Ts.toFixed(2)+' s','#4cc2ff'],
+    ['單擺 ω=√(g/L)',wP().toFixed(2)+' rad/s','#ff6b9d'],
+    ['單擺週期 T=2π√(L/g)',Tp.toFixed(2)+' s','#ff6b9d'],
+  ];
+  document.getElementById('stats').innerHTML=rows.map(r=>
+    `<div class="box"><div class="k">${r[0]}</div><div class="v" style="color:${r[2]}">${r[1]}</div></div>`).join('');
+}
+function drawPlot(){
+  const W=plot.width,H=plot.height,mL=20,mR=12,mT=12,mB=18;pc.clearRect(0,0,W,H);
+  const win=Math.max(2*2*Math.PI/wS(),2*2*Math.PI/wP());
+  const t0=simT-win;
+  const X=t=>mL+(t-t0)/win*(W-mL-mR), Y=v=>H/2-v*(H/2-mT);
+  pc.strokeStyle='#16202f';pc.beginPath();pc.moveTo(mL,H/2);pc.lineTo(W-mR,H/2);pc.stroke();
+  function curve(fn,col){pc.strokeStyle=col;pc.lineWidth=2;pc.beginPath();
+    for(let i=0;i<=300;i++){const t=t0+win*i/300;pc[i?'lineTo':'moveTo'](X(t),Y(fn(t)));}pc.stroke();}
+  curve(t=>Math.cos(wS()*t),'#4cc2ff');             // 彈簧位移(正規化)
+  curve(t=>Math.cos(wP()*t),'#ff6b9d');             // 單擺角度(正規化)
+  pc.fillStyle='#4cc2ff';pc.font='11px sans-serif';pc.fillText('彈簧位移 x/A',mL+4,mT+8);
+  pc.fillStyle='#ff6b9d';pc.fillText('單擺角度 θ/θ₀',mL+96,mT+8);
+  const cx=X(simT);pc.strokeStyle='#fff';pc.beginPath();pc.moveTo(cx,mT);pc.lineTo(cx,H-mB);pc.stroke();
+}
+
+function loop(ts){
+  if(playing){const dt=Math.min((ts-last)/1000,0.05);last=ts;simT+=dt;draw();}
+  else last=ts;
+  requestAnimationFrame(loop);
+}
+const pb=document.getElementById('play');
+pb.onclick=()=>{playing=!playing;pb.classList.toggle('on',playing);pb.textContent=playing?'⏸ 暫停':'▶ 播放';last=performance.now();};
+document.getElementById('reset').onclick=()=>{simT=0;playing=true;pb.classList.add('on');pb.textContent='⏸ 暫停';last=performance.now();draw();};
+const PRESETS={
+  match:{A:1,k:12,m:1.5,L:1,g:9.8},
+  stiff:{A:1,k:36,m:1,L:1,g:9.8},
+  longL:{A:1,k:12,m:1.5,L:2.6,g:9.8},
+};
+document.querySelectorAll('[data-preset]').forEach(b=>b.onclick=()=>{
+  const p=PRESETS[b.dataset.preset];if(!p)return;
+  ['A','k','m','L','g'].forEach(kk=>setSlider(kk,p[kk]));
+  simT=0;playing=true;pb.classList.add('on');pb.textContent='⏸ 暫停';last=performance.now();draw();
+});
+
+draw();
+requestAnimationFrame(loop);
+window.addEventListener('resize',draw);
+</script>
+</body>
+</html>

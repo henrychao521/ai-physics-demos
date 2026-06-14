@@ -1,0 +1,226 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>等速圓周運動 ｜ 向心加速度・速度向量・放手切線</title>
+<link rel="icon" href="../assets/favicon.svg" type="image/svg+xml">
+<link rel="stylesheet" href="../assets/site.css">
+<script defer src="../assets/nav.js"></script>
+<style>
+  *{box-sizing:border-box}
+  html,body{margin:0;padding:0;background:var(--bg);color:var(--txt);
+    font-family:"Noto Sans TC","PingFang TC","Microsoft JhengHei",system-ui,sans-serif}
+  a{color:var(--accent)}
+  .wrap{max-width:1100px;margin:0 auto;padding:18px 16px 60px}
+  header h1{font-size:1.5rem;margin:.2em 0}
+  header p{color:var(--muted);margin:.2em 0 1em;line-height:1.6}
+  .badge{display:inline-block;background:var(--panel2);border:1px solid var(--line);
+    color:var(--muted);font-size:.72rem;padding:2px 8px;border-radius:99px;margin-right:6px}
+  .layout{display:grid;grid-template-columns:1.1fr .9fr;gap:16px}
+  @media(max-width:760px){.layout{grid-template-columns:1fr}}
+  .stage{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:14px;margin-bottom:16px}
+  canvas{width:100%;display:block;border-radius:8px;background:#05070b}
+  .label{font-size:.8rem;color:var(--muted);margin:0 0 6px;display:flex;justify-content:space-between;flex-wrap:wrap;gap:8px}
+  .grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(210px,1fr));gap:14px}
+  .ctrl{background:var(--panel2);border:1px solid var(--line);border-radius:10px;padding:10px 12px}
+  .ctrl label{display:flex;justify-content:space-between;font-size:.85rem;margin-bottom:6px}
+  .ctrl .val{color:var(--accent);font-variant-numeric:tabular-nums}
+  input[type=range]{width:100%;accent-color:var(--accent)}
+  .modes{display:flex;gap:8px;margin:6px 0 14px;flex-wrap:wrap;align-items:center}
+  .modes button,.btn{background:var(--panel2);color:var(--txt);border:1px solid var(--line);
+    padding:8px 14px;border-radius:9px;cursor:pointer;font-size:.85rem;font-family:inherit}
+  .modes button.on{background:var(--accent);color:#04121c;border-color:var(--accent);font-weight:700}
+  .btn:hover,.modes button:hover{border-color:var(--accent)}
+  .stat{display:grid;grid-template-columns:repeat(auto-fit,minmax(120px,1fr));gap:10px;margin:2px 0 16px}
+  .stat .box{background:var(--panel2);border:1px solid var(--line);border-radius:10px;padding:9px 11px}
+  .stat .box .k{font-size:.72rem;color:var(--muted)}
+  .stat .box .v{font-size:1.02rem;font-variant-numeric:tabular-nums;font-weight:700}
+  .note{background:var(--panel);border-left:3px solid var(--accent2);border-radius:8px;
+    padding:12px 14px;color:var(--muted);font-size:.86rem;line-height:1.7;margin-top:18px}
+  .note b{color:var(--txt)}.note code{background:var(--bg2);padding:1px 6px;border-radius:5px;color:var(--green);font-size:.85em}
+  footer{color:var(--muted);font-size:.78rem;margin-top:26px;text-align:center;line-height:1.7}
+</style>
+</head>
+<body data-demo="等速圓周運動向量">
+<div class="wrap">
+  <header>
+    <span class="badge">力學・圓周運動</span>
+    <h1>等速圓周運動：向心加速度</h1>
+    <p>物體以固定<b>速率</b>繞圈：<b>速度</b>（藍，沿切線）方向時刻在變，所以一定有<b>加速度</b>。
+       這個加速度（黃，永遠指向圓心）就是<b>向心加速度</b> a = v²/r。按「放手」看它沿切線直線飛出（慣性）。</p>
+  </header>
+
+  <div class="modes">
+    <button id="play" class="on">⏸ 暫停</button>
+    <button class="btn" id="release">✂ 放手（切線飛出）</button>
+    <button class="btn" id="reset">↺ 重設</button>
+    <button class="btn" id="showF">顯示向心力 F</button>
+  </div>
+
+  <div class="layout">
+    <div class="stage">
+      <div class="label"><span>俯視圓周（藍=速度 v，黃=向心加速度 a，紅=向心力 F）</span><span id="tlabel"></span></div>
+      <canvas id="scene" width="560" height="520"></canvas>
+    </div>
+    <div>
+      <div class="stat" id="stats"></div>
+      <div class="stage" style="margin-bottom:0">
+        <div class="label"><span>位置投影：x = r·cosθ、y = r·sinθ</span><span>＝兩個簡諧運動</span></div>
+        <canvas id="plot" width="470" height="300"></canvas>
+      </div>
+    </div>
+  </div>
+
+  <div class="grid" id="controls" style="margin-top:16px"></div>
+
+  <div class="note">
+    <b>物理重點：</b>等速圓周運動「速率不變、速度方向變」。速度永遠沿<b>切線</b>、大小 <code>v = rω</code>；
+    加速度永遠指向<b>圓心</b>、大小 <code>a = v²/r = rω²</code>，並與速度<b>垂直</b>。
+    維持圓周所需的向心力 <code>F = ma = mv²/r</code> 由繩張力／重力／摩擦等提供——一旦消失（放手），
+    物體就依牛頓第一定律沿<b>切線方向</b>等速直線飛出，而不是沿半徑向外。
+    右圖顯示：把圓周運動投影到 x、y 軸，各自就是一個<b>簡諧運動</b>（正弦／餘弦）。
+  </div>
+
+  <footer>純前端 HTML / Canvas，無外部相依。</footer>
+</div>
+
+<script>
+const sliders=[
+  {id:'r',  name:'半徑 r',   min:.5,max:3, step:.1, val:1.5,unit:'m'},
+  {id:'w',  name:'角速度 ω', min:.3,max:3, step:.05,val:1.2,unit:'rad/s'},
+  {id:'m',  name:'質量 m',   min:.5,max:5, step:.5, val:1,  unit:'kg'},
+];
+const state={};
+const ctrl=document.getElementById('controls');
+sliders.forEach(s=>{
+  state[s.id]=s.val;
+  const box=document.createElement('div');box.className='ctrl';
+  box.innerHTML=`<label><span>${s.name}</span><span class="val" id="v_${s.id}">${fmt(s.val)} ${s.unit}</span></label>
+    <input type="range" id="r_${s.id}" min="${s.min}" max="${s.max}" step="${s.step}" value="${s.val}">`;
+  ctrl.appendChild(box);
+  box.querySelector('input').addEventListener('input',e=>{
+    state[s.id]=parseFloat(e.target.value);
+    document.getElementById('v_'+s.id).textContent=`${fmt(state[s.id])} ${s.unit}`;
+    if(mode==='released')toCircle();
+    draw();
+  });
+});
+function fmt(x){return (Math.round(x*100)/100).toString();}
+
+let theta=0, simT=0, playing=true, last=0, showF=false;
+let mode='circle', relTheta=0, relT=0;          // released: 沿切線飛出
+function v(){return state.r*state.w;}
+function acc(){return state.r*state.w*state.w;}
+function toCircle(){mode='circle';}
+function release(){relTheta=theta;relT=simT;mode='released';}
+
+const sc=document.getElementById('scene'),cc=sc.getContext('2d');
+const plot=document.getElementById('plot'),pc=plot.getContext('2d');
+function arrow(c,x1,y1,x2,y2,col,w,lab){
+  if(Math.hypot(x2-x1,y2-y1)<1)return;
+  c.strokeStyle=col;c.fillStyle=col;c.lineWidth=w;
+  c.beginPath();c.moveTo(x1,y1);c.lineTo(x2,y2);c.stroke();
+  const a=Math.atan2(y2-y1,x2-x1),h=10;
+  c.beginPath();c.moveTo(x2,y2);c.lineTo(x2-h*Math.cos(a-.4),y2-h*Math.sin(a-.4));
+  c.lineTo(x2-h*Math.cos(a+.4),y2-h*Math.sin(a+.4));c.closePath();c.fill();
+  if(lab){c.font='bold 13px sans-serif';c.fillText(lab,x2+6,y2-6);}
+}
+function draw(){
+  const W=sc.width,H=sc.height,cx=W/2,cy=H/2;cc.clearRect(0,0,W,H);
+  const PXR=Math.min(W,H)*0.32/state.r;             // 公尺→像素
+  // 圓軌道
+  cc.strokeStyle='#26303f';cc.lineWidth=2;cc.setLineDash([5,5]);
+  cc.beginPath();cc.arc(cx,cy,state.r*PXR,0,7);cc.stroke();cc.setLineDash([]);
+  // 圓心
+  cc.fillStyle='#5b6880';cc.beginPath();cc.arc(cx,cy,4,0,7);cc.fill();cc.font='11px sans-serif';cc.fillText('圓心',cx+8,cy-6);
+  // 球位置
+  let bx,by,vx,vy;
+  if(mode==='circle'){
+    bx=cx+Math.cos(theta)*state.r*PXR; by=cy-Math.sin(theta)*state.r*PXR;
+    vx=-Math.sin(theta); vy=Math.cos(theta);          // 切線(逆時針)
+    // 半徑線
+    cc.strokeStyle='#1f2937';cc.lineWidth=1;cc.beginPath();cc.moveTo(cx,cy);cc.lineTo(bx,by);cc.stroke();
+    // 速度（藍，切線）
+    arrow(cc,bx,by,bx+vx*v()*PXR*0.55,by-vy*v()*PXR*0.55,'#4cc2ff',3.5,'v');
+    // 向心加速度（黃，指向圓心）
+    const ux=(cx-bx),uy=(cy-by),ul=Math.hypot(ux,uy);
+    arrow(cc,bx,by,bx+ux/ul*acc()*PXR*0.18,by+uy/ul*acc()*PXR*0.18,'#ffce54',3.5,'a');
+    // 向心力（紅，與 a 同向）
+    if(showF){const F=state.m*acc();arrow(cc,bx,by,bx+ux/ul*F*PXR*0.10,by+uy/ul*F*PXR*0.10,'#ff6b9d',3,'F');}
+  } else {
+    // 放手後：沿切線等速直線
+    const rx=cx+Math.cos(relTheta)*state.r*PXR, ry=cy-Math.sin(relTheta)*state.r*PXR;
+    const tvx=-Math.sin(relTheta), tvy=Math.cos(relTheta);
+    const dt=simT-relT, dist=v()*dt*PXR;
+    bx=rx+tvx*dist; by=ry-tvy*dist;
+    // 放手點 + 切線虛線
+    cc.strokeStyle='#46566b';cc.setLineDash([4,4]);cc.beginPath();cc.moveTo(rx,ry);cc.lineTo(rx+tvx*900,ry-tvy*900);cc.stroke();cc.setLineDash([]);
+    cc.fillStyle='#ff6b9d';cc.beginPath();cc.arc(rx,ry,4,0,7);cc.fill();
+    cc.fillStyle='#ffce54';cc.font='12px sans-serif';cc.fillText('放手 → 沿切線等速直線飛出（無向心力）',16,H-14);
+    arrow(cc,bx,by,bx+tvx*v()*PXR*0.55,by-tvy*v()*PXR*0.55,'#4cc2ff',3.5,'v');
+  }
+  // 球
+  cc.fillStyle='#e8eef6';cc.strokeStyle='#4cc2ff';cc.lineWidth=2;cc.beginPath();cc.arc(bx,by,9,0,7);cc.fill();cc.stroke();
+  // 圖例
+  cc.fillStyle='#46566b';cc.font='11px sans-serif';
+  cc.fillText('速率固定，但速度方向一直變 → 有加速度（向心）',14,18);
+  document.getElementById('tlabel').textContent=mode==='released'?'已放手':'轉動中';
+  drawStats();drawPlot();
+}
+function drawStats(){
+  const T=2*Math.PI/state.w;
+  const rows=[
+    ['速率 v = rω',v().toFixed(2)+' m/s','#4cc2ff'],
+    ['向心加速度 a = v²/r',acc().toFixed(2)+' m/s²','#ffce54'],
+    ['週期 T = 2π/ω',T.toFixed(2)+' s','#e8eef6'],
+    ['向心力 F = mv²/r',(state.m*acc()).toFixed(2)+' N','#ff6b9d'],
+  ];
+  document.getElementById('stats').innerHTML=rows.map(r=>
+    `<div class="box"><div class="k">${r[0]}</div><div class="v" style="color:${r[2]}">${r[1]}</div></div>`).join('');
+}
+function drawPlot(){
+  const W=plot.width,H=plot.height,mL=30,mR=12,mT=12,mB=18;pc.clearRect(0,0,W,H);
+  const win=4*Math.PI/state.w;                       // 約兩個週期
+  const t0=simT-win;
+  const X=t=>mL+(t-t0)/win*(W-mL-mR);
+  const Y=val=>H/2-(val/state.r)*(H/2-mT);
+  pc.strokeStyle='#16202f';pc.beginPath();pc.moveTo(mL,H/2);pc.lineTo(W-mR,H/2);pc.stroke();
+  // x=r cosθ (青) , y=r sinθ (綠)
+  function curve(fn,col){pc.strokeStyle=col;pc.lineWidth=2;pc.beginPath();
+    for(let i=0;i<=240;i++){const t=t0+win*i/240;const ang=theta+state.w*(t-simT);
+      const px=X(t),py=Y(fn(ang));i?pc.lineTo(px,py):pc.moveTo(px,py);}pc.stroke();}
+  curve(a=>state.r*Math.cos(a),'#4cc2ff');
+  curve(a=>state.r*Math.sin(a),'#7CFFB2');
+  pc.fillStyle='#4cc2ff';pc.font='11px sans-serif';pc.fillText('x=r·cosθ',mL+4,mT+10);
+  pc.fillStyle='#7CFFB2';pc.fillText('y=r·sinθ',mL+72,mT+10);
+  // 現在游標（右端）
+  const cxp=X(simT);pc.strokeStyle='#fff';pc.beginPath();pc.moveTo(cxp,mT);pc.lineTo(cxp,H-mB);pc.stroke();
+  pc.fillStyle='#fff';
+  pc.beginPath();pc.arc(cxp,Y(state.r*Math.cos(theta)),3.5,0,7);pc.fill();
+  pc.beginPath();pc.arc(cxp,Y(state.r*Math.sin(theta)),3.5,0,7);pc.fill();
+}
+
+// ---- 動畫 ----
+function loop(ts){
+  if(playing){const dt=Math.min((ts-last)/1000,0.05);last=ts;simT+=dt;
+    if(mode==='circle')theta+=state.w*dt;
+    // 放手飛出畫面後自動回到圓周
+    if(mode==='released'&&simT-relT>3.2){toCircle();}
+    draw();}
+  else last=ts;
+  requestAnimationFrame(loop);
+}
+const pb=document.getElementById('play');
+pb.onclick=()=>{playing=!playing;pb.classList.toggle('on',playing);pb.textContent=playing?'⏸ 暫停':'▶ 播放';last=performance.now();};
+document.getElementById('reset').onclick=()=>{theta=0;simT=0;toCircle();playing=true;pb.classList.add('on');pb.textContent='⏸ 暫停';last=performance.now();draw();};
+document.getElementById('release').onclick=()=>{release();playing=true;pb.classList.add('on');pb.textContent='⏸ 暫停';last=performance.now();};
+const sfb=document.getElementById('showF');
+sfb.onclick=()=>{showF=!showF;sfb.classList.toggle('on',showF);draw();};
+
+draw();
+requestAnimationFrame(loop);
+window.addEventListener('resize',draw);
+</script>
+</body>
+</html>

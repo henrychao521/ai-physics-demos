@@ -1,0 +1,293 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>能量守恆雲霄飛車 ｜ 動能・位能・摩擦生熱</title>
+<link rel="icon" href="../assets/favicon.svg" type="image/svg+xml">
+<link rel="stylesheet" href="../assets/site.css">
+<script defer src="../assets/nav.js"></script>
+<style>
+  *{box-sizing:border-box}
+  html,body{margin:0;padding:0;background:var(--bg);color:var(--txt);
+    font-family:"Noto Sans TC","PingFang TC","Microsoft JhengHei",system-ui,sans-serif}
+  a{color:var(--accent)}
+  .wrap{max-width:1100px;margin:0 auto;padding:18px 16px 60px}
+  header h1{font-size:1.5rem;margin:.2em 0}
+  header p{color:var(--muted);margin:.2em 0 1em;line-height:1.6}
+  .badge{display:inline-block;background:var(--panel2);border:1px solid var(--line);
+    color:var(--muted);font-size:.72rem;padding:2px 8px;border-radius:99px;margin-right:6px}
+  .stage{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:14px;margin-bottom:16px}
+  canvas{width:100%;display:block;border-radius:8px;background:#05070b}
+  .label{font-size:.8rem;color:var(--muted);margin:0 0 6px;display:flex;justify-content:space-between;flex-wrap:wrap;gap:8px}
+  .grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(210px,1fr));gap:14px}
+  .ctrl{background:var(--panel2);border:1px solid var(--line);border-radius:10px;padding:10px 12px}
+  .ctrl label{display:flex;justify-content:space-between;font-size:.85rem;margin-bottom:6px}
+  .ctrl .val{color:var(--accent);font-variant-numeric:tabular-nums}
+  input[type=range]{width:100%;accent-color:var(--accent)}
+  .modes{display:flex;gap:8px;margin:6px 0 14px;flex-wrap:wrap;align-items:center}
+  .modes button,.btn{background:var(--panel2);color:var(--txt);border:1px solid var(--line);
+    padding:8px 14px;border-radius:9px;cursor:pointer;font-size:.85rem;font-family:inherit}
+  .modes button.on{background:var(--accent);color:#04121c;border-color:var(--accent);font-weight:700}
+  .btn:hover,.modes button:hover{border-color:var(--accent)}
+  .ebar{display:flex;height:30px;border-radius:8px;overflow:hidden;border:1px solid var(--line);margin:2px 0 4px;background:#05070b}
+  .ebar div{display:flex;align-items:center;justify-content:center;font-size:.74rem;color:#04121c;font-weight:700;
+    white-space:nowrap;transition:width .05s linear;overflow:hidden}
+  .elegend{display:flex;gap:16px;flex-wrap:wrap;font-size:.8rem;color:var(--muted);margin-top:2px}
+  .elegend i{display:inline-block;width:11px;height:11px;border-radius:3px;vertical-align:middle;margin-right:5px}
+  .stat{display:grid;grid-template-columns:repeat(auto-fit,minmax(120px,1fr));gap:10px;margin:10px 0 2px}
+  .stat .box{background:var(--panel2);border:1px solid var(--line);border-radius:10px;padding:9px 11px}
+  .stat .box .k{font-size:.72rem;color:var(--muted)}
+  .stat .box .v{font-size:1.02rem;color:var(--accent2);font-variant-numeric:tabular-nums;font-weight:700}
+  .note{background:var(--panel);border-left:3px solid var(--accent2);border-radius:8px;
+    padding:12px 14px;color:var(--muted);font-size:.86rem;line-height:1.7;margin-top:18px}
+  .note b{color:var(--txt)}
+  .note code{background:var(--bg2);padding:1px 6px;border-radius:5px;color:var(--green);font-size:.85em}
+  footer{color:var(--muted);font-size:.78rem;margin-top:26px;text-align:center;line-height:1.7}
+</style>
+</head>
+<body data-demo="能量守恆雲霄飛車">
+<div class="wrap">
+  <header>
+    <span class="badge">力學・功與能</span>
+    <h1>能量守恆雲霄飛車</h1>
+    <p>小車從軌道上的<b>釋放點</b>由靜止滑下。觀察<b>動能 KE</b> 與<b>位能 PE</b> 如何此消彼長、總和維持不變；
+       打開<b>摩擦</b>後，部分力學能轉成<b>熱能</b>，小車越盪越低——這就是「能量守恆，但力學能不一定守恆」。</p>
+  </header>
+
+  <div class="modes">
+    <button id="play" class="on">▶ 播放</button>
+    <button class="btn" id="reset">↺ 重設</button>
+    <span style="color:var(--muted);font-size:.8rem;margin-left:4px">情境：</span>
+    <button class="btn" data-preset="ideal">無摩擦守恆</button>
+    <button class="btn" data-preset="fric">有摩擦衰減</button>
+    <button class="btn" data-preset="low">低釋放點</button>
+  </div>
+
+  <div class="stage">
+    <div class="label"><span>軌道與小車（粉點＝釋放點，虛線＝釋放高度）</span><span id="tlabel">t = 0.00 s</span></div>
+    <canvas id="track" width="1040" height="360"></canvas>
+    <div class="label" style="margin-top:10px"><span>能量分配（總長＝釋放時的總能量 E₀）</span><span id="elab"></span></div>
+    <div class="ebar" id="ebar">
+      <div id="bKE" style="background:#4cc2ff"></div>
+      <div id="bPE" style="background:#7CFFB2"></div>
+      <div id="bHT" style="background:#ff6b9d"></div>
+    </div>
+    <div class="elegend">
+      <span><i style="background:#4cc2ff"></i>動能 KE = ½mv²</span>
+      <span><i style="background:#7CFFB2"></i>位能 PE = mgh</span>
+      <span><i style="background:#ff6b9d"></i>熱能（摩擦損耗）</span>
+    </div>
+  </div>
+
+  <div class="stat" id="stats"></div>
+
+  <div class="stage">
+    <div class="label"><span>能量 vs 時間（堆疊）— 天花板＝E₀ 固定，摩擦時熱能由上往下侵蝕力學能</span><span>白線＝目前時刻</span></div>
+    <canvas id="plot" width="1040" height="220"></canvas>
+  </div>
+
+  <div class="grid" id="controls"></div>
+
+  <div class="note">
+    <b>物理重點：</b>能量守恆指<b>總能量</b>（KE＋PE＋熱）不變。無摩擦時力學能 <code>KE + PE = 定值</code>，
+    小車在等高處速率相同、可永遠來回。加入摩擦後，每滑行一段距離就把
+    <code>f·d = μmg·Δx</code> 的力學能轉成熱，KE＋PE 的「天花板」被熱能由上往下吃掉，小車最高點逐漸下降，最終停在谷底。
+    注意：<b>運動快慢與質量無關</b>（重力與摩擦加速度都不含 m），但能量大小與 m 成正比。
+  </div>
+
+  <footer>純前端 HTML / Canvas，無外部相依。沿軌道切向方向做動力學數值積分（含坡度重力分量與摩擦）。</footer>
+</div>
+
+<script>
+const sliders=[
+  {id:'x0', name:'釋放位置', min:0,  max:100, step:1, val:4,  unit:'%'},
+  {id:'m',  name:'質量 m',   min:1,  max:10,  step:.5,val:2,  unit:'kg'},
+  {id:'mu', name:'摩擦係數 μ',min:0,  max:.06, step:.002,val:0, unit:''},
+  {id:'g',  name:'重力 g',   min:1,  max:20,  step:.1,val:9.8,unit:'m/s²'},
+];
+const state={};
+const ctrl=document.getElementById('controls');
+sliders.forEach(s=>{
+  state[s.id]=s.val;
+  const box=document.createElement('div');box.className='ctrl';
+  box.innerHTML=`<label><span>${s.name}</span><span class="val" id="v_${s.id}">${fmt(s.val)}${s.unit?' '+s.unit:''}</span></label>
+    <input type="range" id="r_${s.id}" min="${s.min}" max="${s.max}" step="${s.step}" value="${s.val}">`;
+  ctrl.appendChild(box);
+  box.querySelector('input').addEventListener('input',e=>{
+    state[s.id]=parseFloat(e.target.value);
+    document.getElementById('v_'+s.id).textContent=`${fmt(state[s.id])}${s.unit?' '+s.unit:''}`;
+    rebuild();
+  });
+});
+function fmt(x){return (Math.round(x*1000)/1000).toString();}
+function setSlider(id,val){state[id]=val;const r=document.getElementById('r_'+id);if(r)r.value=val;
+  const s=sliders.find(z=>z.id===id);if(s)document.getElementById('v_'+id).textContent=`${fmt(val)}${s.unit?' '+s.unit:''}`;}
+
+// ---- 軌道幾何 ----
+const A=18, B=8, w=0.12, N=900, WIDTH=60;   // WIDTH：軌道水平實際寬度(公尺)，使坡度與摩擦距離為真實尺度
+function trackY(x){return A*Math.pow(2*x-1,2)+B*Math.exp(-Math.pow((x-0.5)/w,2));}     // 高度(m)，x 為 0..1
+function trackDY(x){return (4*A*(2*x-1)+B*Math.exp(-Math.pow((x-0.5)/w,2))*(-2*(x-0.5)/(w*w)))/WIDTH;} // dy/dX(實際斜率)
+let TX=[],TY=[],TDY=[],TS=[],YMIN=1e9,YMAX=-1e9,STOT=0;
+(function buildTrack(){
+  for(let i=0;i<N;i++){const x=i/(N-1);const y=trackY(x);TX.push(x);TY.push(y);TDY.push(trackDY(x));
+    YMIN=Math.min(YMIN,y);YMAX=Math.max(YMAX,y);}
+  TS[0]=0;for(let i=1;i<N;i++){const dx=(TX[i]-TX[i-1])*WIDTH;const dy=(TY[i]-TY[i-1]);TS[i]=TS[i-1]+Math.hypot(dx,dy);}
+  STOT=TS[N-1];
+})();
+function atX(x){ // x in 0..1 -> {y,dydx}
+  const f=Math.max(0,Math.min(1,x))*(N-1);const i=Math.floor(f),fr=f-i,j=Math.min(N-1,i+1);
+  return {y:TY[i]+(TY[j]-TY[i])*fr, dydx:TDY[i]+(TDY[j]-TDY[i])*fr};
+}
+function atS(s){ // arc length -> {x,y,dydx}
+  s=Math.max(0,Math.min(STOT,s));let lo=0,hi=N-1;
+  while(hi-lo>1){const mid=(lo+hi)>>1;if(TS[mid]<s)lo=mid;else hi=mid;}
+  const fr=(s-TS[lo])/((TS[hi]-TS[lo])||1);
+  return {x:TX[lo]+(TX[hi]-TX[lo])*fr, y:TY[lo]+(TY[hi]-TY[lo])*fr, dydx:TDY[lo]+(TDY[hi]-TDY[lo])*fr};
+}
+function arcAtX(x){ // x in 0..1 -> arc length s
+  const f=Math.max(0,Math.min(1,x))*(N-1);const i=Math.floor(f),fr=f-i,j=Math.min(N-1,i+1);
+  return TS[i]+(TS[j]-TS[i])*fr;
+}
+
+// ---- 模擬 ----
+const TTOT=18, DT=0.004;
+let SIM=[], E0=0, playT=0, playing=true, last=0;
+function simulate(){
+  // 能量法：v 由「總能 − 位能 − 已生熱」直接求出，總能量逐構造守恆。
+  const m=state.m,g=state.g,mu=state.mu;
+  const x0=state.x0/100;
+  let s=arcAtX(x0), dir=0, heat=0;          // 從釋放點靜止（dir=0，首步自動往下坡）
+  const y0=atS(s).y; E0=m*g*(y0-YMIN);
+  SIM=[];
+  for(let t=0;t<=TTOT+1e-9;t+=DT){
+    const p=atS(s); const PE=m*g*(p.y-YMIN);
+    let avail=E0-heat-PE; if(avail<0)avail=0;
+    const KE=avail, v=Math.sqrt(2*avail/m);
+    SIM.push({t,x:p.x,y:p.y,u:dir*v,KE,PE,HT:heat});
+    const inv=1/Math.sqrt(1+p.dydx*p.dydx), cosT=inv, sinT=p.dydx*inv;
+    if(dir===0) dir=(sinT>0?-1:1);          // 下坡方向：+x 為上坡(sinT>0)則往 -x
+    const minStep=STOT*1e-4;                 // v≈0(釋放點/折返點)時的最小位移，避免停滯
+    let step=dir*v*DT; if(Math.abs(step)<minStep) step=dir*minStep;
+    let ns=s+step;
+    if(ns<0){ns=0;dir=-dir;}                 // 撞左端反彈
+    else if(ns>STOT){ns=STOT;dir=-dir;}      // 撞右端反彈
+    else{ const np=atS(ns); if(E0-heat-m*g*(np.y-YMIN)<0){dir=-dir;ns=s;} } // 能量不足→折返(最高點)
+    heat+=mu*m*g*cosT*Math.abs(ns-s);
+    s=ns;
+  }
+}
+function simAt(tt){
+  if(tt<=0)return SIM[0];if(tt>=SIM[SIM.length-1].t)return SIM[SIM.length-1];
+  const idx=Math.min(SIM.length-1,Math.round(tt/DT));return SIM[idx];
+}
+
+// ---- 視圖 ----
+const tk=document.getElementById('track'),tc=tk.getContext('2d');
+const plot=document.getElementById('plot'),pc=plot.getContext('2d');
+function trackMap(){const W=tk.width,H=tk.height,mL=40,mR=18,mT=16,mB=30;
+  const span=YMAX-YMIN; const X=x=>mL+x*(W-mL-mR); const Y=y=>H-mB-((y-YMIN)/span)*(H-mT-mB);return{W,H,mL,mR,mT,mB,X,Y};}
+function drawTrack(cur){
+  const {W,H,mL,mR,mT,mB,X,Y}=trackMap();tc.clearRect(0,0,W,H);
+  // 高度格線
+  tc.strokeStyle='#16202f';tc.fillStyle='#46566b';tc.font='11px sans-serif';tc.lineWidth=1;
+  for(let h=0;h<=YMAX-YMIN+0.1;h+=6){const yy=Y(YMIN+h);tc.beginPath();tc.moveTo(mL,yy);tc.lineTo(W-mR,yy);tc.stroke();
+    tc.fillText(h.toFixed(0)+'m',6,yy+4);}
+  // 釋放高度虛線
+  const rel=atX(state.x0/100).y;tc.strokeStyle='#ff6b9d';tc.setLineDash([5,4]);tc.beginPath();tc.moveTo(mL,Y(rel));tc.lineTo(W-mR,Y(rel));tc.stroke();tc.setLineDash([]);
+  // 軌道 + 軌道下方填色
+  tc.beginPath();for(let i=0;i<N;i++){const px=X(TX[i]),py=Y(TY[i]);i?tc.lineTo(px,py):tc.moveTo(px,py);}
+  tc.lineTo(X(1),H-mB);tc.lineTo(X(0),H-mB);tc.closePath();
+  tc.fillStyle='#0c1626';tc.fill();
+  tc.beginPath();for(let i=0;i<N;i++){const px=X(TX[i]),py=Y(TY[i]);i?tc.lineTo(px,py):tc.moveTo(px,py);}
+  tc.strokeStyle='#5a7bb0';tc.lineWidth=3;tc.stroke();
+  // 釋放點
+  const r0=atX(state.x0/100);tc.fillStyle='#ff6b9d';tc.beginPath();tc.arc(X(r0.x),Y(r0.y),5,0,7);tc.fill();
+  // 小車
+  const cx=X(cur.x),cy=Y(cur.y);
+  tc.fillStyle='#ffce54';tc.strokeStyle='#fff';tc.lineWidth=2;tc.beginPath();tc.arc(cx,cy,9,0,7);tc.fill();tc.stroke();
+  // 速度向量（沿切向）
+  const inv=1/Math.sqrt(1+cur_dydx(cur)*cur_dydx(cur));
+  const dirx=Math.sign(cur.u)||1; const tx=dirx*inv, ty=dirx*cur_dydx(cur)*inv;
+  const vlen=Math.min(60,Math.abs(cur.u)*4);
+  if(vlen>3){tc.strokeStyle='#4cc2ff';tc.fillStyle='#4cc2ff';tc.lineWidth=2.5;
+    const ex=cx+tx*vlen, ey=cy+ty*vlen;tc.beginPath();tc.moveTo(cx,cy);tc.lineTo(ex,ey);tc.stroke();
+    const a=Math.atan2(ey-cy,ex-cx);tc.beginPath();tc.moveTo(ex,ey);tc.lineTo(ex-7*Math.cos(a-.4),ey-7*Math.sin(a-.4));
+    tc.lineTo(ex-7*Math.cos(a+.4),ey-7*Math.sin(a+.4));tc.closePath();tc.fill();}
+  document.getElementById('tlabel').textContent='t = '+cur.t.toFixed(2)+' s';
+}
+function cur_dydx(cur){return atX(cur.x).dydx;}
+function drawBars(cur){
+  const tot=Math.max(E0,1e-6);
+  const ke=cur.KE/tot*100, pe=cur.PE/tot*100, ht=cur.HT/tot*100;
+  const bKE=document.getElementById('bKE'),bPE=document.getElementById('bPE'),bHT=document.getElementById('bHT');
+  bKE.style.width=ke+'%';bPE.style.width=pe+'%';bHT.style.width=ht+'%';
+  bKE.textContent=ke>12?'KE':'';bPE.textContent=pe>12?'PE':'';bHT.textContent=ht>12?'熱':'';
+  document.getElementById('elab').textContent=`E₀ = ${E0.toFixed(1)} J　力學能 = ${(cur.KE+cur.PE).toFixed(1)} J`;
+}
+function drawStats(cur){
+  const v=Math.abs(cur.u), h=cur.y-YMIN;
+  const rows=[
+    ['動能 KE', cur.KE.toFixed(1)+' J'],
+    ['位能 PE', cur.PE.toFixed(1)+' J'],
+    ['熱能', cur.HT.toFixed(1)+' J'],
+    ['力學能 KE+PE', (cur.KE+cur.PE).toFixed(1)+' J'],
+    ['速率 v', v.toFixed(2)+' m/s'],
+    ['高度 h', h.toFixed(1)+' m'],
+  ];
+  document.getElementById('stats').innerHTML=rows.map(r=>
+    `<div class="box"><div class="k">${r[0]}</div><div class="v">${r[1]}</div></div>`).join('');
+}
+function drawPlot(cur){
+  const W=plot.width,H=plot.height,mL=46,mR=16,mT=14,mB=24;pc.clearRect(0,0,W,H);
+  const tot=Math.max(E0,1e-6);
+  const X=t=>mL+t/TTOT*(W-mL-mR), Y=e=>H-mB-(e/tot)*(H-mT-mB);
+  // 堆疊面積：KE(底) + PE + 熱(頂)
+  function area(getTop,getBot,col){pc.fillStyle=col;pc.beginPath();
+    for(let i=0;i<SIM.length;i++){const px=X(SIM[i].t),py=Y(getBot(SIM[i]));i?pc.lineTo(px,py):pc.moveTo(px,py);}
+    for(let i=SIM.length-1;i>=0;i--){const px=X(SIM[i].t),py=Y(getTop(SIM[i]));pc.lineTo(px,py);}pc.closePath();pc.fill();}
+  area(s=>s.KE,s=>0,'rgba(76,194,255,.55)');
+  area(s=>s.KE+s.PE,s=>s.KE,'rgba(124,255,178,.5)');
+  area(s=>s.KE+s.PE+s.HT,s=>s.KE+s.PE,'rgba(255,107,157,.5)');
+  // E0 天花板
+  pc.strokeStyle='#8a99ad';pc.setLineDash([5,4]);pc.lineWidth=1;pc.beginPath();pc.moveTo(mL,Y(E0));pc.lineTo(W-mR,Y(E0));pc.stroke();pc.setLineDash([]);
+  pc.fillStyle='#8a99ad';pc.font='11px sans-serif';pc.fillText('E₀',W-mR-22,Y(E0)-4);
+  // 軸
+  pc.strokeStyle='#314056';pc.beginPath();pc.moveTo(mL,H-mB);pc.lineTo(W-mR,H-mB);pc.stroke();
+  for(let i=0;i<=6;i++){const tx=X(TTOT*i/6);pc.fillStyle='#46566b';pc.fillText((TTOT*i/6).toFixed(0)+'s',tx-7,H-9);}
+  // 游標
+  const cx=X(cur.t);pc.strokeStyle='#fff';pc.lineWidth=1;pc.beginPath();pc.moveTo(cx,mT);pc.lineTo(cx,H-mB);pc.stroke();
+}
+function render(cur){drawTrack(cur);drawBars(cur);drawStats(cur);drawPlot(cur);}
+function rebuild(){simulate();playT=Math.min(playT,TTOT);render(simAt(playT));}
+
+// ---- 動畫 ----
+function loop(ts){
+  if(playing){const dt=(ts-last)/1000;last=ts;playT+=Math.min(dt,0.05);
+    if(playT>=TTOT){playT=TTOT;playing=false;pb.classList.remove('on');pb.textContent='▶ 重新播放';}
+    render(simAt(playT));}
+  else last=ts;
+  requestAnimationFrame(loop);
+}
+const pb=document.getElementById('play');
+pb.onclick=()=>{if(playT>=TTOT)playT=0;playing=!playing;pb.classList.toggle('on',playing);
+  pb.textContent=playing?'⏸ 暫停':'▶ 播放';last=performance.now();};
+document.getElementById('reset').onclick=()=>{playT=0;playing=true;pb.classList.add('on');pb.textContent='⏸ 暫停';last=performance.now();render(simAt(0));};
+const PRESETS={
+  ideal:{x0:4,m:2,mu:0,    g:9.8},
+  fric: {x0:4,m:2,mu:0.024,g:9.8},
+  low:  {x0:30,m:2,mu:0,   g:9.8},
+};
+document.querySelectorAll('[data-preset]').forEach(b=>b.onclick=()=>{
+  const p=PRESETS[b.dataset.preset];if(!p)return;
+  ['x0','m','mu','g'].forEach(k=>setSlider(k,p[k]));
+  playT=0;playing=true;pb.classList.add('on');pb.textContent='⏸ 暫停';last=performance.now();
+  simulate();render(simAt(0));
+});
+
+simulate();render(simAt(0));
+requestAnimationFrame(loop);
+window.addEventListener('resize',()=>render(simAt(playT)));
+</script>
+</body>
+</html>

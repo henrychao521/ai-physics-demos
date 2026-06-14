@@ -1,0 +1,203 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>比熱與加熱曲線 ｜ 相變・潛熱・Q=mcΔT</title>
+<link rel="icon" href="../assets/favicon.svg" type="image/svg+xml">
+<link rel="stylesheet" href="../assets/site.css">
+<script defer src="../assets/nav.js"></script>
+<style>
+  *{box-sizing:border-box}
+  html,body{margin:0;padding:0;background:var(--bg);color:var(--txt);
+    font-family:"Noto Sans TC","PingFang TC","Microsoft JhengHei",system-ui,sans-serif}
+  a{color:var(--accent)}
+  .wrap{max-width:1100px;margin:0 auto;padding:18px 16px 60px}
+  header h1{font-size:1.5rem;margin:.2em 0}
+  header p{color:var(--muted);margin:.2em 0 1em;line-height:1.6}
+  .badge{display:inline-block;background:var(--panel2);border:1px solid var(--line);
+    color:var(--muted);font-size:.72rem;padding:2px 8px;border-radius:99px;margin-right:6px}
+  .layout{display:grid;grid-template-columns:1fr .42fr;gap:16px}
+  @media(max-width:760px){.layout{grid-template-columns:1fr}}
+  .stage{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:14px;margin-bottom:16px}
+  canvas{width:100%;display:block;border-radius:8px;background:#05070b}
+  .label{font-size:.8rem;color:var(--muted);margin:0 0 6px;display:flex;justify-content:space-between;flex-wrap:wrap;gap:8px}
+  .grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:14px}
+  .ctrl{background:var(--panel2);border:1px solid var(--line);border-radius:10px;padding:10px 12px}
+  .ctrl label{display:flex;justify-content:space-between;font-size:.85rem;margin-bottom:6px}
+  .ctrl .val{color:var(--accent);font-variant-numeric:tabular-nums}
+  input[type=range]{width:100%;accent-color:var(--accent)}
+  .modes{display:flex;gap:8px;margin:6px 0 14px;flex-wrap:wrap;align-items:center}
+  .modes button,.btn{background:var(--panel2);color:var(--txt);border:1px solid var(--line);
+    padding:8px 14px;border-radius:9px;cursor:pointer;font-size:.85rem;font-family:inherit}
+  .modes button.on{background:var(--accent);color:#04121c;border-color:var(--accent);font-weight:700}
+  .btn:hover,.modes button:hover{border-color:var(--accent)}
+  .stat{display:grid;grid-template-columns:1fr;gap:10px}
+  .stat .box{background:var(--panel2);border:1px solid var(--line);border-radius:10px;padding:9px 11px}
+  .stat .box .k{font-size:.72rem;color:var(--muted)}
+  .stat .box .v{font-size:1.05rem;font-variant-numeric:tabular-nums;font-weight:700}
+  .phase{margin-top:10px;padding:10px 12px;border-radius:10px;text-align:center;font-weight:700;font-size:1rem}
+  .note{background:var(--panel);border-left:3px solid var(--accent2);border-radius:8px;
+    padding:12px 14px;color:var(--muted);font-size:.86rem;line-height:1.7;margin-top:18px}
+  .note b{color:var(--txt)}.note code{background:var(--bg2);padding:1px 6px;border-radius:5px;color:var(--green);font-size:.85em}
+  footer{color:var(--muted);font-size:.78rem;margin-top:26px;text-align:center;line-height:1.7}
+</style>
+</head>
+<body data-demo="比熱與加熱曲線">
+<div class="wrap">
+  <header>
+    <span class="badge">熱學・比熱與相變</span>
+    <h1>比熱與加熱曲線</h1>
+    <p>用固定功率加熱 −20°C 的冰。溫度沿著曲線上升，但在<b>熔化</b>（0°C）與<b>沸騰</b>（100°C）時出現
+       <b>水平平台</b>——加熱卻不升溫，因為熱量都用來改變<b>相態</b>（潛熱）。斜段則服從 <b>Q = mcΔT</b>。</p>
+  </header>
+
+  <div class="modes">
+    <button id="play" class="on">⏸ 暫停</button>
+    <button class="btn" id="reset">↺ 重新加熱</button>
+    <span style="color:var(--muted);font-size:.8rem;margin-left:4px">情境：</span>
+    <button class="btn" data-preset="std">標準</button>
+    <button class="btn" data-preset="fast">大功率(快)</button>
+    <button class="btn" data-preset="big">大質量(慢)</button>
+  </div>
+
+  <div class="layout">
+    <div class="stage">
+      <div class="label"><span>溫度 — 加熱時間曲線（平台＝相變吸潛熱）</span><span id="tlabel"></span></div>
+      <canvas id="cv" width="720" height="420"></canvas>
+    </div>
+    <div>
+      <div class="stage" style="margin-bottom:12px;display:flex;gap:12px;align-items:stretch">
+        <canvas id="therm" width="80" height="240" style="width:64px;flex:none"></canvas>
+        <div style="flex:1;display:flex;flex-direction:column;justify-content:center" id="phasewrap">
+          <div class="phase" id="phase"></div>
+        </div>
+      </div>
+      <div class="stat" id="stats"></div>
+    </div>
+  </div>
+
+  <div class="grid" id="controls" style="margin-top:6px"></div>
+
+  <div class="note">
+    <b>物理重點：</b>斜段（升溫）吸收的是<b>顯熱</b> <code>Q = m·c·ΔT</code>，比熱 c 越大、質量 m 越大，同樣加熱升溫越慢（斜率越緩）。
+    平台（相變）吸收的是<b>潛熱</b> <code>Q = m·L</code>：熔化吸熔化熱 L_f、沸騰吸汽化熱 L_v，期間分子忙著掙脫彼此的束縛，
+    動能（溫度）不變。水的汽化熱（2260 J/g）遠大於熔化熱（334 J/g），所以<b>沸騰平台特別長</b>——這也是流汗、蒸氣燙傷的物理。
+  </div>
+
+  <footer>純前端 HTML / Canvas，無外部相依。採水的標準比熱與潛熱值（液態比熱可調以示範斜率）。</footer>
+</div>
+
+<script>
+const sliders=[
+  {id:'m',name:'質量 m',     min:50,max:500,step:10,val:150,unit:'g'},
+  {id:'P',name:'加熱功率 P', min:100,max:2000,step:50,val:800,unit:'W'},
+  {id:'c',name:'液態比熱 c', min:1,max:6,step:.1,val:4.18,unit:'J/g°C'},
+];
+const state={};
+const ctrl=document.getElementById('controls');
+sliders.forEach(s=>{
+  state[s.id]=s.val;
+  const box=document.createElement('div');box.className='ctrl';
+  box.innerHTML=`<label><span>${s.name}</span><span class="val" id="v_${s.id}">${fmt(s.val)} ${s.unit}</span></label>
+    <input type="range" id="r_${s.id}" min="${s.min}" max="${s.max}" step="${s.step}" value="${s.val}">`;
+  ctrl.appendChild(box);
+  box.querySelector('input').addEventListener('input',e=>{
+    state[s.id]=parseFloat(e.target.value);
+    document.getElementById('v_'+s.id).textContent=`${fmt(state[s.id])} ${s.unit}`;
+    buildSeg();draw();
+  });
+});
+function fmt(x){return (Math.round(x*100)/100).toString();}
+function setSlider(id,val){state[id]=val;const r=document.getElementById('r_'+id);if(r)r.value=val;
+  const s=sliders.find(z=>z.id===id);if(s)document.getElementById('v_'+id).textContent=`${fmt(val)} ${s.unit}`;}
+
+// ---- 物理常數（水）----
+const cI=2.1,cS=2.0,Lf=334,Lv=2260,T0=-20,Tend=130;
+let seg=[], Qmax=0, t=0, tEnd=0, playing=true, last=0;
+function buildSeg(){
+  const m=state.m,c=state.c;
+  // 每段: {q0,q1, T(Q), 名稱}
+  const q1=m*cI*20;            // 冰 -20→0
+  const q2=q1+m*Lf;            // 熔化
+  const q3=q2+m*c*100;         // 水 0→100
+  const q4=q3+m*Lv;            // 沸騰
+  const q5=q4+m*cS*30;         // 蒸氣 100→130
+  seg=[
+    {a:0, b:q1, f:Q=>T0+Q/(m*cI),        ph:'固體（冰）升溫',col:'#8b9cff'},
+    {a:q1,b:q2, f:Q=>0,                  ph:'熔化中（吸熔化熱）',col:'#4cc2ff'},
+    {a:q2,b:q3, f:Q=>(Q-q2)/(m*c),       ph:'液體（水）升溫',col:'#4cc2ff'},
+    {a:q3,b:q4, f:Q=>100,                ph:'沸騰中（吸汽化熱）',col:'#ff6b9d'},
+    {a:q4,b:q5, f:Q=>100+(Q-q4)/(m*cS),  ph:'氣體（蒸氣）升溫',col:'#ff6b9d'},
+  ];
+  Qmax=q5; tEnd=Qmax/state.P;
+}
+function TofQ(Q){for(const s of seg){if(Q<=s.b)return {T:s.f(Q),ph:s.ph,col:s.col};}const l=seg[seg.length-1];return {T:l.f(Qmax),ph:'完成',col:'#7CFFB2'};}
+
+// ---- 視圖 ----
+const cv=document.getElementById('cv'),cc=cv.getContext('2d');
+const th=document.getElementById('therm'),tcx=th.getContext('2d');
+function draw(){
+  const W=cv.width,H=cv.height,mL=46,mR=16,mT=14,mB=30;cc.clearRect(0,0,W,H);
+  const X=tt=>mL+tt/Math.max(tEnd,.001)*(W-mL-mR);
+  const Y=T=>H-mB-(T-T0)/(Tend-T0)*(H-mT-mB);
+  // 格線 + 0/100 參考線
+  cc.strokeStyle='#16202f';cc.lineWidth=1;cc.fillStyle='#46566b';cc.font='11px sans-serif';
+  for(let T=T0;T<=Tend;T+=20){const y=Y(T);cc.beginPath();cc.moveTo(mL,y);cc.lineTo(W-mR,y);cc.stroke();cc.fillText(T+'°',8,y+4);}
+  [0,100].forEach(Tc=>{cc.strokeStyle='#2a3850';cc.setLineDash([4,4]);cc.beginPath();cc.moveTo(mL,Y(Tc));cc.lineTo(W-mR,Y(Tc));cc.stroke();cc.setLineDash([]);});
+  cc.fillStyle='#6b7785';cc.fillText('加熱時間 (s)',W-110,H-10);cc.fillText('溫度',8,mT+2);
+  // 曲線（依段著色）
+  cc.lineWidth=3;
+  for(const s of seg){cc.strokeStyle=s.col;cc.beginPath();let first=true;
+    for(let Q=s.a;Q<=s.b;Q+=Qmax/600){const tt=Q/state.P,T=s.f(Q);const x=X(tt),y=Y(T);first?cc.moveTo(x,y):cc.lineTo(x,y);first=false;}cc.stroke();}
+  // 平台標註
+  cc.fillStyle='#4cc2ff';cc.font='11px sans-serif';
+  const meltMidT=(seg[1].a+seg[1].b)/2/state.P, boilMidT=(seg[3].a+seg[3].b)/2/state.P;
+  cc.fillText('熔化平台',X(meltMidT)-22,Y(0)-8);
+  cc.fillStyle='#ff6b9d';cc.fillText('沸騰平台（最長）',X(boilMidT)-40,Y(100)-8);
+  // 目前點
+  const Q=Math.min(state.P*t,Qmax);const cur=TofQ(Q);
+  const cx=X(Q/state.P),cy=Y(cur.T);
+  cc.strokeStyle='#fff';cc.lineWidth=1;cc.setLineDash([3,3]);cc.beginPath();cc.moveTo(cx,mT);cc.lineTo(cx,H-mB);cc.stroke();cc.setLineDash([]);
+  cc.fillStyle='#fff';cc.beginPath();cc.arc(cx,cy,5,0,7);cc.fill();
+  document.getElementById('tlabel').textContent='t = '+t.toFixed(1)+' s / '+tEnd.toFixed(0)+' s';
+  drawTherm(cur);drawStats(Q,cur);
+}
+function drawTherm(cur){
+  const W=th.width,H=th.height,bx=W/2,bw=18,top=16,bot=H-30;tcx.clearRect(0,0,W,H);
+  tcx.strokeStyle='#3a4756';tcx.lineWidth=2;tcx.strokeRect(bx-bw/2,top,bw,bot-top);
+  tcx.fillStyle='#5a7bb0';tcx.beginPath();tcx.arc(bx,bot+8,12,0,7);tcx.fill();
+  const frac=(cur.T-T0)/(Tend-T0);const fy=bot-(bot-top)*Math.max(0,Math.min(1,frac));
+  tcx.fillStyle=cur.col;tcx.fillRect(bx-bw/2+3,fy,bw-6,bot-fy);tcx.beginPath();tcx.arc(bx,bot+8,9,0,7);tcx.fill();
+  tcx.fillStyle='#e8eef6';tcx.font='bold 13px sans-serif';tcx.textAlign='center';tcx.fillText(cur.T.toFixed(0)+'°C',bx,top-3);tcx.textAlign='left';
+}
+function drawStats(Q,cur){
+  const pct=Qmax>0?Q/Qmax*100:0;
+  const rows=[
+    ['目前溫度',cur.T.toFixed(1)+' °C'],
+    ['已加熱量 Q',(Q/1000).toFixed(1)+' kJ'],
+    ['總需熱量',(Qmax/1000).toFixed(1)+' kJ'],
+    ['完成度',pct.toFixed(0)+' %'],
+  ];
+  document.getElementById('stats').innerHTML=rows.map(r=>
+    `<div class="box"><div class="k">${r[0]}</div><div class="v">${r[1]}</div></div>`).join('');
+  const ph=document.getElementById('phase');ph.textContent=cur.ph;ph.style.background=cur.col+'22';ph.style.color=cur.col;
+}
+function loop(ts){
+  if(playing){const dt=Math.min((ts-last)/1000,0.05);last=ts;t+=dt;if(state.P*t>=Qmax){t=Qmax/state.P;}draw();}
+  else last=ts;requestAnimationFrame(loop);
+}
+const pb=document.getElementById('play');
+pb.onclick=()=>{playing=!playing;pb.classList.toggle('on',playing);pb.textContent=playing?'⏸ 暫停':'▶ 播放';last=performance.now();};
+document.getElementById('reset').onclick=()=>{t=0;playing=true;pb.classList.add('on');pb.textContent='⏸ 暫停';last=performance.now();};
+const PRE={std:{m:150,P:800,c:4.18},fast:{m:150,P:1800,c:4.18},big:{m:450,P:800,c:4.18}};
+document.querySelectorAll('[data-preset]').forEach(b=>b.onclick=()=>{
+  const p=PRE[b.dataset.preset];if(!p)return;['m','P','c'].forEach(k=>setSlider(k,p[k]));buildSeg();t=0;
+  playing=true;pb.classList.add('on');pb.textContent='⏸ 暫停';last=performance.now();
+});
+buildSeg();draw();
+requestAnimationFrame(loop);
+window.addEventListener('resize',draw);
+</script>
+</body>
+</html>

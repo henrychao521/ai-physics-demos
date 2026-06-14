@@ -1,0 +1,183 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>電磁感應發電機 ｜ 法拉第定律・EMF=-dΦ/dt</title>
+<link rel="icon" href="../assets/favicon.svg" type="image/svg+xml">
+<link rel="stylesheet" href="../assets/site.css">
+<script defer src="../assets/nav.js"></script>
+<style>
+  *{box-sizing:border-box}
+  html,body{margin:0;padding:0;background:var(--bg);color:var(--txt);
+    font-family:"Noto Sans TC","PingFang TC","Microsoft JhengHei",system-ui,sans-serif}
+  a{color:var(--accent)}
+  .wrap{max-width:1100px;margin:0 auto;padding:18px 16px 60px}
+  header h1{font-size:1.5rem;margin:.2em 0}
+  header p{color:var(--muted);margin:.2em 0 1em;line-height:1.6}
+  .badge{display:inline-block;background:var(--panel2);border:1px solid var(--line);
+    color:var(--muted);font-size:.72rem;padding:2px 8px;border-radius:99px;margin-right:6px}
+  .layout{display:grid;grid-template-columns:.62fr 1fr;gap:16px}
+  @media(max-width:760px){.layout{grid-template-columns:1fr}}
+  .stage{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:14px;margin-bottom:16px}
+  canvas{width:100%;display:block;border-radius:8px;background:#05070b}
+  .label{font-size:.8rem;color:var(--muted);margin:0 0 6px;display:flex;justify-content:space-between;flex-wrap:wrap;gap:8px}
+  .grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:14px}
+  .ctrl{background:var(--panel2);border:1px solid var(--line);border-radius:10px;padding:10px 12px}
+  .ctrl label{display:flex;justify-content:space-between;font-size:.85rem;margin-bottom:6px}
+  .ctrl .val{color:var(--accent);font-variant-numeric:tabular-nums}
+  input[type=range]{width:100%;accent-color:var(--accent)}
+  .modes{display:flex;gap:8px;margin:6px 0 14px;flex-wrap:wrap;align-items:center}
+  .modes button,.btn{background:var(--panel2);color:var(--txt);border:1px solid var(--line);
+    padding:8px 14px;border-radius:9px;cursor:pointer;font-size:.85rem;font-family:inherit}
+  .modes button.on{background:var(--accent);color:#04121c;border-color:var(--accent);font-weight:700}
+  .btn:hover,.modes button:hover{border-color:var(--accent)}
+  .stat{display:grid;grid-template-columns:repeat(auto-fit,minmax(120px,1fr));gap:10px;margin:2px 0}
+  .stat .box{background:var(--panel2);border:1px solid var(--line);border-radius:10px;padding:9px 11px}
+  .stat .box .k{font-size:.72rem;color:var(--muted)}
+  .stat .box .v{font-size:1.02rem;font-variant-numeric:tabular-nums;font-weight:700}
+  .note{background:var(--panel);border-left:3px solid var(--accent2);border-radius:8px;
+    padding:12px 14px;color:var(--muted);font-size:.86rem;line-height:1.7;margin-top:18px}
+  .note b{color:var(--txt)}.note code{background:var(--bg2);padding:1px 6px;border-radius:5px;color:var(--green);font-size:.85em}
+  footer{color:var(--muted);font-size:.78rem;margin-top:26px;text-align:center;line-height:1.7}
+</style>
+</head>
+<body data-demo="電磁感應發電機">
+<div class="wrap">
+  <header>
+    <span class="badge">電磁・電磁感應</span>
+    <h1>電磁感應發電機</h1>
+    <p>讓線圈在磁場中<b>轉動</b>，穿過線圈的<b>磁通量 Φ</b> 不斷改變，就會感應出<b>電動勢 EMF</b>（發電）。
+       <b>法拉第定律</b>：EMF = −N·dΦ/dt。轉得越快、磁場越強、匝數越多，發出的電壓越大。這就是發電廠與腳踏車發電燈的原理。</p>
+  </header>
+
+  <div class="modes">
+    <button id="play" class="on">⏸ 暫停</button>
+    <button class="btn" id="reset">↺ 重設</button>
+    <span style="color:var(--muted);font-size:.8rem;margin-left:4px">情境：</span>
+    <button class="btn" data-preset="slow">慢轉</button>
+    <button class="btn" data-preset="fast">快轉(電壓大)</button>
+    <button class="btn" data-preset="strong">強磁場</button>
+  </div>
+
+  <div class="layout">
+    <div class="stage">
+      <div class="label"><span>線圈在磁場中旋轉（燈泡亮度＝|EMF|）</span><span id="sub"></span></div>
+      <canvas id="gen" width="360" height="320"></canvas>
+    </div>
+    <div class="stage">
+      <div class="label"><span>磁通量 Φ（青）與 感應電動勢 EMF（黃）— 相差 90°</span><span id="tlabel"></span></div>
+      <canvas id="plot" width="640" height="320"></canvas>
+    </div>
+  </div>
+
+  <div class="stat" id="stats"></div>
+  <div class="grid" id="controls" style="margin-top:14px"></div>
+
+  <div class="note">
+    <b>物理重點：</b>磁通量 <code>Φ = N·B·A·cosθ</code>（θ 為線圈法線與磁場的夾角）。線圈以角速度 ω 轉動時 θ=ωt，
+    <b>法拉第定律</b> <code>EMF = −dΦ/dt = N·B·A·ω·sin(ωt)</code>——是個<b>正弦交流</b>電壓，峰值 <code>NBAω</code>。
+    注意 EMF 與 Φ <b>相差 90°</b>：Φ 變化最快（線圈與磁場平行、掃過最多磁力線）時 EMF 最大；Φ 最大（線圈正對磁場）時
+    EMF 反而為零。負號是<b>冷次定律</b>：感應電流的方向總是<b>反抗磁通的改變</b>（能量守恆，否則就能無中生有）。
+  </div>
+
+  <footer>純前端 HTML / Canvas，無外部相依。</footer>
+</div>
+
+<script>
+const sliders=[
+  {id:'w',name:'轉速 ω',min:0.5,max:6,step:.1,val:2,unit:'rad/s'},
+  {id:'B',name:'磁場強度 B',min:.5,max:3,step:.1,val:1.5,unit:''},
+  {id:'N',name:'線圈匝數 N',min:1,max:50,step:1,val:20,unit:'匝'},
+];
+const state={}; let theta=0, t=0, playing=true, last=0;
+const A=1;
+const ctrl=document.getElementById('controls');
+sliders.forEach(s=>{
+  state[s.id]=s.val;
+  const box=document.createElement('div');box.className='ctrl';
+  box.innerHTML=`<label><span>${s.name}</span><span class="val" id="v_${s.id}">${fmt(s.val)} ${s.unit}</span></label>
+    <input type="range" id="r_${s.id}" min="${s.min}" max="${s.max}" step="${s.step}" value="${s.val}">`;
+  ctrl.appendChild(box);
+  box.querySelector('input').addEventListener('input',e=>{state[s.id]=parseFloat(e.target.value);
+    document.getElementById('v_'+s.id).textContent=`${fmt(state[s.id])} ${s.unit}`;});
+});
+function fmt(x){return (Math.round(x*100)/100).toString();}
+function setSlider(id,val){state[id]=val;const r=document.getElementById('r_'+id);if(r)r.value=val;
+  const s=sliders.find(z=>z.id===id);if(s)document.getElementById('v_'+id).textContent=`${fmt(val)} ${s.unit}`;}
+
+function flux(th){return state.N*state.B*A*Math.cos(th);}
+function emf(th){return state.N*state.B*A*state.w*Math.sin(th);}
+function emfPeak(){return state.N*state.B*A*state.w;}
+
+const gen=document.getElementById('gen'),gc=gen.getContext('2d');
+const plot=document.getElementById('plot'),pc=plot.getContext('2d');
+function drawGen(){
+  const W=gen.width,H=gen.height,cx=W/2,cy=H/2-20;gc.clearRect(0,0,W,H);
+  // 磁場箭頭(向右)
+  gc.strokeStyle='#26303f';gc.fillStyle='#26303f';gc.lineWidth=1.5;
+  for(let y=24;y<H-70;y+=34){gc.beginPath();gc.moveTo(20,y);gc.lineTo(W-20,y);gc.stroke();
+    gc.beginPath();gc.moveTo(W-20,y);gc.lineTo(W-28,y-4);gc.lineTo(W-28,y+4);gc.closePath();gc.fill();}
+  gc.fillStyle='#46566b';gc.font='11px sans-serif';gc.fillText('磁場 B →',20,16);
+  // 旋轉線圈(邊視為一條線, 角度=theta 從鉛直)
+  const L=90, ux=Math.sin(theta), uy=-Math.cos(theta);
+  gc.strokeStyle='#4cc2ff';gc.lineWidth=4;gc.beginPath();gc.moveTo(cx-ux*L,cy-uy*L);gc.lineTo(cx+ux*L,cy+uy*L);gc.stroke();
+  // 兩端導線點
+  gc.fillStyle='#ffce54';gc.beginPath();gc.arc(cx+ux*L,cy+uy*L,5,0,7);gc.fill();
+  gc.fillStyle='#7CFFB2';gc.beginPath();gc.arc(cx-ux*L,cy-uy*L,5,0,7);gc.fill();
+  // 法線(顯示與B夾角)
+  const nx=Math.cos(theta),ny=Math.sin(theta);
+  gc.strokeStyle='#ff6b9d';gc.lineWidth=1.5;gc.setLineDash([4,3]);gc.beginPath();gc.moveTo(cx,cy);gc.lineTo(cx+nx*55,cy+ny*55);gc.stroke();gc.setLineDash([]);
+  gc.fillStyle='#ff6b9d';gc.fillText('法線',cx+nx*58,cy+ny*58);
+  gc.fillStyle='#5b6880';gc.beginPath();gc.arc(cx,cy,3,0,7);gc.fill();
+  // 燈泡(下方)
+  const br=Math.min(1,(emf(theta)/Math.max(emfPeak(),.01))**2);
+  const bx=cx,by=H-34;
+  if(br>0.02){const g=gc.createRadialGradient(bx,by,2,bx,by,30);g.addColorStop(0,`rgba(255,240,180,${0.9*br})`);g.addColorStop(1,'rgba(255,240,180,0)');
+    gc.fillStyle=g;gc.beginPath();gc.arc(bx,by,30,0,7);gc.fill();}
+  gc.fillStyle=`rgb(${40+br*215},${40+br*200},${40+br*120})`;gc.strokeStyle='#8a99ad';gc.lineWidth=2;
+  gc.beginPath();gc.arc(bx,by,13,0,7);gc.fill();gc.stroke();
+  gc.strokeStyle='#5a7bb0';gc.lineWidth=1.5;gc.beginPath();gc.moveTo(cx-ux*L,cy-uy*L);gc.lineTo(bx-10,by);gc.moveTo(cx+ux*L,cy+uy*L);gc.lineTo(bx+10,by);gc.stroke();
+  document.getElementById('sub').textContent='θ='+(theta*180/Math.PI%360).toFixed(0)+'°';
+}
+function drawPlot(){
+  const W=plot.width,H=plot.height,mL=40,mR=40,mT=14,mB=22,mid=(H-mB+mT)/2;pc.clearRect(0,0,W,H);
+  const span=4*Math.PI, t0=theta-span*0.7;
+  const X=th=>mL+(th-t0)/span*(W-mL-mR);
+  const fmax=state.N*state.B*A||1, emax=emfPeak()||1;
+  const Yf=v=>mid-(v/fmax)*(H/2-mT-6);
+  const Ye=v=>mid-(v/emax)*(H/2-mT-6);
+  pc.strokeStyle='#16202f';pc.beginPath();pc.moveTo(mL,mid);pc.lineTo(W-mR,mid);pc.stroke();
+  pc.strokeStyle='#4cc2ff';pc.lineWidth=2.5;pc.beginPath();
+  for(let i=0;i<=300;i++){const th=t0+span*i/300;const x=X(th),y=Yf(flux(th));i?pc.lineTo(x,y):pc.moveTo(x,y);}pc.stroke();
+  pc.strokeStyle='#ffce54';pc.lineWidth=2.5;pc.beginPath();
+  for(let i=0;i<=300;i++){const th=t0+span*i/300;const x=X(th),y=Ye(emf(th));i?pc.lineTo(x,y):pc.moveTo(x,y);}pc.stroke();
+  pc.fillStyle='#4cc2ff';pc.font='11px sans-serif';pc.fillText('磁通 Φ',mL+4,mT+10);pc.fillStyle='#ffce54';pc.fillText('電動勢 EMF',mL+62,mT+10);
+  const cx=X(theta);pc.strokeStyle='#fff';pc.lineWidth=1;pc.beginPath();pc.moveTo(cx,mT);pc.lineTo(cx,H-mB);pc.stroke();
+  pc.fillStyle='#fff';pc.beginPath();pc.arc(cx,Yf(flux(theta)),3.5,0,7);pc.fill();pc.beginPath();pc.arc(cx,Ye(emf(theta)),3.5,0,7);pc.fill();
+  document.getElementById('tlabel').textContent='Φ 最大時 EMF=0；Φ 變化最快時 EMF 最大';
+}
+function draw(){drawGen();drawPlot();drawStats();}
+function drawStats(){
+  const f=2*Math.PI/state.w;
+  const rows=[
+    ['磁通 Φ',flux(theta).toFixed(2),'#4cc2ff'],
+    ['感應電動勢 EMF',emf(theta).toFixed(2),'#ffce54'],
+    ['EMF 峰值 NBAω',emfPeak().toFixed(2),'#ff6b9d'],
+    ['交流週期',f.toFixed(2)+' s','#e8eef6'],
+  ];
+  document.getElementById('stats').innerHTML=rows.map(r=>
+    `<div class="box"><div class="k">${r[0]}</div><div class="v" style="color:${r[2]}">${r[1]}</div></div>`).join('');
+}
+function loop(ts){if(playing){const dt=Math.min((ts-last)/1000,0.05);last=ts;theta+=state.w*dt;draw();}else last=ts;requestAnimationFrame(loop);}
+const pb=document.getElementById('play');
+pb.onclick=()=>{playing=!playing;pb.classList.toggle('on',playing);pb.textContent=playing?'⏸ 暫停':'▶ 播放';last=performance.now();};
+document.getElementById('reset').onclick=()=>{theta=0;playing=true;pb.classList.add('on');pb.textContent='⏸ 暫停';last=performance.now();};
+const PRE={slow:{w:1,B:1.5,N:20},fast:{w:5,B:1.5,N:20},strong:{w:2,B:3,N:30}};
+document.querySelectorAll('[data-preset]').forEach(b=>b.onclick=()=>{const p=PRE[b.dataset.preset];if(!p)return;
+  ['w','B','N'].forEach(k=>setSlider(k,p[k]));});
+draw();requestAnimationFrame(loop);
+window.addEventListener('resize',draw);
+</script>
+</body>
+</html>

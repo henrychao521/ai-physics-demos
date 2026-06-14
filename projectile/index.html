@@ -1,0 +1,285 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>拋體運動實驗室 ｜ 初速・仰角・重力・空氣阻力</title>
+<link rel="icon" href="../assets/favicon.svg" type="image/svg+xml">
+<link rel="stylesheet" href="../assets/site.css">
+<script defer src="../assets/nav.js"></script>
+<style>
+  *{box-sizing:border-box}
+  html,body{margin:0;padding:0;background:var(--bg);color:var(--txt);
+    font-family:"Noto Sans TC","PingFang TC","Microsoft JhengHei",system-ui,sans-serif}
+  a{color:var(--accent)}
+  .wrap{max-width:1100px;margin:0 auto;padding:18px 16px 60px}
+  header h1{font-size:1.5rem;margin:.2em 0}
+  header p{color:var(--muted);margin:.2em 0 1em;line-height:1.6}
+  .badge{display:inline-block;background:var(--panel2);border:1px solid var(--line);
+    color:var(--muted);font-size:.72rem;padding:2px 8px;border-radius:99px;margin-right:6px}
+  .stage{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:14px;margin-bottom:16px}
+  canvas{width:100%;display:block;border-radius:8px;background:#05070b}
+  .label{font-size:.8rem;color:var(--muted);margin:0 0 6px;display:flex;justify-content:space-between;flex-wrap:wrap;gap:8px}
+  .grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(210px,1fr));gap:14px}
+  .ctrl{background:var(--panel2);border:1px solid var(--line);border-radius:10px;padding:10px 12px}
+  .ctrl label{display:flex;justify-content:space-between;font-size:.85rem;margin-bottom:6px}
+  .ctrl .val{color:var(--accent);font-variant-numeric:tabular-nums}
+  input[type=range]{width:100%;accent-color:var(--accent)}
+  .modes{display:flex;gap:8px;margin:6px 0 14px;flex-wrap:wrap;align-items:center}
+  .modes button,.btn{background:var(--panel2);color:var(--txt);border:1px solid var(--line);
+    padding:8px 14px;border-radius:9px;cursor:pointer;font-size:.85rem;font-family:inherit}
+  .modes button.on{background:var(--accent);color:#04121c;border-color:var(--accent);font-weight:700}
+  .btn:hover,.modes button:hover{border-color:var(--accent)}
+  .stat{display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:10px;margin:4px 0 2px}
+  .stat .box{background:var(--panel2);border:1px solid var(--line);border-radius:10px;padding:9px 11px}
+  .stat .box .k{font-size:.72rem;color:var(--muted)}
+  .stat .box .v{font-size:1.05rem;color:var(--accent2);font-variant-numeric:tabular-nums;font-weight:700}
+  .note{background:var(--panel);border-left:3px solid var(--accent2);border-radius:8px;
+    padding:12px 14px;color:var(--muted);font-size:.86rem;line-height:1.7;margin-top:18px}
+  .note b{color:var(--txt)}
+  .note code{background:var(--bg2);padding:1px 6px;border-radius:5px;color:var(--green);font-size:.85em}
+  footer{color:var(--muted);font-size:.78rem;margin-top:26px;text-align:center;line-height:1.7}
+</style>
+</head>
+<body data-demo="拋體運動實驗室">
+<div class="wrap">
+  <header>
+    <span class="badge">力學・運動學</span>
+    <h1>拋體運動實驗室</h1>
+    <p>調整 <b>初速 v₀</b>、<b>仰角 θ</b>、<b>重力 g</b> 與 <b>空氣阻力</b>，即時觀察拋物線軌跡、速度的
+       <b>水平／鉛直分量</b>，以及高度與速度的時間圖。核心概念：水平與鉛直方向<b>互不影響</b>，只有鉛直方向受重力。</p>
+  </header>
+
+  <div class="modes">
+    <button id="play" class="on">▶ 播放</button>
+    <button class="btn" id="reset">↺ 重設</button>
+    <button class="btn" id="drag">空氣阻力：關（理想）</button>
+    <span style="color:var(--muted);font-size:.8rem;margin-left:4px">情境：</span>
+    <button class="btn" data-preset="45">45° 最遠</button>
+    <button class="btn" data-preset="steep">高仰角</button>
+    <button class="btn" data-preset="cliff">懸崖平拋</button>
+    <button class="btn" data-preset="moon">月球重力</button>
+  </div>
+
+  <div class="stage">
+    <div class="label"><span>軌跡（側視，藍=水平分量 vₓ，黃=鉛直分量 v_y）</span><span id="tlabel">t = 0.00 s</span></div>
+    <canvas id="traj" width="1040" height="430"></canvas>
+  </div>
+
+  <div class="stat" id="stats"></div>
+
+  <div class="stage">
+    <div class="label"><span>高度 y(t)　與　鉛直速度 v_y(t)</span><span>白點＝目前時刻</span></div>
+    <canvas id="plot" width="1040" height="240"></canvas>
+  </div>
+
+  <div class="grid" id="controls"></div>
+
+  <div class="note">
+    <b>物理重點：</b>理想情況下水平方向<b>等速度</b>（vₓ 不變），鉛直方向<b>等加速度</b>（v_y 每秒減少 g）。
+    最高點時 v_y = 0 但 vₓ 仍在 → 物體仍在前進。射程公式 <code>R = v₀²·sin(2θ)/g</code>（平地發射）在
+    <b>θ = 45°</b> 時最大；最高點 <code>H = (v₀·sinθ)²/2g</code>。打開<b>空氣阻力</b>後，軌跡不再對稱、射程變短、落點提前，
+    這正是真實世界與課本理想模型的差異。
+  </div>
+
+  <footer>純前端 HTML / Canvas，無外部相依。空氣阻力採二次阻力數值積分（半隱式 Euler）。</footer>
+</div>
+
+<script>
+const sliders=[
+  {id:'v0', name:'初速 v₀', min:5,  max:60, step:1, val:25, unit:'m/s'},
+  {id:'ang',name:'仰角 θ',  min:0,  max:90, step:1, val:45, unit:'°'},
+  {id:'g',  name:'重力 g',  min:1,  max:25, step:.1,val:9.8,unit:'m/s²'},
+  {id:'h0', name:'初始高度 h₀', min:0, max:60, step:1, val:0, unit:'m'},
+  {id:'k',  name:'阻力係數 k', min:0, max:.04, step:.001, val:.01, unit:'/m'},
+];
+const state={}; let dragOn=false;
+const ctrl=document.getElementById('controls');
+sliders.forEach(s=>{
+  state[s.id]=s.val;
+  const box=document.createElement('div'); box.className='ctrl';
+  box.innerHTML=`<label><span>${s.name}</span><span class="val" id="v_${s.id}">${fmt(s.val)} ${s.unit}</span></label>
+    <input type="range" id="r_${s.id}" min="${s.min}" max="${s.max}" step="${s.step}" value="${s.val}">`;
+  ctrl.appendChild(box);
+  box.querySelector('input').addEventListener('input',e=>{
+    state[s.id]=parseFloat(e.target.value);
+    document.getElementById('v_'+s.id).textContent=`${fmt(state[s.id])} ${s.unit}`;
+    rebuild();
+  });
+});
+function fmt(x){return (Math.round(x*100)/100).toString();}
+function setSlider(id,val){state[id]=val;const r=document.getElementById('r_'+id);if(r)r.value=val;
+  const s=sliders.find(z=>z.id===id);if(s)document.getElementById('v_'+id).textContent=`${fmt(val)} ${s.unit}`;}
+
+// ---- 物理模擬 ----
+let PATH=[], STATS={}, playT=0, playing=true, last=0;
+function simulate(){
+  const v0=state.v0, th=state.ang*Math.PI/180, g=state.g, h0=state.h0;
+  const k=dragOn?state.k:0;
+  let x=0,y=h0,vx=v0*Math.cos(th),vy=v0*Math.sin(th),t=0;
+  const dt=0.004, path=[{t,x,y,vx,vy}]; let guard=0;
+  while(guard++<300000){
+    const sp=Math.hypot(vx,vy);
+    vx+=(-k*sp*vx)*dt;
+    vy+=(-g-k*sp*vy)*dt;
+    const nx=x+vx*dt, ny=y+vy*dt, nt=t+dt;
+    if(ny<0){ const f=y/(y-ny);
+      path.push({t:t+dt*f, x:x+(nx-x)*f, y:0, vx, vy}); break; }
+    x=nx;y=ny;t=nt; path.push({t,x,y,vx,vy});
+    if(t>120) break;
+  }
+  PATH=path;
+  let H=0,Hi=0; path.forEach((p,i)=>{if(p.y>H){H=p.y;Hi=i;}});
+  const L=path[path.length-1];
+  STATS={T:L.t, R:L.x, H, vImp:Math.hypot(L.vx,L.vy), tH:path[Hi].t};
+}
+function stateAt(tt){
+  if(tt<=0) return PATH[0];
+  if(tt>=STATS.T) return PATH[PATH.length-1];
+  let lo=0,hi=PATH.length-1;
+  while(hi-lo>1){const m=(lo+hi)>>1; if(PATH[m].t<tt)lo=m;else hi=m;}
+  const a=PATH[lo],b=PATH[hi],f=(tt-a.t)/(b.t-a.t||1);
+  return {t:tt,x:a.x+(b.x-a.x)*f,y:a.y+(b.y-a.y)*f,vx:a.vx+(b.vx-a.vx)*f,vy:a.vy+(b.vy-a.vy)*f};
+}
+
+// ---- 視圖 ----
+const traj=document.getElementById('traj'), tc=traj.getContext('2d');
+const plot=document.getElementById('plot'), pc=plot.getContext('2d');
+function bounds(){
+  let xmax=Math.max(STATS.R,1), ymax=Math.max(STATS.H,state.h0,1);
+  return {xmax:xmax*1.06, ymax:ymax*1.18};
+}
+function drawTraj(cur){
+  const W=traj.width,H=traj.height,mL=52,mR=20,mT=16,mB=40;
+  tc.clearRect(0,0,W,H);
+  const {xmax,ymax}=bounds();
+  const sx=(W-mL-mR)/xmax, sy=(H-mT-mB)/ymax, s=Math.min(sx,sy);
+  const X=x=>mL+x*s, Y=y=>H-mB-y*s;
+  // 格線
+  tc.strokeStyle='#16202f';tc.lineWidth=1;tc.fillStyle='#46566b';tc.font='11px sans-serif';
+  const gx=niceStep(xmax);
+  for(let x=0;x<=xmax;x+=gx){tc.beginPath();tc.moveTo(X(x),mT);tc.lineTo(X(x),H-mB);tc.stroke();
+    tc.fillText(x.toFixed(0), X(x)-6, H-mB+15);}
+  const gy=niceStep(ymax);
+  for(let y=0;y<=ymax;y+=gy){tc.beginPath();tc.moveTo(mL,Y(y));tc.lineTo(W-mR,Y(y));tc.stroke();
+    tc.fillText(y.toFixed(0), 8, Y(y)+4);}
+  tc.fillStyle='#6b7785';tc.fillText('水平距離 x (m)',W-130,H-mB+15);tc.fillText('高度 y (m)',8,mT+2);
+  // 地面
+  tc.strokeStyle='#3a4756';tc.lineWidth=2;tc.beginPath();tc.moveTo(mL,Y(0));tc.lineTo(W-mR,Y(0));tc.stroke();
+  // 完整軌跡（淡）
+  tc.strokeStyle='#2f6d8c';tc.lineWidth=1.5;tc.beginPath();
+  PATH.forEach((p,i)=>{const px=X(p.x),py=Y(p.y); i?tc.lineTo(px,py):tc.moveTo(px,py);});tc.stroke();
+  // 已走過（亮）
+  tc.strokeStyle='#4cc2ff';tc.lineWidth=2.5;tc.beginPath();
+  for(let i=0;i<PATH.length&&PATH[i].t<=cur.t;i++){const px=X(PATH[i].x),py=Y(PATH[i].y);i?tc.lineTo(px,py):tc.moveTo(px,py);}
+  tc.lineTo(X(cur.x),Y(cur.y));tc.stroke();
+  // 最高點標記
+  if(STATS.H>0.3){const p=stateAt(STATS.tH);tc.fillStyle='#ff6b9d';tc.beginPath();tc.arc(X(p.x),Y(p.y),3,0,7);tc.fill();
+    tc.fillText('最高點 H='+STATS.H.toFixed(1)+'m',X(p.x)+6,Y(p.y)-4);}
+  // 物體 + 速度向量
+  const ox=X(cur.x),oy=Y(cur.y);
+  const vscale=s*0.5;
+  arrow(tc,ox,oy,ox+cur.vx*vscale,oy,'#4cc2ff',2);              // vx 水平
+  arrow(tc,ox,oy,ox,oy-cur.vy*vscale,'#ffce54',2);              // vy 鉛直
+  arrow(tc,ox,oy,ox+cur.vx*vscale,oy-cur.vy*vscale,'#ffffff',2.5);// 合速度
+  tc.setLineDash([3,3]);tc.strokeStyle='#5b6880';
+  tc.beginPath();tc.moveTo(ox+cur.vx*vscale,oy);tc.lineTo(ox+cur.vx*vscale,oy-cur.vy*vscale);tc.stroke();
+  tc.beginPath();tc.moveTo(ox,oy-cur.vy*vscale);tc.lineTo(ox+cur.vx*vscale,oy-cur.vy*vscale);tc.stroke();tc.setLineDash([]);
+  tc.fillStyle='#0b1220';tc.strokeStyle='#fff';tc.lineWidth=2;tc.beginPath();tc.arc(ox,oy,6,0,7);tc.fill();tc.stroke();
+  document.getElementById('tlabel').textContent='t = '+cur.t.toFixed(2)+' s';
+}
+function niceStep(span){const raw=span/6;const p=Math.pow(10,Math.floor(Math.log10(raw)));const n=raw/p;
+  return (n<1.5?1:n<3?2:n<7?5:10)*p;}
+function arrow(c,x1,y1,x2,y2,col,w){
+  if(Math.hypot(x2-x1,y2-y1)<2)return;
+  c.strokeStyle=col;c.fillStyle=col;c.lineWidth=w;
+  c.beginPath();c.moveTo(x1,y1);c.lineTo(x2,y2);c.stroke();
+  const a=Math.atan2(y2-y1,x2-x1),h=7;
+  c.beginPath();c.moveTo(x2,y2);c.lineTo(x2-h*Math.cos(a-.4),y2-h*Math.sin(a-.4));
+  c.lineTo(x2-h*Math.cos(a+.4),y2-h*Math.sin(a+.4));c.closePath();c.fill();
+}
+function drawPlot(cur){
+  const W=plot.width,H=plot.height,mL=46,mR=46,mT=14,mB=26;
+  pc.clearRect(0,0,W,H);
+  const T=Math.max(STATS.T,0.1);
+  let ymax=Math.max(STATS.H,state.h0,1)*1.1;
+  let vmax=0;PATH.forEach(p=>{vmax=Math.max(vmax,Math.abs(p.vy));});vmax=Math.max(vmax,1)*1.1;
+  const X=t=>mL+t/T*(W-mL-mR);
+  const Yy=y=>H-mB-(y/ymax)*(H-mT-mB);
+  const Yv=v=>mT+(H-mT-mB)/2 - v/vmax*(H-mT-mB)/2;
+  // 軸線
+  pc.strokeStyle='#16202f';pc.lineWidth=1;
+  for(let i=0;i<=5;i++){const tx=X(T*i/5);pc.beginPath();pc.moveTo(tx,mT);pc.lineTo(tx,H-mB);pc.stroke();
+    pc.fillStyle='#46566b';pc.font='11px sans-serif';pc.fillText((T*i/5).toFixed(1)+'s',tx-9,H-9);}
+  pc.strokeStyle='#314056';pc.setLineDash([4,4]);pc.beginPath();pc.moveTo(mL,Yv(0));pc.lineTo(W-mR,Yv(0));pc.stroke();pc.setLineDash([]);
+  // y(t)
+  pc.strokeStyle='#7CFFB2';pc.lineWidth=2;pc.beginPath();
+  PATH.forEach((p,i)=>{const px=X(p.t),py=Yy(p.y);i?pc.lineTo(px,py):pc.moveTo(px,py);});pc.stroke();
+  // vy(t)
+  pc.strokeStyle='#ffce54';pc.lineWidth=2;pc.beginPath();
+  PATH.forEach((p,i)=>{const px=X(p.t),py=Yv(p.vy);i?pc.lineTo(px,py):pc.moveTo(px,py);});pc.stroke();
+  // 圖例
+  pc.fillStyle='#7CFFB2';pc.fillText('● 高度 y',mL+4,mT+12);
+  pc.fillStyle='#ffce54';pc.fillText('● 鉛直速度 v_y（過零=最高點）',mL+74,mT+12);
+  // 時間游標
+  const cx=X(cur.t);pc.strokeStyle='#ffffff';pc.lineWidth=1;pc.beginPath();pc.moveTo(cx,mT);pc.lineTo(cx,H-mB);pc.stroke();
+  pc.fillStyle='#fff';pc.beginPath();pc.arc(cx,Yy(cur.y),3.5,0,7);pc.fill();
+  pc.beginPath();pc.arc(cx,Yv(cur.vy),3.5,0,7);pc.fill();
+}
+function drawStats(cur){
+  const rows=[
+    ['飛行時間 T', STATS.T.toFixed(2)+' s'],
+    ['水平射程 R', STATS.R.toFixed(1)+' m'],
+    ['最高點 H', STATS.H.toFixed(1)+' m'],
+    ['落地速率', STATS.vImp.toFixed(1)+' m/s'],
+    ['目前 vₓ', cur.vx.toFixed(1)+' m/s'],
+    ['目前 v_y', cur.vy.toFixed(1)+' m/s'],
+  ];
+  document.getElementById('stats').innerHTML=rows.map(r=>
+    `<div class="box"><div class="k">${r[0]}</div><div class="v">${r[1]}</div></div>`).join('');
+}
+function render(cur){drawTraj(cur);drawPlot(cur);drawStats(cur);}
+
+function rebuild(){simulate();playT=Math.min(playT,STATS.T);render(stateAt(playT));}
+
+// ---- 動畫 ----
+function loop(ts){
+  if(playing){
+    const dt=(ts-last)/1000; last=ts;
+    playT+=Math.min(dt,0.05);
+    if(playT>=STATS.T){playT=STATS.T;playing=false;document.getElementById('play').classList.remove('on');document.getElementById('play').textContent='▶ 重新播放';}
+    render(stateAt(playT));
+  } else last=ts;
+  requestAnimationFrame(loop);
+}
+const playBtn=document.getElementById('play');
+playBtn.onclick=()=>{
+  if(playT>=STATS.T)playT=0;
+  playing=!playing;
+  playBtn.classList.toggle('on',playing);
+  playBtn.textContent=playing?'⏸ 暫停':'▶ 播放';
+  last=performance.now();
+};
+document.getElementById('reset').onclick=()=>{playT=0;playing=true;playBtn.classList.add('on');playBtn.textContent='⏸ 暫停';last=performance.now();render(stateAt(0));};
+const dragBtn=document.getElementById('drag');
+dragBtn.onclick=()=>{dragOn=!dragOn;dragBtn.textContent='空氣阻力：'+(dragOn?'開（真實）':'關（理想）');dragBtn.classList.toggle('on',dragOn);rebuild();};
+const PRESETS={
+  '45':  {v0:25,ang:45,g:9.8,h0:0,drag:false},
+  steep: {v0:25,ang:75,g:9.8,h0:0,drag:false},
+  cliff: {v0:20,ang:0, g:9.8,h0:40,drag:false},
+  moon:  {v0:25,ang:45,g:1.6,h0:0,drag:false},
+};
+document.querySelectorAll('[data-preset]').forEach(b=>b.onclick=()=>{
+  const p=PRESETS[b.dataset.preset];if(!p)return;
+  ['v0','ang','g','h0'].forEach(k=>setSlider(k,p[k]));
+  dragOn=p.drag;dragBtn.textContent='空氣阻力：'+(dragOn?'開（真實）':'關（理想）');dragBtn.classList.toggle('on',dragOn);
+  playT=0;playing=true;playBtn.classList.add('on');playBtn.textContent='⏸ 暫停';last=performance.now();
+  simulate();render(stateAt(0));
+});
+
+simulate();render(stateAt(0));
+requestAnimationFrame(loop);
+window.addEventListener('resize',()=>render(stateAt(playT)));
+</script>
+</body>
+</html>

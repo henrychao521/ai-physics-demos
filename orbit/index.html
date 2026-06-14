@@ -1,0 +1,217 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>行星軌道沙盒 ｜ 萬有引力・克卜勒定律</title>
+<link rel="icon" href="../assets/favicon.svg" type="image/svg+xml">
+<link rel="stylesheet" href="../assets/site.css">
+<script defer src="../assets/nav.js"></script>
+<style>
+  *{box-sizing:border-box}
+  html,body{margin:0;padding:0;background:var(--bg);color:var(--txt);
+    font-family:"Noto Sans TC","PingFang TC","Microsoft JhengHei",system-ui,sans-serif}
+  a{color:var(--accent)}
+  .wrap{max-width:1100px;margin:0 auto;padding:18px 16px 60px}
+  header h1{font-size:1.5rem;margin:.2em 0}
+  header p{color:var(--muted);margin:.2em 0 1em;line-height:1.6}
+  .badge{display:inline-block;background:var(--panel2);border:1px solid var(--line);
+    color:var(--muted);font-size:.72rem;padding:2px 8px;border-radius:99px;margin-right:6px}
+  .layout{display:grid;grid-template-columns:1.25fr .75fr;gap:16px}
+  @media(max-width:780px){.layout{grid-template-columns:1fr}}
+  .stage{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:14px;margin-bottom:16px}
+  canvas{width:100%;display:block;border-radius:8px;background:#05070b}
+  .label{font-size:.8rem;color:var(--muted);margin:0 0 6px;display:flex;justify-content:space-between;flex-wrap:wrap;gap:8px}
+  .grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(210px,1fr));gap:14px}
+  .ctrl{background:var(--panel2);border:1px solid var(--line);border-radius:10px;padding:10px 12px}
+  .ctrl label{display:flex;justify-content:space-between;font-size:.85rem;margin-bottom:6px}
+  .ctrl .val{color:var(--accent);font-variant-numeric:tabular-nums}
+  input[type=range]{width:100%;accent-color:var(--accent)}
+  .modes{display:flex;gap:8px;margin:6px 0 14px;flex-wrap:wrap;align-items:center}
+  .modes button,.btn{background:var(--panel2);color:var(--txt);border:1px solid var(--line);
+    padding:8px 14px;border-radius:9px;cursor:pointer;font-size:.85rem;font-family:inherit}
+  .modes button.on{background:var(--accent);color:#04121c;border-color:var(--accent);font-weight:700}
+  .btn:hover,.modes button:hover{border-color:var(--accent)}
+  .stat{display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:10px}
+  .stat .box{background:var(--panel2);border:1px solid var(--line);border-radius:10px;padding:9px 11px}
+  .stat .box .k{font-size:.72rem;color:var(--muted)}
+  .stat .box .v{font-size:1.0rem;font-variant-numeric:tabular-nums;font-weight:700}
+  .note{background:var(--panel);border-left:3px solid var(--accent2);border-radius:8px;
+    padding:12px 14px;color:var(--muted);font-size:.86rem;line-height:1.7;margin-top:18px}
+  .note b{color:var(--txt)}.note code{background:var(--bg2);padding:1px 6px;border-radius:5px;color:var(--green);font-size:.85em}
+  footer{color:var(--muted);font-size:.78rem;margin-top:26px;text-align:center;line-height:1.7}
+</style>
+</head>
+<body data-demo="行星軌道沙盒">
+<div class="wrap">
+  <header>
+    <span class="badge">力學・萬有引力</span>
+    <h1>行星軌道沙盒</h1>
+    <p>行星在中心恆星的<b>萬有引力</b> F = GMm/r² 下運動。改變<b>初速</b>看圓、橢圓、拋物線到雙曲線（逃逸）。
+       彩色楔形示範<b>克卜勒第二定律</b>：相同時間內<b>掃過的面積相等</b>（近日點快、遠日點慢）。</p>
+  </header>
+
+  <div class="modes">
+    <button id="play" class="on">⏸ 暫停</button>
+    <button class="btn" id="reset">↺ 重新發射</button>
+    <span style="color:var(--muted);font-size:.8rem;margin-left:4px">情境：</span>
+    <button class="btn" data-preset="circle">圓形</button>
+    <button class="btn" data-preset="ellipse">橢圓</button>
+    <button class="btn" data-preset="high">高橢圓</button>
+    <button class="btn" data-preset="escape">逃逸</button>
+  </div>
+
+  <div class="layout">
+    <div class="stage">
+      <div class="label"><span>軌道（藍=速度 v，黃=引力加速度，楔形=等時間掃過面積）</span><span id="tlabel"></span></div>
+      <canvas id="scene" width="620" height="560"></canvas>
+    </div>
+    <div>
+      <div class="stat" id="stats"></div>
+    </div>
+  </div>
+
+  <div class="grid" id="controls"></div>
+
+  <div class="note">
+    <b>物理重點：</b>引力提供向心力，使行星走<b>橢圓</b>（恆星在一焦點上）＝克卜勒第一定律。
+    連接行星與恆星的線段，在相同時間內<b>掃過相等面積</b>（dA/dt = 常數 = ½·角動量/質量）＝克卜勒第二定律——
+    所以近恆星時跑得快、遠時慢。對橢圓軌道，<code>T² ∝ a³</code>（半長軸三次方）＝克卜勒第三定律。
+    初速恰為圓軌道速度 v_c=√(GM/r) 時是圓；小於則向內成橢圓；達到逃逸速度 √2·v_c 時開口成拋物線/雙曲線一去不回。
+  </div>
+
+  <footer>純前端 HTML / Canvas，無外部相依。以 velocity-Verlet（辛積分）數值積分萬有引力，長期能量穩定。</footer>
+</div>
+
+<script>
+const sliders=[
+  {id:'ratio',name:'初速比 v / v_圓',min:.5,max:1.55,step:.01,val:.85,unit:'×'},
+  {id:'M',    name:'中心質量 M',    min:1, max:10,  step:.5, val:5,  unit:'(相對)'},
+];
+const state={};
+const ctrl=document.getElementById('controls');
+sliders.forEach(s=>{
+  state[s.id]=s.val;
+  const box=document.createElement('div');box.className='ctrl';
+  box.innerHTML=`<label><span>${s.name}</span><span class="val" id="v_${s.id}">${fmt(s.val)} ${s.unit}</span></label>
+    <input type="range" id="r_${s.id}" min="${s.min}" max="${s.max}" step="${s.step}" value="${s.val}">`;
+  ctrl.appendChild(box);
+  box.querySelector('input').addEventListener('input',e=>{
+    state[s.id]=parseFloat(e.target.value);
+    document.getElementById('v_'+s.id).textContent=`${fmt(state[s.id])} ${s.unit}`;
+    launch();
+  });
+});
+function fmt(x){return (Math.round(x*100)/100).toString();}
+function setSlider(id,val){state[id]=val;const r=document.getElementById('r_'+id);if(r)r.value=val;
+  const s=sliders.find(z=>z.id===id);if(s)document.getElementById('v_'+id).textContent=`${fmt(val)} ${s.unit}`;}
+
+// ---- 物理 ----
+const D0=170, MU_PER_M=505400*Math.pow(170/160,3); // 校準使 M=5 圓軌道週期約 8s
+function MU(){return state.M*MU_PER_M;}
+function vcirc(){return Math.sqrt(MU()/D0);}
+let pos,vel,trace,wedges,simT,lastWedgeT,playing=true,last=0,escaped=false;
+function launch(){
+  pos={x:D0,y:0}; vel={x:0,y:-state.ratio*vcirc()};
+  trace=[{x:pos.x,y:pos.y}]; wedges=[{x:pos.x,y:pos.y}]; simT=0; lastWedgeT=0; escaped=false;
+  draw();
+}
+function accel(p){const r=Math.hypot(p.x,p.y),f=-MU()/(r*r*r);return {x:f*p.x,y:f*p.y};}
+function integrate(dt){
+  const n=12,h=dt/n;
+  for(let i=0;i<n;i++){
+    let a=accel(pos);
+    pos.x+=vel.x*h+0.5*a.x*h*h; pos.y+=vel.y*h+0.5*a.y*h*h;
+    const a2=accel(pos);
+    vel.x+=0.5*(a.x+a2.x)*h; vel.y+=0.5*(a.y+a2.y)*h;
+  }
+  simT+=dt;
+  trace.push({x:pos.x,y:pos.y}); if(trace.length>2400)trace.shift();
+  if(simT-lastWedgeT>=0.16){wedges.push({x:pos.x,y:pos.y});if(wedges.length>16)wedges.shift();lastWedgeT=simT;}
+  const r=Math.hypot(pos.x,pos.y);
+  if(r>D0*4.2){escaped=true; if(r>2200)launch();}    // 逃逸飛遠後重新發射
+}
+
+// ---- 軌道參數 ----
+function orbit(){
+  const r=Math.hypot(pos.x,pos.y),v=Math.hypot(vel.x,vel.y),mu=MU();
+  const eps=0.5*v*v-mu/r;                              // 比能
+  const h=pos.x*vel.y-pos.y*vel.x;                     // 角動量/質量
+  const a=eps<0?-mu/(2*eps):Infinity;
+  const e=Math.sqrt(Math.max(0,1+2*eps*h*h/(mu*mu)));
+  const T=eps<0?2*Math.PI*Math.sqrt(a*a*a/mu):null;
+  let type;if(eps<-1e-3){type=e<0.03?'圓形':'橢圓';}else if(eps<=1e-3){type='拋物線(逃逸)';}else{type='雙曲線(逃逸)';}
+  return {r,v,eps,h,a,e,T,type,dAdt:0.5*Math.abs(h)};
+}
+
+// ---- 視圖 ----
+const sc=document.getElementById('scene'),cc=sc.getContext('2d');
+function arrow(c,x1,y1,x2,y2,col,w,lab){
+  if(Math.hypot(x2-x1,y2-y1)<2)return;
+  c.strokeStyle=col;c.fillStyle=col;c.lineWidth=w;c.beginPath();c.moveTo(x1,y1);c.lineTo(x2,y2);c.stroke();
+  const a=Math.atan2(y2-y1,x2-x1),hh=9;c.beginPath();c.moveTo(x2,y2);
+  c.lineTo(x2-hh*Math.cos(a-.4),y2-hh*Math.sin(a-.4));c.lineTo(x2-hh*Math.cos(a+.4),y2-hh*Math.sin(a+.4));c.closePath();c.fill();
+  if(lab){c.font='bold 12px sans-serif';c.fillText(lab,x2+5,y2-5);}
+}
+function draw(){
+  const W=sc.width,H=sc.height,cx=W/2,cy=H/2;cc.clearRect(0,0,W,H);
+  const X=x=>cx+x*0.62, Y=y=>cy+y*0.62;               // 視圖縮放
+  // 等面積楔形
+  for(let i=0;i<wedges.length-1;i++){
+    cc.fillStyle=i%2? 'rgba(76,194,255,.16)':'rgba(255,206,84,.16)';
+    cc.beginPath();cc.moveTo(X(0),Y(0));cc.lineTo(X(wedges[i].x),Y(wedges[i].y));cc.lineTo(X(wedges[i+1].x),Y(wedges[i+1].y));cc.closePath();cc.fill();
+  }
+  // 軌跡
+  cc.strokeStyle='#2f6d8c';cc.lineWidth=1.5;cc.beginPath();
+  trace.forEach((p,i)=>{i?cc.lineTo(X(p.x),Y(p.y)):cc.moveTo(X(p.x),Y(p.y));});cc.stroke();
+  // 恆星
+  const sr=8+state.M*0.9;
+  cc.fillStyle='#ffce54';cc.beginPath();cc.arc(X(0),Y(0),sr,0,7);cc.fill();
+  cc.fillStyle='rgba(255,206,84,.18)';cc.beginPath();cc.arc(X(0),Y(0),sr+10,0,7);cc.fill();
+  // 行星 + 向量
+  const o=orbit();
+  arrow(cc,X(pos.x),Y(pos.y),X(pos.x)+vel.x*0.18,Y(pos.y)+vel.y*0.18,'#4cc2ff',3,'v');
+  const ax=accel(pos);const al=Math.hypot(ax.x,ax.y);
+  arrow(cc,X(pos.x),Y(pos.y),X(pos.x)+ax.x/al*42,Y(pos.y)+ax.y/al*42,'#ffce54',2.5,'g');
+  cc.fillStyle='#e8eef6';cc.strokeStyle='#4cc2ff';cc.lineWidth=2;cc.beginPath();cc.arc(X(pos.x),Y(pos.y),7,0,7);cc.fill();cc.stroke();
+  cc.fillStyle='#46566b';cc.font='11px sans-serif';
+  cc.fillText('每個楔形＝相同時間掃過的面積（克卜勒第二定律）',12,H-12);
+  document.getElementById('tlabel').textContent=escaped?'已逃逸':'t = '+simT.toFixed(1)+' s';
+  drawStats(o);
+}
+function drawStats(o){
+  const rows=[
+    ['軌道類型',o.type,'#4cc2ff'],
+    ['偏心率 e',o.e.toFixed(3),'#e8eef6'],
+    ['半長軸 a',isFinite(o.a)?o.a.toFixed(0):'∞','#e8eef6'],
+    ['週期 T (克卜勒3)',o.T?o.T.toFixed(2)+' s':'—','#ffce54'],
+    ['目前距離 r',o.r.toFixed(0),'#7CFFB2'],
+    ['目前速率 v',o.v.toFixed(0),'#4cc2ff'],
+    ['掃面率 dA/dt',o.dAdt.toFixed(0),'#ff6b9d'],
+    ['比能 ε',o.eps.toExponential(2),o.eps<0?'#7CFFB2':'#ff6b9d'],
+  ];
+  document.getElementById('stats').innerHTML=rows.map(r=>
+    `<div class="box"><div class="k">${r[0]}</div><div class="v" style="color:${r[2]}">${r[1]}</div></div>`).join('');
+}
+
+function loop(ts){
+  if(playing){const dt=Math.min((ts-last)/1000,0.04);last=ts;if(dt>0)integrate(dt);draw();}
+  else last=ts;
+  requestAnimationFrame(loop);
+}
+const pb=document.getElementById('play');
+pb.onclick=()=>{playing=!playing;pb.classList.toggle('on',playing);pb.textContent=playing?'⏸ 暫停':'▶ 播放';last=performance.now();};
+document.getElementById('reset').onclick=()=>{launch();playing=true;pb.classList.add('on');pb.textContent='⏸ 暫停';last=performance.now();};
+const PRESETS={circle:{ratio:1,M:5},ellipse:{ratio:0.82,M:5},high:{ratio:0.62,M:5},escape:{ratio:1.45,M:5}};
+document.querySelectorAll('[data-preset]').forEach(b=>b.onclick=()=>{
+  const p=PRESETS[b.dataset.preset];if(!p)return;
+  setSlider('ratio',p.ratio);setSlider('M',p.M);launch();
+  playing=true;pb.classList.add('on');pb.textContent='⏸ 暫停';last=performance.now();
+});
+
+launch();
+requestAnimationFrame(loop);
+window.addEventListener('resize',draw);
+</script>
+</body>
+</html>

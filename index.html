@@ -3,12 +3,12 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>AI 協作互動作品集 ｜ 物理・工程・資料</title>
-<meta name="description" content="與 AI 協作的瀏覽器互動作品集：繞射成像、摩爾紋、無影燈光學、3D 光譜干涉、RC 氣墊船工程模擬、全台房市數據系統。可直接用於教學與成果展示。">
+<title>物理互動模擬平台 ｜ 國高中物理・力學熱學波動光學電磁近代</title>
+<meta name="description" content="涵蓋國高中物理的瀏覽器互動模擬平台：拋體運動、能量守恆、碰撞、圓周運動、簡諧、行星軌道、氣體動力論、駐波、都卜勒、透鏡成像、折射全反射、電路、電場、電磁感應、光電效應、半衰期、波耳原子光譜等 30+ 個即時互動模擬。適合課堂教學與自學。">
 <link rel="icon" href="assets/favicon.svg" type="image/svg+xml">
 <link rel="stylesheet" href="assets/site.css">
-<meta property="og:title" content="AI 協作互動作品集">
-<meta property="og:description" content="物理・工程・資料：6 個可在瀏覽器即時操作的互動作品，適合教學與成果展示。">
+<meta property="og:title" content="物理互動模擬平台 ｜ 國高中物理">
+<meta property="og:description" content="力學・熱學・波動・光學・電磁・近代物理：30+ 個可在瀏覽器即時操作的互動模擬，適合課堂教學與自學。">
 <meta property="og:type" content="website">
 <meta property="og:url" content="https://henrychao521.github.io/ai-physics-demos/">
 <meta property="og:image" content="https://henrychao521.github.io/ai-physics-demos/assets/og.png">
@@ -27,6 +27,11 @@
   .tag{margin:14px 16px 0}
   .go{margin:6px 16px 18px;color:var(--accent);font-size:.85rem;font-weight:700}
   .feat{outline:1px solid #ff6b9d55}
+  .section{grid-column:1/-1;display:flex;align-items:center;gap:12px;margin:22px 0 0}
+  .section:first-child{margin-top:0}
+  .section h2{font-size:1.08rem;margin:0;white-space:nowrap;letter-spacing:.5px}
+  .section .ln{flex:1;height:1px;background:var(--line)}
+  .section .cnt{font-size:.74rem;color:var(--faint);white-space:nowrap}
   /* thumbnails */
   .t-spec{background:#000}
   .t-spec::before{content:"";position:absolute;inset:0;background:
@@ -48,6 +53,31 @@
   .t-house i:nth-child(4){height:70%}.t-house i:nth-child(5){height:60%}.t-house i:nth-child(6){height:90%;background:#4cc2ff}
   .t-house i:nth-child(7){height:48%;background:#ff6b9d}
   .t-beat{background:#070a12}
+  .t-proj{background:radial-gradient(120px 90px at 50% 120%,#13203a 0,#070d18 70%)}
+  .t-coaster{background:#070d18}
+  .t-collide{background:#070d18}
+  .t-newton{background:#070d18}
+  .t-circular{background:#070d18}
+  .t-shm{background:#070d18}
+  .t-orbit{background:radial-gradient(circle at 31% 50%,#15120a 0,#070d18 60%)}
+  .t-vectors{background:#070d18}
+  .t-machines{background:#070d18}
+  .t-buoy{background:#070d18}
+  .t-kinetic{background:#070d18}
+  .t-heat{background:#070d18}
+  .t-standing{background:#070d18}
+  .t-doppler{background:#070d18}
+  .t-sound{background:#070d18}
+  .t-lens{background:#070d18}
+  .t-refraction{background:#070d18}
+  .t-colormix{background:#000}
+  .t-circuits{background:#070d18}
+  .t-efield{background:#0a1020}
+  .t-rc{background:#070d18}
+  .t-lorentz{background:#070d18}
+  .t-induction{background:#070d18}
+  .t-photo{background:#070d18}
+  .t-halflife{background:#070d18}
   .ext{font-size:.7rem;color:var(--accent2)}
   footer{color:var(--muted);font-size:.8rem;margin-top:42px;line-height:1.8;border-top:1px solid var(--line);padding-top:18px}
   footer a{color:var(--accent)}
@@ -57,21 +87,24 @@
 <header class="site-nav">
   <a class="brand" href="./">
     <svg viewBox="0 0 32 32"><rect width="32" height="32" rx="7" fill="#101828"/><polygon points="8,23 16,7 24,23" fill="none" stroke="#4cc2ff" stroke-width="2" stroke-linejoin="round"/><line x1="16.5" y1="14" x2="28" y2="12.5" stroke="#ff6b9d" stroke-width="1.8" stroke-linecap="round"/><line x1="16.5" y1="16" x2="28" y2="16" stroke="#ffce54" stroke-width="1.8" stroke-linecap="round"/><line x1="16.5" y1="18" x2="28" y2="19.5" stroke="#7CFFB2" stroke-width="1.8" stroke-linecap="round"/></svg>
-    <span><span class="b2">AI</span> 協作互動作品集</span>
+    <span><span class="b2">物理</span> 互動模擬平台</span>
   </a>
   <a class="back" href="https://github.com/henrychao521/ai-physics-demos" target="_blank" rel="noopener">GitHub ↗</a>
 </header>
 
 <div class="wrap">
   <div class="intro">
-    <span class="badge">物理・工程・資料</span>
-    <span class="badge">瀏覽器即時互動</span>
-    <h1>AI 協作互動作品集</h1>
-    <p class="lead">這些互動作品源自我與 AI 的討論，從物理理論、工程設計到資料分析，皆重建為可在瀏覽器中即時操作的網頁。
-       可直接用於教學與成果展示。點擊任一卡片開始體驗。</p>
+    <span class="badge">國高中物理</span>
+    <span class="badge">30+ 互動模擬</span>
+    <span class="badge">瀏覽器即時操作</span>
+    <h1>物理互動模擬平台</h1>
+    <p class="lead">涵蓋國高中物理六大領域——<b style="color:var(--txt)">力學、熱學、波動、光學、電磁、近代物理</b>——的即時互動模擬，
+       每個都可調參數、即時看公式與圖表變化，並附物理重點說明。適合課堂教學、課後自學與成果展示。點擊任一卡片開始體驗。</p>
   </div>
 
   <div class="cards">
+    <div class="section"><h2>✦ 精選</h2><span class="ln"></span><span class="cnt">最具視覺亮點</span></div>
+
     <a class="card feat" href="spectral-lab/">
       <div class="thumb t-spec"></div>
       <div class="tag"><span class="badge">3D・光譜干涉</span></div>
@@ -93,6 +126,436 @@
       <p>一維拍頻即時示範，說明光的干涉、繞射與摩爾紋本質都是「兩個週期圖案疊加 → 差頻拍頻」，並連到兩個細部模擬。</p>
       <div class="go">開始體驗 →</div>
     </a>
+
+    <div class="section"><h2>🟦 力學館</h2><span class="ln"></span><span class="cnt">運動・力・能量・動量・圓周・簡諧・重力・流體</span></div>
+
+    <a class="card" href="projectile/">
+      <div class="thumb t-proj">
+        <svg viewBox="0 0 300 152" preserveAspectRatio="none" style="width:100%;height:100%">
+          <line x1="0" y1="140" x2="300" y2="140" stroke="#3a4756" stroke-width="2"/>
+          <path d="M8,140 Q150,2 292,140" fill="none" stroke="#4cc2ff" stroke-width="2.5"/>
+          <circle cx="150" cy="34" r="4" fill="#ff6b9d"/>
+          <line x1="60" y1="96" x2="92" y2="96" stroke="#4cc2ff" stroke-width="2"/>
+          <line x1="60" y1="96" x2="60" y2="70" stroke="#ffce54" stroke-width="2"/>
+        </svg>
+      </div>
+      <div class="tag"><span class="badge">力學・運動學</span></div>
+      <h3>拋體運動實驗室</h3>
+      <p>調初速、仰角、重力與空氣阻力，看拋物線軌跡與速度的水平／鉛直分量，並同步高度與速度的時間圖。</p>
+      <div class="go">開始體驗 →</div>
+    </a>
+
+    <a class="card" href="energy-coaster/">
+      <div class="thumb t-coaster">
+        <svg viewBox="0 0 300 152" preserveAspectRatio="none" style="width:100%;height:100%">
+          <path d="M6,16 Q70,150 150,96 Q230,44 294,16" fill="none" stroke="#5a7bb0" stroke-width="3"/>
+          <circle cx="150" cy="96" r="6" fill="#ffce54" stroke="#fff" stroke-width="1.5"/>
+          <rect x="20" y="128" width="120" height="10" rx="3" fill="#4cc2ff"/>
+          <rect x="140" y="128" width="100" height="10" rx="3" fill="#7CFFB2"/>
+          <rect x="240" y="128" width="40" height="10" rx="3" fill="#ff6b9d"/>
+        </svg>
+      </div>
+      <div class="tag"><span class="badge">力學・功與能</span></div>
+      <h3>能量守恆雲霄飛車</h3>
+      <p>小車滑下軌道，動能／位能／熱能三色長條即時消長；打開摩擦看力學能轉熱、越盪越低，理解能量守恆。</p>
+      <div class="go">開始體驗 →</div>
+    </a>
+
+    <a class="card" href="collision/">
+      <div class="thumb t-collide">
+        <svg viewBox="0 0 300 152" preserveAspectRatio="none" style="width:100%;height:100%">
+          <line x1="0" y1="100" x2="300" y2="100" stroke="#3a4756" stroke-width="2"/>
+          <circle cx="110" cy="86" r="20" fill="#4cc2ff"/>
+          <circle cx="190" cy="80" r="26" fill="#ff6b9d"/>
+          <line x1="118" y1="52" x2="150" y2="52" stroke="#4cc2ff" stroke-width="3"/>
+          <polygon points="150,52 142,48 142,56" fill="#4cc2ff"/>
+          <line x1="182" y1="44" x2="214" y2="44" stroke="#ff6b9d" stroke-width="3"/>
+          <polygon points="214,44 206,40 206,48" fill="#ff6b9d"/>
+        </svg>
+      </div>
+      <div class="tag"><span class="badge">力學・動量</span></div>
+      <h3>碰撞實驗台</h3>
+      <p>兩球對撞，調質量、初速與回復係數；看總動量守恆（綠條恆定）與動能在非彈性碰撞時階梯損耗成熱。</p>
+      <div class="go">開始體驗 →</div>
+    </a>
+
+    <a class="card" href="newton-force/">
+      <div class="thumb t-newton">
+        <svg viewBox="0 0 300 152" preserveAspectRatio="none" style="width:100%;height:100%">
+          <line x1="0" y1="118" x2="300" y2="118" stroke="#3a4756" stroke-width="2"/>
+          <rect x="118" y="74" width="64" height="44" fill="#1b2740" stroke="#5a7bb0" stroke-width="2"/>
+          <line x1="182" y1="96" x2="250" y2="96" stroke="#4cc2ff" stroke-width="4"/>
+          <polygon points="250,96 240,90 240,102" fill="#4cc2ff"/>
+          <line x1="118" y1="96" x2="78" y2="96" stroke="#ff6b9d" stroke-width="4"/>
+          <polygon points="78,96 88,90 88,102" fill="#ff6b9d"/>
+          <line x1="150" y1="58" x2="200" y2="58" stroke="#ffce54" stroke-width="4"/>
+          <polygon points="200,58 190,52 190,64" fill="#ffce54"/>
+        </svg>
+      </div>
+      <div class="tag"><span class="badge">力學・牛頓運動定律</span></div>
+      <h3>牛頓第二定律：推箱子</h3>
+      <p>施力、質量、摩擦三滑桿，看自由體圖、合力與加速度，體會 F合=ma 與「推不動」的靜摩擦門檻。</p>
+      <div class="go">開始體驗 →</div>
+    </a>
+
+    <a class="card" href="circular/">
+      <div class="thumb t-circular">
+        <svg viewBox="0 0 300 152" preserveAspectRatio="none" style="width:100%;height:100%">
+          <circle cx="150" cy="76" r="54" fill="none" stroke="#26303f" stroke-width="2" stroke-dasharray="5 5"/>
+          <circle cx="150" cy="76" r="3" fill="#5b6880"/>
+          <circle cx="204" cy="76" r="7" fill="#e8eef6" stroke="#4cc2ff" stroke-width="2"/>
+          <line x1="204" y1="76" x2="204" y2="32" stroke="#4cc2ff" stroke-width="3"/>
+          <polygon points="204,32 198,42 210,42" fill="#4cc2ff"/>
+          <line x1="204" y1="76" x2="170" y2="76" stroke="#ffce54" stroke-width="3"/>
+          <polygon points="170,76 180,71 180,81" fill="#ffce54"/>
+        </svg>
+      </div>
+      <div class="tag"><span class="badge">力學・圓周運動</span></div>
+      <h3>等速圓周運動：向心加速度</h3>
+      <p>速率不變但速度方向一直變 → 必有指向圓心的向心加速度；按「放手」看物體沿切線飛出（慣性）。</p>
+      <div class="go">開始體驗 →</div>
+    </a>
+
+    <a class="card" href="shm/">
+      <div class="thumb t-shm">
+        <svg viewBox="0 0 300 152" preserveAspectRatio="none" style="width:100%;height:100%">
+          <circle cx="60" cy="76" r="34" fill="none" stroke="#26303f" stroke-width="2"/>
+          <circle cx="86" cy="54" r="6" fill="#4cc2ff"/>
+          <path d="M110,76 Q150,30 190,76 T270,76" fill="none" stroke="#4cc2ff" stroke-width="2"/>
+          <path d="M110,76 Q150,122 190,76 T270,76" fill="none" stroke="#ff6b9d" stroke-width="2" opacity=".8"/>
+        </svg>
+      </div>
+      <div class="tag"><span class="badge">力學・簡諧運動</span></div>
+      <h3>簡諧運動三表徵</h3>
+      <p>圓周投影＝彈簧振子，加上單擺，三種表徵同步呈現；位置對時間都是正弦曲線，並比較週期公式。</p>
+      <div class="go">開始體驗 →</div>
+    </a>
+
+    <a class="card" href="orbit/">
+      <div class="thumb t-orbit">
+        <svg viewBox="0 0 300 152" preserveAspectRatio="none" style="width:100%;height:100%">
+          <ellipse cx="160" cy="76" rx="110" ry="58" fill="none" stroke="#2f6d8c" stroke-width="2"/>
+          <circle cx="92" cy="76" r="9" fill="#ffce54"/>
+          <circle cx="92" cy="76" r="16" fill="#ffce54" opacity=".2"/>
+          <circle cx="266" cy="76" r="6" fill="#e8eef6" stroke="#4cc2ff" stroke-width="2"/>
+          <path d="M92,76 L120,40 L150,30 Z" fill="#ffce5422"/>
+          <path d="M92,76 L240,52 L262,62 Z" fill="#4cc2ff22"/>
+        </svg>
+      </div>
+      <div class="tag"><span class="badge">力學・萬有引力</span></div>
+      <h3>行星軌道沙盒</h3>
+      <p>萬有引力下的圓／橢圓／逃逸軌道，彩色楔形示範克卜勒第二定律「等時間掃過等面積」，含週期與偏心率。</p>
+      <div class="go">開始體驗 →</div>
+    </a>
+
+    <a class="card" href="vectors/">
+      <div class="thumb t-vectors">
+        <svg viewBox="0 0 300 152" preserveAspectRatio="none" style="width:100%;height:100%">
+          <line x1="90" y1="100" x2="190" y2="60" stroke="#4cc2ff" stroke-width="3"/>
+          <polygon points="190,60 178,60 184,71" fill="#4cc2ff"/>
+          <line x1="90" y1="100" x2="140" y2="36" stroke="#ff6b9d" stroke-width="3"/>
+          <polygon points="140,36 130,44 142,48" fill="#ff6b9d"/>
+          <line x1="90" y1="100" x2="240" y2="20" stroke="#fff" stroke-width="3.5"/>
+          <polygon points="240,20 226,24 233,35" fill="#fff"/>
+          <line x1="190" y1="60" x2="240" y2="20" stroke="#ff6b9d55" stroke-width="1.5" stroke-dasharray="3 3"/>
+          <circle cx="90" cy="100" r="4" fill="#e8eef6"/>
+        </svg>
+      </div>
+      <div class="tag"><span class="badge">力學・向量</span></div>
+      <h3>力的合成（向量加法）</h3>
+      <p>拖曳力向量，用平行四邊形／頭尾相接求合力；即時分量表與力平衡判定。</p>
+      <div class="go">開始體驗 →</div>
+    </a>
+
+    <a class="card" href="machines/">
+      <div class="thumb t-machines">
+        <svg viewBox="0 0 300 152" preserveAspectRatio="none" style="width:100%;height:100%">
+          <polygon points="150,96 134,124 166,124" fill="#3a4756"/>
+          <line x1="60" y1="84" x2="240" y2="108" stroke="#5a7bb0" stroke-width="6" stroke-linecap="round"/>
+          <rect x="52" y="84" width="22" height="22" fill="#4cc2ff"/>
+          <rect x="208" y="108" width="30" height="30" fill="#ff6b9d"/>
+        </svg>
+      </div>
+      <div class="tag"><span class="badge">力學・簡單機械</span></div>
+      <h3>槓桿與滑輪</h3>
+      <p>槓桿力矩平衡（W₁d₁=W₂d₂，橫桿會傾倒）與滑輪組省力倍數；體會「省力但費距離、功守恆」。</p>
+      <div class="go">開始體驗 →</div>
+    </a>
+
+    <a class="card" href="buoyancy/">
+      <div class="thumb t-buoy">
+        <svg viewBox="0 0 300 152" preserveAspectRatio="none" style="width:100%;height:100%">
+          <rect x="40" y="64" width="220" height="78" fill="#4c8cc833"/>
+          <line x1="40" y1="64" x2="260" y2="64" stroke="#4c8cc8" stroke-width="2"/>
+          <rect x="124" y="40" width="52" height="52" fill="#7CFFB2"/>
+          <rect x="124" y="64" width="52" height="28" fill="#14284680"/>
+          <line x1="112" y1="78" x2="112" y2="56" stroke="#4cc2ff" stroke-width="3"/>
+          <polygon points="112,56 107,66 117,66" fill="#4cc2ff"/>
+        </svg>
+      </div>
+      <div class="tag"><span class="badge">壓力・浮力</span></div>
+      <h3>浮力與密度</h3>
+      <p>阿基米德原理：浮力＝排開液體重量；比較物體與液體密度看浮沉，沒入比例＝ρ物/ρ液（冰山一角）。</p>
+      <div class="go">開始體驗 →</div>
+    </a>
+
+    <div class="section"><h2>🟧 熱學館</h2><span class="ln"></span><span class="cnt">氣體動力論・比熱・相變</span></div>
+
+    <a class="card" href="kinetic/">
+      <div class="thumb t-kinetic">
+        <svg viewBox="0 0 300 152" preserveAspectRatio="none" style="width:100%;height:100%">
+          <rect x="80" y="20" width="140" height="112" fill="none" stroke="#4c8cc8" stroke-width="2"/>
+          <circle cx="110" cy="48" r="3.5" fill="#8b9cff"/><circle cx="160" cy="40" r="3.5" fill="#4cc2ff"/>
+          <circle cx="195" cy="70" r="3.5" fill="#c4b5ff"/><circle cx="125" cy="95" r="3.5" fill="#4cc2ff"/>
+          <circle cx="170" cy="110" r="3.5" fill="#8b9cff"/><circle cx="100" cy="120" r="3.5" fill="#4cc2ff"/>
+          <circle cx="205" cy="105" r="3.5" fill="#c4b5ff"/><circle cx="150" cy="72" r="3.5" fill="#8b9cff"/>
+        </svg>
+      </div>
+      <div class="tag"><span class="badge">熱學・氣體動力論</span></div>
+      <h3>分子運動箱（PV=nRT）</h3>
+      <p>分子撞牆產生壓力，調溫度／體積／分子數看壓力變化；實測壓力與理論 NkT/V 吻合，微觀導出巨觀定律。</p>
+      <div class="go">開始體驗 →</div>
+    </a>
+
+    <a class="card" href="heating-curve/">
+      <div class="thumb t-heat">
+        <svg viewBox="0 0 300 152" preserveAspectRatio="none" style="width:100%;height:100%">
+          <polyline points="20,128 60,104 95,104 130,64 230,64 270,30" fill="none" stroke="#ff6b9d" stroke-width="2.5"/>
+          <polyline points="20,128 60,104 95,104" fill="none" stroke="#8b9cff" stroke-width="2.5"/>
+          <polyline points="95,104 130,64" fill="none" stroke="#4cc2ff" stroke-width="2.5"/>
+          <line x1="60" y1="104" x2="95" y2="104" stroke="#4cc2ff" stroke-width="4"/>
+          <line x1="130" y1="64" x2="230" y2="64" stroke="#ff6b9d" stroke-width="4"/>
+        </svg>
+      </div>
+      <div class="tag"><span class="badge">熱學・比熱與相變</span></div>
+      <h3>比熱與加熱曲線</h3>
+      <p>固定功率加熱冰→水→蒸氣，看熔化與沸騰的水平平台（潛熱）與斜段 Q=mcΔT，理解相變吸熱不升溫。</p>
+      <div class="go">開始體驗 →</div>
+    </a>
+
+    <div class="section"><h2>🟩 波動館</h2><span class="ln"></span><span class="cnt">駐波・都卜勒・聲音</span></div>
+
+    <a class="card" href="standing-wave/">
+      <div class="thumb t-standing">
+        <svg viewBox="0 0 300 152" preserveAspectRatio="none" style="width:100%;height:100%">
+          <path d="M20,76 Q70,26 120,76 T220,76 T300,76" fill="none" stroke="#7CFFB2" stroke-width="1.5" opacity=".5"/>
+          <path d="M20,76 Q70,126 120,76 T220,76 T300,76" fill="none" stroke="#7CFFB2" stroke-width="1.5" opacity=".5"/>
+          <path d="M20,76 Q70,46 120,76 T220,76 T300,76" fill="none" stroke="#4cc2ff" stroke-width="2.5"/>
+          <circle cx="20" cy="76" r="3" fill="#7CFFB2"/><circle cx="120" cy="76" r="3" fill="#7CFFB2"/>
+          <circle cx="220" cy="76" r="3" fill="#7CFFB2"/>
+          <circle cx="70" cy="50" r="3" fill="#ffce54"/><circle cx="170" cy="50" r="3" fill="#ffce54"/>
+        </svg>
+      </div>
+      <div class="tag"><span class="badge">波動・駐波與共振</span></div>
+      <h3>駐波弦：共振與諧波</h3>
+      <p>掃動頻率找共振，形成 n=1,2,3… 駐波，看節點與腹點；張力與弦長如何決定諧波頻率（弦樂器調音原理）。</p>
+      <div class="go">開始體驗 →</div>
+    </a>
+
+    <a class="card" href="doppler/">
+      <div class="thumb t-doppler">
+        <svg viewBox="0 0 300 152" preserveAspectRatio="none" style="width:100%;height:100%">
+          <circle cx="190" cy="76" r="20" fill="none" stroke="#78b4ff" stroke-width="1.5"/>
+          <circle cx="183" cy="76" r="40" fill="none" stroke="#78b4ff" stroke-width="1.5"/>
+          <circle cx="174" cy="76" r="62" fill="none" stroke="#78b4ff" stroke-width="1.5"/>
+          <circle cx="163" cy="76" r="86" fill="none" stroke="#78b4ff" stroke-width="1.2" opacity=".6"/>
+          <polygon points="200,68 188,84 212,84" fill="#ffce54"/>
+        </svg>
+      </div>
+      <div class="tag"><span class="badge">波動・都卜勒效應</span></div>
+      <h3>都卜勒效應與音爆</h3>
+      <p>移動音源的波前壓縮／拉伸，觀察者聽到的頻率隨接近／遠離升降；超音速時形成馬赫錐（音爆）。</p>
+      <div class="go">開始體驗 →</div>
+    </a>
+
+    <a class="card" href="sound/">
+      <div class="thumb t-sound">
+        <svg viewBox="0 0 300 152" preserveAspectRatio="none" style="width:100%;height:100%">
+          <path d="M10,76 Q40,20 70,76 T130,76 T190,76 T250,76 T300,76" fill="none" stroke="#4cc2ff" stroke-width="1.5" opacity=".5"/>
+          <path d="M10,76 C40,10 60,10 90,76 C120,142 140,142 170,76 C200,10 220,10 250,76 C270,120 285,120 300,90" fill="none" stroke="#7CFFB2" stroke-width="2.5"/>
+        </svg>
+      </div>
+      <div class="tag"><span class="badge">波動・聲音</span></div>
+      <h3>聲波合成器（拍音）</h3>
+      <p>聲音三要素響度／音調／音色，兩音疊加成拍音；Web Audio 真實發聲，用耳朵驗證拍頻=|f₁−f₂|。</p>
+      <div class="go">開始體驗 →</div>
+    </a>
+
+    <div class="section"><h2>🟪 光學館</h2><span class="ln"></span><span class="cnt">幾何光學・折射・顏色（更多波動光學見下方）</span></div>
+
+    <a class="card" href="lens/">
+      <div class="thumb t-lens">
+        <svg viewBox="0 0 300 152" preserveAspectRatio="none" style="width:100%;height:100%">
+          <line x1="0" y1="76" x2="300" y2="76" stroke="#2a3340" stroke-width="1.5"/>
+          <line x1="150" y1="28" x2="150" y2="124" stroke="#4cc2ff" stroke-width="2"/>
+          <line x1="60" y1="50" x2="150" y2="50" stroke="#ffce54" stroke-width="1.5"/>
+          <line x1="150" y1="50" x2="240" y2="104" stroke="#ffce54" stroke-width="1.5"/>
+          <line x1="60" y1="50" x2="240" y2="104" stroke="#ff6b9d" stroke-width="1.5"/>
+          <line x1="60" y1="76" x2="60" y2="50" stroke="#7CFFB2" stroke-width="3"/>
+          <line x1="240" y1="76" x2="240" y2="104" stroke="#ffce54" stroke-width="3"/>
+        </svg>
+      </div>
+      <div class="tag"><span class="badge">光學・幾何光學</span></div>
+      <h3>透鏡成像（凸／凹）</h3>
+      <p>三主光線追跡凸／凹透鏡成像，看實像／虛像、正立／倒立、放大／縮小如何隨物距切換，1/f=1/p+1/q。</p>
+      <div class="go">開始體驗 →</div>
+    </a>
+
+    <a class="card" href="refraction/">
+      <div class="thumb t-refraction">
+        <svg viewBox="0 0 300 152" preserveAspectRatio="none" style="width:100%;height:100%">
+          <rect x="0" y="76" width="300" height="76" fill="#4c8cc822"/>
+          <line x1="0" y1="76" x2="300" y2="76" stroke="#4c8cc8" stroke-width="2"/>
+          <line x1="150" y1="20" x2="150" y2="132" stroke="#3a4756" stroke-width="1" stroke-dasharray="4 4"/>
+          <line x1="60" y1="30" x2="150" y2="76" stroke="#4cc2ff" stroke-width="2.5"/>
+          <line x1="150" y1="76" x2="210" y2="140" stroke="#ffce54" stroke-width="2.5"/>
+          <line x1="150" y1="76" x2="240" y2="30" stroke="#6b86a8" stroke-width="1.5"/>
+        </svg>
+      </div>
+      <div class="tag"><span class="badge">光學・折射</span></div>
+      <h3>折射與全反射</h3>
+      <p>Snell 定律 n₁sinθ₁=n₂sinθ₂，看光在界面轉彎；密→疏介質超過臨界角時全反射，即光纖原理。</p>
+      <div class="go">開始體驗 →</div>
+    </a>
+
+    <a class="card" href="color-mix/">
+      <div class="thumb t-colormix">
+        <svg viewBox="0 0 300 152" preserveAspectRatio="none" style="width:100%;height:100%">
+          <g style="mix-blend-mode:screen">
+            <circle cx="150" cy="56" r="44" fill="#ff0000"/>
+            <circle cx="124" cy="98" r="44" fill="#00ff00"/>
+            <circle cx="176" cy="98" r="44" fill="#0000ff"/>
+          </g>
+        </svg>
+      </div>
+      <div class="tag"><span class="badge">光學・顏色</span></div>
+      <h3>加法混色盤（RGB）</h3>
+      <p>光的三原色疊加，重疊區即時合成黃／青／洋紅／白；對照顏料的減法混色，理解螢幕發光原理。</p>
+      <div class="go">開始體驗 →</div>
+    </a>
+
+    <div class="section"><h2>🟥 電磁館</h2><span class="ln"></span><span class="cnt">電路・電場・RC・勞侖茲力・電磁感應</span></div>
+
+    <a class="card" href="circuits/">
+      <div class="thumb t-circuits">
+        <svg viewBox="0 0 300 152" preserveAspectRatio="none" style="width:100%;height:100%">
+          <rect x="40" y="34" width="220" height="84" fill="none" stroke="#4c8cc8" stroke-width="2"/>
+          <line x1="40" y1="64" x2="40" y2="88" stroke="#070d18" stroke-width="6"/>
+          <line x1="40" y1="58" x2="40" y2="94" stroke="#7CFFB2" stroke-width="2"/>
+          <circle cx="120" cy="34" r="12" fill="#fff5b0"/><circle cx="120" cy="34" r="20" fill="#fff5b0" opacity=".25"/>
+          <circle cx="180" cy="34" r="12" fill="#fff5b0"/><circle cx="180" cy="34" r="20" fill="#fff5b0" opacity=".25"/>
+          <circle cx="240" cy="34" r="12" fill="#fff5b0"/><circle cx="240" cy="34" r="20" fill="#fff5b0" opacity=".25"/>
+        </svg>
+      </div>
+      <div class="tag"><span class="badge">電磁・電路</span></div>
+      <h3>電路：串聯與並聯</h3>
+      <p>電池點亮燈泡，比較串聯（越串越暗、斷一全滅）與並聯（各自滿亮、互不影響），即時算 V=IR 與亮度。</p>
+      <div class="go">開始體驗 →</div>
+    </a>
+
+    <a class="card" href="efield/">
+      <div class="thumb t-efield">
+        <svg viewBox="0 0 300 152" preserveAspectRatio="none" style="width:100%;height:100%">
+          <circle cx="95" cy="76" r="11" fill="#ff5b5b"/><text x="91" y="81" fill="#fff" font-size="13" font-weight="bold">+</text>
+          <circle cx="205" cy="76" r="11" fill="#5b8fff"/><text x="201" y="81" fill="#fff" font-size="13" font-weight="bold">−</text>
+          <path d="M106,76 Q150,40 194,76" fill="none" stroke="#e8eef6" stroke-width="1.3" opacity=".7"/>
+          <path d="M106,76 Q150,112 194,76" fill="none" stroke="#e8eef6" stroke-width="1.3" opacity=".7"/>
+          <path d="M106,70 Q150,20 194,70" fill="none" stroke="#e8eef6" stroke-width="1" opacity=".4"/>
+          <path d="M106,82 Q150,132 194,82" fill="none" stroke="#e8eef6" stroke-width="1" opacity=".4"/>
+        </svg>
+      </div>
+      <div class="tag"><span class="badge">電磁・靜電學</span></div>
+      <h3>電場與電位</h3>
+      <p>放置正負電荷看電場向量與等位面，拖曳即時重組；庫侖定律與平方反比，電偶極場線由正到負。</p>
+      <div class="go">開始體驗 →</div>
+    </a>
+
+    <a class="card" href="rc-circuit/">
+      <div class="thumb t-rc">
+        <svg viewBox="0 0 300 152" preserveAspectRatio="none" style="width:100%;height:100%">
+          <path d="M20,120 Q20,40 70,40 T160,76 T260,90" fill="none" stroke="#4cc2ff" stroke-width="2.5"/>
+          <path d="M20,40 Q70,108 160,118 T280,128" fill="none" stroke="#ffce54" stroke-width="2"/>
+          <line x1="20" y1="40" x2="280" y2="40" stroke="#2a3850" stroke-width="1" stroke-dasharray="4 4"/>
+          <line x1="56" y1="20" x2="56" y2="132" stroke="#2a3850" stroke-width="1" stroke-dasharray="4 4"/>
+        </svg>
+      </div>
+      <div class="tag"><span class="badge">電磁・RC 電路</span></div>
+      <h3>RC 充放電</h3>
+      <p>電容充放電的指數曲線與時間常數 τ=RC，t=τ 充到 63%；計時、閃光燈、濾波電路的基礎。</p>
+      <div class="go">開始體驗 →</div>
+    </a>
+
+    <a class="card" href="lorentz/">
+      <div class="thumb t-lorentz">
+        <svg viewBox="0 0 300 152" preserveAspectRatio="none" style="width:100%;height:100%">
+          <g stroke="#3a4756" stroke-width="1.2">
+            <path d="M60,40 l8,8 M68,40 l-8,8 M150,40 l8,8 M158,40 l-8,8 M240,40 l8,8 M248,40 l-8,8 M60,112 l8,8 M68,112 l-8,8 M240,112 l8,8 M248,112 l-8,8"/>
+          </g>
+          <circle cx="150" cy="76" r="50" fill="none" stroke="#7CFFB2" stroke-width="2"/>
+          <circle cx="200" cy="76" r="8" fill="#ff5b5b"/>
+          <line x1="200" y1="76" x2="200" y2="40" stroke="#4cc2ff" stroke-width="2.5"/>
+          <line x1="200" y1="76" x2="164" y2="76" stroke="#ff6b9d" stroke-width="2.5"/>
+        </svg>
+      </div>
+      <div class="tag"><span class="badge">電磁・勞侖茲力</span></div>
+      <h3>磁場中的帶電粒子</h3>
+      <p>勞侖茲力 F=qv×B 永遠垂直速度，使粒子走圓周；r=mv/qB，反轉磁場或電荷則旋向相反（質譜儀、極光原理）。</p>
+      <div class="go">開始體驗 →</div>
+    </a>
+
+    <a class="card" href="induction/">
+      <div class="thumb t-induction">
+        <svg viewBox="0 0 300 152" preserveAspectRatio="none" style="width:100%;height:100%">
+          <g stroke="#2a3850" stroke-width="1.2">
+            <line x1="20" y1="40" x2="280" y2="40"/><line x1="20" y1="112" x2="280" y2="112"/>
+            <polygon points="280,40 272,36 272,44" fill="#2a3850"/><polygon points="280,112 272,108 272,116" fill="#2a3850"/>
+          </g>
+          <line x1="100" y1="100" x2="200" y2="52" stroke="#4cc2ff" stroke-width="4"/>
+          <circle cx="100" cy="100" r="5" fill="#7CFFB2"/><circle cx="200" cy="52" r="5" fill="#ffce54"/>
+          <circle cx="150" cy="130" r="10" fill="#fff5b0"/><circle cx="150" cy="130" r="18" fill="#fff5b0" opacity=".3"/>
+        </svg>
+      </div>
+      <div class="tag"><span class="badge">電磁・電磁感應</span></div>
+      <h3>電磁感應發電機</h3>
+      <p>線圈在磁場中旋轉產生交流電壓，法拉第定律 EMF=-N·dΦ/dt；磁通與電動勢相差 90°，發電廠原理。</p>
+      <div class="go">開始體驗 →</div>
+    </a>
+
+    <div class="section"><h2>⬛ 近代物理館</h2><span class="ln"></span><span class="cnt">光電效應・半衰期・原子光譜</span></div>
+
+    <a class="card" href="photoelectric/">
+      <div class="thumb t-photo">
+        <svg viewBox="0 0 300 152" preserveAspectRatio="none" style="width:100%;height:100%">
+          <rect x="190" y="30" width="16" height="92" fill="#3a4756"/>
+          <circle cx="40" cy="50" r="3.5" fill="#b388ff"/><circle cx="90" cy="76" r="3.5" fill="#b388ff"/>
+          <circle cx="140" cy="60" r="3.5" fill="#b388ff"/><circle cx="120" cy="98" r="3.5" fill="#b388ff"/>
+          <circle cx="230" cy="50" r="4" fill="#4cc2ff"/><circle cx="260" cy="80" r="4" fill="#4cc2ff"/>
+          <circle cx="240" cy="108" r="4" fill="#4cc2ff"/>
+        </svg>
+      </div>
+      <div class="tag"><span class="badge">近代物理・量子</span></div>
+      <h3>光電效應</h3>
+      <p>頻率不夠光再強也打不出電子；夠高才發射且 KE=hf−W 只看頻率。愛因斯坦光量子，量子物理開端。</p>
+      <div class="go">開始體驗 →</div>
+    </a>
+
+    <a class="card" href="half-life/">
+      <div class="thumb t-halflife">
+        <svg viewBox="0 0 300 152" preserveAspectRatio="none" style="width:100%;height:100%">
+          <path d="M20,28 C80,28 90,120 150,128 C210,134 230,138 280,140" fill="none" stroke="#7CFFB2" stroke-width="2.5"/>
+          <line x1="20" y1="78" x2="280" y2="78" stroke="#243042" stroke-width="1" stroke-dasharray="3 4"/>
+          <line x1="20" y1="103" x2="280" y2="103" stroke="#243042" stroke-width="1" stroke-dasharray="3 4"/>
+          <circle cx="50" cy="40" r="3" fill="#7CFFB2"/><circle cx="90" cy="55" r="3" fill="#7CFFB2"/>
+          <circle cx="130" cy="100" r="3" fill="#2a3340"/><circle cx="180" cy="120" r="3" fill="#2a3340"/>
+        </svg>
+      </div>
+      <div class="tag"><span class="badge">近代物理・核物理</span></div>
+      <h3>放射性半衰期</h3>
+      <p>原子隨機衰變，每過一個半衰期剩一半，N=N₀(½)^(t/T)；原子越少鋸齒越明顯，碳-14 定年原理。</p>
+      <div class="go">開始體驗 →</div>
+    </a>
+
+    <div class="section"><h2>🔬 波動光學・幾何光學（既有作品）</h2><span class="ln"></span><span class="cnt">干涉・繞射・摩爾紋・無影燈</span></div>
 
     <a class="card" href="diffraction/">
       <div class="thumb t-diff">
@@ -129,6 +592,8 @@
       <div class="go">開始體驗 →</div>
     </a>
 
+    <div class="section"><h2>🛠 工程・資料</h2><span class="ln"></span><span class="cnt">工程設計・資料視覺化</span></div>
+
     <a class="card" href="hovercraft/">
       <div class="thumb t-hover"><b></b></div>
       <div class="tag"><span class="badge">工程・動力分析</span></div>
@@ -147,8 +612,8 @@
   </div>
 
   <footer>
-    依 AI 協作討論重建／收錄的可執行互動作品 · 適合課堂與成果展示<br>
-    原始碼：<a href="https://github.com/henrychao521/ai-physics-demos" target="_blank" rel="noopener">github.com/henrychao521/ai-physics-demos</a>
+    純前端 HTML / Canvas 打造的可執行互動模擬 · 涵蓋國高中物理六大領域 · 適合課堂教學與自學<br>
+    每個模擬皆經物理數值驗證（守恆律、公式關係實測吻合）。原始碼：<a href="https://github.com/henrychao521/ai-physics-demos" target="_blank" rel="noopener">github.com/henrychao521/ai-physics-demos</a>
   </footer>
 </div>
 </body>

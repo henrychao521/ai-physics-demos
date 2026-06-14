@@ -1,0 +1,197 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>透鏡成像 ｜ 凸/凹透鏡・光線追跡・1/f=1/p+1/q</title>
+<link rel="icon" href="../assets/favicon.svg" type="image/svg+xml">
+<link rel="stylesheet" href="../assets/site.css">
+<script defer src="../assets/nav.js"></script>
+<style>
+  *{box-sizing:border-box}
+  html,body{margin:0;padding:0;background:var(--bg);color:var(--txt);
+    font-family:"Noto Sans TC","PingFang TC","Microsoft JhengHei",system-ui,sans-serif}
+  a{color:var(--accent)}
+  .wrap{max-width:1100px;margin:0 auto;padding:18px 16px 60px}
+  header h1{font-size:1.5rem;margin:.2em 0}
+  header p{color:var(--muted);margin:.2em 0 1em;line-height:1.6}
+  .badge{display:inline-block;background:var(--panel2);border:1px solid var(--line);
+    color:var(--muted);font-size:.72rem;padding:2px 8px;border-radius:99px;margin-right:6px}
+  .stage{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:14px;margin-bottom:16px}
+  canvas{width:100%;display:block;border-radius:8px;background:#05070b;touch-action:none}
+  .label{font-size:.8rem;color:var(--muted);margin:0 0 6px;display:flex;justify-content:space-between;flex-wrap:wrap;gap:8px}
+  .grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(210px,1fr));gap:14px}
+  .ctrl{background:var(--panel2);border:1px solid var(--line);border-radius:10px;padding:10px 12px}
+  .ctrl label{display:flex;justify-content:space-between;font-size:.85rem;margin-bottom:6px}
+  .ctrl .val{color:var(--accent);font-variant-numeric:tabular-nums}
+  input[type=range]{width:100%;accent-color:var(--accent)}
+  .modes{display:flex;gap:8px;margin:6px 0 14px;flex-wrap:wrap;align-items:center}
+  .modes button,.btn{background:var(--panel2);color:var(--txt);border:1px solid var(--line);
+    padding:8px 14px;border-radius:9px;cursor:pointer;font-size:.85rem;font-family:inherit}
+  .modes button.on{background:var(--accent);color:#04121c;border-color:var(--accent);font-weight:700}
+  .btn:hover,.modes button:hover{border-color:var(--accent)}
+  .stat{display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:10px;margin:2px 0}
+  .stat .box{background:var(--panel2);border:1px solid var(--line);border-radius:10px;padding:9px 11px}
+  .stat .box .k{font-size:.72rem;color:var(--muted)}
+  .stat .box .v{font-size:1.02rem;font-variant-numeric:tabular-nums;font-weight:700}
+  .desc{margin-top:12px;padding:10px 12px;border-radius:10px;text-align:center;font-weight:700;
+    background:rgba(76,194,255,.1);color:#4cc2ff}
+  .note{background:var(--panel);border-left:3px solid var(--accent2);border-radius:8px;
+    padding:12px 14px;color:var(--muted);font-size:.86rem;line-height:1.7;margin-top:18px}
+  .note b{color:var(--txt)}.note code{background:var(--bg2);padding:1px 6px;border-radius:5px;color:var(--green);font-size:.85em}
+  footer{color:var(--muted);font-size:.78rem;margin-top:26px;text-align:center;line-height:1.7}
+</style>
+</head>
+<body data-demo="透鏡成像">
+<div class="wrap">
+  <header>
+    <span class="badge">光學・幾何光學</span>
+    <h1>透鏡成像（凸／凹透鏡）</h1>
+    <p>拖曳物體（或調物距），用三條<b>主光線</b>追跡成像。<b>凸透鏡</b>：物體在 2F 外成<b>縮小倒立實像</b>、
+       F 與 2F 間成<b>放大倒立實像</b>、F 內成<b>放大正立虛像</b>（放大鏡）；<b>凹透鏡</b>永遠成縮小正立虛像。
+       遵守 <b>1/f = 1/p + 1/q</b>。</p>
+  </header>
+
+  <div class="modes">
+    <button class="btn on" id="mConvex">凸透鏡 (f&gt;0)</button>
+    <button class="btn" id="mConcave">凹透鏡 (f&lt;0)</button>
+    <span style="color:var(--muted);font-size:.8rem;margin-left:6px">情境：</span>
+    <button class="btn" data-preset="far">遠物(縮小)</button>
+    <button class="btn" data-preset="mid">2F~F(放大)</button>
+    <button class="btn" data-preset="near">放大鏡(虛像)</button>
+  </div>
+
+  <div class="stage">
+    <div class="label"><span>光具座（綠=物體，黃=像；可拖曳物體改變物距）</span><span id="sub"></span></div>
+    <canvas id="cv" width="1040" height="360"></canvas>
+  </div>
+
+  <div class="desc" id="desc"></div>
+  <div class="stat" id="stats" style="margin-top:12px"></div>
+  <div class="grid" id="controls" style="margin-top:14px"></div>
+
+  <div class="note">
+    <b>物理重點：</b>三條主光線：①平行軸的光經透鏡<b>折向焦點</b>；②通過<b>透鏡中心</b>的光直行不偏；③通過<b>焦點</b>的光經透鏡後<b>平行射出</b>。
+    它們交會處就是像。成像公式 <code>1/f = 1/p + 1/q</code>，橫向放大率 <code>m = −q/p</code>（負號＝倒立）。
+    q&gt;0 表示<b>實像</b>（光線真的會聚，可投影到屏幕，倒立）；q&lt;0 是<b>虛像</b>（要靠眼睛延長線看到，正立）。
+    面鏡成像也遵守同一條公式（凹面鏡 f&gt;0、凸面鏡 f&lt;0），只是把折射換成反射。
+  </div>
+
+  <footer>純前端 HTML / Canvas，無外部相依。薄透鏡近軸成像。</footer>
+</div>
+
+<script>
+const sliders=[
+  {id:'p',name:'物距 p',min:5,max:70,step:1,val:45,unit:'cm'},
+  {id:'fa',name:'焦距 |f|',min:5,max:30,step:1,val:15,unit:'cm'},
+  {id:'h',name:'物高 h',min:2,max:10,step:.5,val:6,unit:'cm'},
+];
+const state={}; let convex=true;
+const ctrl=document.getElementById('controls');
+sliders.forEach(s=>{
+  state[s.id]=s.val;
+  const box=document.createElement('div');box.className='ctrl';
+  box.innerHTML=`<label><span>${s.name}</span><span class="val" id="v_${s.id}">${fmt(s.val)} ${s.unit}</span></label>
+    <input type="range" id="r_${s.id}" min="${s.min}" max="${s.max}" step="${s.step}" value="${s.val}">`;
+  ctrl.appendChild(box);
+  box.querySelector('input').addEventListener('input',e=>{
+    state[s.id]=parseFloat(e.target.value);
+    document.getElementById('v_'+s.id).textContent=`${fmt(state[s.id])} ${s.unit}`;draw();
+  });
+});
+function fmt(x){return (Math.round(x*100)/100).toString();}
+function setSlider(id,val){state[id]=val;const r=document.getElementById('r_'+id);if(r)r.value=val;
+  const s=sliders.find(z=>z.id===id);if(s)document.getElementById('v_'+id).textContent=`${fmt(val)} ${s.unit}`;}
+
+function f(){return convex?state.fa:-state.fa;}
+function image(){const p=state.p,F=f();const q=p*F/(p-F);const m=-q/p;return {q,m};}
+
+const cv=document.getElementById('cv'),cc=cv.getContext('2d');
+let SCALE=1, AX=0, AY=0;                                // cm→px, 軸位置
+function setup(){const W=cv.width,H=cv.height;AY=H/2;AX=W*0.42;SCALE=Math.min(5.2,(W*0.5-40)/70);}
+function X(xcm){return AX+xcm*SCALE;}
+function Y(ycm){return AY-ycm*SCALE;}
+function ray(x1,y1,x2,y2,col,dash){cc.strokeStyle=col;cc.lineWidth=1.6;cc.setLineDash(dash||[]);
+  cc.beginPath();cc.moveTo(X(x1),Y(y1));cc.lineTo(X(x2),Y(y2));cc.stroke();cc.setLineDash([]);}
+function draw(){
+  setup();const W=cv.width,H=cv.height;cc.clearRect(0,0,W,H);
+  const F=f(),{q,m}=image(),p=state.p,h=state.h,ih=m*h;
+  // 主軸
+  cc.strokeStyle='#2a3340';cc.lineWidth=1;cc.beginPath();cc.moveTo(0,AY);cc.lineTo(W,AY);cc.stroke();
+  // 透鏡
+  cc.strokeStyle='#4cc2ff';cc.lineWidth=2;const lh=120;
+  cc.beginPath();cc.moveTo(AX,AY-lh);cc.lineTo(AX,AY+lh);cc.stroke();
+  // 透鏡符號箭頭(凸 向外, 凹 向內)
+  cc.fillStyle='#4cc2ff';
+  if(convex){cc.beginPath();cc.moveTo(AX,AY-lh);cc.lineTo(AX-6,AY-lh+12);cc.lineTo(AX+6,AY-lh+12);cc.closePath();cc.fill();
+    cc.beginPath();cc.moveTo(AX,AY+lh);cc.lineTo(AX-6,AY+lh-12);cc.lineTo(AX+6,AY+lh-12);cc.closePath();cc.fill();}
+  else{cc.beginPath();cc.moveTo(AX,AY-lh+12);cc.lineTo(AX-6,AY-lh);cc.lineTo(AX+6,AY-lh);cc.closePath();cc.fill();
+    cc.beginPath();cc.moveTo(AX,AY+lh-12);cc.lineTo(AX-6,AY+lh);cc.lineTo(AX+6,AY+lh);cc.closePath();cc.fill();}
+  // F 與 2F
+  cc.fillStyle='#6b7785';cc.font='11px sans-serif';
+  [[F,'F'],[2*F,'2F'],[-F,'F'],[-2*F,'2F']].forEach(([xc,lb])=>{
+    if(Math.abs(xc)<3)return;cc.fillStyle='#5b6880';cc.beginPath();cc.arc(X(xc),AY,3,0,7);cc.fill();cc.fillText(lb,X(xc)-5,AY+16);});
+  // 物體
+  arrowObj(-p,h,'#7CFFB2','物');
+  // 三主光線 (物頂 O=(-p,h))
+  const O={x:-p,y:h};
+  // 光線①: 平行 → 折向焦點(凸:過右F；凹:像從右側F發散)
+  ray(O.x,O.y,0,h,'#ffce54');                            // 入射平行
+  // 折射①的方向: 通過 (0,h) 與焦點(F,0)
+  drawRefr(0,h,F,'#ffce54',q,ih);
+  // 光線②: 過中心 直行
+  ray(O.x,O.y,0,0,'#ff6b9d');
+  // 折射② 延伸: 沿 O->(0,0) 方向繼續到右邊
+  {const slope=(0-O.y)/(0-O.x);const xR=70;ray(0,0,xR,slope*xR,'#ff6b9d');
+   if(q<0)ray(0,0,q,ih,'#ff6b9d',[4,4]);}
+  // 像
+  if(Math.abs(q)<200){arrowObj(q,ih, q>0?'#ffce54':'#ffb3d1','像'+(q>0?'(實)':'(虛)'), q<0);}
+  document.getElementById('sub').textContent=convex?'凸透鏡':'凹透鏡';
+  drawStats(q,m);
+}
+function drawRefr(x0,y0,Fx,col,q,ih){
+  // 折射光通過 (x0,y0) 與焦點(Fx,0) 所在直線；畫向右
+  const slope=(0-y0)/(Fx-x0);const xR=70;const yR=y0+slope*(xR-x0);
+  ray(x0,y0,xR,yR,col);
+  if(q<0)ray(x0,y0,q,ih,col,[4,4]);                      // 虛像：往左延長(虛線)
+}
+function arrowObj(xc,yc,col,lab,dashed){
+  cc.strokeStyle=col;cc.fillStyle=col;cc.lineWidth=3;cc.setLineDash(dashed?[5,4]:[]);
+  cc.beginPath();cc.moveTo(X(xc),AY);cc.lineTo(X(xc),Y(yc));cc.stroke();cc.setLineDash([]);
+  const dir=yc>=0?-1:1;cc.beginPath();cc.moveTo(X(xc),Y(yc));cc.lineTo(X(xc)-6,Y(yc)-dir*10);cc.lineTo(X(xc)+6,Y(yc)-dir*10);cc.closePath();cc.fill();
+  cc.font='bold 12px sans-serif';cc.fillText(lab,X(xc)+8,Y(yc)+(yc>=0?-4:14));
+}
+function drawStats(q,m){
+  const real=q>0;
+  const rows=[
+    ['物距 p',state.p+' cm','#7CFFB2'],
+    ['焦距 f',f()+' cm','#4cc2ff'],
+    ['像距 q',isFinite(q)?q.toFixed(1)+' cm':'∞','#ffce54'],
+    ['放大率 m',m.toFixed(2),'#ff6b9d'],
+  ];
+  document.getElementById('stats').innerHTML=rows.map(r=>
+    `<div class="box"><div class="k">${r[0]}</div><div class="v" style="color:${r[2]}">${r[1]}</div></div>`).join('');
+  const d=document.getElementById('desc');
+  const kind=real?'實像':'虛像', ori=m<0?'倒立':'正立', sz=Math.abs(m)>1.02?'放大':Math.abs(m)<0.98?'縮小':'等大';
+  d.textContent=`成像：${kind}、${ori}、${sz}　(q=${q.toFixed(1)}cm, m=${m.toFixed(2)})`;
+  d.style.background=real?'rgba(255,206,84,.12)':'rgba(255,179,209,.12)';
+  d.style.color=real?'#ffce54':'#ffb3d1';
+}
+// 拖曳物體改物距
+let drag=false;
+function pos(e){const r=cv.getBoundingClientRect();return {x:(e.clientX-r.left)*cv.width/r.width};}
+cv.addEventListener('pointerdown',e=>{const x=pos(e).x;if(Math.abs(x-X(-state.p))<30){drag=true;cv.setPointerCapture(e.pointerId);}});
+cv.addEventListener('pointermove',e=>{if(!drag)return;const xcm=(pos(e).x-AX)/SCALE;setSlider('p',Math.max(5,Math.min(70,Math.round(-xcm))));draw();});
+window.addEventListener('pointerup',()=>{drag=false;});
+const mCx=document.getElementById('mConvex'),mCc=document.getElementById('mConcave');
+mCx.onclick=()=>{convex=true;mCx.classList.add('on');mCc.classList.remove('on');draw();};
+mCc.onclick=()=>{convex=false;mCc.classList.add('on');mCx.classList.remove('on');draw();};
+const PRE={far:{p:55,fa:15,conv:true},mid:{p:22,fa:15,conv:true},near:{p:9,fa:15,conv:true}};
+document.querySelectorAll('[data-preset]').forEach(b=>b.onclick=()=>{const p=PRE[b.dataset.preset];if(!p)return;
+  convex=p.conv;mCx.classList.toggle('on',convex);mCc.classList.toggle('on',!convex);
+  setSlider('p',p.p);setSlider('fa',p.fa);draw();});
+draw();
+window.addEventListener('resize',draw);
+</script>
+</body>
+</html>

@@ -1,0 +1,283 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>碰撞實驗台 ｜ 動量守恆・彈性與非彈性碰撞</title>
+<link rel="icon" href="../assets/favicon.svg" type="image/svg+xml">
+<link rel="stylesheet" href="../assets/site.css">
+<script defer src="../assets/nav.js"></script>
+<style>
+  *{box-sizing:border-box}
+  html,body{margin:0;padding:0;background:var(--bg);color:var(--txt);
+    font-family:"Noto Sans TC","PingFang TC","Microsoft JhengHei",system-ui,sans-serif}
+  a{color:var(--accent)}
+  .wrap{max-width:1100px;margin:0 auto;padding:18px 16px 60px}
+  header h1{font-size:1.5rem;margin:.2em 0}
+  header p{color:var(--muted);margin:.2em 0 1em;line-height:1.6}
+  .badge{display:inline-block;background:var(--panel2);border:1px solid var(--line);
+    color:var(--muted);font-size:.72rem;padding:2px 8px;border-radius:99px;margin-right:6px}
+  .stage{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:14px;margin-bottom:16px}
+  canvas{width:100%;display:block;border-radius:8px;background:#05070b}
+  .label{font-size:.8rem;color:var(--muted);margin:0 0 6px;display:flex;justify-content:space-between;flex-wrap:wrap;gap:8px}
+  .grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(210px,1fr));gap:14px}
+  .ctrl{background:var(--panel2);border:1px solid var(--line);border-radius:10px;padding:10px 12px}
+  .ctrl label{display:flex;justify-content:space-between;font-size:.85rem;margin-bottom:6px}
+  .ctrl .val{color:var(--accent);font-variant-numeric:tabular-nums}
+  .ctrl.c1 .val{color:#4cc2ff}.ctrl.c2 .val{color:#ff6b9d}
+  input[type=range]{width:100%;accent-color:var(--accent)}
+  .modes{display:flex;gap:8px;margin:6px 0 14px;flex-wrap:wrap;align-items:center}
+  .modes button,.btn{background:var(--panel2);color:var(--txt);border:1px solid var(--line);
+    padding:8px 14px;border-radius:9px;cursor:pointer;font-size:.85rem;font-family:inherit}
+  .modes button.on{background:var(--accent);color:#04121c;border-color:var(--accent);font-weight:700}
+  .btn:hover,.modes button:hover{border-color:var(--accent)}
+  .bars{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:16px}
+  @media(max-width:620px){.bars{grid-template-columns:1fr}}
+  .bcard{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:12px 14px}
+  .bcard .t{font-size:.82rem;color:var(--muted);margin-bottom:8px;display:flex;justify-content:space-between}
+  .bcard .t b{font-variant-numeric:tabular-nums}
+  .track{height:26px;border-radius:7px;overflow:hidden;border:1px solid var(--line);background:#05070b;display:flex;position:relative}
+  .track>div{height:100%;transition:width .06s linear}
+  .glow{box-shadow:0 0 12px var(--green),0 0 3px var(--green) inset}
+  .stat{display:grid;grid-template-columns:repeat(auto-fit,minmax(120px,1fr));gap:10px;margin:2px 0}
+  .stat .box{background:var(--panel2);border:1px solid var(--line);border-radius:10px;padding:9px 11px}
+  .stat .box .k{font-size:.72rem;color:var(--muted)}
+  .stat .box .v{font-size:1.02rem;font-variant-numeric:tabular-nums;font-weight:700}
+  .note{background:var(--panel);border-left:3px solid var(--accent2);border-radius:8px;
+    padding:12px 14px;color:var(--muted);font-size:.86rem;line-height:1.7;margin-top:18px}
+  .note b{color:var(--txt)}.note code{background:var(--bg2);padding:1px 6px;border-radius:5px;color:var(--green);font-size:.85em}
+  footer{color:var(--muted);font-size:.78rem;margin-top:26px;text-align:center;line-height:1.7}
+</style>
+</head>
+<body data-demo="碰撞實驗台">
+<div class="wrap">
+  <header>
+    <span class="badge">力學・動量</span>
+    <h1>碰撞實驗台</h1>
+    <p>兩球在無摩擦的開放直線軌道上對撞，碰撞後飛出畫面並自動重播。調整質量、初速與<b>回復係數 e</b>（e=1 完全彈性、e=0 完全非彈性黏合）。
+       核心：系統不受外力 → <b>總動量永遠守恆</b>（綠色恆定），而<b>總動能只有彈性碰撞才守恆</b>，非彈性碰撞會「階梯式」損耗成熱。</p>
+  </header>
+
+  <div class="modes">
+    <button id="play" class="on">⏸ 暫停</button>
+    <button class="btn" id="reset">↺ 重設</button>
+    <button class="btn" id="bElastic">完全彈性 e=1</button>
+    <button class="btn" id="bInel">完全非彈性 e=0</button>
+    <span style="color:var(--muted);font-size:.8rem;margin-left:4px">情境：</span>
+    <button class="btn" data-preset="equal">等質量正撞</button>
+    <button class="btn" data-preset="heavy">重撞輕</button>
+    <button class="btn" data-preset="stick">黏合</button>
+    <button class="btn" data-preset="catch">追撞</button>
+  </div>
+
+  <div class="stage">
+    <div class="label"><span>軌道（球大小＝質量；箭頭＝動量 p = mv）</span><span id="clab">碰撞次數：0</span></div>
+    <canvas id="track" width="1040" height="220"></canvas>
+  </div>
+
+  <div class="bars">
+    <div class="bcard">
+      <div class="t"><span>總動量 p<sub>總</sub>（守恆）</span><b id="pv" style="color:#7CFFB2"></b></div>
+      <div class="track"><div id="pbar" class="glow" style="background:#7CFFB2"></div></div>
+      <div class="t" style="margin:8px 0 0;color:var(--faint)">綠條長度與方向固定不變 → 動量守恆</div>
+    </div>
+    <div class="bcard">
+      <div class="t"><span>總動能 KE<sub>總</sub></span><b id="kv" style="color:#ffce54"></b></div>
+      <div class="track"><div id="kbar" style="background:#ffce54"></div><div id="klost" style="background:#ff6b9d"></div></div>
+      <div class="t" style="margin:8px 0 0;color:var(--faint)"><span style="color:#ffce54">■</span> 現有動能　<span style="color:#ff6b9d">■</span> 已損耗（轉熱）　<b id="loss"></b></div>
+    </div>
+  </div>
+
+  <div class="stat" id="stats"></div>
+
+  <div class="stage">
+    <div class="label"><span>總動量（綠）與總動能（黃）對時間 — 動量水平不動，動能在非彈性碰撞時階梯下降</span><span>右端＝現在</span></div>
+    <canvas id="plot" width="1040" height="180"></canvas>
+  </div>
+
+  <div class="grid" id="controls"></div>
+
+  <div class="note">
+    <b>物理重點：</b>碰撞前後 <code>m₁v₁ + m₂v₂ = m₁v₁' + m₂v₂'</code> 恆成立（動量守恆，來自牛頓第三定律）。
+    動能 <code>½m₁v₁² + ½m₂v₂²</code> 只有 e=1 時守恆；e&lt;1 時部分動能轉成熱與形變。
+    回復係數 <code>e = (v₂' − v₁')/(v₁ − v₂)</code> 衡量「分離速率 ÷ 接近速率」。
+    試試：<b>等質量彈性正撞</b>會交換速度；<b>重球撞靜止輕球</b>會把輕球高速彈出；<b>黏合</b>後兩球以共同速度（質心速度）一起走。
+  </div>
+
+  <footer>純前端 HTML / Canvas，無外部相依。即時碰撞偵測 + 回復係數碰撞公式；開放軌道使系統總動量嚴格守恆。</footer>
+</div>
+
+<script>
+const sliders=[
+  {id:'m1',name:'球1 質量 m₁',min:.5,max:5,step:.5,val:2,unit:'kg',cls:'c1'},
+  {id:'v1',name:'球1 初速 v₁',min:-6,max:6,step:.5,val:4,unit:'m/s',cls:'c1'},
+  {id:'m2',name:'球2 質量 m₂',min:.5,max:5,step:.5,val:3,unit:'kg',cls:'c2'},
+  {id:'v2',name:'球2 初速 v₂',min:-6,max:6,step:.5,val:-2,unit:'m/s',cls:'c2'},
+  {id:'e', name:'回復係數 e', min:0,max:1,step:.05,val:1,unit:''},
+];
+const state={};
+const ctrl=document.getElementById('controls');
+sliders.forEach(s=>{
+  state[s.id]=s.val;
+  const box=document.createElement('div');box.className='ctrl '+(s.cls||'');
+  box.innerHTML=`<label><span>${s.name}</span><span class="val" id="v_${s.id}">${fmt(s.val)}${s.unit?' '+s.unit:''}</span></label>
+    <input type="range" id="r_${s.id}" min="${s.min}" max="${s.max}" step="${s.step}" value="${s.val}">`;
+  ctrl.appendChild(box);
+  box.querySelector('input').addEventListener('input',e=>{
+    state[s.id]=parseFloat(e.target.value);
+    document.getElementById('v_'+s.id).textContent=`${fmt(state[s.id])}${s.unit?' '+s.unit:''}`;
+    resetSim();
+  });
+});
+function fmt(x){return (Math.round(x*100)/100).toString();}
+function setSlider(id,val){state[id]=val;const r=document.getElementById('r_'+id);if(r)r.value=val;
+  const s=sliders.find(z=>z.id===id);if(s)document.getElementById('v_'+id).textContent=`${fmt(val)}${s.unit?' '+s.unit:''}`;}
+
+// ---- 物理 ----
+const L=10;                                  // 軌道長(公尺)
+function r1(){return 0.18+0.085*state.m1;}    // 半徑由質量決定(視覺)
+function r2(){return 0.18+0.085*state.m2;}
+let live, collisions, lastCol, KE0, P0, history, simT, playing=true;
+function KEnow(){return 0.5*state.m1*live.v1*live.v1+0.5*state.m2*live.v2*live.v2;}
+function Pnow(){return state.m1*live.v1+state.m2*live.v2;}
+function resetSim(){
+  live={x1:2.4,v1:state.v1,x2:7.6,v2:state.v2,glued:false};
+  // 避免初始重疊
+  const minGap=r1()+r2();if(live.x2-live.x1<minGap){live.x2=live.x1+minGap;}
+  collisions=0;lastCol=null;KE0=KEnow();P0=Pnow();history=[];simT=0;
+  draw();
+}
+function step(dt){
+  const n=Math.max(1,Math.ceil(dt/0.004));const h=dt/n;
+  for(let i=0;i<n;i++)substep(h);
+  simT+=dt;
+  history.push({t:simT,p:Pnow(),ke:KEnow()});
+  if(history.length>2000)history.shift();
+  // 自動重播：碰撞後兩球都出界，或超時 → 重設
+  const off=(live.x1<-1.5||live.x1>L+1.5)&&(live.x2<-1.5||live.x2>L+1.5);
+  if((collisions>0&&off)||simT>11){resetSim();}
+}
+function substep(h){
+  const m1=state.m1,m2=state.m2,R1=r1(),R2=r2();
+  if(live.glued){ live.x1+=live.v1*h;live.x2=live.x1+R1+R2;live.v2=live.v1;return; }
+  live.x1+=live.v1*h;live.x2+=live.v2*h;
+  // 開放軌道：無牆 → 兩球系統不受外力 → 總動量嚴格守恆
+  const gap=live.x2-live.x1-(R1+R2);
+  if(gap<=0 && (live.v1-live.v2)>0){
+    const e=state.e,M=m1+m2,u1=live.v1,u2=live.v2;
+    let nv1=((m1-e*m2)*u1+(1+e)*m2*u2)/M;
+    let nv2=((1+e)*m1*u1+(m2-e*m1)*u2)/M;
+    live.v1=nv1;live.v2=nv2;
+    const overlap=-gap;live.x1-=overlap*0.5;live.x2+=overlap*0.5;
+    collisions++;
+    lastCol={u1,u2,nv1,nv2};
+    if(Math.abs(nv1-nv2)<1e-3){live.glued=true;live.v1=live.v2=(m1*u1+m2*u2)/M;live.x2=live.x1+R1+R2;}
+  }
+}
+
+// ---- 視圖 ----
+const tk=document.getElementById('track'),tc=tk.getContext('2d');
+const plot=document.getElementById('plot'),pc=plot.getContext('2d');
+function draw(){
+  const W=tk.width,H=tk.height,mX=20,gy=H*0.62;tc.clearRect(0,0,W,H);
+  const sx=(W-2*mX)/L, X=x=>mX+x*sx;
+  // 開放軌道（無牆）
+  tc.strokeStyle='#3a4756';tc.lineWidth=3;tc.beginPath();tc.moveTo(0,gy+30);tc.lineTo(W,gy+30);tc.stroke();
+  // 質心標記
+  const xcm=(state.m1*live.x1+state.m2*live.x2)/(state.m1+state.m2);
+  tc.strokeStyle='#5b6880';tc.setLineDash([3,4]);tc.beginPath();tc.moveTo(X(xcm),gy-44);tc.lineTo(X(xcm),gy+34);tc.stroke();tc.setLineDash([]);
+  tc.fillStyle='#5b6880';tc.font='11px sans-serif';tc.fillText('質心',X(xcm)-12,gy-48);
+  // 球
+  ball(X(live.x1),gy, r1()*sx, '#4cc2ff', live.v1, state.m1, '1');
+  ball(X(live.x2),gy, r2()*sx, '#ff6b9d', live.v2, state.m2, '2');
+  // 動量箭頭刻度說明
+  tc.fillStyle='#46566b';tc.fillText('← 動量方向 →',W/2-40,18);
+  document.getElementById('clab').textContent='碰撞次數：'+collisions;
+  drawBars();drawStats();drawPlot();
+}
+function ball(px,py,r,col,v,m,lab){
+  tc.fillStyle=col;tc.beginPath();tc.arc(px,py,r,0,7);tc.fill();
+  tc.fillStyle='#04121c';tc.font='bold 13px sans-serif';tc.textAlign='center';tc.fillText(lab,px,py+5);tc.textAlign='left';
+  // 動量箭頭 p=mv
+  const p=m*v, plen=p*9;
+  if(Math.abs(plen)>2){
+    const y=py-r-14;tc.strokeStyle=col;tc.fillStyle=col;tc.lineWidth=3;
+    tc.beginPath();tc.moveTo(px,y);tc.lineTo(px+plen,y);tc.stroke();
+    const d=Math.sign(plen);tc.beginPath();tc.moveTo(px+plen,y);tc.lineTo(px+plen-d*8,y-5);tc.lineTo(px+plen-d*8,y+5);tc.closePath();tc.fill();
+  }
+}
+function drawBars(){
+  const p=Pnow(),ke=KEnow();
+  const pmaxRef=Math.max(Math.abs(P0),Math.abs(p),1);
+  const pbar=document.getElementById('pbar');
+  pbar.style.width=Math.min(100,Math.abs(p)/pmaxRef*100)+'%';
+  pbar.style.marginLeft=p<0?'auto':'0';
+  document.getElementById('pv').textContent=p.toFixed(2)+' kg·m/s '+(p>=0?'→':'←');
+  const keFrac=KE0>1e-6?ke/KE0:0;
+  document.getElementById('kbar').style.width=(keFrac*100)+'%';
+  document.getElementById('klost').style.width=((1-keFrac)*100)+'%';
+  document.getElementById('kv').textContent=ke.toFixed(2)+' J';
+  document.getElementById('loss').textContent='損耗 '+((1-keFrac)*100).toFixed(0)+'%';
+}
+function drawStats(){
+  const p1=state.m1*live.v1,p2=state.m2*live.v2;
+  const rows=[
+    ['球1 速度 v₁',live.v1.toFixed(2)+' m/s','#4cc2ff'],
+    ['球2 速度 v₂',live.v2.toFixed(2)+' m/s','#ff6b9d'],
+    ['球1 動量 p₁',p1.toFixed(2),'#4cc2ff'],
+    ['球2 動量 p₂',p2.toFixed(2),'#ff6b9d'],
+    ['總動量',Pnow().toFixed(2),'#7CFFB2'],
+    ['總動能',KEnow().toFixed(2)+' J','#ffce54'],
+  ];
+  document.getElementById('stats').innerHTML=rows.map(r=>
+    `<div class="box"><div class="k">${r[0]}</div><div class="v" style="color:${r[2]}">${r[1]}</div></div>`).join('');
+}
+function drawPlot(){
+  const W=plot.width,H=plot.height,mL=40,mR=12,mT=12,mB=20;pc.clearRect(0,0,W,H);
+  if(history.length<2){return;}
+  const t1=history[history.length-1].t, t0=Math.max(0,t1-12);
+  const X=t=>mL+(t-t0)/((t1-t0)||1)*(W-mL-mR);
+  const pAbs=Math.max(Math.abs(P0),1), keMax=Math.max(KE0,1);
+  const Yp=p=>H-mB-(p/pAbs*0.5+0.5)*(H-mT-mB);   // 動量置中(±)
+  const Yk=k=>H-mB-(k/keMax)*(H-mT-mB);
+  pc.strokeStyle='#16202f';pc.beginPath();pc.moveTo(mL,Yp(0));pc.lineTo(W-mR,Yp(0));pc.stroke();
+  // 動能(黃)
+  pc.strokeStyle='#ffce54';pc.lineWidth=2;pc.beginPath();
+  history.forEach((s,i)=>{const x=X(s.t),y=Yk(s.ke);if(s.t>=t0)i&&history[i-1].t>=t0?pc.lineTo(x,y):pc.moveTo(x,y);});pc.stroke();
+  // 動量(綠)
+  pc.strokeStyle='#7CFFB2';pc.lineWidth=2;pc.beginPath();
+  history.forEach((s,i)=>{const x=X(s.t),y=Yp(s.p);if(s.t>=t0)i&&history[i-1].t>=t0?pc.lineTo(x,y):pc.moveTo(x,y);});pc.stroke();
+  pc.fillStyle='#7CFFB2';pc.font='11px sans-serif';pc.fillText('總動量',mL+4,mT+10);
+  pc.fillStyle='#ffce54';pc.fillText('總動能',mL+58,mT+10);
+}
+
+// ---- 動畫 ----
+let last=0;
+function loop(ts){
+  if(playing){const dt=Math.min((ts-last)/1000,0.05);last=ts;if(dt>0)step(dt);draw();}
+  else last=ts;
+  requestAnimationFrame(loop);
+}
+const pb=document.getElementById('play');
+pb.onclick=()=>{playing=!playing;pb.classList.toggle('on',playing);pb.textContent=playing?'⏸ 暫停':'▶ 播放';last=performance.now();};
+document.getElementById('reset').onclick=()=>{resetSim();playing=true;pb.classList.add('on');pb.textContent='⏸ 暫停';last=performance.now();};
+document.getElementById('bElastic').onclick=()=>{setSlider('e',1);resetSim();};
+document.getElementById('bInel').onclick=()=>{setSlider('e',0);resetSim();};
+const PRESETS={
+  equal:{m1:2,v1:4,m2:2,v2:0,e:1},
+  heavy:{m1:5,v1:3,m2:1,v2:0,e:1},
+  stick:{m1:2,v1:4,m2:3,v2:-2,e:0},
+  catch:{m1:1,v1:5,m2:3,v2:1,e:1},
+};
+document.querySelectorAll('[data-preset]').forEach(b=>b.onclick=()=>{
+  const p=PRESETS[b.dataset.preset];if(!p)return;
+  ['m1','v1','m2','v2','e'].forEach(k=>setSlider(k,p[k]));
+  resetSim();playing=true;pb.classList.add('on');pb.textContent='⏸ 暫停';last=performance.now();
+});
+
+resetSim();
+requestAnimationFrame(loop);
+window.addEventListener('resize',draw);
+</script>
+</body>
+</html>
