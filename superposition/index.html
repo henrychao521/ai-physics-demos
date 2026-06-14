@@ -1,0 +1,159 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>干涉與摩爾紋：同一種疊加 ｜ 疊加與拍頻</title>
+<link rel="icon" href="../assets/favicon.svg" type="image/svg+xml">
+<link rel="stylesheet" href="../assets/site.css">
+<script defer src="../assets/nav.js"></script>
+<style>
+  :root{--accent:#b18bff}
+  .wrap{max-width:1000px;margin:0 auto;padding:22px 16px 70px}
+  h1{font-size:clamp(1.4rem,4vw,1.9rem);margin:.3em 0}
+  .lead{color:var(--muted);line-height:1.8;margin:.3em 0 0}
+  .lead b{color:var(--txt)}
+  .stage{background:var(--panel);border:1px solid var(--line);border-radius:var(--radius);padding:14px;margin:18px 0}
+  .label{font-size:.82rem;color:var(--muted);margin:0 0 8px}
+  canvas{width:100%;display:block;border-radius:8px;background:#05070b}
+  .grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(230px,1fr));gap:14px}
+  .ctrl{background:var(--panel2);border:1px solid var(--line);border-radius:10px;padding:10px 12px}
+  .ctrl label{display:flex;justify-content:space-between;font-size:.85rem;margin-bottom:6px}
+  .ctrl .val{color:var(--accent);font-variant-numeric:tabular-nums}
+  input[type=range]{width:100%;accent-color:var(--accent)}
+  .readout{margin-top:10px;color:var(--accent);font-size:.9rem;font-family:monospace}
+  .row{display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-bottom:6px}
+  .twin{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-top:18px}
+  @media(max-width:560px){.twin{grid-template-columns:1fr}}
+  .link-card{display:block;background:var(--panel);border:1px solid var(--line);border-radius:14px;
+    padding:18px;text-decoration:none;color:inherit;transition:.16s}
+  .link-card:hover{border-color:var(--accent);transform:translateY(-3px)}
+  .link-card h3{margin:.2em 0 .3em;font-size:1.05rem}
+  .link-card p{margin:0;color:var(--muted);font-size:.84rem;line-height:1.6}
+  .link-card .go{color:var(--accent);font-size:.85rem;font-weight:700;margin-top:8px}
+  .note{background:var(--panel);border-left:3px solid var(--accent);border-radius:8px;padding:14px 16px;color:var(--muted);font-size:.88rem;line-height:1.8;margin-top:18px}
+  .note b{color:var(--txt)}
+  .eq{font-family:"Cambria Math",Georgia,serif;color:#dfe7f0;background:var(--panel2);padding:2px 8px;border-radius:6px;display:inline-block;margin:2px 0}
+</style>
+</head>
+<body data-demo="干涉與摩爾紋：同一種疊加">
+<div class="wrap">
+  <span class="badge">波動・疊加</span><span class="badge">概念整合</span>
+  <h1>干涉與摩爾紋：<span style="color:var(--accent)">同一種疊加</span></h1>
+  <p class="lead">光的<b>雙狹縫干涉</b>、<b>繞射</b>與<b>摩爾紋</b>看似不同，其實是同一件事：
+     當<b>兩個（或多個）週期性圖案疊加</b>，它們的<b>頻率差 |f₁−f₂|</b> 會產生一個肉眼可見的大尺度條紋——這就是「<b>拍頻 (beat)</b>」。
+     下面用最單純的一維波示範這個共同核心，再連到兩個細部模擬。</p>
+
+  <div class="stage">
+    <div class="label">一維疊加：兩個頻率 f₁、f₂ 的波 → 相加 → 出現低頻「拍頻包絡」</div>
+    <canvas id="cv" width="1000" height="360"></canvas>
+    <div id="readout" class="readout"></div>
+  </div>
+
+  <div class="grid" id="controls"></div>
+  <div class="row" style="margin-top:14px">
+    <button class="btn" id="anim">▶ 移動波形</button>
+    <button class="btn" id="reset">重設</button>
+  </div>
+
+  <div class="note">
+    <b>為什麼是「同一回事」？</b><br>
+    兩個波 <span class="eq">sin(2πf₁x) + sin(2πf₂x) = 2·cos(π(f₁−f₂)x)·sin(π(f₁+f₂)x)</span><br>
+    — 後項是平均頻率的細密振盪，<b>前項 cos(π(f₁−f₂)x) 就是慢慢起伏的「包絡」</b>，週期為 <span class="eq">1/|f₁−f₂|</span>。
+    <br>• <b>光的雙狹縫干涉／繞射</b>：兩個狹縫送出的光波在空間疊加，差頻決定亮暗條紋間距 <span class="eq">Δy = λL/d</span>。
+    <br>• <b>摩爾紋</b>：兩個光柵（空間頻率）疊加，差頻決定摩爾條紋間距 <span class="eq">p<sub>M</sub> ≈ p/(2·sin(Δθ/2))</span>。
+    <br>兩者的數學都是「<b>兩個週期性訊號相乘/相加 → 差頻拍頻</b>」，只是一個發生在<b>光波</b>、一個發生在<b>圖案</b>。
+  </div>
+
+  <div class="twin">
+    <a class="link-card" href="../diffraction/">
+      <span class="badge">波動光學</span>
+      <h3>→ 光的雙狹縫／單狹縫干涉</h3>
+      <p>以惠更斯子波疊加實際光程，調狹縫間距、相位差與前後距離差，看亮暗條紋如何形成與偏移。</p>
+      <div class="go">開啟繞射模擬 →</div>
+    </a>
+    <a class="link-card" href="../moire/">
+      <span class="badge">取樣・拍頻</span>
+      <h3>→ 摩爾紋（Moiré）</h3>
+      <p>兩組光柵疊加產生摩爾條紋，可切換平行線/同心圓/點陣與彩色模式，直接看「圖案版的拍頻」。</p>
+      <div class="go">開啟摩爾紋模擬 →</div>
+    </a>
+  </div>
+</div>
+
+<script>
+const sliders=[
+  {id:'f1',name:'波 1 頻率 f₁',min:6,max:40,step:1,val:18,unit:'週期'},
+  {id:'f2',name:'波 2 頻率 f₂',min:6,max:40,step:1,val:20,unit:'週期'},
+];
+const state={};
+const ctrl=document.getElementById('controls');
+sliders.forEach(s=>{state[s.id]=s.val;
+  const b=document.createElement('div');b.className='ctrl';
+  b.innerHTML=`<label><span>${s.name}</span><span class="val" id="v_${s.id}">${s.val} ${s.unit}</span></label>
+    <input type="range" id="r_${s.id}" min="${s.min}" max="${s.max}" step="${s.step}" value="${s.val}">`;
+  ctrl.appendChild(b);
+  b.querySelector('input').addEventListener('input',e=>{state[s.id]=parseFloat(e.target.value);
+    document.getElementById('v_'+s.id).textContent=`${state[s.id]} ${s.unit}`;if(!running)draw();});
+});
+
+const cv=document.getElementById('cv'), g=cv.getContext('2d');
+const W=cv.width,H=cv.height;
+const readoutEl=document.getElementById('readout');
+let phase=0;
+
+function wave(yc,amp,f,color,ph){
+  g.strokeStyle=color;g.lineWidth=2;g.beginPath();
+  for(let i=0;i<=W;i++){const x=i/W;const y=yc-amp*Math.sin(2*Math.PI*f*x+ph);if(i===0)g.moveTo(i,y);else g.lineTo(i,y);}
+  g.stroke();
+}
+function draw(){
+  g.fillStyle='#05070b';g.fillRect(0,0,W,H);
+  const f1=state.f1,f2=state.f2,ph=phase;
+  // 三條基準線
+  const lanes=[70,150,270];
+  g.strokeStyle='#141c28';g.lineWidth=1;
+  lanes.forEach(y=>{g.beginPath();g.moveTo(0,y);g.lineTo(W,y);g.stroke();});
+  // 波1 (青)、波2 (洋紅)
+  wave(lanes[0],34,f1,'#4cc2ff',ph);
+  wave(lanes[1],34,f2,'#ff6bd0',ph*1.0);
+  // 標籤
+  g.fillStyle='#6b7785';g.font='12px sans-serif';
+  g.fillText('波 1：sin(2πf₁x)',12,lanes[0]-44);
+  g.fillText('波 2：sin(2πf₂x)',12,lanes[1]-44);
+  g.fillText('相加：波1 + 波2（白）＋ 拍頻包絡（黃）',12,lanes[2]-78);
+  // 包絡 envelope = 2cos(π(f1-f2)x)
+  const df=f1-f2;
+  g.strokeStyle='#ffce54';g.setLineDash([5,4]);g.lineWidth=1.5;
+  for(const sgn of [1,-1]){
+    g.beginPath();
+    for(let i=0;i<=W;i++){const x=i/W;const env=2*Math.cos(Math.PI*df*x);const y=lanes[2]-sgn*Math.abs(env)*34;if(i===0)g.moveTo(i,y);else g.lineTo(i,y);}
+    g.stroke();
+  }
+  g.setLineDash([]);
+  // 相加波 (白)
+  g.strokeStyle='#e8eef6';g.lineWidth=2;g.beginPath();
+  for(let i=0;i<=W;i++){const x=i/W;const y=lanes[2]-(Math.sin(2*Math.PI*f1*x+ph)+Math.sin(2*Math.PI*f2*x+ph))*34;if(i===0)g.moveTo(i,y);else g.lineTo(i,y);}
+  g.stroke();
+  // 包絡節點（拍頻暗紋位置）
+  const nodes=Math.abs(df);
+  g.fillStyle='#ffce54';
+  if(nodes>0)for(let k=0;k<nodes;k++){const x=(k+0.5)/nodes;g.beginPath();g.arc(x*W,lanes[2],3,0,7);g.fill();}
+  // readout
+  if(nodes===0){readoutEl.textContent='f₁ = f₂ → 無頻率差 → 無拍頻（包絡為定值）';}
+  else{readoutEl.innerHTML=`頻率差 |f₁−f₂| = <b>${Math.abs(df)}</b> → 視窗內出現 <b>${nodes}</b> 個拍頻節點（暗紋）；拍頻週期 = 1/|f₁−f₂| = <b>${(1/Math.abs(df)).toFixed(3)}</b> 視窗寬`;}
+}
+
+let running=false,raf=null;
+const animBtn=document.getElementById('anim');
+animBtn.onclick=()=>{running=!running;animBtn.classList.toggle('on',running);animBtn.textContent=running?'⏸ 暫停':'▶ 移動波形';
+  if(running)loop();else cancelAnimationFrame(raf);};
+function loop(){phase=(phase+0.06)%(Math.PI*2);draw();raf=requestAnimationFrame(loop);}
+document.getElementById('reset').onclick=()=>{
+  sliders.forEach(s=>{state[s.id]=s.val;document.getElementById('r_'+s.id).value=s.val;document.getElementById('v_'+s.id).textContent=`${s.val} ${s.unit}`;});
+  if(running)animBtn.click();phase=0;draw();
+};
+draw();
+</script>
+</body>
+</html>

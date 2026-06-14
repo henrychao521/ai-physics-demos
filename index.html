@@ -47,6 +47,8 @@
   .t-house i:nth-child(1){height:30%}.t-house i:nth-child(2){height:55%}.t-house i:nth-child(3){height:45%}
   .t-house i:nth-child(4){height:70%}.t-house i:nth-child(5){height:60%}.t-house i:nth-child(6){height:90%;background:#4cc2ff}
   .t-house i:nth-child(7){height:48%;background:#ff6b9d}
+  .t-beat{background:#070a12}
+  .ext{font-size:.7rem;color:var(--accent2)}
   footer{color:var(--muted);font-size:.8rem;margin-top:42px;line-height:1.8;border-top:1px solid var(--line);padding-top:18px}
   footer a{color:var(--accent)}
 </style>
@@ -78,6 +80,20 @@
       <div class="go">開始體驗 →</div>
     </a>
 
+    <a class="card feat" href="superposition/">
+      <div class="thumb t-beat">
+        <svg viewBox="0 0 300 152" preserveAspectRatio="none" style="width:100%;height:100%">
+          <path d="M0,76 Q75,18 150,76 T300,76" fill="none" stroke="#ffce54" stroke-width="2" stroke-dasharray="5 4"/>
+          <path d="M0,76 Q75,134 150,76 T300,76" fill="none" stroke="#ffce54" stroke-width="2" stroke-dasharray="5 4"/>
+          <path d="M0,76 Q9,40 18,76 T36,76 T54,76 T72,76 T90,40 T108,76 T126,76 T144,60 T162,76 T180,90 T198,76 T216,76 T234,112 T252,76 T270,76 T288,50 T300,76" fill="none" stroke="#e8eef6" stroke-width="1.6"/>
+        </svg>
+      </div>
+      <div class="tag"><span class="badge">概念整合・波動</span></div>
+      <h3>干涉與摩爾紋：同一種疊加</h3>
+      <p>一維拍頻即時示範，說明光的干涉、繞射與摩爾紋本質都是「兩個週期圖案疊加 → 差頻拍頻」，並連到兩個細部模擬。</p>
+      <div class="go">開始體驗 →</div>
+    </a>
+
     <a class="card" href="diffraction/">
       <div class="thumb t-diff">
         <i style="left:34%"></i><i style="left:42%;opacity:.6"></i><i style="left:50%"></i>
@@ -97,11 +113,19 @@
       <div class="go">開始體驗 →</div>
     </a>
 
-    <a class="card" href="shadowless-lamp/">
+    <a class="card" href="https://henrychao521.github.io/shadowless-lamp-sim/" target="_blank" rel="noopener">
       <div class="thumb t-lamp"><b></b></div>
-      <div class="tag"><span class="badge">幾何光學</span></div>
-      <h3>外科無影燈光學</h3>
-      <p>多光源從不同角度照射同一術區；增加光源數量，觀察遮擋物的陰影如何被互補填補、趨近無影。</p>
+      <div class="tag"><span class="badge">幾何光學・3D</span> <span class="ext">外部專案 ↗</span></div>
+      <h3>外科無影燈光學模擬器（3D 專業版）</h3>
+      <p>Three.js + IES 光錐疊加的真實光學模擬，含陰影稀釋分析、學習單與操作說明。為本主題的完整版。</p>
+      <div class="go">前往 3D 模擬器 ↗</div>
+    </a>
+
+    <a class="card" href="shadowless-lamp/">
+      <div class="thumb t-lamp" style="opacity:.85"><b></b></div>
+      <div class="tag"><span class="badge">幾何光學・2D</span></div>
+      <h3>外科無影燈（2D 概念版）</h3>
+      <p>2D 側視的多光源消影示意：增加光源數量、拖曳遮擋物，快速理解陰影互補的核心概念。</p>
       <div class="go">開始體驗 →</div>
     </a>
 
