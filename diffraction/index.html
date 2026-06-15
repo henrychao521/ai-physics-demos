@@ -323,10 +323,11 @@ function setSlider(id,val){state[id]=val;const r=document.getElementById('r_'+id
 schemCanvas.style.touchAction='none';
 schemCanvas.addEventListener('pointerdown',e=>{
   const p=schPos(e),{bx,cy}=schemGeo();
+  const hit=Math.max(18,16*1040/schemCanvas.getBoundingClientRect().width);
   if(mode==='double'){
     const y1=cy-state.d*SC/2,y2=cy+state.d*SC/2,x2=bx+state.dz*XOFF;
-    if(Math.hypot(p.x-bx,p.y-y1)<18)schDrag='s1';
-    else if(Math.hypot(p.x-x2,p.y-y2)<18)schDrag='s2';
+    if(Math.hypot(p.x-bx,p.y-y1)<hit)schDrag='s1';
+    else if(Math.hypot(p.x-x2,p.y-y2)<hit)schDrag='s2';
   }else schDrag='single';
   if(schDrag){schemCanvas.setPointerCapture(e.pointerId);e.preventDefault();}
 });

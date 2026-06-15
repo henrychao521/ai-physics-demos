@@ -48,6 +48,18 @@ select,optgroup,option{background:var(--panel2)!important;color:var(--txt)!impor
 </head>
 <body data-demo="全台房市實證數據系統">
 <div id="root"><div class="app-loading"><div class="ring"></div>載入中…（首次載入需從 CDN 取得 React / Chart.js，請稍候）</div></div>
+<script>
+  // CDN 韌性：12 秒後若 React 仍未渲染（CDN 失敗），顯示可讀錯誤與重試，避免無限載入轉圈
+  setTimeout(function(){
+    var r=document.getElementById('root');
+    if(r && r.querySelector('.app-loading')){
+      r.innerHTML='<div style="min-height:60vh;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:14px;color:#8a99ad;font-family:system-ui;text-align:center;padding:24px">'+
+        '<div style="font-size:1.05rem;color:#e8eef6;font-weight:700">載入失敗</div>'+
+        '<div style="font-size:.86rem;max-width:380px;line-height:1.7">無法從 CDN 取得 React / Chart.js 等資源，可能是網路連線問題。請確認連線後重試。</div>'+
+        '<button onclick="location.reload()" style="background:#1a2233;color:#4cc2ff;border:1px solid #28324a;padding:10px 20px;border-radius:10px;cursor:pointer;font-size:.86rem;font-family:inherit">重新整理</button></div>';
+    }
+  }, 12000);
+</script>
 
 <script type="text/babel" data-type="module" data-presets="react">
 import React, { useState, useMemo } from 'react';

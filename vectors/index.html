@@ -129,7 +129,7 @@ let drag=-1;
 function pos(e){const r=sc.canvas?sc.canvas.getBoundingClientRect():document.getElementById('scene').getBoundingClientRect();
   const cv=document.getElementById('scene');return {x:(e.clientX-r.left)*cv.width/r.width/sc._dpr,y:(e.clientY-r.top)*cv.height/r.height/sc._dpr};}
 const cvEl=document.getElementById('scene');
-cvEl.addEventListener('pointerdown',e=>{const p=pos(e);for(let i=0;i<n;i++){const h=toS(forces[i]);if(Math.hypot(p.x-h.x,p.y-h.y)<16){drag=i;cvEl.setPointerCapture(e.pointerId);cvEl.style.cursor='grabbing';return;}}});
+cvEl.addEventListener('pointerdown',e=>{const p=pos(e);for(let i=0;i<n;i++){const h=toS(forces[i]);if(Math.hypot(p.x-h.x,p.y-h.y)<22){drag=i;cvEl.setPointerCapture(e.pointerId);cvEl.style.cursor='grabbing';return;}}});
 cvEl.addEventListener('pointermove',e=>{if(drag<0)return;const p=pos(e),o=O();forces[drag]={x:Math.round((p.x-o.x)/SCALE),y:Math.round(-(p.y-o.y)/SCALE)};draw();});
 window.addEventListener('pointerup',()=>{drag=-1;cvEl.style.cursor='grab';});
 const b2=document.getElementById('b2'),b3=document.getElementById('b3');
