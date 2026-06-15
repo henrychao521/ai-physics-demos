@@ -205,15 +205,12 @@ function draw(){
   const [R,G,B]=wl2rgb(state.lambda);
   // fringe strip
   const stripH=70, stripY=H-stripH;
-  const img=pc.createImageData(W,stripH);
+  // 逐列填色取代 putImageData(後者不受 setTransform 影響，dpr>1 會只填左半/錯位)；fillRect 走邏輯座標受 transform 縮放
   for(let i=0;i<n;i++){
     const inten=Math.min(1,I[i]/Imax);
-    for(let y=0;y<stripH;y++){
-      const o=(y*W+i)*4;
-      img.data[o]=R*inten; img.data[o+1]=G*inten; img.data[o+2]=B*inten; img.data[o+3]=255;
-    }
+    pc.fillStyle='rgb('+(R*inten|0)+','+(G*inten|0)+','+(B*inten|0)+')';
+    pc.fillRect(i,stripY,1,stripH);
   }
-  pc.putImageData(img,0,stripY);
 
   // axis + center line
   pc.strokeStyle='#2a3340'; pc.lineWidth=1;

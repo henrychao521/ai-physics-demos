@@ -359,8 +359,8 @@ function App() {
                       <td className="px-8 py-4 font-black text-slate-700 group-hover:text-blue-700">{q}</td>
                       <td className="px-8 py-4 text-right font-medium">{currentData.p[idx]}</td>
                       <td className="px-8 py-4 text-right font-black text-slate-800">{curV.toLocaleString()}</td>
-                      <td className={`px-8 py-4 text-right font-black ${qoqVal.includes('-') ? 'text-red-500' : (qoqVal === '-' ? 'text-slate-300' : 'text-green-600')}`}>
-                        {qoqVal !== '-' && !qoqVal.includes('-') ? '+' : ''}{qoqVal}
+                      <td className={`px-8 py-4 text-right font-black ${qoqVal === '-' ? 'text-slate-300' : parseFloat(qoqVal) < 0 ? 'text-red-500' : parseFloat(qoqVal) > 0 ? 'text-green-600' : 'text-slate-400'}`}>
+                        {parseFloat(qoqVal) > 0 ? '+' : ''}{qoqVal}
                       </td>
                     </tr>
                   );

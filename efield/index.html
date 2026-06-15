@@ -96,7 +96,9 @@ function draw(){const W=900,H=470;
   for(let y=0;y<H;y+=cell)for(let x=0;x<W;x+=cell){const v=potential(x+cell/2,y+cell/2),t=Math.tanh(v*0.06),band=Math.round(t*9)/9;
     let r,g,b;if(band>=0){r=18+band*150;g=14+band*22;b=30+band*12;}else{r=14-band*8;g=20-band*30;b=44-band*150;}
     for(let yy=y;yy<Math.min(y+cell,H);yy++)for(let xx=x;xx<Math.min(x+cell,W);xx++){const o=(yy*W+xx)*4;img.data[o]=r;img.data[o+1]=g;img.data[o+2]=b;img.data[o+3]=255;}}
-  cc.putImageData(img,0,0);
+  // putImageData 不受 setTransform 影響(以 device px 寫入)，高清(dpr>1)下只填左上 1/4 → 改經離屏 canvas 再 drawImage(受 transform 縮放填滿全畫布)
+  if(!draw._hm){draw._hm=document.createElement('canvas');draw._hm.width=W;draw._hm.height=H;draw._hmx=draw._hm.getContext('2d');}
+  draw._hmx.putImageData(img,0,0);cc.drawImage(draw._hm,0,0);
   // 場線
   for(const c of charges)if(c.q>0){const nL=Math.min(16,6+Math.abs(c.q));for(let i=0;i<nL;i++){const a=i/nL*2*Math.PI;fieldLine(c.x+Math.cos(a)*11,c.y+Math.sin(a)*11,1);}}
   // 場向量

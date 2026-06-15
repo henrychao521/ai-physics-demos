@@ -1,0 +1,11 @@
+{
+  "version": "0.0.1",
+  "configurations": [
+    {
+      "name": "efield-qa",
+      "runtimeExecutable": "python3",
+      "runtimeArgs": ["-m", "http.server", "8731", "--directory", "/Users/henry/3d/projects/ai-physics-demos"],
+      "port": 8731
+    }
+  ]
+}

@@ -203,6 +203,8 @@
         // --- Camera Helper (Euclidean View) ---
         // Sets the camera to look along a vector with rational slope p/q
         window.setCameraView = (p, q) => {
+            const gd = document.getElementById('chart-3d');
+            if (!gd || !gd._fullLayout) return; // 圖表尚未初始化前點擊直接返回，避免 Plotly.relayout 丟錯
             const radius = 2.0; // Distance from center
 
             // Plotly uses Cartesian coordinates for eye position.
