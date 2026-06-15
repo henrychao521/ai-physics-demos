@@ -6,39 +6,36 @@
 <title>聲波合成器 ｜ 響度・音調・音色・拍音</title>
 <link rel="icon" href="../assets/favicon.svg" type="image/svg+xml">
 <link rel="stylesheet" href="../assets/site.css">
+<script src="../assets/sim.js"></script>
 <script defer src="../assets/nav.js"></script>
 <style>
   *{box-sizing:border-box}
-  html,body{margin:0;padding:0;background:var(--bg);color:var(--txt);
-    font-family:"Noto Sans TC","PingFang TC","Microsoft JhengHei",system-ui,sans-serif}
+  html,body{margin:0;padding:0;background:var(--bg);color:var(--txt);font-family:"Noto Sans TC","PingFang TC","Microsoft JhengHei",system-ui,sans-serif}
   a{color:var(--accent)}
-  .wrap{max-width:1100px;margin:0 auto;padding:18px 16px 60px}
+  .wrap{max-width:1120px;margin:0 auto;padding:18px 16px 60px}
   header h1{font-size:1.5rem;margin:.2em 0}
   header p{color:var(--muted);margin:.2em 0 1em;line-height:1.6}
-  .badge{display:inline-block;background:var(--panel2);border:1px solid var(--line);
-    color:var(--muted);font-size:.72rem;padding:2px 8px;border-radius:99px;margin-right:6px}
-  .stage{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:14px;margin-bottom:16px}
-  canvas{width:100%;display:block;border-radius:8px;background:#05070b}
-  .label{font-size:.8rem;color:var(--muted);margin:0 0 6px;display:flex;justify-content:space-between;flex-wrap:wrap;gap:8px}
-  .grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(210px,1fr));gap:14px}
-  .ctrl{background:var(--panel2);border:1px solid var(--line);border-radius:10px;padding:10px 12px}
-  .ctrl label{display:flex;justify-content:space-between;font-size:.85rem;margin-bottom:6px}
-  .ctrl .val{color:var(--accent);font-variant-numeric:tabular-nums}
-  input[type=range]{width:100%;accent-color:var(--accent)}
+  .badge{display:inline-block;background:var(--panel2);border:1px solid var(--line);color:var(--muted);font-size:.72rem;padding:2px 8px;border-radius:99px;margin-right:6px}
   .modes{display:flex;gap:8px;margin:6px 0 14px;flex-wrap:wrap;align-items:center}
-  .modes button,.btn{background:var(--panel2);color:var(--txt);border:1px solid var(--line);
-    padding:8px 14px;border-radius:9px;cursor:pointer;font-size:.85rem;font-family:inherit}
+  .modes button{background:var(--panel2);color:var(--txt);border:1px solid var(--line);padding:8px 13px;border-radius:9px;cursor:pointer;font-size:.85rem;font-family:inherit}
   .modes button.on{background:var(--accent);color:#04121c;border-color:var(--accent);font-weight:700}
-  .btn:hover,.modes button:hover{border-color:var(--accent)}
-  #playBtn.on{background:#7CFFB2;border-color:#7CFFB2}
-  .stat{display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:10px;margin:2px 0}
-  .stat .box{background:var(--panel2);border:1px solid var(--line);border-radius:10px;padding:9px 11px}
-  .stat .box .k{font-size:.72rem;color:var(--muted)}
-  .stat .box .v{font-size:1.05rem;font-variant-numeric:tabular-nums;font-weight:700}
-  .note{background:var(--panel);border-left:3px solid var(--accent2);border-radius:8px;
-    padding:12px 14px;color:var(--muted);font-size:.86rem;line-height:1.7;margin-top:18px}
+  #playBtn.on{background:#7CFFB2;border-color:#7CFFB2;color:#04211a}
+  .stage{position:relative;border-radius:14px;overflow:hidden;border:1px solid var(--line);margin-bottom:14px;box-shadow:0 12px 36px rgba(0,0,0,.4)}
+  .stage .lab{position:absolute;top:10px;left:12px;font-size:.78rem;color:#9fb4d8;z-index:2}
+  .stage .sub{position:absolute;top:10px;right:12px;font-size:.78rem;color:#9fb4d8;z-index:2}
+  canvas{display:block;width:100%}
+  .statgrid{display:grid;grid-template-columns:repeat(auto-fit,minmax(120px,1fr));gap:10px;margin:2px 0 14px}
+  .box{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:10px 12px}
+  .box .k{font-size:.72rem;color:var(--muted)}.box .v{font-size:1.05rem;font-variant-numeric:tabular-nums;font-weight:700}
+  .bar{display:flex;gap:14px;flex-wrap:wrap;align-items:flex-end;background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:14px 16px}
+  .sld{flex:1;min-width:150px}
+  .sld label{display:flex;justify-content:space-between;font-size:.82rem;color:var(--muted);margin-bottom:5px}
+  .sld label .v{font-variant-numeric:tabular-nums;font-weight:700}
+  .sld input{width:100%}
+  #r_f1{accent-color:#4cc2ff}#r_f2{accent-color:#8b9cff}#r_vol{accent-color:#7CFFB2}
+  .note{background:var(--panel);border-left:3px solid var(--accent2);border-radius:8px;padding:12px 14px;color:var(--muted);font-size:.86rem;line-height:1.7;margin-top:14px}
   .note b{color:var(--txt)}.note code{background:var(--bg2);padding:1px 6px;border-radius:5px;color:var(--green);font-size:.85em}
-  footer{color:var(--muted);font-size:.78rem;margin-top:26px;text-align:center;line-height:1.7}
+  footer{color:var(--muted);font-size:.78rem;margin-top:24px;text-align:center;line-height:1.7}
 </style>
 </head>
 <body data-demo="聲波合成器">
@@ -46,148 +43,102 @@
   <header>
     <span class="badge">波動・聲音</span>
     <h1>聲波合成器：響度・音調・音色・拍音</h1>
-    <p>聲音的三要素：<b>響度</b>＝振幅、<b>音調</b>＝頻率、<b>音色</b>＝波形。開啟<b>雙音</b>時，兩個接近的頻率疊加會產生
-       <b>拍音</b>（聲音規律地強弱起伏），拍頻 = |f₁ − f₂|。按播放用耳朵驗證！</p>
+    <p>聲音三要素：<b>響度</b>＝振幅、<b>音調</b>＝頻率、<b>音色</b>＝波形。開啟<b>雙音</b>時兩個接近的頻率疊加會產生
+       <b>拍音</b>（聲音規律地強弱起伏），拍頻 = |f₁−f₂|。按播放用耳朵驗證！</p>
   </header>
 
   <div class="modes">
-    <button class="btn" id="playBtn">▶ 播放聲音</button>
-    <button class="btn on" id="dualBtn">雙音（拍音）</button>
+    <button id="playBtn">▶ 播放聲音</button>
+    <button id="dualBtn" class="on">雙音（拍音）</button>
     <span style="color:var(--muted);font-size:.8rem;margin-left:6px">音色：</span>
-    <button class="btn wf on" data-wf="sine">正弦</button>
-    <button class="btn wf" data-wf="square">方波</button>
-    <button class="btn wf" data-wf="triangle">三角</button>
-    <button class="btn wf" data-wf="sawtooth">鋸齒</button>
+    <button class="wf on" data-wf="sine">正弦</button>
+    <button class="wf" data-wf="square">方波</button>
+    <button class="wf" data-wf="triangle">三角</button>
+    <button class="wf" data-wf="sawtooth">鋸齒</button>
   </div>
 
-  <div class="stage">
-    <div class="label"><span>單一波形（音色與音調）</span><span id="sub1"></span></div>
-    <canvas id="wave" width="1040" height="150"></canvas>
-  </div>
-  <div class="stage" id="beatStage">
-    <div class="label"><span>兩音疊加 → 拍音（綠色＝拍包絡，振幅週期性強弱）</span><span id="sub2"></span></div>
-    <canvas id="beat" width="1040" height="190"></canvas>
-  </div>
+  <div class="stage"><div class="lab">單一波形（音色與音調）</div><div class="sub" id="sub1"></div><canvas id="wave"></canvas></div>
+  <div class="stage" id="beatStage"><div class="lab">兩音疊加 → 拍音（綠＝拍包絡）</div><div class="sub" id="sub2"></div><canvas id="beat"></canvas></div>
 
-  <div class="stat" id="stats"></div>
-  <div class="grid" id="controls" style="margin-top:14px"></div>
+  <div class="statgrid" id="stats"></div>
+  <div class="bar" id="sliders"></div>
 
   <div class="note">
-    <b>物理重點：</b><b>響度</b>由振幅決定（振幅大＝大聲）、<b>音調</b>由頻率決定（頻率高＝高音）、<b>音色</b>由波形（諧波成分）決定——
-    同樣音調，正弦最純、方波/鋸齒較尖銳，因為含有不同的<b>泛音</b>。兩個頻率相近的音疊加時，振幅以
-    <code>cos(π·Δf·t)</code> 緩慢起伏，每秒強弱起伏 <code>|f₁ − f₂|</code> 次（拍頻）——調音師就是聽拍音消失來對準音高的。
+    <b>物理重點：</b><b>響度</b>由振幅決定、<b>音調</b>由頻率決定、<b>音色</b>由波形（泛音成分）決定——同樣音調，正弦最純、方波/鋸齒較尖銳。
+    兩個頻率相近的音疊加時，振幅以 <code>cos(π·Δf·t)</code> 緩慢起伏，每秒強弱 <code>|f₁−f₂|</code> 次（拍頻）——調音師就是聽拍音消失對準音高的。
   </div>
 
-  <footer>純前端 HTML / Canvas + Web Audio API，無外部相依。需點「播放聲音」啟動（瀏覽器音訊政策）。</footer>
+  <footer>純前端 HTML / Canvas + Web Audio API（SIM 工具庫）。需點「播放聲音」啟動（瀏覽器音訊政策）。</footer>
 </div>
 
 <script>
+const S=SIM;
 const sliders=[
-  {id:'f1',name:'頻率 f₁',min:200,max:600,step:1,val:440,unit:'Hz'},
-  {id:'f2',name:'頻率 f₂',min:200,max:600,step:1,val:444,unit:'Hz'},
-  {id:'vol',name:'音量（響度）',min:0,max:100,step:1,val:35,unit:'%'},
+  {id:'f1',name:'頻率 f₁',min:200,max:600,step:1,val:440,unit:'Hz',col:'#4cc2ff'},
+  {id:'f2',name:'頻率 f₂',min:200,max:600,step:1,val:444,unit:'Hz',col:'#8b9cff'},
+  {id:'vol',name:'音量（響度）',min:0,max:100,step:1,val:35,unit:'%',col:'#7CFFB2'},
 ];
 const state={}; let dual=true, wf='sine';
-const ctrl=document.getElementById('controls');
-sliders.forEach(s=>{
-  state[s.id]=s.val;
-  const box=document.createElement('div');box.className='ctrl';
-  box.innerHTML=`<label><span>${s.name}</span><span class="val" id="v_${s.id}">${fmt(s.val)} ${s.unit}</span></label>
+const sBar=document.getElementById('sliders');
+sliders.forEach(s=>{ state[s.id]=s.val;
+  const d=document.createElement('div');d.className='sld';
+  d.innerHTML=`<label><span style="color:${s.col}">${s.name}</span><span class="v" id="v_${s.id}" style="color:${s.col}">${s.val} ${s.unit}</span></label>
     <input type="range" id="r_${s.id}" min="${s.min}" max="${s.max}" step="${s.step}" value="${s.val}">`;
-  ctrl.appendChild(box);
-  box.querySelector('input').addEventListener('input',e=>{
-    state[s.id]=parseFloat(e.target.value);
-    document.getElementById('v_'+s.id).textContent=`${fmt(state[s.id])} ${s.unit}`;
-    updateAudio();
-  });
+  sBar.appendChild(d);
+  d.querySelector('input').addEventListener('input',e=>{state[s.id]=parseFloat(e.target.value);
+    document.getElementById('v_'+s.id).textContent=`${state[s.id]} ${s.unit}`;updateAudio();});
 });
-function fmt(x){return (Math.round(x*100)/100).toString();}
-
-function wsample(type,ph){
-  ph=ph%(2*Math.PI);if(ph<0)ph+=2*Math.PI;
-  if(type==='sine')return Math.sin(ph);
-  if(type==='square')return Math.sin(ph)>=0?1:-1;
-  if(type==='triangle')return 2/Math.PI*Math.asin(Math.sin(ph));
-  return ph/Math.PI-1;                                  // sawtooth
-}
-const wc=document.getElementById('wave'),wcx=wc.getContext('2d');
-const bc=document.getElementById('beat'),bcx=bc.getContext('2d');
-function drawWave(){
-  const W=wc.width,H=wc.height,mid=H/2;wcx.clearRect(0,0,W,H);
-  wcx.strokeStyle='#16202f';wcx.beginPath();wcx.moveTo(0,mid);wcx.lineTo(W,mid);wcx.stroke();
-  const cycles=6,A=(H/2-14)*(state.vol/100*0.8+0.2);
-  wcx.strokeStyle='#4cc2ff';wcx.lineWidth=2.5;wcx.beginPath();
-  for(let i=0;i<=W;i++){const ph=i/W*cycles*2*Math.PI;const y=mid-wsample(wf,ph)*A;i?wcx.lineTo(i,y):wcx.moveTo(i,y);}
-  wcx.stroke();
-  document.getElementById('sub1').textContent=wf+'　f₁='+state.f1+' Hz';
-}
-function drawBeat(){
-  const W=bc.width,H=bc.height,mid=H/2;bcx.clearRect(0,0,W,H);
-  bcx.strokeStyle='#16202f';bcx.beginPath();bcx.moveTo(0,mid);bcx.lineTo(W,mid);bcx.stroke();
-  if(!dual){bcx.fillStyle='#46566b';bcx.font='13px sans-serif';bcx.fillText('（單音模式：開啟「雙音」以觀察拍音）',W/2-130,mid);return;}
-  const df=Math.abs(state.f1-state.f2);
-  const win=df>0.2? 3/df : 0.02;                        // 顯示約3個拍
-  const A=(H/2-16)*(state.vol/100*0.8+0.2);
-  // 拍包絡 ±2A cos(πΔf t)
-  bcx.strokeStyle='rgba(124,255,178,.7)';bcx.lineWidth=1.5;
-  [1,-1].forEach(sg=>{bcx.beginPath();for(let i=0;i<=W;i++){const t=i/W*win;const e=sg*A*Math.abs(2*Math.cos(Math.PI*df*t));
-    i?bcx.lineTo(i,mid-e*0.5):bcx.moveTo(i,mid-e*0.5);}bcx.stroke();});
-  // 疊加波
-  const fm=(state.f1+state.f2)/2;
-  bcx.strokeStyle='#4cc2ff';bcx.lineWidth=1.2;bcx.beginPath();
-  const NS=4000;
-  for(let i=0;i<=NS;i++){const t=i/NS*win;const v=Math.sin(2*Math.PI*state.f1*t)+Math.sin(2*Math.PI*state.f2*t);
-    const x=i/NS*W,y=mid-v*A*0.5;i?bcx.lineTo(x,y):bcx.moveTo(x,y);}
-  bcx.stroke();
-  // 拍週期標註
-  bcx.fillStyle='#7CFFB2';bcx.font='11px sans-serif';
-  if(df>0.2){const Tb=1/df,xb=Tb/win*W;bcx.strokeStyle='#7CFFB2';bcx.setLineDash([3,3]);
-    bcx.beginPath();bcx.moveTo(xb,12);bcx.lineTo(xb,H-12);bcx.stroke();bcx.setLineDash([]);
-    bcx.fillText('1 拍 ('+Tb.toFixed(3)+'s)',6,14);}
-  document.getElementById('sub2').textContent='拍頻 '+df.toFixed(1)+' Hz';
-}
-function drawStats(){
-  const df=Math.abs(state.f1-state.f2);
-  const rows=[
-    ['頻率 f₁',state.f1+' Hz','#4cc2ff'],
-    ['頻率 f₂',state.f2+' Hz','#8b9cff'],
-    ['拍頻 |f₁−f₂|',dual?df.toFixed(1)+' Hz':'—','#7CFFB2'],
-    ['拍週期',dual&&df>0.2?(1/df).toFixed(3)+' s':'—','#ffce54'],
-  ];
-  document.getElementById('stats').innerHTML=rows.map(r=>
-    `<div class="box"><div class="k">${r[0]}</div><div class="v" style="color:${r[2]}">${r[1]}</div></div>`).join('');
-}
+function wsample(type,ph){ph=ph%(2*Math.PI);if(ph<0)ph+=2*Math.PI;
+  if(type==='sine')return Math.sin(ph);if(type==='square')return Math.sin(ph)>=0?1:-1;
+  if(type==='triangle')return 2/Math.PI*Math.asin(Math.sin(ph));return ph/Math.PI-1;}
+let wc,bc;
+function setupCanvases(){wc=S.fit(document.getElementById('wave'),5.2);bc=S.fit(document.getElementById('beat'),5.2);}
+function glowLine(ctx,pts,rgb,w){ctx.save();ctx.globalCompositeOperation='lighter';ctx.shadowColor=`rgb(${rgb})`;ctx.shadowBlur=10;
+  ctx.strokeStyle=`rgb(${rgb})`;ctx.lineWidth=w;ctx.beginPath();pts.forEach((p,i)=>i?ctx.lineTo(p[0],p[1]):ctx.moveTo(p[0],p[1]));ctx.stroke();ctx.restore();}
+function drawWave(){const W=wc._w,H=wc._h,mid=H/2;wc.fillStyle='#080c16';wc.fillRect(0,0,W,H);
+  wc.strokeStyle='#16202f';wc.beginPath();wc.moveTo(0,mid);wc.lineTo(W,mid);wc.stroke();
+  const cycles=6,A=(H/2-12)*(state.vol/100*0.8+0.2),pts=[];
+  for(let i=0;i<=W;i++)pts.push([i,mid-wsample(wf,i/W*cycles*2*Math.PI)*A]);
+  glowLine(wc,pts,'76,194,255',2.6);
+  document.getElementById('sub1').textContent=wf+'　f₁='+state.f1+' Hz';}
+function drawBeat(){const W=bc._w,H=bc._h,mid=H/2;bc.fillStyle='#080c16';bc.fillRect(0,0,W,H);
+  bc.strokeStyle='#16202f';bc.beginPath();bc.moveTo(0,mid);bc.lineTo(W,mid);bc.stroke();
+  if(!dual){bc.fillStyle='#46566b';bc.font='13px system-ui';bc.fillText('（單音模式：開啟「雙音」以觀察拍音）',W/2-130,mid);return;}
+  const df=Math.abs(state.f1-state.f2),win=df>0.2?3/df:0.02,A=(H/2-14)*(state.vol/100*0.8+0.2);
+  // 包絡(填色)
+  bc.fillStyle='rgba(124,255,178,.1)';bc.beginPath();
+  for(let i=0;i<=W;i++){const e=A*Math.abs(2*Math.cos(Math.PI*df*(i/W*win)));bc.lineTo(i,mid-e*0.5);}
+  for(let i=W;i>=0;i--){const e=A*Math.abs(2*Math.cos(Math.PI*df*(i/W*win)));bc.lineTo(i,mid+e*0.5);}bc.closePath();bc.fill();
+  bc.strokeStyle='rgba(124,255,178,.6)';bc.lineWidth=1.5;
+  [1,-1].forEach(sg=>{bc.beginPath();for(let i=0;i<=W;i++){const e=sg*A*Math.abs(2*Math.cos(Math.PI*df*(i/W*win)));i?bc.lineTo(i,mid-e*0.5):bc.moveTo(i,mid-e*0.5);}bc.stroke();});
+  // 疊加波(發光)
+  const NS=3000,pts=[];for(let i=0;i<=NS;i++){const t=i/NS*win,v=Math.sin(2*Math.PI*state.f1*t)+Math.sin(2*Math.PI*state.f2*t);pts.push([i/NS*W,mid-v*A*0.5]);}
+  glowLine(bc,pts,'76,194,255',1.4);
+  if(df>0.2){const Tb=1/df,xb=Tb/win*W;bc.strokeStyle='#7CFFB2';bc.setLineDash([3,3]);bc.beginPath();bc.moveTo(xb,12);bc.lineTo(xb,H-12);bc.stroke();bc.setLineDash([]);
+    bc.fillStyle='#7CFFB2';bc.font='11px system-ui';bc.fillText('1 拍 ('+Tb.toFixed(3)+'s)',6,16);}
+  document.getElementById('sub2').textContent='拍頻 '+df.toFixed(1)+' Hz';}
+function drawStats(){const df=Math.abs(state.f1-state.f2);
+  const rows=[['頻率 f₁',state.f1+' Hz','#4cc2ff'],['頻率 f₂',state.f2+' Hz','#8b9cff'],['拍頻 |f₁−f₂|',dual?df.toFixed(1)+' Hz':'—','#7CFFB2'],['拍週期',dual&&df>0.2?(1/df).toFixed(3)+' s':'—','#ffce54']];
+  document.getElementById('stats').innerHTML=rows.map(r=>`<div class="box"><div class="k">${r[0]}</div><div class="v" style="color:${r[2]}">${r[1]}</div></div>`).join('');}
 function redraw(){drawWave();drawBeat();drawStats();}
 
 // ---- Web Audio ----
 let actx=null,o1=null,o2=null,g=null,playing=false;
-function startAudio(){
-  if(!actx)actx=new (window.AudioContext||window.webkitAudioContext)();
-  if(actx.state==='suspended')actx.resume();
+function startAudio(){if(!actx)actx=new (window.AudioContext||window.webkitAudioContext)();if(actx.state==='suspended')actx.resume();
   g=actx.createGain();g.gain.value=0.0001;g.connect(actx.destination);
   o1=actx.createOscillator();o1.type=wf;o1.frequency.value=state.f1;o1.connect(g);o1.start();
-  o2=actx.createOscillator();o2.type=wf;o2.frequency.value=state.f2;o2.connect(g);o2.start();
-  setGain();playing=true;
-}
+  o2=actx.createOscillator();o2.type=wf;o2.frequency.value=dual?state.f2:state.f1;o2.connect(g);o2.start();setGain();playing=true;}
 function stopAudio(){if(o1){o1.stop();o2.stop();o1.disconnect();o2.disconnect();g.disconnect();o1=o2=null;}playing=false;}
 function setGain(){if(g)g.gain.setTargetAtTime(state.vol/100*0.18,actx.currentTime,0.02);}
-function updateAudio(){
-  if(playing){o1.frequency.setTargetAtTime(state.f1,actx.currentTime,0.01);
-    o2.frequency.setTargetAtTime(dual?state.f2:state.f1,actx.currentTime,0.01);
-    o1.type=wf;o2.type=wf;setGain();}
-  redraw();
-}
+function updateAudio(){if(playing){o1.frequency.setTargetAtTime(state.f1,actx.currentTime,0.01);o2.frequency.setTargetAtTime(dual?state.f2:state.f1,actx.currentTime,0.01);o1.type=wf;o2.type=wf;setGain();}redraw();}
 const playBtn=document.getElementById('playBtn');
-playBtn.onclick=()=>{if(playing){stopAudio();playBtn.classList.remove('on');playBtn.textContent='▶ 播放聲音';}
-  else{startAudio();playBtn.classList.add('on');playBtn.textContent='⏹ 停止聲音';}};
+playBtn.onclick=()=>{if(playing){stopAudio();playBtn.classList.remove('on');playBtn.textContent='▶ 播放聲音';}else{startAudio();playBtn.classList.add('on');playBtn.textContent='⏹ 停止聲音';}};
 const dualBtn=document.getElementById('dualBtn');
-dualBtn.onclick=()=>{dual=!dual;dualBtn.classList.toggle('on',dual);dualBtn.textContent=dual?'雙音（拍音）':'單音';
-  document.getElementById('beatStage').style.opacity=dual?1:.5;updateAudio();};
-document.querySelectorAll('.wf').forEach(b=>b.onclick=()=>{
-  wf=b.dataset.wf;document.querySelectorAll('.wf').forEach(x=>x.classList.toggle('on',x===b));updateAudio();});
+dualBtn.onclick=()=>{dual=!dual;dualBtn.classList.toggle('on',dual);dualBtn.textContent=dual?'雙音（拍音）':'單音';document.getElementById('beatStage').style.opacity=dual?1:.5;updateAudio();};
+document.querySelectorAll('.wf').forEach(b=>b.onclick=()=>{wf=b.dataset.wf;document.querySelectorAll('.wf').forEach(x=>x.classList.toggle('on',x===b));updateAudio();});
 window.addEventListener('beforeunload',stopAudio);
-redraw();
-window.addEventListener('resize',redraw);
+window.addEventListener('load',()=>{setupCanvases();redraw();});
+window.addEventListener('resize',()=>{setupCanvases();redraw();});
 </script>
 </body>
 </html>

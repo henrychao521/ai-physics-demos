@@ -6,39 +6,41 @@
 <title>都卜勒效應 ｜ 波前壓縮・音爆</title>
 <link rel="icon" href="../assets/favicon.svg" type="image/svg+xml">
 <link rel="stylesheet" href="../assets/site.css">
+<script src="../assets/sim.js"></script>
 <script defer src="../assets/nav.js"></script>
 <style>
   *{box-sizing:border-box}
-  html,body{margin:0;padding:0;background:var(--bg);color:var(--txt);
-    font-family:"Noto Sans TC","PingFang TC","Microsoft JhengHei",system-ui,sans-serif}
+  html,body{margin:0;padding:0;background:var(--bg);color:var(--txt);font-family:"Noto Sans TC","PingFang TC","Microsoft JhengHei",system-ui,sans-serif}
   a{color:var(--accent)}
-  .wrap{max-width:1100px;margin:0 auto;padding:18px 16px 60px}
+  .wrap{max-width:1120px;margin:0 auto;padding:18px 16px 60px}
   header h1{font-size:1.5rem;margin:.2em 0}
   header p{color:var(--muted);margin:.2em 0 1em;line-height:1.6}
-  .badge{display:inline-block;background:var(--panel2);border:1px solid var(--line);
-    color:var(--muted);font-size:.72rem;padding:2px 8px;border-radius:99px;margin-right:6px}
-  .stage{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:14px;margin-bottom:16px}
-  canvas{width:100%;display:block;border-radius:8px;background:#05070b}
-  .label{font-size:.8rem;color:var(--muted);margin:0 0 6px;display:flex;justify-content:space-between;flex-wrap:wrap;gap:8px}
-  .grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(210px,1fr));gap:14px}
-  .ctrl{background:var(--panel2);border:1px solid var(--line);border-radius:10px;padding:10px 12px}
-  .ctrl label{display:flex;justify-content:space-between;font-size:.85rem;margin-bottom:6px}
-  .ctrl .val{color:var(--accent);font-variant-numeric:tabular-nums}
-  input[type=range]{width:100%;accent-color:var(--accent)}
-  .modes{display:flex;gap:8px;margin:6px 0 14px;flex-wrap:wrap;align-items:center}
-  .modes button,.btn{background:var(--panel2);color:var(--txt);border:1px solid var(--line);
-    padding:8px 14px;border-radius:9px;cursor:pointer;font-size:.85rem;font-family:inherit}
-  .modes button.on{background:var(--accent);color:#04121c;border-color:var(--accent);font-weight:700}
-  .btn:hover,.modes button:hover{border-color:var(--accent)}
-  .stat{display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:10px;margin:2px 0}
-  .stat .box{background:var(--panel2);border:1px solid var(--line);border-radius:10px;padding:9px 11px}
-  .stat .box .k{font-size:.72rem;color:var(--muted)}
-  .stat .box .v{font-size:1.05rem;font-variant-numeric:tabular-nums;font-weight:700}
-  .state{margin-top:12px;padding:10px 12px;border-radius:10px;text-align:center;font-weight:700}
-  .note{background:var(--panel);border-left:3px solid var(--accent2);border-radius:8px;
-    padding:12px 14px;color:var(--muted);font-size:.86rem;line-height:1.7;margin-top:18px}
+  .badge{display:inline-block;background:var(--panel2);border:1px solid var(--line);color:var(--muted);font-size:.72rem;padding:2px 8px;border-radius:99px;margin-right:6px}
+  .scene-wrap{position:relative;border-radius:16px;overflow:hidden;border:1px solid var(--line);box-shadow:0 18px 50px rgba(0,0,0,.45)}
+  #scene{display:block;width:100%}
+  .hud{position:absolute;top:12px;left:12px;display:flex;gap:8px;flex-wrap:wrap;pointer-events:none}
+  .chip{background:rgba(8,12,24,.6);backdrop-filter:blur(6px);border:1px solid rgba(160,180,255,.18);border-radius:10px;padding:6px 11px;color:#dce6ff;font-size:.8rem;line-height:1.25}
+  .chip b{display:block;font-size:1.0rem;font-variant-numeric:tabular-nums;color:#fff}
+  .chip.up b{color:#ff8fa3}.chip.down b{color:#6cd0ff}
+  .toolbar{position:absolute;bottom:12px;left:12px;display:flex;gap:7px;flex-wrap:wrap}
+  .toolbar button{background:rgba(8,12,24,.6);backdrop-filter:blur(6px);color:#dce6ff;border:1px solid rgba(160,180,255,.2);border-radius:9px;padding:7px 11px;font-size:.82rem;cursor:pointer;font-family:inherit}
+  .toolbar button.on{background:var(--accent);color:#04121c;border-color:var(--accent);font-weight:700}
+  .state{margin-top:14px;padding:10px 12px;border-radius:12px;text-align:center;font-weight:700}
+  .statgrid{display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:10px;margin-top:12px}
+  .box{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:10px 12px}
+  .box .k{font-size:.72rem;color:var(--muted)}.box .v{font-size:1.05rem;font-variant-numeric:tabular-nums;font-weight:700}
+  .bar{display:flex;gap:14px;flex-wrap:wrap;align-items:flex-end;background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:14px 16px;margin-top:14px}
+  .sld{flex:1;min-width:200px}
+  .sld label{display:flex;justify-content:space-between;font-size:.82rem;color:var(--muted);margin-bottom:5px}
+  .sld label .v{color:var(--accent);font-variant-numeric:tabular-nums;font-weight:700}
+  .sld input{width:100%;accent-color:var(--accent)}
+  .presets{display:flex;gap:7px;flex-wrap:wrap;align-items:center;margin-top:12px}
+  .presets span{color:var(--muted);font-size:.8rem}
+  .pbtn{background:var(--panel2);color:var(--txt);border:1px solid var(--line);padding:7px 12px;border-radius:9px;cursor:pointer;font-size:.83rem;font-family:inherit}
+  .pbtn:hover{border-color:var(--accent)}
+  .note{background:var(--panel);border-left:3px solid var(--accent2);border-radius:8px;padding:12px 14px;color:var(--muted);font-size:.86rem;line-height:1.7;margin-top:14px}
   .note b{color:var(--txt)}.note code{background:var(--bg2);padding:1px 6px;border-radius:5px;color:var(--green);font-size:.85em}
-  footer{color:var(--muted);font-size:.78rem;margin-top:26px;text-align:center;line-height:1.7}
+  footer{color:var(--muted);font-size:.78rem;margin-top:24px;text-align:center;line-height:1.7}
 </style>
 </head>
 <body data-demo="都卜勒效應">
@@ -46,124 +48,111 @@
   <header>
     <span class="badge">波動・都卜勒效應</span>
     <h1>都卜勒效應與音爆</h1>
-    <p>移動的音源每隔一段時間發出一個球面波。音源前方的波前被<b>壓縮</b>（波長短→頻率高→音調高），
-       後方被<b>拉長</b>（頻率低→音調低）——這就是救護車經過時音調由高轉低。速度超過聲速時波前疊成<b>音爆</b>（馬赫錐）。</p>
+    <p>移動的音源每隔一段時間發出一個球面波。前方波前被<b>壓縮</b>（波長短→頻率高→音調高），後方被<b>拉長</b>（音調低）——
+       這就是救護車經過時音調由高轉低。速度超過聲速時波前疊成<b>音爆</b>（馬赫錐）。</p>
   </header>
 
-  <div class="modes">
-    <button id="play" class="on">⏸ 暫停</button>
-    <button class="btn" id="reset">↺ 重設</button>
-    <span style="color:var(--muted);font-size:.8rem;margin-left:4px">情境：</span>
-    <button class="btn" data-preset="slow">慢速</button>
-    <button class="btn" data-preset="fast">高速接近音速</button>
-    <button class="btn" data-preset="boom">超音速(音爆)</button>
-  </div>
-
-  <div class="stage">
-    <div class="label"><span>波前傳播（藍圈=聲波，🔺=音源，●=觀察者）</span><span id="sub"></span></div>
-    <canvas id="cv" width="1040" height="380"></canvas>
+  <div class="scene-wrap">
+    <canvas id="scene"></canvas>
+    <div class="hud" id="hud"></div>
+    <div class="toolbar">
+      <button id="play" class="on">⏸ 暫停</button>
+      <button class="pbtn" data-preset="slow" style="background:rgba(8,12,24,.6);color:#dce6ff;border-color:rgba(160,180,255,.2)">慢速</button>
+      <button class="pbtn" data-preset="fast" style="background:rgba(8,12,24,.6);color:#dce6ff;border-color:rgba(160,180,255,.2)">接近音速</button>
+      <button class="pbtn" data-preset="boom" style="background:rgba(8,12,24,.6);color:#dce6ff;border-color:rgba(160,180,255,.2)">超音速</button>
+    </div>
   </div>
 
   <div class="state" id="stateBar"></div>
-  <div class="stat" id="stats" style="margin-top:12px"></div>
+  <div class="statgrid" id="stats"></div>
 
-  <div class="grid" id="controls" style="margin-top:14px"></div>
-
-  <div class="note">
-    <b>物理重點：</b>音源向你移動時，每個新波前都從更靠近你的位置發出，波前擠在一起 → 你接收到的<b>波長變短、頻率變高</b>；
-    遠離時相反。移動音源的都卜勒公式 <code>f' = f₀ · v /(v − v_源·cosθ)</code>（v 為聲速，θ 為音源速度與「指向觀察者」的夾角）。
-    當音源速度 <b>等於聲速</b>（馬赫數 M=1），所有波前在正前方疊合成一道高壓波牆；<b>超過聲速</b>（M&gt;1）時波前包絡成
-    <b>馬赫錐</b>，錐面掃過你的耳朵就是<b>音爆</b>。注意：波本身的速度（聲速）不變，改變的只是你「接收到的頻率」。</p>
+  <div class="bar" id="sliders"></div>
+  <div class="presets">
+    <span>情境：</span>
+    <button class="pbtn" data-preset="slow">慢速</button>
+    <button class="pbtn" data-preset="fast">高速接近音速</button>
+    <button class="pbtn" data-preset="boom">超音速(音爆)</button>
   </div>
 
-  <footer>純前端 HTML / Canvas，無外部相依。波前為等時間間隔發出的同心圓，半徑以聲速擴張。</footer>
+  <div class="note">
+    <b>物理重點：</b>音源向你移動時，每個新波前都從更靠近你的位置發出，波前擠在一起 → 接收到的<b>波長變短、頻率變高</b>；遠離時相反。
+    公式 <code>f' = f₀·v/(v − v_源·cosθ)</code>。當音源速度<b>等於聲速</b>（M=1）所有波前在正前方疊合；<b>超過聲速</b>（M&gt;1）波前包絡成
+    <b>馬赫錐</b>，錐面掃過耳朵就是<b>音爆</b>。注意：聲速不變，改變的只是「接收到的頻率」。
+  </div>
+
+  <footer>純前端 HTML / Canvas（SIM 工具庫）。波前為等時間間隔發出的同心圓，半徑以聲速擴張。</footer>
 </div>
 
 <script>
-const VSND=190;                                        // 聲速(px/s, 視覺)
+const S=SIM, VSND=190, EMIT=0.16;
 const sliders=[
-  {id:'M', name:'音源速度 (馬赫數 M)',min:0,max:2.2,step:.05,val:0.6,unit:'×聲速'},
+  {id:'M',name:'音源速度 (馬赫數 M)',min:0,max:2.2,step:.05,val:.6,unit:'×聲速'},
   {id:'f0',name:'音源頻率 f₀',min:200,max:1000,step:10,val:440,unit:'Hz'},
 ];
 const state={};
-const ctrl=document.getElementById('controls');
-sliders.forEach(s=>{
-  state[s.id]=s.val;
-  const box=document.createElement('div');box.className='ctrl';
-  box.innerHTML=`<label><span>${s.name}</span><span class="val" id="v_${s.id}">${fmt(s.val)} ${s.unit}</span></label>
+const sBar=document.getElementById('sliders');
+sliders.forEach(s=>{ state[s.id]=s.val;
+  const d=document.createElement('div');d.className='sld';
+  d.innerHTML=`<label><span>${s.name}</span><span class="v" id="v_${s.id}">${fmt(s.val)} ${s.unit}</span></label>
     <input type="range" id="r_${s.id}" min="${s.min}" max="${s.max}" step="${s.step}" value="${s.val}">`;
-  ctrl.appendChild(box);
-  box.querySelector('input').addEventListener('input',e=>{
-    state[s.id]=parseFloat(e.target.value);
-    document.getElementById('v_'+s.id).textContent=`${fmt(state[s.id])} ${s.unit}`;
-  });
+  sBar.appendChild(d);
+  d.querySelector('input').addEventListener('input',e=>{state[s.id]=parseFloat(e.target.value);
+    document.getElementById('v_'+s.id).textContent=`${fmt(state[s.id])} ${s.unit}`;});
 });
 function fmt(x){return (Math.round(x*100)/100).toString();}
 function setSlider(id,val){state[id]=val;const r=document.getElementById('r_'+id);if(r)r.value=val;
   const s=sliders.find(z=>z.id===id);if(s)document.getElementById('v_'+id).textContent=`${fmt(val)} ${s.unit}`;}
 
-const cv=document.getElementById('cv'),cc=cv.getContext('2d');
-let fronts=[], sx=80, simT=0, lastEmit=0, playing=true, last=0;
-const EMIT=0.16, OBSX=820, OBSY=300, SY=150;
-function reset(){fronts=[];sx=80;simT=0;lastEmit=-EMIT;}
-function step(dt){
-  const vsrc=state.M*VSND;
-  sx+=vsrc*dt;simT+=dt;
+let sc,fronts=[],sx=80,simT=0,lastEmit=-EMIT,playing=true,SY=150,OBSX=820,OBSY=300;
+const NIGHT={skyTop:'#0a1230',skyBottom:'#060818',vignette:'rgba(0,0,0,.5)'};
+function setupCanvases(){sc=S.fit(document.getElementById('scene'),2.6);SY=sc._h*0.4;OBSX=sc._w*0.78;OBSY=sc._h*0.78;if(sx>sc._w)sx=80;}
+function reset(){fronts=[];sx=sc?sc._w*0.06:80;simT=0;lastEmit=-EMIT;}
+function step(dt){const vsrc=state.M*VSND;sx+=vsrc*dt;simT+=dt;
   if(simT-lastEmit>=EMIT){fronts.push({x:sx,y:SY,t:simT});lastEmit=simT;}
-  // 移除超出畫面的圈
-  fronts=fronts.filter(f=>VSND*(simT-f.t)<1600);
-  if(sx>cv.width+60)reset();
-}
-function fHeard(){
-  const vsrc=state.M*VSND;const dx=OBSX-sx,dy=OBSY-SY,d=Math.hypot(dx,dy)||1;
-  const vrad=vsrc*(dx/d);                              // 音源朝觀察者的速度分量(>0 接近)
-  if(state.M>=1)return null;                            // 超音速：聽到的是音爆，不定義單一頻率
-  return state.f0*VSND/(VSND-vrad);
-}
-function draw(){
-  const W=cv.width,H=cv.height;cc.clearRect(0,0,W,H);
-  // 波前
-  for(const f of fronts){const r=VSND*(simT-f.t);if(r<2)continue;
-    // 前方(靠近觀察者側)偏紅, 後方偏藍 — 視覺暗示音調
-    cc.strokeStyle='rgba(120,180,255,.5)';cc.lineWidth=1.5;
-    cc.beginPath();cc.arc(f.x,f.y,r,0,7);cc.stroke();}
-  // 音源路徑線
-  cc.strokeStyle='#1a2330';cc.setLineDash([4,5]);cc.beginPath();cc.moveTo(0,SY);cc.lineTo(W,SY);cc.stroke();cc.setLineDash([]);
-  // 音源
-  cc.fillStyle=state.M>=1?'#ff6b9d':'#ffce54';cc.beginPath();cc.moveTo(sx,SY-9);cc.lineTo(sx-9,SY+7);cc.lineTo(sx+9,SY+7);cc.closePath();cc.fill();
-  cc.fillStyle='#8a99ad';cc.font='11px sans-serif';cc.fillText('音源 M='+state.M.toFixed(2),sx-26,SY-14);
-  // 觀察者
-  cc.fillStyle='#4cc2ff';cc.beginPath();cc.arc(OBSX,OBSY,8,0,7);cc.fill();
-  cc.fillStyle='#8a99ad';cc.fillText('觀察者',OBSX-18,OBSY+24);
+  fronts=fronts.filter(f=>VSND*(simT-f.t)<2000);if(sx>sc._w+60)reset();}
+function fHeard(){const vsrc=state.M*VSND,dx=OBSX-sx,dy=OBSY-SY,d=Math.hypot(dx,dy)||1,vrad=vsrc*(dx/d);
+  if(state.M>=1)return null;return state.f0*VSND/(VSND-vrad);}
+function draw(){const W=sc._w,H=sc._h;
+  S.scene(sc,NIGHT,{});
+  for(let i=0;i<60;i++){sc.fillStyle='rgba(255,255,255,.3)';sc.fillRect((i*137)%W,(i*89)%H,1,1);}
+  // 波前(發光)
+  sc.save();sc.globalCompositeOperation='lighter';
+  for(const f of fronts){const r=VSND*(simT-f.t);if(r<2)continue;const a=Math.max(0,0.5-r/2000);
+    sc.strokeStyle=`rgba(120,180,255,${a})`;sc.lineWidth=1.6;sc.beginPath();sc.arc(f.x,f.y,r,0,7);sc.stroke();}
+  sc.restore();
+  // 路徑
+  sc.strokeStyle='rgba(120,140,200,.18)';sc.setLineDash([4,6]);sc.beginPath();sc.moveTo(0,SY);sc.lineTo(W,SY);sc.stroke();sc.setLineDash([]);
   // 連線
-  cc.strokeStyle='#2a3850';cc.beginPath();cc.moveTo(sx,SY);cc.lineTo(OBSX,OBSY);cc.stroke();
-  document.getElementById('sub').textContent='聲速固定，改變的是接收頻率';
-  drawStats();
+  sc.strokeStyle='rgba(120,150,210,.3)';sc.beginPath();sc.moveTo(sx,SY);sc.lineTo(OBSX,OBSY);sc.stroke();
+  // 音源(喇叭/飛行器)
+  const sup=state.M>=1;sc.save();sc.translate(sx,SY);
+  S.sphere(sc,0,0,9,sup?[345,80,60]:[45,85,58]);
+  sc.fillStyle=sup?'#ff8fb0':'#ffd66a';sc.beginPath();sc.moveTo(8,0);sc.lineTo(18,-7);sc.lineTo(18,7);sc.closePath();sc.fill();
+  sc.restore();
+  sc.fillStyle='rgba(200,210,240,.7)';sc.font='11px system-ui';sc.fillText('音源 M='+state.M.toFixed(2),sx-24,SY-16);
+  // 觀察者(耳)
+  S.sphere(sc,OBSX,OBSY,9,[210,40,70]);sc.fillStyle='rgba(200,210,240,.7)';sc.fillText('觀察者',OBSX-18,OBSY+24);
+  updateHud();
 }
-function drawStats(){
-  const f=fHeard();const vsrc=state.M*VSND;const approaching=(OBSX-sx)>0&&state.M>0;
-  const rows=[
-    ['馬赫數 M',state.M.toFixed(2),'#ffce54'],
-    ['音源頻率 f₀',state.f0.toFixed(0)+' Hz','#8b9cff'],
-    ['聽到頻率 f′', f?f.toFixed(0)+' Hz':'(音爆)', f? (f>state.f0?'#ff6b9d':'#4cc2ff'):'#ff6b9d'],
-    ['f′ / f₀', f?(f/state.f0).toFixed(2):'—','#e8eef6'],
-  ];
-  document.getElementById('stats').innerHTML=rows.map(r=>
-    `<div class="box"><div class="k">${r[0]}</div><div class="v" style="color:${r[2]}">${r[1]}</div></div>`).join('');
+function updateHud(){const f=fHeard(),approaching=(OBSX-sx)>0&&state.M>0;
+  document.getElementById('hud').innerHTML=chip('馬赫數 M',state.M.toFixed(2),'')+chip('音源 f₀',state.f0+' Hz','')+
+    chip('聽到 f′',f?f.toFixed(0)+' Hz':'(音爆)',f?(f>state.f0?'up':'down'):'up');
+  const rows=[['馬赫數 M',state.M.toFixed(2),'#ffce54'],['聽到頻率 f′',f?f.toFixed(0)+' Hz':'(音爆)',f?(f>state.f0?'#ff6b9d':'#4cc2ff'):'#ff6b9d'],['f′/f₀',f?(f/state.f0).toFixed(2):'—','#e8eef6']];
+  document.getElementById('stats').innerHTML=rows.map(r=>`<div class="box"><div class="k">${r[0]}</div><div class="v" style="color:${r[2]}">${r[1]}</div></div>`).join('');
   const sb=document.getElementById('stateBar');
   if(state.M>=1){sb.textContent='💥 超音速！波前疊成馬赫錐 → 錐面掃過耳朵即「音爆」';sb.style.background='rgba(255,107,157,.16)';sb.style.color='#ff6b9d';}
   else if(approaching){sb.textContent='🔴 音源接近中：波前壓縮 → 聽到頻率升高（音調變高）';sb.style.background='rgba(255,107,157,.13)';sb.style.color='#ff6b9d';}
-  else{sb.textContent='🔵 音源遠離中：波前拉長 → 聽到頻率降低（音調變低）';sb.style.background='rgba(76,194,255,.12)';sb.style.color='#4cc2ff';}
-}
-function loop(ts){if(playing){let dt=Math.min((ts-last)/1000,0.04);last=ts;for(let i=0;i<2;i++)step(dt/2);draw();}else last=ts;requestAnimationFrame(loop);}
+  else{sb.textContent='🔵 音源遠離中：波前拉長 → 聽到頻率降低（音調變低）';sb.style.background='rgba(76,194,255,.12)';sb.style.color='#4cc2ff';}}
+function chip(k,v,cls){return `<div class="chip ${cls}">${k}<b>${v}</b></div>`;}
+
+let lastTs=0;
+function loop(ts){const dt=lastTs?Math.min((ts-lastTs)/1000,0.04):0;lastTs=ts;if(playing)for(let i=0;i<2;i++)step(dt/2);draw();requestAnimationFrame(loop);}
 const pb=document.getElementById('play');
-pb.onclick=()=>{playing=!playing;pb.classList.toggle('on',playing);pb.textContent=playing?'⏸ 暫停':'▶ 播放';last=performance.now();};
-document.getElementById('reset').onclick=()=>{reset();playing=true;pb.classList.add('on');pb.textContent='⏸ 暫停';last=performance.now();};
-const PRE={slow:{M:0.4,f0:440},fast:{M:0.85,f0:440},boom:{M:1.6,f0:440}};
-document.querySelectorAll('[data-preset]').forEach(b=>b.onclick=()=>{const p=PRE[b.dataset.preset];if(!p)return;
-  setSlider('M',p.M);setSlider('f0',p.f0);reset();playing=true;pb.classList.add('on');pb.textContent='⏸ 暫停';last=performance.now();});
-reset();requestAnimationFrame(loop);
-window.addEventListener('resize',draw);
+pb.onclick=()=>{playing=!playing;pb.classList.toggle('on',playing);pb.textContent=playing?'⏸ 暫停':'▶ 播放';};
+const PRE={slow:{M:.4,f0:440},fast:{M:.85,f0:440},boom:{M:1.6,f0:440}};
+document.querySelectorAll('[data-preset]').forEach(b=>b.onclick=()=>{const p=PRE[b.dataset.preset];if(!p)return;setSlider('M',p.M);setSlider('f0',p.f0);reset();playing=true;pb.classList.add('on');pb.textContent='⏸ 暫停';});
+window.addEventListener('load',()=>{setupCanvases();reset();requestAnimationFrame(loop);});
+window.addEventListener('resize',()=>{setupCanvases();});
 </script>
 </body>
 </html>
