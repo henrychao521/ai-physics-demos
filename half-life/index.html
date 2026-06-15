@@ -65,6 +65,8 @@
   <div class="statgrid" id="stats"></div>
   <div class="bar" id="sliders"></div>
 
+  <div class="formula" id="formula"></div>
+
   <div class="note">
     <b>物理重點：</b>衰變是<b>機率事件</b>——每顆原子單位時間有固定機率衰變，與它「活了多久」無關（無記憶）。對大量原子，
     <code>N(t) = N₀·(½)^(t/T) = N₀·e^(−λt)</code>，衰變常數 <code>λ = ln2 / T</code>。碳-14（5730 年）定年、碘-131（8 天）醫療、鈾-238（45 億年）推定地球年齡。
@@ -93,7 +95,22 @@ function fmt(x){return (Math.round(x*100)/100).toString();}
 function setSlider(id,val){state[id]=val;const r=document.getElementById('r_'+id);if(r)r.value=val;
   const s=sliders.find(z=>z.id===id);if(s)document.getElementById('v_'+id).textContent=`${fmt(val)} ${s.unit}`;}
 let atoms=[],t=0,hist=[],playing=true;
-function reset(){atoms=[];for(let i=0;i<state.N0;i++)atoms.push(true);t=0;hist=[{t:0,n:state.N0}];}
+function frow(n,sym,sub,val){return `<div class="frow"><span class="fname">${n}</span><span class="fsym">${sym}</span><span class="fsub">= ${sub}</span><span class="fval">${val}</span></div>`;}
+function updateFormula(){
+  const T=state.T,N0=state.N0;
+  const lam=Math.LN2/T;            // 衰變常數 λ = ln2 / T
+  const tau=1/lam;                 // 平均壽命 τ = 1/λ = T/ln2
+  const nT=N0*Math.pow(.5,1);      // t=T 後剩餘（= N₀/2）
+  const n2T=N0*Math.pow(.5,2);     // t=2T 後剩餘（= N₀/4）
+  document.getElementById('formula').innerHTML=
+    `<h4>📐 計算公式（即時代入　大量原子的指數衰變）</h4>`+
+    frow('衰變常數 λ','ln2 / T',`0.6931 / ${fmt(T)}`, lam.toFixed(4)+' /s')+
+    frow('平均壽命 τ','1 / λ = T / ln2',`${fmt(T)} / 0.6931`, tau.toFixed(2)+' s')+
+    frow('一個半衰期後 N(T)','N₀·(½)¹',`${fmt(N0)}·½`, nT.toFixed(0)+' 顆')+
+    frow('兩個半衰期後 N(2T)','N₀·(½)²',`${fmt(N0)}·¼`, n2T.toFixed(0)+' 顆')+
+    `<div class="frel">📈 <b>每過一個 T 數量減半</b>：T→½、2T→¼、3T→⅛…　·　<b>T 越大 → λ 越小</b>（衰變越慢，成反比）　·　<b>無記憶性</b>：剩餘比例只看「過了幾個 T」，與原子已存活多久無關。</div>`;
+}
+function reset(){atoms=[];for(let i=0;i<state.N0;i++)atoms.push(true);t=0;hist=[{t:0,n:state.N0}];updateFormula();}
 function remaining(){let n=0;for(const a of atoms)if(a)n++;return n;}
 function step(dt){const prob=1-Math.pow(2,-dt/state.T);for(let i=0;i<atoms.length;i++)if(atoms[i]&&Math.random()<prob)atoms[i]=false;
   t+=dt;hist.push({t,n:remaining()});if(hist.length>3000)hist.shift();if(t>6*state.T)t=6*state.T;}

@@ -63,6 +63,8 @@
   <div class="statgrid" id="stats"></div>
   <div class="bar" id="sliders"></div>
 
+  <div class="formula" id="formula"></div>
+
   <div class="note">
     <b>物理重點：</b><b>響度</b>由振幅決定、<b>音調</b>由頻率決定、<b>音色</b>由波形（泛音成分）決定——同樣音調，正弦最純、方波/鋸齒較尖銳。
     兩個頻率相近的音疊加時，振幅以 <code>cos(π·Δf·t)</code> 緩慢起伏，每秒強弱 <code>|f₁−f₂|</code> 次（拍頻）——調音師就是聽拍音消失對準音高的。
@@ -120,7 +122,25 @@ function drawBeat(){const W=bc._w,H=bc._h,mid=H/2;bc.fillStyle='#080c16';bc.fill
 function drawStats(){const df=Math.abs(state.f1-state.f2);
   const rows=[['頻率 f₁',state.f1+' Hz','#4cc2ff'],['頻率 f₂',state.f2+' Hz','#8b9cff'],['拍頻 |f₁−f₂|',dual?df.toFixed(1)+' Hz':'—','#7CFFB2'],['拍週期',dual&&df>0.2?(1/df).toFixed(3)+' s':'—','#ffce54']];
   document.getElementById('stats').innerHTML=rows.map(r=>`<div class="box"><div class="k">${r[0]}</div><div class="v" style="color:${r[2]}">${r[1]}</div></div>`).join('');}
-function redraw(){drawWave();drawBeat();drawStats();}
+function frow(n,sym,sub,val){return `<div class="frow"><span class="fname">${n}</span><span class="fsym">${sym}</span><span class="fsub">= ${sub}</span><span class="fval">${val}</span></div>`;}
+function updateFormula(){
+  const f1=state.f1,f2=state.f2,vol=state.vol;
+  const df=Math.abs(f1-f2);
+  const wfName={sine:'正弦',square:'方波',triangle:'三角',sawtooth:'鋸齒'}[wf]||wf;
+  let html=`<h4>📐 計算公式（即時代入）</h4>`
+    +frow('音調 f₁','f₁',`${f1}`, f1+' Hz')
+    +frow('響度（相對振幅）','音量 / 100',`${vol} / 100`, (vol/100).toFixed(2))
+    +frow('音色','波形',`目前波形`, wfName);
+  if(dual){
+    html+=frow('拍頻 f_拍','|f₁−f₂|',`|${f1}−${f2}|`, df.toFixed(1)+' Hz')
+      +frow('拍週期 T_拍','1 / |f₁−f₂|', df>0.2?`1 / ${df.toFixed(1)}`:'—', df>0.2?(1/df).toFixed(3)+' s':'—')
+      +`<div class="frel">📈 <b>拍頻 = |f₁−f₂|</b>：兩頻率差越大、強弱起伏越快　·　<b>f₁=f₂ → 拍頻=0</b>（聽不到拍音，音準對齊）　·　響度只改振幅、不改音調與拍頻。</div>`;
+  }else{
+    html+=`<div class="frel">📈 <b>音調 ∝ 頻率</b>：f 越大音越高　·　<b>響度 ∝ 振幅</b>：音量越大波越高　·　同音調下，正弦最純、方波/鋸齒泛音多較尖銳（音色不同）。開啟「雙音」可觀察拍音。</div>`;
+  }
+  document.getElementById('formula').innerHTML=html;
+}
+function redraw(){drawWave();drawBeat();drawStats();updateFormula();}
 
 // ---- Web Audio ----
 let actx=null,o1=null,o2=null,g=null,playing=false;

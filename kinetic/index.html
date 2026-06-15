@@ -79,6 +79,8 @@
 
   <div class="bar" id="sliders"></div>
 
+  <div class="formula" id="formula"></div>
+
   <div class="note">
     <b>物理重點：</b>單一分子撞牆一次把動量 2m·v⊥ 傳給牆；每秒大量碰撞累積成穩定的力，除以面積就是<b>壓力</b>。
     由動力論可導出 <code>P·V = N·k·T</code>（即 PV=nRT）。溫度正比於分子平均動能 <code>½m·v̄² ∝ T</code>——溫度就是「分子運動劇烈程度」。
@@ -115,7 +117,8 @@ function vrms(){return Math.sqrt(2*state.T);}
 function spawn(n){for(let i=0;i<n;i++){const a=Math.random()*2*Math.PI,v=vrms();P.push({x:Math.random()*state.box,y:Math.random()*state.box,vx:Math.cos(a)*v,vy:Math.sin(a)*v});}}
 function init(){P=[];box=state.box;spawn(state.N);impAccum=0;tAccum=0;Pmeas=state.N*state.T/(box*box);}
 function onChange(id,old,nw){if(id==='T'){const f=Math.sqrt(nw/old);P.forEach(p=>{p.vx*=f;p.vy*=f;});}
-  if(id==='box'){const f=nw/box;P.forEach(p=>{p.x*=f;p.y*=f;});box=nw;}if(id==='N'){if(nw>P.length)spawn(nw-P.length);else P.length=nw;}}
+  if(id==='box'){const f=nw/box;P.forEach(p=>{p.x*=f;p.y*=f;});box=nw;}if(id==='N'){if(nw>P.length)spawn(nw-P.length);else P.length=nw;}
+  updateFormula();}
 function step(dt){let imp=0;const b=state.box;
   for(const p of P){p.x+=p.vx*dt;p.y+=p.vy*dt;
     if(p.x<0){p.x=0;p.vx=-p.vx;imp+=2*Math.abs(p.vx);}else if(p.x>b){p.x=b;p.vx=-p.vx;imp+=2*Math.abs(p.vx);}
@@ -153,6 +156,22 @@ function updateHud(){const V=state.box*state.box,Pth=state.N*state.T/V,ratio=Pth
   document.getElementById('check').textContent='實測 / 理論 ≈ '+ratio.toFixed(2)+'（→ PV = NkT 成立）';}
 function chip(k,v){return `<div class="chip">${k}<b>${v}</b></div>`;}
 
+function frow(n,sym,sub,val){return `<div class="frow"><span class="fname">${n}</span><span class="fsym">${sym}</span><span class="fsub">= ${sub}</span><span class="fval">${val}</span></div>`;}
+function updateFormula(){
+  const T=state.T, N=state.N, L=state.box;        // 溫度、分子數、容器邊長
+  const V=L*L;                                     // 體積 V = L²（2D，與 HUD 同源）
+  const Pth=N*T/V;                                 // 理論壓力 P = NkT/V（k=1）
+  const vr=Math.sqrt(2*T);                         // 方均根速率 v_rms = √(2T)（2D，m=1、k=1）
+  const Ek=T;                                      // 平均動能 ⟨½m v²⟩ = kT = T（2D）
+  document.getElementById('formula').innerHTML=
+    `<h4>📐 計算公式（即時代入　2D 理想氣體・k_B=1・m=1）</h4>`+
+    frow('體積 V','L²',`${fmt(L)}²`, V.toFixed(2))+
+    frow('理論壓力 P','N·k·T / V',`${N}·${T} / ${V.toFixed(2)}`, Pth.toFixed(2))+
+    frow('方均根速率 v_rms','√(2kT/m)',`√(2·${T})`, vr.toFixed(2))+
+    frow('平均動能 ⟨E_k⟩','k·T',`1·${T}`, Ek.toFixed(2))+
+    `<div class="frel">📈 <b>P ∝ T</b>：溫度加倍 → 壓力加倍　·　<b>P ∝ 1/V</b>：體積減半 → 壓力加倍（波以耳）　·　<b>P ∝ N</b>：分子越多撞得越頻繁　·　<b>v_rms ∝ √T</b>：T 變 4 倍 → 速率才變 2 倍。</div>`;
+}
+
 let lastTs=0;
 function loop(ts){const dt=lastTs?Math.min((ts-lastTs)/1000,0.04):0;lastTs=ts;if(playing)for(let i=0;i<4;i++)step((dt||0.016)/4);draw();requestAnimationFrame(loop);}
 const pb=document.getElementById('play');
@@ -160,7 +179,7 @@ pb.onclick=()=>{playing=!playing;pb.classList.toggle('on',playing);pb.textConten
 const PRE={heat:{T:32,box:6,N:80},compress:{T:12,box:3.6,N:80},more:{T:12,box:6,N:200}};
 document.querySelectorAll('[data-preset]').forEach(b=>b.onclick=()=>{const p=PRE[b.dataset.preset];if(!p)return;
   setSlider('T',p.T);setSlider('box',p.box);setSlider('N',p.N);init();});
-window.addEventListener('load',()=>{setupCanvases();init();requestAnimationFrame(loop);});
+window.addEventListener('load',()=>{setupCanvases();init();updateFormula();requestAnimationFrame(loop);});
 window.addEventListener('resize',()=>{setupCanvases();});
 </script>
 </body>

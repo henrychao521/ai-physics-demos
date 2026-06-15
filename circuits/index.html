@@ -68,6 +68,8 @@
     <button class="pbtn" data-preset="p3">並聯3燈</button>
   </div>
 
+  <div class="formula" id="formula"></div>
+
   <div class="note">
     <b>物理重點：</b>歐姆定律 <code>V = IR</code>。<b>串聯</b>等效電阻 <code>R總 = R₁+R₂+…</code>（越串越大），電流 <code>I = V/R總</code> 每顆燈相同，電壓按電阻比例分配。
     <b>並聯</b>等效電阻 <code>1/R總 = 1/R₁+…</code>（越並越小），每顆燈兩端都是電源電壓、亮度不變，總電流變大。
@@ -92,7 +94,7 @@ sliders.forEach(s=>{ state[s.id]=s.val;
     <input type="range" id="r_${s.id}" min="${s.min}" max="${s.max}" step="${s.step}" value="${s.val}">`;
   sBar.appendChild(d);
   d.querySelector('input').addEventListener('input',e=>{state[s.id]=parseFloat(e.target.value);
-    document.getElementById('v_'+s.id).textContent=`${fmt(state[s.id])} ${s.unit}`;});
+    document.getElementById('v_'+s.id).textContent=`${fmt(state[s.id])} ${s.unit}`;updateFormula();});
 });
 function fmt(x){return (Math.round(x*100)/100).toString();}
 function setSlider(id,val){state[id]=val;const r=document.getElementById('r_'+id);if(r)r.value=val;
@@ -100,6 +102,28 @@ function setSlider(id,val){state[id]=val;const r=document.getElementById('r_'+id
 function calc(){const V=state.V,R=state.R,N=state.N;let Rtot,Itot,Vb,Ib,Pb;
   if(series){Rtot=N*R;Itot=V/Rtot;Ib=Itot;Vb=Ib*R;Pb=Ib*Ib*R;}else{Rtot=R/N;Itot=V/Rtot;Vb=V;Ib=V/R;Pb=Vb*Ib;}
   return {Rtot,Itot,Vb,Ib,Pb,bright:Math.min(1,Pb/(V*V/R))};}
+
+function frow(n,sym,sub,val){return `<div class="frow"><span class="fname">${n}</span><span class="fsym">${sym}</span><span class="fsub">= ${sub}</span><span class="fval">${val}</span></div>`;}
+function updateFormula(){
+  const V=state.V,R=state.R,N=state.N,c=calc();
+  if(series){
+    document.getElementById('formula').innerHTML=
+      `<h4>📐 計算公式（即時代入　串聯　V = IR）</h4>`+
+      frow('總電阻 R總','R₁+R₂+…= N·R',`${N}·${fmt(R)}`, c.Rtot.toFixed(1)+' Ω')+
+      frow('總電流 I','V / R總',`${fmt(V)} / ${c.Rtot.toFixed(1)}`, c.Itot.toFixed(2)+' A')+
+      frow('每燈電壓 V燈','I·R',`${c.Ib.toFixed(2)}·${fmt(R)}`, c.Vb.toFixed(2)+' V')+
+      frow('每燈功率 P','I²·R',`${c.Ib.toFixed(2)}²·${fmt(R)}`, c.Pb.toFixed(2)+' W')+
+      `<div class="frel">📈 <b>串聯越串總電阻越大</b>：燈越多 → 總電流越小 → 每顆越暗　·　每顆電流相同 (I 處處相等)　·　斷一顆 → 全部熄滅。</div>`;
+  }else{
+    document.getElementById('formula').innerHTML=
+      `<h4>📐 計算公式（即時代入　並聯　V = IR）</h4>`+
+      frow('總電阻 R總','R / N',`${fmt(R)} / ${N}`, c.Rtot.toFixed(1)+' Ω')+
+      frow('每燈電壓 V燈','＝ 電源 V',`${fmt(V)}`, c.Vb.toFixed(2)+' V')+
+      frow('每燈電流 I燈','V / R',`${fmt(V)} / ${fmt(R)}`, c.Ib.toFixed(2)+' A')+
+      frow('總電流 I','V / R總 = N·I燈',`${N}·${c.Ib.toFixed(2)}`, c.Itot.toFixed(2)+' A')+
+      `<div class="frel">📈 <b>並聯越並總電阻越小</b>：燈越多 → 總電流越大　·　每顆兩端都拿到全電壓 → <b>亮度不變</b>　·　斷一顆 → 其他照亮 (家用電器都並聯)。</div>`;
+  }
+}
 
 let sc,flow=0;
 const BOARD={skyTop:'#0a2024',skyBottom:'#04100f',grid:'rgba(80,200,170,.18)',vignette:'rgba(0,0,0,.5)'};
@@ -142,11 +166,11 @@ function drawStats(c){
 let lastTs=0;
 function loop(ts){const dt=lastTs?Math.min((ts-lastTs)/1000,0.05):0;lastTs=ts;flow+=dt;draw();requestAnimationFrame(loop);}
 const mS=document.getElementById('mSeries'),mP=document.getElementById('mParallel');
-mS.onclick=()=>{series=true;mS.classList.add('on');mP.classList.remove('on');};
-mP.onclick=()=>{series=false;mP.classList.add('on');mS.classList.remove('on');};
+mS.onclick=()=>{series=true;mS.classList.add('on');mP.classList.remove('on');updateFormula();};
+mP.onclick=()=>{series=false;mP.classList.add('on');mS.classList.remove('on');updateFormula();};
 const PRE={s3:{ser:true,V:6,R:6,N:3},p3:{ser:false,V:6,R:6,N:3}};
-document.querySelectorAll('[data-preset]').forEach(b=>b.onclick=()=>{const p=PRE[b.dataset.preset];if(!p)return;series=p.ser;mS.classList.toggle('on',series);mP.classList.toggle('on',!series);['V','R','N'].forEach(k=>setSlider(k,p[k]));});
-window.addEventListener('load',()=>{setupCanvases();requestAnimationFrame(loop);});
+document.querySelectorAll('[data-preset]').forEach(b=>b.onclick=()=>{const p=PRE[b.dataset.preset];if(!p)return;series=p.ser;mS.classList.toggle('on',series);mP.classList.toggle('on',!series);['V','R','N'].forEach(k=>setSlider(k,p[k]));updateFormula();});
+window.addEventListener('load',()=>{setupCanvases();updateFormula();requestAnimationFrame(loop);});
 window.addEventListener('resize',()=>{setupCanvases();});
 </script>
 </body>

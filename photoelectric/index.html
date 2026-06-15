@@ -72,6 +72,8 @@
 
   <div class="bar" id="sliders"></div>
 
+  <div class="formula" id="formula"></div>
+
   <div class="note">
     <b>物理重點：</b>古典波動說預測「光越強總能打出電子」，但實驗發現：低於<b>臨界頻率</b> <code>f₀ = W/h</code> 時無論多強都<b>沒有</b>光電子；
     高於 f₀ 才有，且最大動能 <code>KE = hf − W</code>。<b>光強度只決定電子數量（電流），不影響每顆能量</b>。愛因斯坦用「光由能量 hf 的<b>光子</b>組成、一顆打一顆」解釋，獲 1921 諾貝爾獎。
@@ -94,13 +96,25 @@ sliders.forEach(s=>{ state[s.id]=s.val;
   d.innerHTML=`<label><span>${s.name}</span><span class="v" id="v_${s.id}">${fmt(s.val)} ${s.unit}</span></label>
     <input type="range" id="r_${s.id}" min="${s.min}" max="${s.max}" step="${s.step}" value="${s.val}">`;
   sBar.appendChild(d);
-  d.querySelector('input').addEventListener('input',e=>{state[s.id]=parseFloat(e.target.value);document.getElementById('v_'+s.id).textContent=`${fmt(state[s.id])} ${s.unit}`;});
+  d.querySelector('input').addEventListener('input',e=>{state[s.id]=parseFloat(e.target.value);document.getElementById('v_'+s.id).textContent=`${fmt(state[s.id])} ${s.unit}`;updateFormula();});
 });
 function fmt(x){return (Math.round(x*100)/100).toString();}
 function setSlider(id,val){state[id]=val;const r=document.getElementById('r_'+id);if(r)r.value=val;
-  const s=sliders.find(z=>z.id===id);if(s)document.getElementById('v_'+id).textContent=`${fmt(val)} ${s.unit}`;}
+  const s=sliders.find(z=>z.id===id);if(s)document.getElementById('v_'+id).textContent=`${fmt(val)} ${s.unit}`;
+  if(typeof updateFormula==='function')updateFormula();}
 function Ephoton(){return HEV*state.f;} function f0(){return state.W/HEV;}
 function KEmax(){return Math.max(0,Ephoton()-state.W);} function emits(){return Ephoton()>state.W;}
+function frow(n,sym,sub,val){return `<div class="frow"><span class="fname">${n}</span><span class="fsym">${sym}</span><span class="fsub">= ${sub}</span><span class="fval">${val}</span></div>`;}
+function updateFormula(){
+  const f=state.f, W=state.W, hf=Ephoton(), ke=KEmax(), fc=f0(), on=emits();
+  document.getElementById('formula').innerHTML=
+    `<h4>📐 計算公式（即時代入　h=4.136×10⁻¹⁵ eV·s，f 以 ×10¹⁴ Hz 計）</h4>`
+    + frow('光子能量 hf','h·f',`0.4136·${fmt(f)}`, hf.toFixed(2)+' eV')
+    + frow('臨界頻率 f₀','W / h',`${fmt(W)} / 0.4136`, fc.toFixed(1)+'×10¹⁴ Hz')
+    + frow('最大動能 KEₘₐₓ','hf − W', (on?`${hf.toFixed(2)} − ${fmt(W)}`:`${hf.toFixed(2)} − ${fmt(W)} ≤ 0`), ke.toFixed(2)+' eV')
+    + frow('遏止電壓 V_s','KEₘₐₓ / e',`${ke.toFixed(2)} eV / e`, ke.toFixed(2)+' V')
+    + `<div class="frel">📈 <b>KEₘₐₓ ∝ f（過 f₀ 後線性）</b>：頻率越高、電子飛得越快　·　<b>f &lt; f₀（${fc.toFixed(1)}×10¹⁴）光再強也打不出電子</b>　·　<b>光強度只改電子數量（電流），不改每顆能量</b></div>`;
+}
 function wl2rgb(f){const lam=2998/f;let r,g,b;if(lam<380)return[170,130,255];if(lam>720)return[150,40,40];
   if(lam<440){r=-(lam-440)/60;g=0;b=1;}else if(lam<490){r=0;g=(lam-440)/50;b=1;}else if(lam<510){r=0;g=1;b=-(lam-510)/20;}
   else if(lam<580){r=(lam-510)/70;g=1;b=0;}else if(lam<645){r=1;g=-(lam-645)/65;b=0;}else{r=1;g=0;b=0;}
@@ -154,7 +168,7 @@ function loop(ts){const dt=lastTs?Math.min((ts-lastTs)/1000,0.05):0.016;lastTs=t
 document.querySelectorAll('.metal').forEach(b=>b.onclick=()=>{document.querySelectorAll('.metal').forEach(x=>x.classList.toggle('on',x===b));setSlider('W',parseFloat(b.dataset.w));});
 const PRE={redfail:{f:4.5,I:60,W:2.1},brightfail:{f:4.5,I:100,W:2.1},uv:{f:9,I:60,W:2.1}};
 document.querySelectorAll('[data-preset]').forEach(b=>b.onclick=()=>{const p=PRE[b.dataset.preset];if(!p)return;['f','I','W'].forEach(k=>setSlider(k,p[k]));document.querySelectorAll('.metal').forEach(x=>x.classList.toggle('on',parseFloat(x.dataset.w)===p.W));});
-window.addEventListener('load',()=>{requestAnimationFrame(loop);});
+window.addEventListener('load',()=>{updateFormula();requestAnimationFrame(loop);});
 </script>
 </body>
 </html>

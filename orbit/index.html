@@ -70,6 +70,8 @@
     <button class="pbtn" id="reset" style="margin-left:auto">↺ 重新發射</button>
   </div>
 
+  <div class="formula" id="formula"></div>
+
   <div class="note">
     <b>物理重點：</b>引力提供向心力使行星走<b>橢圓</b>（恆星在一焦點）＝克卜勒第一定律。連接行星與恆星的線段在相同時間
     <b>掃過相等面積</b>（dA/dt = 常數 = ½·角動量/質量）＝克卜勒第二定律，所以近恆星時快、遠時慢。對橢圓軌道，
@@ -104,7 +106,7 @@ const D0=170,MU_PER_M=505400*Math.pow(170/160,3);
 function MU(){return state.M*MU_PER_M;}
 function vcirc(){return Math.sqrt(MU()/D0);}
 let pos,vel,trace,wedges,simT,lastWedgeT,playing=true,escaped=false;
-function launch(){pos={x:D0,y:0};vel={x:0,y:-state.ratio*vcirc()};trace=[{x:pos.x,y:pos.y}];wedges=[{x:pos.x,y:pos.y}];simT=0;lastWedgeT=0;escaped=false;}
+function launch(){pos={x:D0,y:0};vel={x:0,y:-state.ratio*vcirc()};trace=[{x:pos.x,y:pos.y}];wedges=[{x:pos.x,y:pos.y}];simT=0;lastWedgeT=0;escaped=false;if(typeof updateFormula==='function')updateFormula();}
 function accel(p){const r=Math.hypot(p.x,p.y),f=-MU()/(r*r*r);return {x:f*p.x,y:f*p.y};}
 function integrate(dt){const n=12,h=dt/n;
   for(let i=0;i<n;i++){let a=accel(pos);pos.x+=vel.x*h+0.5*a.x*h*h;pos.y+=vel.y*h+0.5*a.y*h*h;const a2=accel(pos);vel.x+=0.5*(a.x+a2.x)*h;vel.y+=0.5*(a.y+a2.y)*h;}
@@ -115,6 +117,27 @@ function orbit(){const r=Math.hypot(pos.x,pos.y),v=Math.hypot(vel.x,vel.y),mu=MU
   const a=eps<0?-mu/(2*eps):Infinity,e=Math.sqrt(Math.max(0,1+2*eps*h*h/(mu*mu))),T=eps<0?2*Math.PI*Math.sqrt(a*a*a/mu):null;
   let type;if(eps<-1e-3){type=e<0.03?'圓形':'橢圓';}else if(eps<=1e-3){type='拋物線(逃逸)';}else{type='雙曲線(逃逸)';}
   return {r,v,eps,h,a,e,T,type,dAdt:0.5*Math.abs(h)};}
+
+// ---- 即時代入計算公式（重用 orbit() 與 vcirc() 來源，與 HUD 數值一致）----
+function frow(n,sym,sub,val){return `<div class="frow"><span class="fname">${n}</span><span class="fsym">${sym}</span><span class="fsub">= ${sub}</span><span class="fval">${val}</span></div>`;}
+function updateFormula(){
+  const el=document.getElementById('formula');if(!el)return;
+  const o=orbit();                       // 與 HUD 同源
+  const ratio=state.ratio;               // 初速比 v/v_圓
+  const vc=vcirc();                      // 圓軌道速度 √(GM/r)
+  const v0=ratio*vc;                     // 實際發射速度
+  const vesc=Math.SQRT2*vc;              // 逃逸速度 √2·v_c
+  const aTxt=isFinite(o.a)?o.a.toFixed(0):'∞';
+  const Ttxt=o.T?o.T.toFixed(2)+' s':'—（未閉合軌道）';
+  el.innerHTML=
+    `<h4>📐 計算公式（即時代入　GM = μ，r = 發射半徑 ${D0}）</h4>`
+    + frow('圓軌道速度 v_c','√(GM / r)',`√(${MU().toFixed(0)} / ${D0})`, vc.toFixed(1))
+    + frow('發射速度 v','(v/v_圓)·v_c',`${ratio.toFixed(2)}·${vc.toFixed(1)}`, v0.toFixed(1))
+    + frow('半長軸 a','−GM / 2ε　(ε=½v²−GM/r)','由能量 ε 解出', aTxt)
+    + frow('週期 T','2π·√(a³ / GM)','克卜勒第三定律 T²∝a³', Ttxt)
+    + frow('偏心率 e','√(1 + 2εh²/GM²)','由能量 ε 與角動量 h', o.e.toFixed(3))
+    + `<div class="frel">📈 <b>v=v_c → 圓</b>、<b>v&lt;v_c → 橢圓</b>　·　<b>v ≥ √2·v_c (≈${vesc.toFixed(1)}) → 逃逸</b>（拋物線/雙曲線）　·　<b>T² ∝ a³</b>：軌道越大週期越長　·　近恆星快、遠恆星慢（等面積，角動量守恆）。</div>`;
+}
 
 let sc,stars=[];
 const SPACE={skyTop:'#0a1030',skyBottom:'#03040c',vignette:'rgba(0,0,0,.6)'};
@@ -156,7 +179,7 @@ document.getElementById('reset').onclick=()=>{launch();playing=true;pb.classList
 const PRE={circle:{ratio:1,M:5},ellipse:{ratio:.82,M:5},high:{ratio:.62,M:5},escape:{ratio:1.45,M:5}};
 document.querySelectorAll('[data-preset]').forEach(b=>b.onclick=()=>{const p=PRE[b.dataset.preset];if(!p)return;
   setSlider('ratio',p.ratio);setSlider('M',p.M);launch();playing=true;pb.classList.add('on');pb.textContent='⏸ 暫停';});
-window.addEventListener('load',()=>{setupCanvases();launch();draw();requestAnimationFrame(loop);});
+window.addEventListener('load',()=>{setupCanvases();launch();updateFormula();draw();requestAnimationFrame(loop);});
 window.addEventListener('resize',()=>{setupCanvases();draw();});
 </script>
 </body>

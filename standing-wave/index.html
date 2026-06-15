@@ -61,6 +61,8 @@
 
   <div class="bar" id="sliders"></div>
 
+  <div class="formula" id="formula"></div>
+
   <div class="note">
     <b>物理重點：</b>弦上波速 <code>v = √(張力 T / 線密度 μ)</code>。兩端固定 → 弦長必是<b>半波長整數倍</b> <code>L = n·λ/2</code>，
     得諧波頻率 <code>f_n = n·v/2L</code>。驅動頻率落在 f_n 才共振、振幅放大；偏離就互相抵消、幾乎不動。
@@ -85,7 +87,7 @@ sliders.forEach(s=>{ state[s.id]=s.val;
     <input type="range" id="r_${s.id}" min="${s.min}" max="${s.max}" step="${s.step}" value="${s.val}">`;
   sBar.appendChild(d);
   d.querySelector('input').addEventListener('input',e=>{state[s.id]=parseFloat(e.target.value);
-    document.getElementById('v_'+s.id).textContent=`${fmt(state[s.id])} ${s.unit}`;});
+    document.getElementById('v_'+s.id).textContent=`${fmt(state[s.id])} ${s.unit}`;updateFormula();});
 });
 function fmt(x){return (Math.round(x*100)/100).toString();}
 function setSlider(id,val){state[id]=val;const r=document.getElementById('r_'+id);if(r)r.value=val;
@@ -135,10 +137,23 @@ function updateHud(n,af){const fn=n*f1(),lam=2*state.L/n;
   else{r.textContent='非共振：波互相抵消、振幅很小（試試 '+Math.round(f1())+'、'+Math.round(2*f1())+'、'+Math.round(3*f1())+' Hz）';r.style.background='rgba(138,153,173,.1)';r.style.color='#8a99ad';}}
 function chip(k,v2){return `<div class="chip">${k}<b>${v2}</b></div>`;}
 
+function frow(n,sym,sub,val){return `<div class="frow"><span class="fname">${n}</span><span class="fsym">${sym}</span><span class="fsub">= ${sub}</span><span class="fval">${val}</span></div>`;}
+function updateFormula(){
+  const T=state.T, L=state.L, mu=MU, f=state.f;
+  const vv=v(), f1v=f1(), n=nearest(), fn=n*f1v, lam=2*L/n, af=ampFactor();
+  document.getElementById('formula').innerHTML=
+    `<h4>📐 計算公式（即時代入　兩端固定弦・μ=${mu} kg/m）</h4>`
+    + frow('波速 v','√(T / μ)',`√(${T} / ${mu})`, vv.toFixed(0)+' m/s')
+    + frow('基頻 f₁','v / 2L',`${vv.toFixed(0)} / (2·${L})`, f1v.toFixed(1)+' Hz')
+    + frow('第 n 諧波 f_n','n·v / 2L',`${n}·${vv.toFixed(0)} / (2·${L})`, fn.toFixed(1)+' Hz')
+    + frow('波長 λ_n','2L / n',`2·${L} / ${n}`, lam.toFixed(2)+' m')
+    + `<div class="frel">📈 <b>張力變 4 倍 → 波速變 2 倍</b>（v ∝ √T）　·　<b>弦越長 f_n 越低</b>（f_n ∝ 1/L，調音原理）　·　驅動 f=${fmt(f)} Hz 最接近第 ${n} 諧波 ${fn.toFixed(0)} Hz，共振度 ${(af*100).toFixed(0)}%</div>`;
+}
+
 let lastTs=0;
 function loop(ts){const dt=lastTs?Math.min((ts-lastTs)/1000,0.05):0.016;lastTs=ts;phase+=state.f*dt*0.12;draw();requestAnimationFrame(loop);}
-document.querySelectorAll('[data-n]').forEach(b=>b.onclick=()=>{setSlider('f',Math.round(parseInt(b.dataset.n)*f1()));});
-window.addEventListener('load',()=>{setupCanvases();draw();requestAnimationFrame(loop);});
+document.querySelectorAll('[data-n]').forEach(b=>b.onclick=()=>{setSlider('f',Math.round(parseInt(b.dataset.n)*f1()));updateFormula();});
+window.addEventListener('load',()=>{setupCanvases();draw();updateFormula();requestAnimationFrame(loop);});
 window.addEventListener('resize',()=>{setupCanvases();draw();});
 </script>
 </body>

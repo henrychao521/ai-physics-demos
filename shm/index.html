@@ -74,6 +74,8 @@
     <button class="pbtn" data-preset="longL">長擺(慢)</button>
   </div>
 
+  <div class="formula" id="formula"></div>
+
   <div class="note">
     <b>物理重點：</b>簡諧運動的回復力與位移成正比、方向相反（<code>F = −kx</code>），所以位置 <code>x = A·cos(ωt)</code> 是正弦曲線。
     <b>圓周投影</b>：等速圓周運動投影到一軸恰好就是 SHM——這就是左圖圓上的點與中間彈簧高度永遠一致的原因。
@@ -100,7 +102,7 @@ sliders.forEach(s=>{ state[s.id]=s.val;
     <input type="range" id="r_${s.id}" min="${s.min}" max="${s.max}" step="${s.step}" value="${s.val}">`;
   sBar.appendChild(d);
   d.querySelector('input').addEventListener('input',e=>{state[s.id]=parseFloat(e.target.value);
-    document.getElementById('v_'+s.id).textContent=`${fmt(state[s.id])} ${s.unit}`;});
+    document.getElementById('v_'+s.id).textContent=`${fmt(state[s.id])} ${s.unit}`;updateFormula();});
 });
 function fmt(x){return (Math.round(x*100)/100).toString();}
 function setSlider(id,val){state[id]=val;const r=document.getElementById('r_'+id);if(r)r.value=val;
@@ -153,6 +155,19 @@ function drawStats(){const Ts=2*Math.PI/wS(),Tp=2*Math.PI/wP();
   const rows=[['彈簧 ω=√(k/m)',wS().toFixed(2)+' rad/s','#4cc2ff'],['彈簧週期 T=2π√(m/k)',Ts.toFixed(2)+' s','#4cc2ff'],
     ['單擺 ω=√(g/L)',wP().toFixed(2)+' rad/s','#ff6b9d'],['單擺週期 T=2π√(L/g)',Tp.toFixed(2)+' s','#ff6b9d']];
   document.getElementById('stats').innerHTML=rows.map(r=>`<div class="box"><div class="k">${r[0]}</div><div class="v" style="color:${r[2]}">${r[1]}</div></div>`).join('');}
+function frow(n,sym,sub,val){return `<div class="frow"><span class="fname">${n}</span><span class="fsym">${sym}</span><span class="fsub">= ${sub}</span><span class="fval">${val}</span></div>`;}
+function updateFormula(){
+  const k=state.k,m=state.m,L=state.L,g=state.g;
+  const ws=wS(),wp=wP();                 // 與 HUD 同一來源：彈簧 ω=√(k/m)、單擺 ω=√(g/L)
+  const Ts=2*Math.PI/ws,Tp=2*Math.PI/wp; // 與 drawStats 同一算法
+  document.getElementById('formula').innerHTML=
+    `<h4>📐 計算公式（即時代入　單擺取小角度近似）</h4>`+
+    frow('彈簧角頻率 ω','√(k/m)',`√(${fmt(k)}/${fmt(m)})`, ws.toFixed(2)+' rad/s')+
+    frow('彈簧週期 T','2π√(m/k)',`2π√(${fmt(m)}/${fmt(k)})`, Ts.toFixed(2)+' s')+
+    frow('單擺角頻率 ω','√(g/L)',`√(${fmt(g)}/${fmt(L)})`, wp.toFixed(2)+' rad/s')+
+    frow('單擺週期 T','2π√(L/g)',`2π√(${fmt(L)}/${fmt(g)})`, Tp.toFixed(2)+' s')+
+    `<div class="frel">📈 <b>彈簧：k 變 4 倍 → ω 變 2 倍、T 減半</b>，質量 m 越大則振動越慢　·　<b>單擺：擺長 L 變 4 倍 → T 變 2 倍</b>，與質量、振幅都無關（等時性）　·　兩者週期 <b>都與振幅 A 無關</b>。</div>`;
+}
 function drawPlot(){const W=pc._w,H=pc._h,mL=14,mR=10,mT=10,mB=14;pc.clearRect(0,0,W,H);
   const win=Math.max(2*2*Math.PI/wS(),2*2*Math.PI/wP()),t0=simT-win,X=t=>mL+(t-t0)/win*(W-mL-mR),Y=v=>H/2-v*(H/2-mT);
   pc.strokeStyle='#141828';pc.beginPath();pc.moveTo(mL,H/2);pc.lineTo(W-mR,H/2);pc.stroke();
@@ -166,8 +181,8 @@ function loop(ts){const dt=lastTs?Math.min((ts-lastTs)/1000,0.05):0;lastTs=ts;if
 const pb=document.getElementById('play');
 pb.onclick=()=>{playing=!playing;pb.classList.toggle('on',playing);pb.textContent=playing?'⏸ 暫停':'▶ 播放';};
 const PRE={match:{A:1,k:12,m:1.5,L:1,g:9.8},stiff:{A:1,k:36,m:1,L:1,g:9.8},longL:{A:1,k:12,m:1.5,L:2.6,g:9.8}};
-document.querySelectorAll('[data-preset]').forEach(b=>b.onclick=()=>{const p=PRE[b.dataset.preset];if(!p)return;['A','k','m','L','g'].forEach(k=>setSlider(k,p[k]));simT=0;});
-window.addEventListener('load',()=>{setupCanvases();draw();requestAnimationFrame(loop);});
+document.querySelectorAll('[data-preset]').forEach(b=>b.onclick=()=>{const p=PRE[b.dataset.preset];if(!p)return;['A','k','m','L','g'].forEach(k=>setSlider(k,p[k]));simT=0;updateFormula();});
+window.addEventListener('load',()=>{setupCanvases();updateFormula();draw();requestAnimationFrame(loop);});
 window.addEventListener('resize',()=>{setupCanvases();draw();});
 </script>
 </body>

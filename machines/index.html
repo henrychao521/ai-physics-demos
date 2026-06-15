@@ -68,6 +68,8 @@
     <button class="pbtn" data-preset="adv">小力撬大物</button>
   </div>
 
+  <div class="formula" id="formula"></div>
+
   <div class="note" id="note"></div>
   <footer>純前端 HTML / Canvas（SIM 工具庫）。</footer>
 </div>
@@ -78,6 +80,27 @@ const lever={w1:20,d1:3,w2:30,d2:2}, pulley={W:120,N:2};
 let sc;
 const LAB={skyTop:'#18223a',skyBottom:'#0b1120',ground:'#222c44',groundDark:'#121829',grid:'rgba(120,150,210,.22)',horizon:'rgba(150,180,230,.3)',vignette:'rgba(0,0,0,.45)'};
 function fmt(x){return (Math.round(x*100)/100).toString();}
+function frow(n,sym,sub,val){return `<div class="frow"><span class="fname">${n}</span><span class="fsym">${sym}</span><span class="fsub">= ${sub}</span><span class="fval">${val}</span></div>`;}
+function updateFormula(){
+  const el=document.getElementById('formula');if(!el)return;
+  if(mode==='lever'){
+    const {L,R}=leverTorques();
+    el.innerHTML=
+      `<h4>📐 計算公式（即時代入　力矩平衡）</h4>`+
+      frow('左力矩 τ₁','W₁·d₁',`${lever.w1}·${lever.d1}`, L.toFixed(1)+' N·m')+
+      frow('右力矩 τ₂','W₂·d₂',`${lever.w2}·${lever.d2}`, R.toFixed(1)+' N·m')+
+      frow('力矩差 Δτ','τ₂−τ₁',`${R.toFixed(1)}−${L.toFixed(1)}`, (R-L).toFixed(1)+' N·m')+
+      `<div class="frel">📈 <b>平衡條件 W₁·d₁ = W₂·d₂</b>：兩側力矩相等才水平　·　<b>τ ∝ d</b>：力臂加倍 → 力矩加倍，故小力配長力臂可撬大重量配短力臂　·　Δτ≠0 → 往力矩較大那側傾倒。</div>`;
+  }else{
+    const N=pulley.N,F=pulley.W/N;
+    el.innerHTML=
+      `<h4>📐 計算公式（即時代入　滑輪組・功守恆）</h4>`+
+      frow('施力 F','W / N',`${pulley.W} / ${N}`, F.toFixed(1)+' N')+
+      frow('機械利益 MA','W / F = N',`${pulley.W} / ${F.toFixed(1)}`, ''+N)+
+      frow('拉繩長 s','N · h',`${N} · h`, N+'·h')+
+      `<div class="frel">📈 <b>F ∝ 1/N</b>：支撐繩數加倍 → 施力減半（更省力）　·　<b>機械利益 = N</b>　·　<b>功守恆 W·h = F·(N·h)</b>：省 N 倍力就費 N 倍距離，機械不能省功。</div>`;
+  }
+}
 const sBar=document.getElementById('sliders');
 function buildControls(){ sBar.innerHTML='';
   const specs= mode==='lever' ? [
@@ -147,7 +170,7 @@ function drawPulley(){const W=sc._w,H=sc._h,N=pulley.N,load=pulley.W,F=load/N,bx
   sc.fillStyle='rgba(124,255,178,.8)';sc.font='12px system-ui';sc.fillText(N+' 條繩分擔載重',bx-150,botY+96);
   sc.fillStyle='rgba(160,180,220,.6)';sc.fillText('載重升高 1，需拉繩 '+N+'（省力但費距離）',bx-150,botY+114);
 }
-function draw(){if(mode==='lever')drawLever();else drawPulley();drawStats();}
+function draw(){if(mode==='lever')drawLever();else drawPulley();drawStats();updateFormula();}
 function drawStats(){let rows,eqt,eqc,eqbg;
   if(mode==='lever'){const {L,R}=leverTorques(),bal=Math.abs(L-R)<0.5;
     rows=[['左力矩 W₁·d₁',L.toFixed(1)+' N·m','#4cc2ff'],['右力矩 W₂·d₂',R.toFixed(1)+' N·m','#ff6b9d'],['力矩差',(R-L).toFixed(1)+' N·m','#ffce54']];

@@ -63,6 +63,23 @@ a{color:var(--accent)}
 .btn:hover{border-color:var(--accent)}
 .btn.on{background:var(--accent);color:#04121c;border-color:var(--accent);font-weight:700}
 
+/* ---- 計算公式面板（即時代入；各模擬共用）---- */
+.formula{background:linear-gradient(180deg,var(--panel2),var(--panel));border:1px solid var(--line);
+  border-radius:var(--radius);padding:13px 16px;margin-top:14px}
+.formula h4{margin:0 0 8px;font-size:.82rem;color:var(--accent);font-weight:800;letter-spacing:.3px}
+.formula .frow{display:flex;flex-wrap:wrap;align-items:baseline;gap:4px 10px;padding:7px 0;
+  border-top:1px dashed var(--line);font-variant-numeric:tabular-nums}
+.formula .frow:first-of-type{border-top:none;padding-top:2px}
+.formula .fname{color:var(--muted);font-size:.8rem;min-width:72px}
+.formula .fsym{color:var(--txt);font-family:ui-monospace,"SF Mono",Menlo,monospace;font-size:.9rem}
+.formula .fsub{color:var(--faint);font-family:ui-monospace,Menlo,monospace;font-size:.82rem}
+.formula .fval{color:var(--accent2);font-weight:700;font-size:.95rem;margin-left:auto;
+  font-family:ui-monospace,Menlo,monospace;white-space:nowrap}
+.formula .frel{margin-top:9px;padding-top:9px;border-top:1px solid var(--line);
+  color:var(--muted);font-size:.82rem;line-height:1.75}
+.formula .frel b{color:var(--green)}
+.formula .frel code{background:var(--bg2);padding:1px 6px;border-radius:5px;color:var(--accent);font-size:.86em}
+
 input[type=range]{accent-color:var(--accent)}
 /* 觸控裝置：放大按鈕與滑桿命中區到 >=40px，桌面滑鼠不受影響 */
 @media (pointer:coarse){

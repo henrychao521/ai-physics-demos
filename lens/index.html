@@ -67,6 +67,8 @@
     <button class="pbtn" data-preset="near">放大鏡(虛像)</button>
   </div>
 
+  <div class="formula" id="formula"></div>
+
   <div class="note">
     <b>物理重點：</b>三主光線：①平行軸的光經透鏡<b>折向焦點</b>；②通過<b>透鏡中心</b>的光直行；③通過<b>焦點</b>的光經透鏡後<b>平行射出</b>。
     交會處就是像。成像公式 <code>1/f = 1/p + 1/q</code>，放大率 <code>m = −q/p</code>（負號＝倒立）。q&gt;0 為<b>實像</b>（可投影、倒立）；q&lt;0 為<b>虛像</b>（眼睛延長線看到、正立）。
@@ -97,6 +99,22 @@ function setSlider(id,val){state[id]=val;const r=document.getElementById('r_'+id
   const s=sliders.find(z=>z.id===id);if(s)document.getElementById('v_'+id).textContent=`${fmt(val)} ${s.unit}`;}
 function f(){return convex?state.fa:-state.fa;}
 function image(){const p=state.p,F=f(),q=p*F/(p-F),m=-q/p;return {q,m};}
+
+function frow(n,sym,sub,val){return `<div class="frow"><span class="fname">${n}</span><span class="fsym">${sym}</span><span class="fsub">= ${sub}</span><span class="fval">${val}</span></div>`;}
+function updateFormula(){
+  const p=state.p,h=state.h,F=f(),{q,m}=image();
+  const qStr=isFinite(q)?q.toFixed(1)+' cm':'∞（成像於無窮遠）';
+  const mStr=isFinite(m)?m.toFixed(2):'∞';
+  const ihStr=isFinite(m)?(m*h).toFixed(1)+' cm':'∞';
+  const kind=!isFinite(q)?'—':(q>0?'實像（倒立）':'虛像（正立）');
+  document.getElementById('formula').innerHTML=
+    `<h4>📐 計算公式（即時代入　薄透鏡・近軸成像）</h4>`
+    + frow('焦距 f（'+(convex?'凸透鏡 f>0':'凹透鏡 f<0')+'）','±|f|',`${convex?'+':'−'}${state.fa}`, F+' cm')
+    + frow('像距 q','1/f = 1/p + 1/q → q = p·f /(p−f)',`${p}·(${F}) / (${p}−(${F}))`, qStr)
+    + frow('放大率 m','m = −q / p',`−(${isFinite(q)?q.toFixed(1):'∞'}) / ${p}`, mStr+'（'+kind+'）')
+    + frow('像高 h′','h′ = m · h',`${mStr}·${h}`, ihStr)
+    + `<div class="frel">📈 <b>1/q = 1/f − 1/p</b>：物距 p 越靠近焦距 f，像距 |q| 與放大率 |m| 越大　·　<b>p = f 時 q→∞</b>（成像於無窮遠）　·　<b>q>0 為實像（倒立可投影）、q<0 為虛像（正立放大鏡）</b>；凹透鏡 f<0 恆得縮小正立虛像。</div>`;
+}
 
 let sc,SCALE=1,AX=0,AY=0;
 const OPTICS={skyTop:'#f4f7fb',skyBottom:'#dbe6f1',vignette:'rgba(60,90,130,.12)'};
@@ -133,6 +151,7 @@ function draw(){setupReady();layout();const W=sc._w,H=sc._h;
   // 像
   if(Math.abs(q)<200)arrowObj(q,ih,q>0?'#c0392b':'#e07a3c','像'+(q>0?'(實)':'(虛)'),q<0);
   drawStats(q,m);
+  updateFormula();
 }
 function arrowObj(xc,yc,col,lab,dashed){sc.strokeStyle=col;sc.fillStyle=col;sc.lineWidth=3.5;sc.setLineDash(dashed?[5,4]:[]);
   sc.beginPath();sc.moveTo(X(xc),AY);sc.lineTo(X(xc),Y(yc));sc.stroke();sc.setLineDash([]);

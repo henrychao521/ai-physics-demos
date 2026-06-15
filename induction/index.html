@@ -75,6 +75,8 @@
     <button class="pbtn" data-preset="strong">強磁場</button>
   </div>
 
+  <div class="formula" id="formula"></div>
+
   <div class="note">
     <b>物理重點：</b>磁通量 <code>Φ = N·B·A·cosθ</code>。線圈以 ω 轉動時 θ=ωt，<b>法拉第定律</b> <code>EMF = −dΦ/dt = N·B·A·ω·sin(ωt)</code>——
     是<b>正弦交流</b>電壓，峰值 <code>NBAω</code>。Φ 與 EMF <b>相差 90°</b>：Φ 變化最快時 EMF 最大、Φ 最大時 EMF 為零。負號是<b>冷次定律</b>（能量守恆）。
@@ -97,14 +99,29 @@ sliders.forEach(s=>{ state[s.id]=s.val;
   d.innerHTML=`<label><span>${s.name}</span><span class="v" id="v_${s.id}">${fmt(s.val)} ${s.unit}</span></label>
     <input type="range" id="r_${s.id}" min="${s.min}" max="${s.max}" step="${s.step}" value="${s.val}">`;
   sBar.appendChild(d);
-  d.querySelector('input').addEventListener('input',e=>{state[s.id]=parseFloat(e.target.value);document.getElementById('v_'+s.id).textContent=`${fmt(state[s.id])} ${s.unit}`;});
+  d.querySelector('input').addEventListener('input',e=>{state[s.id]=parseFloat(e.target.value);document.getElementById('v_'+s.id).textContent=`${fmt(state[s.id])} ${s.unit}`;updateFormula();});
 });
 function fmt(x){return (Math.round(x*100)/100).toString();}
 function setSlider(id,val){state[id]=val;const r=document.getElementById('r_'+id);if(r)r.value=val;
-  const s=sliders.find(z=>z.id===id);if(s)document.getElementById('v_'+id).textContent=`${fmt(val)} ${s.unit}`;}
+  const s=sliders.find(z=>z.id===id);if(s)document.getElementById('v_'+id).textContent=`${fmt(val)} ${s.unit}`;updateFormula();}
 function flux(th){return state.N*state.B*A*Math.cos(th);}
 function emf(th){return state.N*state.B*A*state.w*Math.sin(th);}
 function emfPeak(){return state.N*state.B*A*state.w;}
+
+function frow(n,sym,sub,val){return `<div class="frow"><span class="fname">${n}</span><span class="fsym">${sym}</span><span class="fsub">= ${sub}</span><span class="fval">${val}</span></div>`;}
+function updateFormula(){
+  const N=state.N,B=state.B,w=state.w;
+  const peak=emfPeak();          // NBAω，與 HUD「EMF 峰值」同源
+  const T=2*Math.PI/w;           // 交流週期，與 HUD「交流週期」同源
+  const ferr=N*B*A;              // 磁通峰值 NBA（A=1）
+  document.getElementById('formula').innerHTML=
+    `<h4>📐 計算公式（即時代入　面積 A=1 m²）</h4>`+
+    frow('磁通峰值 Φ₀','N·B·A',`${N}·${fmt(B)}·1`, ferr.toFixed(1)+' Wb')+
+    frow('EMF 峰值 ε₀','N·B·A·ω',`${N}·${fmt(B)}·1·${fmt(w)}`, peak.toFixed(1)+' V')+
+    frow('感應電動勢 ε','ε₀·sin(ωt)',`${peak.toFixed(1)}·sin(ωt)`, '峰值 '+peak.toFixed(1)+' V')+
+    frow('交流週期 T','2π / ω',`2π / ${fmt(w)}`, T.toFixed(2)+' s')+
+    `<div class="frel">📈 <b>ε₀ ∝ ω·B·N</b>：轉速、磁場或匝數任一加倍 → 電壓峰值加倍　·　<b>Φ 與 ε 相差 90°</b>：Φ 最大時 ε=0，Φ 變化最快時 ε 最大　·　<b>T ∝ 1/ω</b>：轉得越快週期越短、頻率越高。</div>`;
+}
 
 let gc,pc;
 const COOL={skyTop:'#0c1830',skyBottom:'#060b1a',vignette:'rgba(0,0,0,.5)'};
@@ -148,7 +165,7 @@ pb.onclick=()=>{playing=!playing;pb.classList.toggle('on',playing);pb.textConten
 document.getElementById('reset').onclick=()=>{theta=0;};
 const PRE={slow:{w:1,B:1.5,N:20},fast:{w:5,B:1.5,N:20},strong:{w:2,B:3,N:30}};
 document.querySelectorAll('[data-preset]').forEach(b=>b.onclick=()=>{const p=PRE[b.dataset.preset];if(!p)return;['w','B','N'].forEach(k=>setSlider(k,p[k]));});
-window.addEventListener('load',()=>{setupCanvases();requestAnimationFrame(loop);});
+window.addEventListener('load',()=>{setupCanvases();updateFormula();requestAnimationFrame(loop);});
 window.addEventListener('resize',()=>{setupCanvases();});
 </script>
 </body>

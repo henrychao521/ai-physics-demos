@@ -64,6 +64,8 @@
 
   <div class="bar" id="sliders"></div>
 
+  <div class="formula" id="formula"></div>
+
   <div class="note">
     <b>物理重點：</b>勞侖茲力 <code>F = qv×B</code>，大小 <code>F = qvB</code>（v⊥B 時），方向用右手定則、永遠<b>垂直速度</b> → 不作功、速率不變、提供向心力。
     由 <code>qvB = mv²/r</code> 得迴旋半徑 <code>r = mv/(qB)</code>、週期 <code>T = 2πm/(qB)</code>（與速率無關！）。<b>反轉磁場或電荷</b>旋轉方向就相反。這是質譜儀、迴旋加速器、極光的原理。
@@ -92,7 +94,7 @@ function fmt(x){return (Math.round(x*100)/100).toString();}
 let sc,p={x:0,y:0},vel={x:0,y:0},trail=[];
 function radius(){return state.m*state.v/(Math.abs(qsign)*state.B);}
 function omega(){return qsign*state.B*Bdir/state.m;}
-function reset(){p={x:sc?sc._w/2:300,y:sc?sc._h/2:250};vel={x:state.v,y:0};trail=[];}
+function reset(){p={x:sc?sc._w/2:300,y:sc?sc._h/2:250};vel={x:state.v,y:0};trail=[];updateFormula();}
 function step(dt){const w=omega(),ang=-w*dt,cosA=Math.cos(ang),sinA=Math.sin(ang);
   const nx=vel.x*cosA-vel.y*sinA,ny=vel.x*sinA+vel.y*cosA;vel.x=nx;vel.y=ny;p.x+=vel.x*dt;p.y+=vel.y*dt;
   trail.push({x:p.x,y:p.y});if(trail.length>1200)trail.shift();
@@ -122,6 +124,20 @@ function drawStats(){const r=radius(),T=2*Math.PI*state.m/(Math.abs(qsign)*state
   const rows=[['迴旋半徑 r=mv/qB',r.toFixed(1),'#7CFFB2'],['週期 T=2πm/qB',T.toFixed(2),'#e8eef6'],['勞侖茲力 F=qvB',F.toFixed(1),'#ff5470'],['速率 v(守恆)',state.v.toFixed(0),'#43d17a']];
   document.getElementById('stats').innerHTML=rows.map(x=>`<div class="box"><div class="k">${x[0]}</div><div class="v" style="color:${x[2]}">${x[1]}</div></div>`).join('');}
 
+function frow(n,sym,sub,val){return `<div class="frow"><span class="fname">${n}</span><span class="fsym">${sym}</span><span class="fsub">= ${sub}</span><span class="fval">${val}</span></div>`;}
+function updateFormula(){
+  const q=Math.abs(qsign),B=state.B,v=state.v,m=state.m;
+  const r=radius();                       // 與 HUD 同源：r = mv/(qB)
+  const T=2*Math.PI*m/(q*B);              // 與 HUD 同源：T = 2πm/(qB)
+  const F=q*v*B;                          // 與 HUD 同源：F = qvB
+  document.getElementById('formula').innerHTML=
+    `<h4>📐 計算公式（即時代入　v⊥B・等速圓周）</h4>`
+    + frow('勞侖茲力 F','q·v·B',`${q}·${v}·${B}`, F.toFixed(1))
+    + frow('迴旋半徑 r','m·v / (q·B)',`${m}·${v} / (${q}·${B})`, r.toFixed(1))
+    + frow('週期 T','2π·m / (q·B)',`2π·${m} / (${q}·${B})`, T.toFixed(2))
+    + `<div class="frel">📈 <b>r ∝ v</b>：速率加倍 → 圓半徑加倍　·　<b>B 越強 → r 越小、T 越短</b>　·　<b>T 與 v 無關</b>（迴旋週期只看 m、q、B）；力 F 恆 ⊥ v → 不作功、速率守恆。</div>`;
+}
+
 let lastTs=0,playing=true;
 function loop(ts){const dt=lastTs?Math.min((ts-lastTs)/1000,0.04):0;lastTs=ts;if(playing)for(let i=0;i<3;i++)step(dt/3);draw();requestAnimationFrame(loop);}
 const pb=document.getElementById('play');
@@ -132,7 +148,7 @@ bIn.onclick=()=>{Bdir=-1;bIn.classList.add('on');bOut.classList.remove('on');res
 bOut.onclick=()=>{Bdir=1;bOut.classList.add('on');bIn.classList.remove('on');reset();};
 qP.onclick=()=>{qsign=1;qP.classList.add('on');qN.classList.remove('on');reset();};
 qN.onclick=()=>{qsign=-1;qN.classList.add('on');qP.classList.remove('on');reset();};
-window.addEventListener('load',()=>{setupCanvases();reset();requestAnimationFrame(loop);});
+window.addEventListener('load',()=>{setupCanvases();reset();updateFormula();requestAnimationFrame(loop);});
 window.addEventListener('resize',()=>{setupCanvases();reset();});
 </script>
 </body>

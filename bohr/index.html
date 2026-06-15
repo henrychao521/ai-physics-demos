@@ -54,6 +54,8 @@
     <button class="btn" data-tr="3,2">Hα (3→2)</button><button class="btn" data-tr="4,2">Hβ (4→2)</button>
     <button class="btn" data-tr="5,2">Hγ (5→2)</button><button class="btn" data-tr="2,1">Lyman-α (2→1)</button></div>
 
+  <div class="formula" id="formula"></div>
+
   <div class="grid2">
     <div class="stage"><div class="lab">波耳軌域（電子躍遷放出光子）</div><div class="sub" id="sub"></div><canvas id="atom" width="430" height="360"></canvas></div>
     <div class="stage"><div class="lab">能階圖（箭頭＝躍遷）</div><canvas id="levels" width="430" height="360"></canvas></div>
@@ -75,13 +77,24 @@
 const S=SIM; let ni=3,nf=2,anim=1;
 function En(n){return -13.6/(n*n);} function dE(){return En(ni)-En(nf);} function lambda(){return 1240/dE();}
 function series(){return nf===1?'來曼系 (紫外)':nf===2?'巴耳末系 (可見光)':nf===3?'帕申系 (紅外)':'n_f='+nf;}
+function frow(n,sym,sub,val){return `<div class="frow"><span class="fname">${n}</span><span class="fsym">${sym}</span><span class="fsub">= ${sub}</span><span class="fval">${val}</span></div>`;}
+function updateFormula(){
+  const Ei=En(ni), Ef=En(nf), de=dE(), lam=lambda();
+  document.getElementById('formula').innerHTML=
+    `<h4>📐 計算公式（即時代入　氫原子・hc=1240 eV·nm）</h4>`+
+    frow('起始能階 E<sub>'+ni+'</sub>','−13.6 / n_i²',`−13.6 / ${ni}²`, Ei.toFixed(2)+' eV')+
+    frow('末態能階 E<sub>'+nf+'</sub>','−13.6 / n_f²',`−13.6 / ${nf}²`, Ef.toFixed(2)+' eV')+
+    frow('光子能量 ΔE','13.6·(1/n_f² − 1/n_i²)',`13.6·(1/${nf}² − 1/${ni}²)`, de.toFixed(2)+' eV')+
+    frow('波長 λ','1240 / ΔE',`1240 / ${de.toFixed(2)}`, lam.toFixed(0)+' nm')+
+    `<div class="frel">📈 <b>能階越高越擠</b>：E_n ∝ −1/n²，n 越大能量越接近 0（束縛越弱）　·　<b>ΔE 越大 → λ 越短</b>（λ ∝ 1/ΔE）：跳得越深放出越短波長的光　·　<b>落到 n_f=2 即巴耳末系</b>（可見光，Hα 紅、Hβ 青、Hγ 紫）。</div>`;
+}
 function wl2rgb(lam){let r,g,b;if(lam<380)return[170,130,255];if(lam>720)return[150,50,50];
   if(lam<440){r=-(lam-440)/60;g=0;b=1;}else if(lam<490){r=0;g=(lam-440)/50;b=1;}else if(lam<510){r=0;g=1;b=-(lam-510)/20;}
   else if(lam<580){r=(lam-510)/70;g=1;b=0;}else if(lam<645){r=1;g=-(lam-645)/65;b=0;}else{r=1;g=0;b=0;}
   return[Math.round(r*255),Math.round(g*255),Math.round(b*255)];}
 function buildN(rowId,vals,getCur,onPick){const row=document.getElementById(rowId);row.innerHTML='';
   vals.forEach(v=>{const b=document.createElement('button');b.className='nbtn';b.textContent=v;if(v===getCur())b.classList.add('on');b.onclick=()=>{onPick(v);refreshBtns();};row.appendChild(b);});}
-function refreshBtns(){buildN('niRow',[2,3,4,5,6],()=>ni,v=>{ni=v;if(nf>=ni)nf=ni-1;});buildN('nfRow',[1,2,3,4,5].filter(v=>v<ni),()=>nf,v=>{nf=v;});draw();}
+function refreshBtns(){buildN('niRow',[2,3,4,5,6],()=>ni,v=>{ni=v;if(nf>=ni)nf=ni-1;});buildN('nfRow',[1,2,3,4,5].filter(v=>v<ni),()=>nf,v=>{nf=v;});draw();updateFormula();}
 function _hd(c,w,h){var d=window.devicePixelRatio||1;c.width=w*d;c.height=h*d;var x=c.getContext('2d');x.setTransform(d,0,0,d,0,0);return x;}
 const atom=document.getElementById('atom'),ac=_hd(atom,430,360);
 const lv=document.getElementById('levels'),lc=_hd(lv,430,360);
@@ -122,7 +135,7 @@ let animating=false;
 function emitPhoton(){anim=0;const t0=performance.now();(function go(){const e=Math.min(1,(performance.now()-t0)/700);anim=e;draw();if(e<1)requestAnimationFrame(go);else{anim=1;draw();}})();}
 document.getElementById('emit').onclick=emitPhoton;
 document.querySelectorAll('[data-tr]').forEach(b=>b.onclick=()=>{const[a,c]=b.dataset.tr.split(',').map(Number);ni=a;nf=c;refreshBtns();emitPhoton();});
-window.addEventListener('load',()=>{refreshBtns();anim=1;draw();});
+window.addEventListener('load',()=>{refreshBtns();anim=1;draw();updateFormula();});
 </script>
 </body>
 </html>

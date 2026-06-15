@@ -65,6 +65,8 @@
 
   <div class="bar" id="sliders"></div>
 
+  <div class="formula" id="formula"></div>
+
   <div class="note">
     <b>物理重點：</b>折射率 n 越大，光在其中越慢、越「難轉」。<b>Snell 定律</b> <code>n₁ sinθ₁ = n₂ sinθ₂</code>：進入較密介質（n 變大）光<b>偏向法線</b>；
     進入較疏介質光<b>偏離法線</b>，當入射角大到 sinθ₂ &gt; 1 就<b>全反射</b>。臨界角 <code>θc = sin⁻¹(n₂/n₁)</code>（須 n₁ &gt; n₂）。
@@ -96,6 +98,30 @@ function setSlider(id,val){state[id]=val;const r=document.getElementById('r_'+id
   const s=sliders.find(z=>z.id===id);if(s)document.getElementById('v_'+id).textContent=`${fmt(val)} ${s.unit}`;}
 function solve(){const th1=state.th1*Math.PI/180,s2=state.n1/state.n2*Math.sin(th1);
   const tir=s2>1,th2=tir?null:Math.asin(s2),tc=state.n1>state.n2?Math.asin(state.n2/state.n1)*180/Math.PI:null;return {th1,th2,tir,tc};}
+
+function frow(n,sym,sub,val){return `<div class="frow"><span class="fname">${n}</span><span class="fsym">${sym}</span><span class="fsub">= ${sub}</span><span class="fval">${val}</span></div>`;}
+function updateFormula(){
+  const n1=state.n1,n2=state.n2,th1=state.th1;
+  const {th2,tir,tc}=solve();
+  const s2=n1/n2*Math.sin(th1*Math.PI/180);            // sinθ₂（與 solve 同源）
+  const th2deg=tir?null:th2*180/Math.PI;
+  // 折射角列：全反射時 sinθ₂>1 無解
+  const refrVal=tir?'sinθ₂>1 → 無折射（全反射）':th2deg.toFixed(1)+'°';
+  // 臨界角列：須 n₁>n₂ 才存在
+  const critSub=n1>n2?`sin⁻¹(${n2.toFixed(2)} / ${n1.toFixed(2)})`:'n₁ ≤ n₂，無臨界角';
+  const critVal=tc!==null?tc.toFixed(1)+'°':'—';
+  document.getElementById('formula').innerHTML=
+    `<h4>📐 計算公式（即時代入　Snell 定律）</h4>`
+    + frow('Snell 定律','n₁·sinθ₁ = n₂·sinθ₂',
+        `${n1.toFixed(2)}·sin${th1}° = ${n2.toFixed(2)}·sinθ₂`,
+        `n₁sinθ₁ = ${(n1*Math.sin(th1*Math.PI/180)).toFixed(3)}`)
+    + frow('折射角 θ₂','sin⁻¹( n₁·sinθ₁ / n₂ )',
+        `sin⁻¹( ${n1.toFixed(2)}·sin${th1}° / ${n2.toFixed(2)} )`,
+        refrVal)
+    + frow('臨界角 θc','sin⁻¹( n₂ / n₁ )',
+        critSub, critVal)
+    + `<div class="frel">📈 <b>進密介質(n₂&gt;n₁)→偏向法線(θ₂&lt;θ₁)</b>　·　<b>進疏介質(n₂&lt;n₁)→偏離法線(θ₂&gt;θ₁)</b>　·　<b>θ₁ &gt; θc 全反射</b>（光纖原理；臨界角僅在密→疏時存在）。</div>`;
+}
 
 let sc;
 function setupCanvases(){sc=S.fit(document.getElementById('scene'),1.18);}
@@ -130,6 +156,7 @@ function draw(){const W=sc._w,H=sc._h,O={x:W/2,y:H/2};
   if(tc!==null){const tcr=tc*Math.PI/180;rayA(O,-Math.sin(tcr),-Math.cos(tcr),200,'rgba(232,69,60,.5)',1.5,[3,4]);
     sc.fillStyle='#c0392b';sc.fillText('臨界角 '+tc.toFixed(1)+'°',O.x-Math.sin(tcr)*210-20,O.y-Math.cos(tcr)*210);}
   drawStats(th2,tir,tc);
+  updateFormula();
 }
 function drawStats(th2,tir,tc){
   const rows=[['入射角 θ₁',state.th1+'°','#1f9d55'],['折射角 θ₂',tir?'—(全反射)':(th2*180/Math.PI).toFixed(1)+'°','#e8a000'],

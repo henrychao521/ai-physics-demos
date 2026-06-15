@@ -66,6 +66,8 @@
 
   <div class="bar" id="sliders"></div>
 
+  <div class="formula" id="formula"></div>
+
   <div class="note">
     <b>物理重點：</b>浮力 <code>F_浮 = ρ_液·V_沒入·g</code>（排開液體的重量）。物體重 <code>W = ρ_物·V·g</code>。
     漂浮平衡時 F_浮 = W，可推得<b>沒入比例 = ρ_物 / ρ_液</b>——所以冰（917）在海水（1025）約露出 1/10（冰山一角）。
@@ -90,9 +92,24 @@ sliders.forEach(s=>{ state[s.id]=s.val;
     <input type="range" id="r_${s.id}" min="${s.min}" max="${s.max}" step="${s.step}" value="${s.val}">`;
   sBar.appendChild(d);
   d.querySelector('input').addEventListener('input',e=>{state[s.id]=parseFloat(e.target.value);
-    document.getElementById('v_'+s.id).textContent=`${fmt(state[s.id])} ${s.unit}`;});
+    document.getElementById('v_'+s.id).textContent=`${fmt(state[s.id])} ${s.unit}`;updateFormula();});
 });
 function fmt(x){return (Math.round(x*100)/100).toString();}
+function frow(n,sym,sub,val){return `<div class="frow"><span class="fname">${n}</span><span class="fsym">${sym}</span><span class="fsub">= ${sub}</span><span class="fval">${val}</span></div>`;}
+function updateFormula(){
+  const rO=state.rhoO, rL=state.rhoL, VL=state.V, Vm=VL/1000;   // V：L → m³
+  const W=rO*Vm*g;                                              // 重量 W = ρ_物·V·g
+  const fracEq=Math.min(1,rO/rL);                               // 平衡沒入比例（漂浮 ρ_物/ρ_液，下沉封頂 1）
+  const buoy=rL*fracEq*Vm*g;                                    // 浮力 F_浮 = ρ_液·V_沒入·g
+  const apparent=Math.max(0,W-buoy);                            // 水中視重 = W − F_浮
+  document.getElementById('formula').innerHTML=
+    `<h4>📐 計算公式（即時代入　平衡狀態）</h4>`
+    + frow('重量 W','ρ_物·V·g',`${rO}·${Vm.toFixed(3)}·${g}`, W.toFixed(1)+' N')
+    + frow('沒入比例 f','ρ_物 / ρ_液',`${rO} / ${rL}`, (fracEq*100).toFixed(0)+' %')
+    + frow('浮力 F_浮','ρ_液·(f·V)·g',`${rL}·${(fracEq*Vm).toFixed(3)}·${g}`, buoy.toFixed(1)+' N')
+    + frow('水中視重','W − F_浮',`${W.toFixed(1)} − ${buoy.toFixed(1)}`, apparent.toFixed(1)+' N')
+    + `<div class="frel">📈 <b>沒入比例 = ρ_物/ρ_液</b>：冰917÷海水1025≈0.9 → 露出約 1/10（冰山一角）　·　<b>ρ_物 &lt; ρ_液 才漂浮</b>，相等則懸浮、較大則下沉　·　<b>體積 V 不改沉浮</b>：放大 V 時 W 與 F_浮同倍放大，比例不變。</div>`;
+}
 function setSlider(id,val){state[id]=val;const r=document.getElementById('r_'+id);if(r)r.value=val;
   const s=sliders.find(z=>z.id===id);if(s)document.getElementById('v_'+id).textContent=`${fmt(val)} ${s.unit}`;}
 
@@ -146,8 +163,8 @@ function drawStats(info){const apparent=Math.max(0,info.weight-info.buoy);
 let lastTs=0;
 function loop(ts){const dt=lastTs?Math.min((ts-lastTs)/1000,0.04):0;lastTs=ts;tt+=dt;let info;for(let i=0;i<3;i++)info=physics((dt||0.016)/3);draw(info);requestAnimationFrame(loop);}
 const PRE={wood:{rhoO:600,rhoL:1000,V:8},ice:{rhoO:917,rhoL:1025,V:10},iron:{rhoO:2500,rhoL:1000,V:6},deadsea:{rhoO:1050,rhoL:1240,V:9}};
-document.querySelectorAll('[data-preset]').forEach(b=>b.onclick=()=>{const p=PRE[b.dataset.preset];if(!p)return;['rhoO','rhoL','V'].forEach(k=>setSlider(k,p[k]));yTop=-0.18;vy=0;});
-window.addEventListener('load',()=>{setupCanvases();requestAnimationFrame(loop);});
+document.querySelectorAll('[data-preset]').forEach(b=>b.onclick=()=>{const p=PRE[b.dataset.preset];if(!p)return;['rhoO','rhoL','V'].forEach(k=>setSlider(k,p[k]));yTop=-0.18;vy=0;updateFormula();});
+window.addEventListener('load',()=>{setupCanvases();updateFormula();requestAnimationFrame(loop);});
 window.addEventListener('resize',()=>{setupCanvases();});
 </script>
 </body>

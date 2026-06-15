@@ -85,6 +85,8 @@
     <button class="pbtn" id="reset" style="margin-left:auto">↺ 重設</button>
   </div>
 
+  <div class="formula" id="formula"></div>
+
   <div class="lower">
     <div class="panel">
       <div class="lab"><span>能量 vs 時間（堆疊）— 天花板＝E₀ 固定，摩擦時熱由上往下侵蝕力學能</span><span id="elab"></span></div>
@@ -214,7 +216,25 @@ function updateHud(cur){const v=Math.abs(cur.u),h=cur.y-YMIN;
   document.getElementById('elab').textContent='力學能 '+(cur.KE+cur.PE).toFixed(0)+' J ／ E₀ '+E0.toFixed(0)+' J';}
 function chip(k,v,cls){return `<div class="chip ${cls}">${k}<b>${v}</b></div>`;}
 function render(cur){drawScene(cur);drawBars(cur);drawPlot(cur);}
-function rebuild(){simulate();playT=Math.min(playT,TTOT);render(simAt(playT));}
+
+// ---- 即時代入計算公式（只讀 state 與既算好的 E0，不改物理）----
+function frow(n,sym,sub,val){return `<div class="frow"><span class="fname">${n}</span><span class="fsym">${sym}</span><span class="fsub">= ${sub}</span><span class="fval">${val}</span></div>`;}
+function updateFormula(){
+  const m=state.m, g=state.g, mu=state.mu;
+  const h0=atX(state.x0/100).y-YMIN;            // 釋放高度（相對谷底），與場景虛線同一來源
+  const E0v=m*g*h0;                              // 總力學能 = 釋放位能（與 simulate() 之 E0 同式）
+  const vmax=Math.sqrt(2*g*h0);                  // 谷底最大速率（無摩擦，KE=E₀）
+  const fric = mu>0;
+  document.getElementById('formula').innerHTML=
+    `<h4>📐 計算公式（即時代入　以谷底為位能零點）</h4>`+
+    frow('釋放高度 h₀','—',`軌道高 − 谷底`, h0.toFixed(1)+' m')+
+    frow('總力學能 E₀','m·g·h₀',`${m}·${g}·${h0.toFixed(1)}`, E0v.toFixed(0)+' J')+
+    frow('谷底最大速率 v','√(2·g·h₀)',`√(2·${g}·${h0.toFixed(1)})`, vmax.toFixed(1)+' m/s')+
+    frow('滑行摩擦生熱 Q','μ·m·g·Δx',`${mu}·${m}·${g}·Δx`, (fric? '＞0（力學能逐段轉熱）':'0（無摩擦）'))+
+    `<div class="frel">📈 <b>v ∝ √h₀</b>：釋放高度變 4 倍 → 谷底速率才變 2 倍　·　<b>運動快慢與質量 m 無關</b>（v 不含 m），但 E₀、Q 皆 ∝ m　·　<b>μ=0 時 KE＋PE 守恆</b>，等高處速率相同；μ＞0 時力學能被熱由上往下吃掉、越盪越低。</div>`;
+}
+
+function rebuild(){simulate();playT=Math.min(playT,TTOT);render(simAt(playT));updateFormula();}
 
 let lastTs=0;
 function loop(ts){const dt=lastTs?Math.min((ts-lastTs)/1000,0.05):0;lastTs=ts;
@@ -225,8 +245,8 @@ pb.onclick=()=>{if(playT>=TTOT)playT=0;playing=!playing;pb.classList.toggle('on'
 document.getElementById('reset').onclick=()=>{playT=0;playing=true;pb.classList.add('on');pb.textContent='⏸ 暫停';};
 const PRE={ideal:{x0:4,m:2,mu:0,g:9.8},fric:{x0:4,m:2,mu:.024,g:9.8},low:{x0:30,m:2,mu:0,g:9.8}};
 document.querySelectorAll('[data-preset]').forEach(b=>b.onclick=()=>{const p=PRE[b.dataset.preset];if(!p)return;
-  ['x0','m','mu','g'].forEach(k=>setSlider(k,p[k]));playT=0;playing=true;pb.classList.add('on');pb.textContent='⏸ 暫停';simulate();});
-window.addEventListener('load',()=>{setupCanvases();simulate();render(simAt(0));requestAnimationFrame(loop);});
+  ['x0','m','mu','g'].forEach(k=>setSlider(k,p[k]));playT=0;playing=true;pb.classList.add('on');pb.textContent='⏸ 暫停';simulate();updateFormula();});
+window.addEventListener('load',()=>{setupCanvases();simulate();render(simAt(0));updateFormula();requestAnimationFrame(loop);});
 window.addEventListener('resize',()=>{setupCanvases();render(simAt(playT));});
 </script>
 </body>

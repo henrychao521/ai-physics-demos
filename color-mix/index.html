@@ -81,6 +81,8 @@
 
   <div class="bar" id="sliders"></div>
 
+  <div class="formula" id="formula"></div>
+
   <div class="note">
     <b>物理重點：</b><b>加法混色</b>（光）：從黑暗開始，每加一種色光就更亮，三原色 RGB 等量全亮就是<b>白光</b>。
     電視、手機、電腦螢幕都是讓無數紅綠藍小點發光，靠加法混出所有顏色。
@@ -127,7 +129,24 @@ function draw(){const W=sc._w,H=sc._h;sc.globalCompositeOperation='source-over';
   document.getElementById('sw').style.background=`rgb(${state.R},${state.G},${state.B})`;
   document.getElementById('hex').textContent=hex.toUpperCase();
   document.getElementById('rgbtxt').textContent=`R ${state.R} · G ${state.G} · B ${state.B}`;
-  document.getElementById('sub').textContent=colorName();}
+  document.getElementById('sub').textContent=colorName();
+  updateFormula();}
+function frow(n,sym,sub,val){return `<div class="frow"><span class="fname">${n}</span><span class="fsym">${sym}</span><span class="fsub">= ${sub}</span><span class="fval">${val}</span></div>`;}
+function updateFormula(){
+  const R=state.R,G=state.G,B=state.B;
+  const h2=v=>v.toString(16).padStart(2,'0').toUpperCase();
+  const hex='#'+h2(R)+h2(G)+h2(B);
+  // 感知亮度（Rec.601 luma，0~255）：螢幕 RGB 加法後的視覺明度
+  const Y=0.299*R+0.587*G+0.114*B;
+  // 互補色（減法/顏料對應）：255 - 各通道
+  const C=255-R,M=255-G,Yc=255-B;
+  document.getElementById('formula').innerHTML=
+    `<h4>📐 計算公式（即時代入　加法混色・每通道 0~255）</h4>`+
+    frow('混合色 (加法)','色 = (R, G, B)',`(${R}, ${G}, ${B})`, hex)+
+    frow('感知亮度 Y','0.299R + 0.587G + 0.114B',`0.299·${R} + 0.587·${G} + 0.114·${B}`, Y.toFixed(0)+' / 255')+
+    frow('互補色 (減法 CMY)','C,M,Y = 255−R, 255−G, 255−B',`255−${R}, 255−${G}, 255−${B}`, `(${C}, ${M}, ${Yc})`)+
+    `<div class="frel">📈 <b>加法越加越亮</b>：每加一色光 Y 變大，RGB 全 255 → 白光（最亮）　·　<b>全 0 → 黑（全暗）</b>　·　<b>綠對亮度權重最大</b>（0.587）：同樣數值的綠看起來比藍亮約 5 倍　·　<b>R+G+B 一通道為 0 即得 CMY</b>：黃=R+G（B=0）、青=G+B、洋紅=R+B，與顏料減法互補。</div>`;
+}
 function colorName(){const {R,G,B}=state,hi=v=>v>200,lo=v=>v<60;
   if(hi(R)&&hi(G)&&hi(B))return '白光';if(lo(R)&&lo(G)&&lo(B))return '全暗（黑）';
   if(hi(R)&&hi(G)&&lo(B))return '黃 (R+G)';if(lo(R)&&hi(G)&&hi(B))return '青 (G+B)';if(hi(R)&&lo(G)&&hi(B))return '洋紅 (R+B)';

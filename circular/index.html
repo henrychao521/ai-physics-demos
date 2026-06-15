@@ -70,6 +70,8 @@
 
   <div class="bar" id="sliders"></div>
 
+  <div class="formula" id="formula"></div>
+
   <div class="note">
     <b>物理重點：</b>等速圓周運動「速率不變、速度方向變」。速度永遠沿<b>切線</b>、大小 <code>v = rω</code>；
     加速度永遠指向<b>圓心</b>、大小 <code>a = v²/r = rω²</code>、與速度<b>垂直</b>。維持圓周所需的向心力 <code>F = mv²/r</code>
@@ -95,9 +97,22 @@ sliders.forEach(s=>{ state[s.id]=s.val;
     <input type="range" id="r_${s.id}" min="${s.min}" max="${s.max}" step="${s.step}" value="${s.val}">`;
   sBar.appendChild(d);
   d.querySelector('input').addEventListener('input',e=>{state[s.id]=parseFloat(e.target.value);
-    document.getElementById('v_'+s.id).textContent=`${fmt(state[s.id])} ${s.unit}`;if(mode==='released')mode='circle';});
+    document.getElementById('v_'+s.id).textContent=`${fmt(state[s.id])} ${s.unit}`;if(mode==='released')mode='circle';updateFormula();});
 });
 function fmt(x){return (Math.round(x*100)/100).toString();}
+
+function frow(n,sym,sub,val){return `<div class="frow"><span class="fname">${n}</span><span class="fsym">${sym}</span><span class="fsub">= ${sub}</span><span class="fval">${val}</span></div>`;}
+function updateFormula(){
+  const r=state.r,w=state.w,m=state.m;
+  const vv=v(), aa=acc(), T=2*Math.PI/w, F=m*aa;
+  document.getElementById('formula').innerHTML=
+    `<h4>📐 計算公式（即時代入　等速圓周運動）</h4>`
+    +frow('切線速率 v','r·ω',`${fmt(r)}·${fmt(w)}`, vv.toFixed(2)+' m/s')
+    +frow('向心加速度 a','v²/r ＝ r·ω²',`${fmt(r)}·${fmt(w)}²`, aa.toFixed(2)+' m/s²')
+    +frow('向心力 F','m·v²/r ＝ m·a',`${fmt(m)}·${aa.toFixed(2)}`, F.toFixed(2)+' N')
+    +frow('週期 T','2π / ω',`2π / ${fmt(w)}`, T.toFixed(2)+' s')
+    +`<div class="frel">📈 <b>a ∝ ω²</b>：角速度加倍 → 向心加速度變 4 倍　·　<b>a、F 永遠指向圓心</b>，與切線速度 v 垂直　·　放手後向心力消失，物體依慣性沿<b>切線</b>等速直線飛出。</div>`;
+}
 
 let theta=0,simT=0,playing=true,showF=false,mode='circle',relTheta=0,relT=0;
 function v(){return state.r*state.w;} function acc(){return state.r*state.w*state.w;}
@@ -161,7 +176,7 @@ const pb=document.getElementById('play');
 pb.onclick=()=>{playing=!playing;pb.classList.toggle('on',playing);pb.textContent=playing?'⏸ 暫停':'▶ 播放';};
 document.getElementById('release').onclick=()=>{relTheta=theta;relT=simT;mode='released';playing=true;pb.classList.add('on');pb.textContent='⏸ 暫停';};
 document.getElementById('showF').onclick=function(){showF=!showF;this.classList.toggle('on',showF);};
-window.addEventListener('load',()=>{setupCanvases();draw();requestAnimationFrame(loop);});
+window.addEventListener('load',()=>{setupCanvases();updateFormula();draw();requestAnimationFrame(loop);});
 window.addEventListener('resize',()=>{setupCanvases();draw();});
 </script>
 </body>

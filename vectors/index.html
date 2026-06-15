@@ -72,6 +72,8 @@
     </div>
   </div>
 
+  <div class="formula" id="formula"></div>
+
   <div class="note">
     <b>物理重點：</b>力是<b>向量</b>，相加要連方向一起加。把各力分解成水平、鉛直分量 <code>Fx = F·cosθ、Fy = F·sinθ</code>，
     分別相加得合力分量，再合成出大小 <code>|R| = √(Rx²+Ry²)</code> 與方向。兩力時可用<b>平行四邊形法</b>；多力時用<b>頭尾相接法</b>。
@@ -113,6 +115,7 @@ function draw(){const W=sc._w,H=sc._h,o=O();
   // 原點物件
   S.sphere(sc,o.x,o.y,7,[210,15,75]);
   updateTable(R);
+  updateFormula();
 }
 function angStr(F){let a=Math.atan2(F.y,F.x)*180/Math.PI;if(a<0)a+=360;return a.toFixed(0)+'°';}
 function updateTable(R){let rows='';
@@ -124,6 +127,25 @@ function updateTable(R){let rows='';
   const eq=document.getElementById('eq');
   if(Rmag<2){eq.textContent='✓ 合力 ≈ 0 → 力平衡（靜止或等速）';eq.style.background='rgba(124,255,178,.15)';eq.style.color='#7CFFB2';}
   else{eq.textContent='合力 = '+Rmag.toFixed(1)+' N → 沿合力方向加速';eq.style.background='rgba(255,206,84,.12)';eq.style.color='#ffce54';}
+}
+function frow(n,sym,sub,val){return `<div class="frow"><span class="fname">${n}</span><span class="fsym">${sym}</span><span class="fsub">= ${sub}</span><span class="fval">${val}</span></div>`;}
+function updateFormula(){
+  // 重用與 HUD 表格同一來源：forces[] 分量與 resultant()
+  const R=resultant();                       // R.x = ΣFx, R.y = ΣFy（與表格合力同源）
+  const Rmag=Math.hypot(R.x,R.y);
+  let ang=Math.atan2(R.y,R.x)*180/Math.PI; if(ang<0)ang+=360;
+  // 逐力的 x、y 分量字串（含正負號便於看抵消）
+  const sx=Array.from({length:n},(_,i)=>(forces[i].x>=0?'+':'')+forces[i].x.toFixed(0)).join(' ');
+  const sy=Array.from({length:n},(_,i)=>(forces[i].y>=0?'+':'')+forces[i].y.toFixed(0)).join(' ');
+  const fmt=v=>(v>=0?'+':'−')+Math.abs(v).toFixed(1);
+  const balanced=Rmag<2;
+  document.getElementById('formula').innerHTML=
+    `<h4>📐 計算公式（即時代入　${n} 個力的向量和）</h4>`
+    + frow('水平合量 Rₓ','ΣFₓ', sx.trim(), fmt(R.x)+' N')
+    + frow('鉛直合量 Rᵧ','ΣFᵧ', sy.trim(), fmt(R.y)+' N')
+    + frow('合力大小 |R|','√(Rₓ²+Rᵧ²)',`√(${R.x.toFixed(1)}²+${R.y.toFixed(1)}²)`, Rmag.toFixed(1)+' N')
+    + frow('合力方向 θ','atan2(Rᵧ, Rₓ)', balanced?'—（合力≈0）':`atan2(${R.y.toFixed(1)}, ${R.x.toFixed(1)})`, balanced?'—':ang.toFixed(0)+'°（0–360°含象限）')
+    + `<div class="frel">📈 <b>分量各自相加</b>：水平、鉛直獨立合成，互不影響　·　<b>Rₓ=0 且 Rᵧ=0 → 力平衡</b>（靜止或等速）　·　<b>同向</b>合力最大、<b>反向</b>合力最小（兩力差）、夾角越大合力越小。</div>`;
 }
 let drag=-1;
 function pos(e){const r=sc.canvas?sc.canvas.getBoundingClientRect():document.getElementById('scene').getBoundingClientRect();

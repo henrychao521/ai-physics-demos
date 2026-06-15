@@ -89,6 +89,8 @@
     <button class="pbtn" id="reset" style="margin-left:auto">↺ 重新發射</button>
   </div>
 
+  <div class="formula" id="formula"></div>
+
   <div class="lower">
     <div class="panel">
       <div class="lab">速度分量對時間：vₓ（藍，定值）與 v_y（橙，每秒 −g）</div>
@@ -231,8 +233,22 @@ function updateHud(cur){
    chip('最高點',STATS.H.toFixed(1)+' m','green')+chip('落地速率',STATS.vImp.toFixed(1)+' m/s','cyan');
 }
 function chip(k,v,cls){return `<div class="chip ${cls}">${k}<b>${v}</b></div>`;}
+function frow(n,sym,sub,val){return `<div class="frow"><span class="fname">${n}</span><span class="fsym">${sym}</span><span class="fsub">= ${sub}</span><span class="fval">${val}</span></div>`;}
+function updateFormula(){
+  const v0=st.v0,th=st.ang,g=st.g,rad=th*Math.PI/180;
+  const Rid=v0*v0*Math.sin(2*rad)/g, Hid=Math.pow(v0*Math.sin(rad),2)/(2*g), Tid=2*v0*Math.sin(rad)/g;
+  const ideal=(st.h0===0&&!dragOn);
+  document.getElementById('formula').innerHTML=
+    `<h4>📐 計算公式（即時代入　理想：無空氣阻力・平地）</h4>`+
+    frow('水平射程 R','v₀²·sin2θ / g',`${v0}²·sin${Math.round(2*th)}° / ${g}`, Rid.toFixed(1)+' m')+
+    frow('最高點 H','v₀²·sin²θ / 2g',`${v0}²·sin²${th}° / ${(2*g).toFixed(1)}`, Hid.toFixed(1)+' m')+
+    frow('飛行時間 T','2·v₀·sinθ / g',`2·${v0}·sin${th}° / ${g}`, Tid.toFixed(2)+' s')+
+    `<div class="frel">📈 <b>R ∝ v₀²</b>：初速加倍 → 射程變 4 倍　·　<b>θ=45° 射程最大</b>（sin2θ=1）　·　重力 g 只改鉛直運動、水平方向恆等速。`+
+    (ideal?'':` <span style="color:var(--accent2)">目前${dragOn?'有空氣阻力':''}${st.h0>0?'、非平地發射':''}，上式為理想值；實測射程 <b style="color:var(--accent2)">${STATS.R.toFixed(1)} m</b>。</span>`)+
+    `</div>`;
+}
 function render(cur){drawScene(cur);drawPlot(cur);}
-function rebuild(){simulate();playT=Math.min(playT,STATS.T);trail.clear();render(at(playT));}
+function rebuild(){simulate();playT=Math.min(playT,STATS.T);trail.clear();render(at(playT));updateFormula();}
 
 // ---- 動畫 ----
 let lastTs=0;
@@ -261,7 +277,7 @@ document.querySelectorAll('[data-preset]').forEach(b=>b.onclick=()=>{const p=PRE
   dragOn=p.drag;dragBtn.classList.toggle('on',dragOn);dragBtn.textContent='空氣阻力：'+(dragOn?'開':'關');
   playT=0;playing=true;trail.clear();pb.classList.add('on');pb.textContent='⏸ 暫停';rebuild();});
 
-window.addEventListener('load',()=>{ setupCanvases(); simulate(); render(at(0)); requestAnimationFrame(loop); });
+window.addEventListener('load',()=>{ setupCanvases(); simulate(); render(at(0)); updateFormula(); requestAnimationFrame(loop); });
 window.addEventListener('resize',()=>{ setupCanvases(); render(at(playT)); });
 </script>
 </body>

@@ -74,6 +74,8 @@
     <button class="pbtn" data-preset="boom">超音速(音爆)</button>
   </div>
 
+  <div class="formula" id="formula"></div>
+
   <div class="note">
     <b>物理重點：</b>音源向你移動時，每個新波前都從更靠近你的位置發出，波前擠在一起 → 接收到的<b>波長變短、頻率變高</b>；遠離時相反。
     公式 <code>f' = f₀·v/(v − v_源·cosθ)</code>。當音源速度<b>等於聲速</b>（M=1）所有波前在正前方疊合；<b>超過聲速</b>（M&gt;1）波前包絡成
@@ -97,11 +99,11 @@ sliders.forEach(s=>{ state[s.id]=s.val;
     <input type="range" id="r_${s.id}" min="${s.min}" max="${s.max}" step="${s.step}" value="${s.val}">`;
   sBar.appendChild(d);
   d.querySelector('input').addEventListener('input',e=>{state[s.id]=parseFloat(e.target.value);
-    document.getElementById('v_'+s.id).textContent=`${fmt(state[s.id])} ${s.unit}`;});
+    document.getElementById('v_'+s.id).textContent=`${fmt(state[s.id])} ${s.unit}`;updateFormula();});
 });
 function fmt(x){return (Math.round(x*100)/100).toString();}
 function setSlider(id,val){state[id]=val;const r=document.getElementById('r_'+id);if(r)r.value=val;
-  const s=sliders.find(z=>z.id===id);if(s)document.getElementById('v_'+id).textContent=`${fmt(val)} ${s.unit}`;}
+  const s=sliders.find(z=>z.id===id);if(s)document.getElementById('v_'+id).textContent=`${fmt(val)} ${s.unit}`;updateFormula();}
 
 let sc,fronts=[],sx=80,simT=0,lastEmit=-EMIT,playing=true,SY=150,OBSX=820,OBSY=300;
 const NIGHT={skyTop:'#0a1230',skyBottom:'#060818',vignette:'rgba(0,0,0,.5)'};
@@ -144,6 +146,24 @@ function updateHud(){const f=fHeard(),approaching=(OBSX-sx)>0&&state.M>0;
   else if(approaching){sb.textContent='🔴 音源接近中：波前壓縮 → 聽到頻率升高（音調變高）';sb.style.background='rgba(255,107,157,.13)';sb.style.color='#ff6b9d';}
   else{sb.textContent='🔵 音源遠離中：波前拉長 → 聽到頻率降低（音調變低）';sb.style.background='rgba(76,194,255,.12)';sb.style.color='#4cc2ff';}}
 function chip(k,v,cls){return `<div class="chip ${cls}">${k}<b>${v}</b></div>`;}
+function frow(n,sym,sub,val){return `<div class="frow"><span class="fname">${n}</span><span class="fsym">${sym}</span><span class="fsub">= ${sub}</span><span class="fval">${val}</span></div>`;}
+function updateFormula(){
+  const M=state.M, f0=state.f0, v=VSND, vsrc=M*v;
+  // 正前方接近(cosθ=1)：與 HUD 的 fHeard() 同一物理式，確保數字不打架
+  const fApp = M<1 ? f0*v/(v-vsrc) : null;          // 接近：波前壓縮 → f′ 升高
+  const fRec = f0*v/(v+vsrc);                         // 遠離：波前拉長 → f′ 降低
+  document.getElementById('formula').innerHTML=
+    `<h4>📐 計算公式（即時代入　聲速 v=${v}　v_源=M·v=${vsrc.toFixed(0)}）</h4>`+
+    frow('接近時 f′','f₀·v / (v − v_源)',
+      M<1?`${f0}·${v} / (${v} − ${vsrc.toFixed(0)})`:`v_源 ≥ v，前方波前疊合`,
+      M<1?fApp.toFixed(0)+' Hz':'（音爆）')+
+    frow('遠離時 f′','f₀·v / (v + v_源)',
+      `${f0}·${v} / (${v} + ${vsrc.toFixed(0)})`, fRec.toFixed(0)+' Hz')+
+    frow('馬赫角 θ_m','sinθ_m = 1/M',
+      M>1?`sinθ_m = 1/${M.toFixed(2)}`:`M ≤ 1，尚無馬赫錐`,
+      M>1?(Math.asin(1/M)*180/Math.PI).toFixed(1)+'°':'—')+
+    `<div class="frel">📈 <b>接近 f′>f₀、遠離 f′<f₀</b>：經過瞬間音調由高驟降　·　<b>v_源→v 時 f′→∞</b>（波前在正前方疊合）　·　<b>M>1 形成馬赫錐</b>，速度越快錐角 θ_m 越小（音爆越尖）。</div>`;
+}
 
 let lastTs=0;
 function loop(ts){const dt=lastTs?Math.min((ts-lastTs)/1000,0.04):0;lastTs=ts;if(playing)for(let i=0;i<2;i++)step(dt/2);draw();requestAnimationFrame(loop);}
@@ -151,7 +171,7 @@ const pb=document.getElementById('play');
 pb.onclick=()=>{playing=!playing;pb.classList.toggle('on',playing);pb.textContent=playing?'⏸ 暫停':'▶ 播放';};
 const PRE={slow:{M:.4,f0:440},fast:{M:.85,f0:440},boom:{M:1.6,f0:440}};
 document.querySelectorAll('[data-preset]').forEach(b=>b.onclick=()=>{const p=PRE[b.dataset.preset];if(!p)return;setSlider('M',p.M);setSlider('f0',p.f0);reset();playing=true;pb.classList.add('on');pb.textContent='⏸ 暫停';});
-window.addEventListener('load',()=>{setupCanvases();reset();requestAnimationFrame(loop);});
+window.addEventListener('load',()=>{setupCanvases();reset();updateFormula();requestAnimationFrame(loop);});
 window.addEventListener('resize',()=>{setupCanvases();});
 </script>
 </body>

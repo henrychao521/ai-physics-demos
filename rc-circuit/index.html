@@ -64,6 +64,8 @@
   <div class="statgrid" id="stats"></div>
   <div class="bar" id="sliders"></div>
 
+  <div class="formula" id="formula"></div>
+
   <div class="note">
     <b>物理重點：</b>充電 <code>V_C(t) = V(1 − e^(−t/τ))</code>、電流 <code>I(t) = (V/R)e^(−t/τ)</code>（電流由大變小）。放電 <code>V_C(t) = V₀·e^(−t/τ)</code>。
     <b>時間常數 τ = RC</b>：t = τ 充到 1−1/e ≈ 63.2%，t = 5τ 時 &gt; 99%。這是計時電路、相機閃光燈充電、訊號濾波的基礎。電流在<b>開關瞬間最大</b>、之後衰減。
@@ -86,12 +88,32 @@ sliders.forEach(s=>{ state[s.id]=s.val;
   d.innerHTML=`<label><span>${s.name}</span><span class="v" id="v_${s.id}">${fmt(s.val)} ${s.unit}</span></label>
     <input type="range" id="r_${s.id}" min="${s.min}" max="${s.max}" step="${s.step}" value="${s.val}">`;
   sBar.appendChild(d);
-  d.querySelector('input').addEventListener('input',e=>{state[s.id]=parseFloat(e.target.value);document.getElementById('v_'+s.id).textContent=`${fmt(state[s.id])} ${s.unit}`;});
+  d.querySelector('input').addEventListener('input',e=>{state[s.id]=parseFloat(e.target.value);document.getElementById('v_'+s.id).textContent=`${fmt(state[s.id])} ${s.unit}`;updateFormula();});
 });
 function fmt(x){return (Math.round(x*100)/100).toString();}
 function tau(){return state.R*state.C*1e-6;}
 function Vc(tt){const T=tau();return charging?state.V*(1-Math.exp(-tt/T)):state.V*Math.exp(-tt/T);}
 function Ic(tt){const T=tau(),i=state.V/state.R*Math.exp(-tt/T);return charging?i:-i;}
+
+function frow(n,sym,sub,val){return `<div class="frow"><span class="fname">${n}</span><span class="fsym">${sym}</span><span class="fsub">= ${sub}</span><span class="fval">${val}</span></div>`;}
+function updateFormula(){
+  const R=state.R, C=state.C, V=state.V;     // R(Ω) C(µF) V(V)
+  const T=tau();                              // τ = RC（與 HUD 同一來源）
+  const Cms=(C*1e-3).toFixed(2);              // µF → mF 顯示用
+  const I0=V/R*1000;                          // 開關瞬間電流 (mA)
+  const Q0=(C*1e-6)*V*1000;                   // 充滿電量 Q=CV (mC)
+  const cap=charging
+    ? frow('充電 V_C(t)','V(1−e^(−t/τ))',`${V}·(1−e^(−t/${T.toFixed(2)}))`, `→ ${V} V`)
+    : frow('放電 V_C(t)','V₀·e^(−t/τ)',`${V}·e^(−t/${T.toFixed(2)})`, `→ 0 V`);
+  document.getElementById('formula').innerHTML=
+    `<h4>📐 計算公式（即時代入　一階 RC・解析解）</h4>`
+    + frow('時間常數 τ','R·C',`${R} Ω · ${Cms} mF`, T.toFixed(2)+' s')
+    + cap
+    + frow('開關瞬間電流 I₀','V / R',`${V} / ${R}`, I0.toFixed(1)+' mA')
+    + frow('充滿電量 Q','C·V',`${Cms} mF · ${V} V`, Q0.toFixed(2)+' mC')
+    + frow('約完成時間 5τ','5·R·C',`5 · ${T.toFixed(2)}`, (5*T).toFixed(1)+' s')
+    + `<div class="frel">📈 <b>τ ∝ R、τ ∝ C</b>：R 或 C 加倍 → 過程慢 2 倍　·　<b>1τ 充到 63%、5τ &gt; 99%</b>　·　<b>電流在開關瞬間最大</b>，之後按 e^(−t/τ) 衰減。</div>`;
+}
 
 let circ,pc,flow=0;
 function setupCanvases(){circ=S.fit(document.getElementById('circ'),1.1);pc=S.fit(document.getElementById('plot'),2.0);}
@@ -135,9 +157,9 @@ function drawStats(){const vc=Vc(t),i=Ic(t),Q=state.C*1e-6*vc;
 let lastTs=0;
 function loop(ts){const dt=lastTs?Math.min((ts-lastTs)/1000,0.05):0;lastTs=ts;flow+=dt;if(playing){t+=dt;if(t>5*tau())t=0;}draw();requestAnimationFrame(loop);}
 const mC=document.getElementById('mCharge'),mD=document.getElementById('mDischarge');
-mC.onclick=()=>{charging=true;mC.classList.add('on');mD.classList.remove('on');t=0;};
-mD.onclick=()=>{charging=false;mD.classList.add('on');mC.classList.remove('on');t=0;};
-window.addEventListener('load',()=>{setupCanvases();requestAnimationFrame(loop);});
+mC.onclick=()=>{charging=true;mC.classList.add('on');mD.classList.remove('on');t=0;updateFormula();};
+mD.onclick=()=>{charging=false;mD.classList.add('on');mC.classList.remove('on');t=0;updateFormula();};
+window.addEventListener('load',()=>{setupCanvases();updateFormula();requestAnimationFrame(loop);});
 window.addEventListener('resize',()=>{setupCanvases();});
 </script>
 </body>

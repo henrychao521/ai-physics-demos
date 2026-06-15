@@ -64,6 +64,8 @@
 
   <div class="bar" id="sliders"></div>
 
+  <div class="formula" id="formula"></div>
+
   <div class="note">
     <b>物理重點：</b>單一點電荷電場大小 <code>E = kq/r²</code>（平方反比），方向沿徑向：正電荷<b>向外</b>、負電荷<b>向內</b>。
     電位 <code>V = kq/r</code> 是純量，正電荷附近高（紅）、負電荷附近低（藍）。<b>等位面</b>上各點電位相同（移動電荷不作功），且電場線<b>永遠垂直</b>等位面。
@@ -76,10 +78,23 @@
 <script>
 const S=SIM;
 const state={mag:4};
+function frow(n,sym,sub,val){return `<div class="frow"><span class="fname">${n}</span><span class="fsym">${sym}</span><span class="fsub">= ${sub}</span><span class="fval">${val}</span></div>`;}
+function updateFormula(){
+  const q=state.mag, k=1, r=100;               // k=1 相對單位；r=參考距離 100（相對單位）
+  const E=k*q/(r*r);                            // 電場 E = kq/r²
+  const V=k*q/r;                                // 電位 V = kq/r
+  const F=k*q*q/(r*r);                          // 兩個同量電荷相距 r 的庫侖力 F = kq₁q₂/r²
+  document.getElementById('formula').innerHTML=
+    `<h4>📐 計算公式（即時代入　k=1 相對單位・參考距離 r=${r}）</h4>`+
+    frow('電場 E','kq / r²',`1·${q} / ${r}²`, E.toFixed(4)+' (相對)')+
+    frow('電位 V','kq / r',`1·${q} / ${r}`, V.toFixed(3)+' (相對)')+
+    frow('庫侖力 F','kq₁q₂ / r²',`1·${q}·${q} / ${r}²`, F.toFixed(4)+' (相對)')+
+    `<div class="frel">📈 <b>E、F ∝ 1/r²</b>：距離加倍 → 電場與作用力剩 ¼　·　<b>V ∝ 1/r</b>：電位衰減較慢　·　<b>E、V ∝ q</b>：電荷量加倍 → 兩者皆加倍。</div>`;
+}
 const sBar=document.getElementById('sliders');
 {const d=document.createElement('div');d.className='sld';
  d.innerHTML=`<label><span>新增電荷量 |q|</span><span class="v" id="v_mag">4</span></label><input type="range" id="r_mag" min="1" max="8" step="1" value="4">`;
- sBar.appendChild(d);d.querySelector('input').addEventListener('input',e=>{state.mag=parseFloat(e.target.value);document.getElementById('v_mag').textContent=state.mag;});}
+ sBar.appendChild(d);d.querySelector('input').addEventListener('input',e=>{state.mag=parseFloat(e.target.value);document.getElementById('v_mag').textContent=state.mag;updateFormula();});}
 
 function _hd(c,w,h){var d=window.devicePixelRatio||1;c.width=w*d;c.height=h*d;var x=c.getContext('2d');x.setTransform(d,0,0,d,0,0);return x;}
 const cv=document.getElementById('cv'),cc=_hd(cv,900,470);
@@ -125,7 +140,7 @@ document.getElementById('addNeg').onclick=()=>{charges.push({x:450,y:235,q:-stat
 document.getElementById('clear').onclick=()=>{charges=[];draw();};
 const PRE={single:[{x:450,y:235,q:6}],dipole:[{x:300,y:235,q:5},{x:600,y:235,q:-5}],two:[{x:300,y:235,q:5},{x:600,y:235,q:5}]};
 document.querySelectorAll('[data-preset]').forEach(b=>b.onclick=()=>{const p=PRE[b.dataset.preset];if(!p)return;charges=p.map(c=>({...c}));draw();});
-window.addEventListener('load',()=>{draw();});
+window.addEventListener('load',()=>{draw();updateFormula();});
 </script>
 </body>
 </html>

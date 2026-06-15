@@ -93,6 +93,8 @@
     <button class="pbtn" id="reset" style="margin-left:auto">↺ 重設</button>
   </div>
 
+  <div class="formula" id="formula"></div>
+
   <div class="panel">
     <div class="lab"><span>總動量（綠，水平不動）與總動能（黃，非彈性碰撞時階梯下降）對時間</span></div>
     <canvas id="plot"></canvas>
@@ -139,7 +141,26 @@ function KEnow(){return 0.5*state.m1*live.v1*live.v1+0.5*state.m2*live.v2*live.v
 function Pnow(){return state.m1*live.v1+state.m2*live.v2;}
 function resetSim(){live={x1:2.4,v1:state.v1,x2:7.6,v2:state.v2,glued:false};
   const minGap=r1()+r2();if(live.x2-live.x1<minGap)live.x2=live.x1+minGap;
-  collisions=0;lastCol=null;KE0=KEnow();P0=Pnow();history=[];simT=0;}
+  collisions=0;lastCol=null;KE0=KEnow();P0=Pnow();history=[];simT=0;updateFormula();}
+
+// ---- 即時代入計算公式（只用初始滑桿值，預測碰撞後狀態，沿用本頁回復係數公式）----
+function frow(n,sym,sub,val){return `<div class="frow"><span class="fname">${n}</span><span class="fsym">${sym}</span><span class="fsub">= ${sub}</span><span class="fval">${val}</span></div>`;}
+function updateFormula(){
+  const m1=state.m1,v1=state.v1,m2=state.m2,v2=state.v2,e=state.e,M=m1+m2;
+  const P=m1*v1+m2*v2;                       // 總動量（與 HUD 同源公式）
+  const KEi=0.5*m1*v1*v1+0.5*m2*v2*v2;       // 碰前總動能
+  const nv1=((m1-e*m2)*v1+(1+e)*m2*v2)/M;    // 碰後 v₁'（本頁 substep 同式）
+  const nv2=((1+e)*m1*v1+(m2-e*m1)*v2)/M;    // 碰後 v₂'
+  const KEf=0.5*m1*nv1*nv1+0.5*m2*nv2*nv2;   // 碰後總動能
+  const lossPct=KEi>1e-6?(1-KEf/KEi)*100:0;  // 動能損耗比例
+  document.getElementById('formula').innerHTML=
+    `<h4>📐 計算公式（即時代入　開放軌道・系統不受外力）</h4>`+
+    frow('總動量 p','m₁v₁ + m₂v₂',`${m1}·${v1} + ${m2}·${v2}`, P.toFixed(2)+' kg·m/s')+
+    frow('碰前動能 KEᵢ','½m₁v₁² + ½m₂v₂²',`½·${m1}·${v1}² + ½·${m2}·${v2}²`, KEi.toFixed(2)+' J')+
+    frow("碰後 v₁'",'[(m₁−e·m₂)v₁+(1+e)m₂v₂]/(m₁+m₂)',`[(${m1}−${e}·${m2})·${v1}+(1+${e})·${m2}·${v2}]/${M}`, nv1.toFixed(2)+' m/s')+
+    frow("碰後 v₂'",'[(1+e)m₁v₁+(m₂−e·m₁)v₂]/(m₁+m₂)',`[(1+${e})·${m1}·${v1}+(${m2}−${e}·${m1})·${v2}]/${M}`, nv2.toFixed(2)+' m/s')+
+    `<div class="frel">📈 <b>動量恆守恆</b>：碰前＝碰後 p（綠線水平不動）　·　<b>e=1 動能守恆</b>，此設定損耗 ${lossPct.toFixed(0)}%（轉成熱/形變）　·　<b>e=0 黏合</b>：兩球以質心速度 (m₁v₁+m₂v₂)/M = ${(P/M).toFixed(2)} m/s 同行。</div>`;
+}
 function step(dt){const n=Math.max(1,Math.ceil(dt/0.004)),h=dt/n;for(let i=0;i<n;i++)substep(h);simT+=dt;
   history.push({t:simT,p:Pnow(),ke:KEnow()});if(history.length>2000)history.shift();
   const off=(live.x1<-1.5||live.x1>L+1.5)&&(live.x2<-1.5||live.x2>L+1.5);if((collisions>0&&off)||simT>11)resetSim();}

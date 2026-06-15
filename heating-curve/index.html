@@ -72,6 +72,8 @@
     <button class="pbtn" data-preset="big">大質量(慢)</button>
   </div>
 
+  <div class="formula" id="formula"></div>
+
   <div class="note">
     <b>物理重點：</b>斜段（升溫）吸收<b>顯熱</b> <code>Q = m·c·ΔT</code>，比熱 c 或質量 m 越大，同樣加熱升溫越慢。
     平台（相變）吸收<b>潛熱</b> <code>Q = m·L</code>：熔化吸熔化熱 L_f、沸騰吸汽化熱 L_v，期間分子忙著掙脫束縛，溫度不變。
@@ -112,8 +114,25 @@ function buildSeg(){const m=state.m,c=state.c;
     {a:q2,b:q3,f:Q=>(Q-q2)/(m*c),ph:'液體（水）升溫',col:'#4cc2ff'},
     {a:q3,b:q4,f:()=>100,ph:'沸騰中（吸汽化熱）',col:'#ff6b9d'},
     {a:q4,b:q5,f:Q=>100+(Q-q4)/(m*cS),ph:'氣體（蒸氣）升溫',col:'#ff6b9d'}];
-  Qmax=q5;tEnd=Qmax/state.P;}
+  Qmax=q5;tEnd=Qmax/state.P;updateFormula();}
 function TofQ(Q){for(const s of seg){if(Q<=s.b)return {T:s.f(Q),ph:s.ph,col:s.col};}const l=seg[seg.length-1];return {T:l.f(Qmax),ph:'完成',col:'#7CFFB2'};}
+
+function frow(n,sym,sub,val){return `<div class="frow"><span class="fname">${n}</span><span class="fsym">${sym}</span><span class="fsub">= ${sub}</span><span class="fval">${val}</span></div>`;}
+function updateFormula(){
+  const m=state.m,c=state.c,P=state.P;
+  const Qmelt=m*Lf, Qboil=m*Lv;               // 潛熱：熔化、沸騰
+  const Qwater=m*c*100;                        // 顯熱：液態水 0→100°C
+  const Qtot=Qmax;                             // 總需熱量（與 buildSeg 同一來源）
+  const tBoil=Qboil/P;                         // 沸騰平台時間
+  document.getElementById('formula').innerHTML=
+    `<h4>📐 計算公式（即時代入　水：L_f=334 J/g・L_v=2260 J/g）</h4>`
+    + frow('液態水顯熱 Q','m·c·ΔT',`${m}·${fmt(c)}·100`, (Qwater/1000).toFixed(1)+' kJ')
+    + frow('熔化潛熱 Q_f','m·L_f',`${m}·334`, (Qmelt/1000).toFixed(1)+' kJ')
+    + frow('沸騰潛熱 Q_v','m·L_v',`${m}·2260`, (Qboil/1000).toFixed(1)+' kJ')
+    + frow('沸騰平台時間 t','Q_v / P',`${(Qboil/1000).toFixed(1)}k / ${P}`, tBoil.toFixed(1)+' s')
+    + frow('總需熱量 Q_總','ΣQ（顯熱＋潛熱）','五段加總', (Qtot/1000).toFixed(1)+' kJ')
+    + `<div class="frel">📈 <b>平台＝相變</b>：加熱不升溫，熱量全用來掙脫分子束縛　·　<b>Q_v ≈ 6.8×Q_f</b>：汽化熱遠大於熔化熱 → <b>沸騰平台特別長</b>　·　<b>Q ∝ m</b>：質量加倍 → 各段熱量與總時間都加倍；功率 P 加倍 → 各段時間減半（曲線水平壓縮）。</div>`;
+}
 
 let bc,cc2,tt=0;
 const THERM={skyTop:'#241318',skyBottom:'#10080c',vignette:'rgba(0,0,0,.5)'};
@@ -178,7 +197,7 @@ pb.onclick=()=>{playing=!playing;pb.classList.toggle('on',playing);pb.textConten
 document.getElementById('reset').onclick=()=>{t=0;playing=true;pb.classList.add('on');pb.textContent='⏸ 暫停';};
 const PRE={std:{m:150,P:800,c:4.18},fast:{m:150,P:1800,c:4.18},big:{m:450,P:800,c:4.18}};
 document.querySelectorAll('[data-preset]').forEach(b=>b.onclick=()=>{const p=PRE[b.dataset.preset];if(!p)return;['m','P','c'].forEach(k=>setSlider(k,p[k]));buildSeg();t=0;playing=true;pb.classList.add('on');pb.textContent='⏸ 暫停';});
-window.addEventListener('load',()=>{setupCanvases();buildSeg();draw();requestAnimationFrame(loop);});
+window.addEventListener('load',()=>{setupCanvases();buildSeg();updateFormula();draw();requestAnimationFrame(loop);});
 window.addEventListener('resize',()=>{setupCanvases();draw();});
 </script>
 </body>
