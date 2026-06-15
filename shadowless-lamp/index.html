@@ -19,7 +19,7 @@
   .badge{display:inline-block;background:var(--panel2);border:1px solid var(--line);
     color:var(--muted);font-size:.72rem;padding:2px 8px;border-radius:99px;margin-right:6px}
   .stage{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:14px;margin-bottom:16px}
-  canvas{width:100%;display:block;border-radius:10px;background:#04060a}
+  canvas{width:100%;display:block;border-radius:10px;background:#04060a;touch-action:none}  /* 可拖曳遮擋物：手機觸控不被瀏覽器捲動搶走 */
   .grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:14px}
   .ctrl{background:var(--panel2);border:1px solid var(--line);border-radius:10px;padding:10px 12px}
   .ctrl label{display:flex;justify-content:space-between;font-size:.85rem;margin-bottom:6px}

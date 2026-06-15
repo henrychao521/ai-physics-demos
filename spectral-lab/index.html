@@ -53,28 +53,15 @@
         @keyframes spin { to { transform: rotate(360deg); } }
     </style>
 </head>
-<body data-demo="光譜干涉實驗室" class="bg-slate-950 text-slate-200 font-sans h-screen flex flex-col overflow-hidden">
+<body data-demo="光譜干涉實驗室" class="bg-slate-950 text-slate-200 font-sans min-h-screen md:h-screen flex flex-col overflow-x-hidden md:overflow-hidden">
 
-    <!-- Header -->
-    <header class="bg-black border-b border-slate-800 shrink-0">
-        <div class="px-6 h-14 flex items-center justify-between">
-            <div class="flex items-center gap-3">
-                <i class="fa-solid fa-prism text-rose-500 text-xl"></i>
-                <h1 class="text-lg font-bold text-slate-100 tracking-tight">光譜干涉實驗室 <span class="text-slate-500 font-normal text-xs ml-2">v5.1 Euclidean Edition</span></h1>
-            </div>
-            <div class="flex gap-4 text-xs text-slate-400">
-                <div class="flex items-center gap-2">
-                    <span class="w-2 h-2 rounded-full bg-green-500"></span> 粒子系統就緒
-                </div>
-            </div>
-        </div>
-    </header>
+    <!-- 頁面自有 header 已移除，改用共用頂部導覽列（nav.js 注入）避免雙頂列擠壓內容高度 -->
 
     <!-- Main Workspace -->
-    <main class="flex-1 flex overflow-hidden">
+    <main class="flex-1 flex flex-col md:flex-row overflow-visible md:overflow-hidden">
 
         <!-- Left Control Panel -->
-        <aside class="w-80 bg-slate-900 border-r border-slate-800 flex flex-col custom-scroll overflow-y-auto shrink-0 z-10 shadow-2xl">
+        <aside class="w-full md:w-80 bg-slate-900 border-b md:border-b-0 md:border-r border-slate-800 flex flex-col custom-scroll md:overflow-y-auto md:shrink-0 z-10 shadow-2xl">
 
             <!-- Section: Euclidean View Controls (RESTORED) -->
             <div class="p-5 border-b border-slate-800 bg-indigo-950/30">
@@ -160,7 +147,7 @@
         </aside>
 
         <!-- Right Visualization Area -->
-        <section class="flex-1 bg-black relative flex flex-col">
+        <section class="flex-1 min-h-[75vh] md:min-h-0 bg-black relative flex flex-col">
 
             <!-- Plot Container -->
             <div id="chart-3d" class="w-full h-full"></div>

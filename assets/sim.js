@@ -35,6 +35,9 @@
   }
   // 讓畫布充滿其容器寬度、依比例定高
   function fit(canvas, aspect) {
+    // 先重設寬度再量父容器：避免上一輪設定的固定 px 寬把父層（grid/flex 容器）反撐，
+    // 造成窄螢幕（手機）無法回收的橫向溢出。
+    canvas.style.width = '100%';
     const cssW = canvas.parentElement.clientWidth;
     const cssH = Math.round(cssW / aspect);
     return setup(canvas, cssW, cssH);

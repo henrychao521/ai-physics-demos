@@ -32,6 +32,7 @@
   .section h2{font-size:1.08rem;margin:0;white-space:nowrap;letter-spacing:.5px}
   .section .ln{flex:1;height:1px;background:var(--line)}
   .section .cnt{font-size:.74rem;color:var(--faint);white-space:nowrap}
+  @media(max-width:600px){.section .cnt{display:none}}
   /* thumbnails */
   .t-spec{background:#000}
   .t-spec::before{content:"";position:absolute;inset:0;background:
@@ -78,6 +79,7 @@
   .t-induction{background:#070d18}
   .t-photo{background:#070d18}
   .t-halflife{background:#070d18}
+  .t-bohr{background:radial-gradient(circle at 50% 45%,#0b1026 0,#05060f 70%)}
   .ext{font-size:.7rem;color:var(--accent2)}
   footer{color:var(--muted);font-size:.8rem;margin-top:42px;line-height:1.8;border-top:1px solid var(--line);padding-top:18px}
   footer a{color:var(--accent)}
@@ -552,6 +554,27 @@
       <div class="tag"><span class="badge">近代物理・核物理</span></div>
       <h3>放射性半衰期</h3>
       <p>原子隨機衰變，每過一個半衰期剩一半，N=N₀(½)^(t/T)；原子越少鋸齒越明顯，碳-14 定年原理。</p>
+      <div class="go">開始體驗 →</div>
+    </a>
+
+    <a class="card" href="bohr/">
+      <div class="thumb t-bohr">
+        <svg viewBox="0 0 300 152" preserveAspectRatio="none" style="width:100%;height:100%">
+          <g fill="none" stroke="#3a4d7a" stroke-width="1.5">
+            <ellipse cx="150" cy="76" rx="42" ry="42"/>
+            <ellipse cx="150" cy="76" rx="80" ry="60"/>
+            <ellipse cx="150" cy="76" rx="120" ry="34"/>
+          </g>
+          <circle cx="150" cy="76" r="7" fill="#ffce54"/>
+          <circle cx="192" cy="76" r="4" fill="#4cc2ff"/>
+          <circle cx="150" cy="16" r="4" fill="#7CFFB2"/>
+          <circle cx="30" cy="76" r="4" fill="#8b9cff"/>
+          <line x1="150" y1="76" x2="264" y2="40" stroke="#ff3b3b" stroke-width="2"/>
+        </svg>
+      </div>
+      <div class="tag"><span class="badge">近代物理・原子模型</span></div>
+      <h3>波耳原子模型</h3>
+      <p>電子只能在特定能階；躍遷放出光子，能量差決定波長。氫原子光譜 Hα 656nm、巴耳末／來曼系，量子化的起點。</p>
       <div class="go">開始體驗 →</div>
     </a>
 

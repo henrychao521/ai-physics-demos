@@ -114,7 +114,7 @@ function draw(){const W=cv.width,H=cv.height;
 }
 let drag=-1;
 function pos(e){const r=cv.getBoundingClientRect();return {x:(e.clientX-r.left)*cv.width/r.width,y:(e.clientY-r.top)*cv.height/r.height};}
-cv.addEventListener('pointerdown',e=>{const p=pos(e);for(let i=0;i<charges.length;i++)if(Math.hypot(p.x-charges[i].x,p.y-charges[i].y)<18){drag=i;cv.setPointerCapture(e.pointerId);cv.style.cursor='grabbing';return;}});
+cv.addEventListener('pointerdown',e=>{const p=pos(e);const hit=Math.max(18,16*cv.width/cv.getBoundingClientRect().width);for(let i=0;i<charges.length;i++)if(Math.hypot(p.x-charges[i].x,p.y-charges[i].y)<hit){drag=i;cv.setPointerCapture(e.pointerId);cv.style.cursor='grabbing';return;}});
 cv.addEventListener('pointermove',e=>{if(drag<0)return;const p=pos(e);charges[drag].x=p.x;charges[drag].y=p.y;draw();});
 window.addEventListener('pointerup',()=>{drag=-1;cv.style.cursor='grab';});
 document.getElementById('addPos').onclick=()=>{charges.push({x:450,y:235,q:state.mag});draw();};
