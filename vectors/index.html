@@ -6,37 +6,38 @@
 <title>力的合成 ｜ 向量加法・平行四邊形・平衡</title>
 <link rel="icon" href="../assets/favicon.svg" type="image/svg+xml">
 <link rel="stylesheet" href="../assets/site.css">
+<script src="../assets/sim.js"></script>
 <script defer src="../assets/nav.js"></script>
 <style>
   *{box-sizing:border-box}
-  html,body{margin:0;padding:0;background:var(--bg);color:var(--txt);
-    font-family:"Noto Sans TC","PingFang TC","Microsoft JhengHei",system-ui,sans-serif}
+  html,body{margin:0;padding:0;background:var(--bg);color:var(--txt);font-family:"Noto Sans TC","PingFang TC","Microsoft JhengHei",system-ui,sans-serif}
   a{color:var(--accent)}
-  .wrap{max-width:1100px;margin:0 auto;padding:18px 16px 60px}
+  .wrap{max-width:1120px;margin:0 auto;padding:18px 16px 60px}
   header h1{font-size:1.5rem;margin:.2em 0}
   header p{color:var(--muted);margin:.2em 0 1em;line-height:1.6}
-  .badge{display:inline-block;background:var(--panel2);border:1px solid var(--line);
-    color:var(--muted);font-size:.72rem;padding:2px 8px;border-radius:99px;margin-right:6px}
-  .layout{display:grid;grid-template-columns:1.2fr .8fr;gap:16px}
-  @media(max-width:780px){.layout{grid-template-columns:1fr}}
-  .stage{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:14px;margin-bottom:16px}
-  canvas{width:100%;display:block;border-radius:8px;background:#05070b;touch-action:none}
-  .label{font-size:.8rem;color:var(--muted);margin:0 0 6px;display:flex;justify-content:space-between;flex-wrap:wrap;gap:8px}
-  .modes{display:flex;gap:8px;margin:6px 0 14px;flex-wrap:wrap;align-items:center}
-  .modes button,.btn{background:var(--panel2);color:var(--txt);border:1px solid var(--line);
-    padding:8px 14px;border-radius:9px;cursor:pointer;font-size:.85rem;font-family:inherit}
-  .modes button.on{background:var(--accent);color:#04121c;border-color:var(--accent);font-weight:700}
-  .btn:hover,.modes button:hover{border-color:var(--accent)}
+  .badge{display:inline-block;background:var(--panel2);border:1px solid var(--line);color:var(--muted);font-size:.72rem;padding:2px 8px;border-radius:99px;margin-right:6px}
+  .grid2{display:grid;grid-template-columns:1.25fr .75fr;gap:14px}
+  @media(max-width:740px){.grid2{grid-template-columns:1fr}}
+  .scene-wrap{position:relative;border-radius:16px;overflow:hidden;border:1px solid var(--line);box-shadow:0 18px 50px rgba(0,0,0,.45)}
+  #scene{display:block;width:100%;touch-action:none;cursor:grab}
+  .toolbar{position:absolute;top:12px;left:12px;display:flex;gap:7px;flex-wrap:wrap}
+  .toolbar button{background:rgba(8,14,24,.6);backdrop-filter:blur(6px);color:#eaf2ff;border:1px solid rgba(255,255,255,.14);border-radius:9px;padding:7px 11px;font-size:.82rem;cursor:pointer;font-family:inherit}
+  .toolbar button.on{background:var(--accent);color:#04121c;border-color:var(--accent);font-weight:700}
+  .side{display:flex;flex-direction:column;gap:12px}
+  .tablecard{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:6px 14px 12px}
   table{width:100%;border-collapse:collapse;font-size:.85rem;font-variant-numeric:tabular-nums}
   th,td{padding:7px 8px;border-bottom:1px solid var(--line);text-align:right}
   th:first-child,td:first-child{text-align:left}
   thead th{color:var(--muted);font-weight:600}
   .res td{color:var(--accent2);font-weight:700;border-top:2px solid var(--line)}
-  .eqbar{margin-top:12px;padding:10px 12px;border-radius:10px;text-align:center;font-weight:700;font-size:.95rem}
-  .note{background:var(--panel);border-left:3px solid var(--accent2);border-radius:8px;
-    padding:12px 14px;color:var(--muted);font-size:.86rem;line-height:1.7;margin-top:18px}
+  .eqbar{padding:10px 12px;border-radius:12px;text-align:center;font-weight:700}
+  .presets{display:flex;gap:7px;flex-wrap:wrap;align-items:center;margin-top:14px}
+  .presets span{color:var(--muted);font-size:.8rem}
+  .pbtn{background:var(--panel2);color:var(--txt);border:1px solid var(--line);padding:7px 12px;border-radius:9px;cursor:pointer;font-size:.83rem;font-family:inherit}
+  .pbtn:hover{border-color:var(--accent)}
+  .note{background:var(--panel);border-left:3px solid var(--accent2);border-radius:8px;padding:12px 14px;color:var(--muted);font-size:.86rem;line-height:1.7;margin-top:14px}
   .note b{color:var(--txt)}.note code{background:var(--bg2);padding:1px 6px;border-radius:5px;color:var(--green);font-size:.85em}
-  footer{color:var(--muted);font-size:.78rem;margin-top:26px;text-align:center;line-height:1.7}
+  footer{color:var(--muted);font-size:.78rem;margin-top:24px;text-align:center;line-height:1.7}
 </style>
 </head>
 <body data-demo="力的合成">
@@ -44,92 +45,77 @@
   <header>
     <span class="badge">力學・向量</span>
     <h1>力的合成（向量加法）</h1>
-    <p><b>拖曳</b>每個彩色箭頭的頂端，改變各力的大小與方向。白色粗箭頭是它們的<b>合力</b>（向量和），
-       用<b>平行四邊形</b>或<b>頭尾相接</b>作圖求得。合力為零時物體達到<b>力平衡</b>。</p>
+    <p><b>拖曳</b>每個彩色箭頭的頂端改變各力的大小與方向。白色粗箭頭是它們的<b>合力</b>（向量和），
+       用<b>平行四邊形</b>或<b>頭尾相接</b>求得。合力為零時物體達到<b>力平衡</b>。</p>
   </header>
 
-  <div class="modes">
-    <button class="btn on" id="b2">兩個力</button>
-    <button class="btn" id="b3">三個力</button>
-    <span style="color:var(--muted);font-size:.8rem;margin-left:6px">情境：</span>
-    <button class="btn" data-preset="same">同向相加</button>
-    <button class="btn" data-preset="perp">垂直(畢氏)</button>
-    <button class="btn" data-preset="balance2">反向平衡</button>
-    <button class="btn" data-preset="tri">三力平衡</button>
-  </div>
-
-  <div class="layout">
-    <div class="stage">
-      <div class="label"><span>拖曳箭頭頂端調整力（格線每格 = 10 N）</span><span id="hint">＊拖白點以外的彩色箭頭頂端</span></div>
-      <canvas id="cv" width="600" height="520"></canvas>
+  <div class="grid2">
+    <div class="scene-wrap">
+      <canvas id="scene"></canvas>
+      <div class="toolbar">
+        <button id="b2" class="on">兩個力</button>
+        <button id="b3">三個力</button>
+      </div>
     </div>
-    <div>
-      <div class="stage" style="margin-bottom:0">
-        <table>
-          <thead><tr><th>力</th><th>大小 (N)</th><th>方向</th><th>Fx</th><th>Fy</th></tr></thead>
-          <tbody id="tb"></tbody>
-        </table>
-        <div class="eqbar" id="eq"></div>
+    <div class="side">
+      <div class="tablecard">
+        <table><thead><tr><th>力</th><th>大小(N)</th><th>方向</th><th>Fx</th><th>Fy</th></tr></thead><tbody id="tb"></tbody></table>
+      </div>
+      <div class="eqbar" id="eq"></div>
+      <div class="presets" style="margin-top:0">
+        <span>情境：</span>
+        <button class="pbtn" data-preset="same">同向</button>
+        <button class="pbtn" data-preset="perp">垂直</button>
+        <button class="pbtn" data-preset="balance2">反向平衡</button>
+        <button class="pbtn" data-preset="tri">三力平衡</button>
       </div>
     </div>
   </div>
 
   <div class="note">
-    <b>物理重點：</b>力是<b>向量</b>，相加要連方向一起加，不能只加大小。把各力分解成水平、鉛直分量
-    <code>Fx = F·cosθ、Fy = F·sinθ</code>，分別相加得合力分量，再合成出大小 <code>|R| = √(Rx²+Ry²)</code> 與方向。
-    兩力時可用<b>平行四邊形法</b>；多力時用<b>頭尾相接法</b>（一個接一個畫，從起點到終點就是合力）。
-    當合力為零（各分量都抵消），物體<b>靜止或等速</b>＝力平衡，例如兩繩吊重物或三力共點平衡。
+    <b>物理重點：</b>力是<b>向量</b>，相加要連方向一起加。把各力分解成水平、鉛直分量 <code>Fx = F·cosθ、Fy = F·sinθ</code>，
+    分別相加得合力分量，再合成出大小 <code>|R| = √(Rx²+Ry²)</code> 與方向。兩力時可用<b>平行四邊形法</b>；多力時用<b>頭尾相接法</b>。
+    當合力為零（各分量都抵消），物體<b>靜止或等速</b>＝力平衡。
   </div>
 
-  <footer>純前端 HTML / Canvas，無外部相依。拖曳互動即時合成向量。</footer>
+  <footer>純前端 HTML / Canvas（SIM 工具庫）。拖曳互動即時合成向量。</footer>
 </div>
 
 <script>
-const SCALE=2.2;                                   // 1 N = 2.2 px
-const COLORS=['#4cc2ff','#ff6b9d','#7CFFB2'];
-let n=2, forces=[{x:60,y:30},{x:-20,y:55},{x:40,y:-60}];  // N（y 向上為正）
-const cv=document.getElementById('cv'),cc=cv.getContext('2d');
-function O(){return {x:cv.width/2,y:cv.height/2};}
+const S=SIM, SCALE=2.2, COLORS=['#4cc2ff','#ff6b9d','#7CFFB2'];
+let n=2, forces=[{x:60,y:30},{x:-20,y:55},{x:40,y:-60}];
+let sc;
+const GRID={skyTop:'#10192b',skyBottom:'#0a0f1c',vignette:'rgba(0,0,0,.4)'};
+function setupCanvases(){sc=S.fit(document.getElementById('scene'),1.35);}
+function O(){return {x:sc._w/2,y:sc._h/2};}
 function toS(F){const o=O();return {x:o.x+F.x*SCALE,y:o.y-F.y*SCALE};}
 function resultant(){let R={x:0,y:0};for(let i=0;i<n;i++){R.x+=forces[i].x;R.y+=forces[i].y;}return R;}
-function arrow(x1,y1,x2,y2,col,w){
-  if(Math.hypot(x2-x1,y2-y1)<1)return;
-  cc.strokeStyle=col;cc.fillStyle=col;cc.lineWidth=w;cc.beginPath();cc.moveTo(x1,y1);cc.lineTo(x2,y2);cc.stroke();
-  const a=Math.atan2(y2-y1,x2-x1),h=11;cc.beginPath();cc.moveTo(x2,y2);
-  cc.lineTo(x2-h*Math.cos(a-.4),y2-h*Math.sin(a-.4));cc.lineTo(x2-h*Math.cos(a+.4),y2-h*Math.sin(a+.4));cc.closePath();cc.fill();
-}
-function draw(){
-  const W=cv.width,H=cv.height,o=O();cc.clearRect(0,0,W,H);
-  // 格線
-  cc.strokeStyle='#131b28';cc.lineWidth=1;
-  for(let x=o.x%(10*SCALE);x<W;x+=10*SCALE){cc.beginPath();cc.moveTo(x,0);cc.lineTo(x,H);cc.stroke();}
-  for(let y=o.y%(10*SCALE);y<H;y+=10*SCALE){cc.beginPath();cc.moveTo(0,y);cc.lineTo(W,y);cc.stroke();}
-  cc.strokeStyle='#26303f';cc.beginPath();cc.moveTo(0,o.y);cc.lineTo(W,o.y);cc.moveTo(o.x,0);cc.lineTo(o.x,H);cc.stroke();
+function draw(){const W=sc._w,H=sc._h,o=O();
+  S.scene(sc,GRID,{});
+  // 格紙(每格 10N)
+  sc.strokeStyle='rgba(120,150,210,.10)';sc.lineWidth=1;
+  for(let x=o.x%(10*SCALE);x<W;x+=10*SCALE){sc.beginPath();sc.moveTo(x,0);sc.lineTo(x,H);sc.stroke();}
+  for(let y=o.y%(10*SCALE);y<H;y+=10*SCALE){sc.beginPath();sc.moveTo(0,y);sc.lineTo(W,y);sc.stroke();}
+  sc.strokeStyle='rgba(150,180,230,.3)';sc.beginPath();sc.moveTo(0,o.y);sc.lineTo(W,o.y);sc.moveTo(o.x,0);sc.lineTo(o.x,H);sc.stroke();
   const R=resultant();
-  // 頭尾相接（淡）
-  let cx=o.x,cy=o.y;cc.setLineDash([4,4]);
-  for(let i=0;i<n;i++){const nx=cx+forces[i].x*SCALE,ny=cy-forces[i].y*SCALE;
-    cc.strokeStyle=COLORS[i]+'66';cc.lineWidth=1.5;cc.beginPath();cc.moveTo(cx,cy);cc.lineTo(nx,ny);cc.stroke();cx=nx;cy=ny;}
-  cc.setLineDash([]);
-  // 平行四邊形（兩力時）
-  if(n===2){const h1=toS(forces[0]),h2=toS(forces[1]);
-    cc.strokeStyle='#2a3850';cc.lineWidth=1;cc.setLineDash([3,4]);
-    cc.beginPath();cc.moveTo(h1.x,h1.y);cc.lineTo(o.x+(forces[0].x+forces[1].x)*SCALE,o.y-(forces[0].y+forces[1].y)*SCALE);
-    cc.moveTo(h2.x,h2.y);cc.lineTo(o.x+(forces[0].x+forces[1].x)*SCALE,o.y-(forces[0].y+forces[1].y)*SCALE);cc.stroke();cc.setLineDash([]);}
-  // 合力（白）
-  const rs=toS(R);arrow(o.x,o.y,rs.x,rs.y,'#ffffff',4);
-  cc.fillStyle='#fff';cc.font='bold 13px sans-serif';cc.fillText('合力 R='+Math.hypot(R.x,R.y).toFixed(1)+'N',rs.x+6,rs.y-6);
+  // 頭尾相接(淡)
+  let cx=o.x,cy=o.y;for(let i=0;i<n;i++){const nx=cx+forces[i].x*SCALE,ny=cy-forces[i].y*SCALE;
+    S.arrow(sc,cx,cy,nx,ny,{color:COLORS[i]+'66',width:1.5,dash:true});cx=nx;cy=ny;}
+  // 平行四邊形(兩力)
+  if(n===2){const h1=toS(forces[0]),h2=toS(forces[1]),tip={x:o.x+(forces[0].x+forces[1].x)*SCALE,y:o.y-(forces[0].y+forces[1].y)*SCALE};
+    sc.strokeStyle='rgba(120,140,180,.4)';sc.setLineDash([3,4]);sc.lineWidth=1;
+    sc.beginPath();sc.moveTo(h1.x,h1.y);sc.lineTo(tip.x,tip.y);sc.moveTo(h2.x,h2.y);sc.lineTo(tip.x,tip.y);sc.stroke();sc.setLineDash([]);}
   // 各力
-  for(let i=0;i<n;i++){const h=toS(forces[i]);arrow(o.x,o.y,h.x,h.y,COLORS[i],3.5);
-    cc.fillStyle=COLORS[i];cc.font='bold 12px sans-serif';cc.fillText('F'+(i+1),h.x+6,h.y+4);
-    cc.beginPath();cc.arc(h.x,h.y,6,0,7);cc.fill();}        // 可拖曳頂點
-  // 原點
-  cc.fillStyle='#e8eef6';cc.beginPath();cc.arc(o.x,o.y,5,0,7);cc.fill();
+  for(let i=0;i<n;i++){const h=toS(forces[i]);S.arrow(sc,o.x,o.y,h.x,h.y,{color:COLORS[i],width:3.5,label:'F'+(i+1)});
+    sc.fillStyle=COLORS[i];sc.beginPath();sc.arc(h.x,h.y,6,0,7);sc.fill();sc.strokeStyle='#fff';sc.lineWidth=1.5;sc.stroke();}
+  // 合力(白)
+  const rs=toS(R);S.arrow(sc,o.x,o.y,rs.x,rs.y,{color:'#fff',width:4.5,label:'合力 R'});
+  // 原點物件
+  S.sphere(sc,o.x,o.y,7,[210,15,75]);
   updateTable(R);
 }
 function angStr(F){let a=Math.atan2(F.y,F.x)*180/Math.PI;if(a<0)a+=360;return a.toFixed(0)+'°';}
-function updateTable(R){
-  let rows='';
+function updateTable(R){let rows='';
   for(let i=0;i<n;i++){const F=forces[i],mag=Math.hypot(F.x,F.y);
     rows+=`<tr><td style="color:${COLORS[i]}">F${i+1}</td><td>${mag.toFixed(1)}</td><td>${angStr(F)}</td><td>${F.x.toFixed(1)}</td><td>${F.y.toFixed(1)}</td></tr>`;}
   const Rmag=Math.hypot(R.x,R.y);
@@ -137,32 +123,24 @@ function updateTable(R){
   document.getElementById('tb').innerHTML=rows;
   const eq=document.getElementById('eq');
   if(Rmag<2){eq.textContent='✓ 合力 ≈ 0 → 力平衡（靜止或等速）';eq.style.background='rgba(124,255,178,.15)';eq.style.color='#7CFFB2';}
-  else{eq.textContent='合力 = '+Rmag.toFixed(1)+' N → 物體沿合力方向加速';eq.style.background='rgba(255,206,84,.12)';eq.style.color='#ffce54';}
+  else{eq.textContent='合力 = '+Rmag.toFixed(1)+' N → 沿合力方向加速';eq.style.background='rgba(255,206,84,.12)';eq.style.color='#ffce54';}
 }
-// 拖曳
 let drag=-1;
-function pos(e){const r=cv.getBoundingClientRect();return {x:(e.clientX-r.left)*cv.width/r.width,y:(e.clientY-r.top)*cv.height/r.height};}
-cv.addEventListener('pointerdown',e=>{const p=pos(e);for(let i=0;i<n;i++){const h=toS(forces[i]);if(Math.hypot(p.x-h.x,p.y-h.y)<16){drag=i;cv.setPointerCapture(e.pointerId);e.preventDefault();return;}}});
-cv.addEventListener('pointermove',e=>{if(drag<0)return;const p=pos(e),o=O();
-  forces[drag]={x:Math.round((p.x-o.x)/SCALE),y:Math.round(-(p.y-o.y)/SCALE)};draw();});
-window.addEventListener('pointerup',()=>{drag=-1;});
-// 力數切換
+function pos(e){const r=sc.canvas?sc.canvas.getBoundingClientRect():document.getElementById('scene').getBoundingClientRect();
+  const cv=document.getElementById('scene');return {x:(e.clientX-r.left)*cv.width/r.width/sc._dpr,y:(e.clientY-r.top)*cv.height/r.height/sc._dpr};}
+const cvEl=document.getElementById('scene');
+cvEl.addEventListener('pointerdown',e=>{const p=pos(e);for(let i=0;i<n;i++){const h=toS(forces[i]);if(Math.hypot(p.x-h.x,p.y-h.y)<16){drag=i;cvEl.setPointerCapture(e.pointerId);cvEl.style.cursor='grabbing';return;}}});
+cvEl.addEventListener('pointermove',e=>{if(drag<0)return;const p=pos(e),o=O();forces[drag]={x:Math.round((p.x-o.x)/SCALE),y:Math.round(-(p.y-o.y)/SCALE)};draw();});
+window.addEventListener('pointerup',()=>{drag=-1;cvEl.style.cursor='grab';});
 const b2=document.getElementById('b2'),b3=document.getElementById('b3');
 b2.onclick=()=>{n=2;b2.classList.add('on');b3.classList.remove('on');draw();};
 b3.onclick=()=>{n=3;b3.classList.add('on');b2.classList.remove('on');draw();};
-// 情境
-const PRE={
-  same:    {n:2,f:[{x:50,y:0},{x:35,y:0},{x:0,y:0}]},
-  perp:    {n:2,f:[{x:60,y:0},{x:0,y:45},{x:0,y:0}]},
-  balance2:{n:2,f:[{x:55,y:25},{x:-55,y:-25},{x:0,y:0}]},
-  tri:     {n:3,f:[{x:0,y:60},{x:52,y:-30},{x:-52,y:-30}]},
-};
-document.querySelectorAll('[data-preset]').forEach(b=>b.onclick=()=>{
-  const p=PRE[b.dataset.preset];if(!p)return;n=p.n;forces=p.f.map(v=>({...v}));
-  b2.classList.toggle('on',n===2);b3.classList.toggle('on',n===3);draw();
-});
-draw();
-window.addEventListener('resize',draw);
+const PRE={same:{n:2,f:[{x:50,y:0},{x:35,y:0},{x:0,y:0}]},perp:{n:2,f:[{x:60,y:0},{x:0,y:45},{x:0,y:0}]},
+  balance2:{n:2,f:[{x:55,y:25},{x:-55,y:-25},{x:0,y:0}]},tri:{n:3,f:[{x:0,y:60},{x:52,y:-30},{x:-52,y:-30}]}};
+document.querySelectorAll('[data-preset]').forEach(b=>b.onclick=()=>{const p=PRE[b.dataset.preset];if(!p)return;n=p.n;forces=p.f.map(v=>({...v}));
+  b2.classList.toggle('on',n===2);b3.classList.toggle('on',n===3);draw();});
+window.addEventListener('load',()=>{setupCanvases();draw();});
+window.addEventListener('resize',()=>{setupCanvases();draw();});
 </script>
 </body>
 </html>

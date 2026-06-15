@@ -6,40 +6,39 @@
 <title>槓桿與滑輪 ｜ 力矩平衡・機械利益</title>
 <link rel="icon" href="../assets/favicon.svg" type="image/svg+xml">
 <link rel="stylesheet" href="../assets/site.css">
+<script src="../assets/sim.js"></script>
 <script defer src="../assets/nav.js"></script>
 <style>
   *{box-sizing:border-box}
-  html,body{margin:0;padding:0;background:var(--bg);color:var(--txt);
-    font-family:"Noto Sans TC","PingFang TC","Microsoft JhengHei",system-ui,sans-serif}
+  html,body{margin:0;padding:0;background:var(--bg);color:var(--txt);font-family:"Noto Sans TC","PingFang TC","Microsoft JhengHei",system-ui,sans-serif}
   a{color:var(--accent)}
-  .wrap{max-width:1100px;margin:0 auto;padding:18px 16px 60px}
+  .wrap{max-width:1120px;margin:0 auto;padding:18px 16px 60px}
   header h1{font-size:1.5rem;margin:.2em 0}
   header p{color:var(--muted);margin:.2em 0 1em;line-height:1.6}
-  .badge{display:inline-block;background:var(--panel2);border:1px solid var(--line);
-    color:var(--muted);font-size:.72rem;padding:2px 8px;border-radius:99px;margin-right:6px}
-  .stage{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:14px;margin-bottom:16px}
-  canvas{width:100%;display:block;border-radius:8px;background:#05070b}
-  .label{font-size:.8rem;color:var(--muted);margin:0 0 6px;display:flex;justify-content:space-between;flex-wrap:wrap;gap:8px}
-  .grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:14px}
-  .ctrl{background:var(--panel2);border:1px solid var(--line);border-radius:10px;padding:10px 12px}
-  .ctrl label{display:flex;justify-content:space-between;font-size:.85rem;margin-bottom:6px}
-  .ctrl .val{color:var(--accent);font-variant-numeric:tabular-nums}
-  .ctrl.l .val{color:#4cc2ff}.ctrl.r .val{color:#ff6b9d}
-  input[type=range]{width:100%;accent-color:var(--accent)}
-  .modes{display:flex;gap:8px;margin:6px 0 14px;flex-wrap:wrap;align-items:center}
-  .modes button,.btn{background:var(--panel2);color:var(--txt);border:1px solid var(--line);
-    padding:8px 14px;border-radius:9px;cursor:pointer;font-size:.85rem;font-family:inherit}
-  .modes button.on{background:var(--accent);color:#04121c;border-color:var(--accent);font-weight:700}
-  .btn:hover,.modes button:hover{border-color:var(--accent)}
-  .stat{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:10px;margin:2px 0}
-  .stat .box{background:var(--panel2);border:1px solid var(--line);border-radius:10px;padding:9px 11px}
-  .stat .box .k{font-size:.72rem;color:var(--muted)}
-  .stat .box .v{font-size:1.02rem;font-variant-numeric:tabular-nums;font-weight:700}
-  .eqbar{margin:14px 0 0;padding:10px 12px;border-radius:10px;text-align:center;font-weight:700}
-  .note{background:var(--panel);border-left:3px solid var(--accent2);border-radius:8px;
-    padding:12px 14px;color:var(--muted);font-size:.86rem;line-height:1.7;margin-top:18px}
+  .badge{display:inline-block;background:var(--panel2);border:1px solid var(--line);color:var(--muted);font-size:.72rem;padding:2px 8px;border-radius:99px;margin-right:6px}
+  .scene-wrap{position:relative;border-radius:16px;overflow:hidden;border:1px solid var(--line);box-shadow:0 18px 50px rgba(0,0,0,.45)}
+  #scene{display:block;width:100%}
+  .toolbar{position:absolute;top:12px;left:12px;display:flex;gap:7px;flex-wrap:wrap}
+  .toolbar button{background:rgba(12,16,28,.6);backdrop-filter:blur(6px);color:#eaf2ff;border:1px solid rgba(255,255,255,.14);border-radius:9px;padding:7px 11px;font-size:.82rem;cursor:pointer;font-family:inherit}
+  .toolbar button.on{background:var(--accent);color:#04121c;border-color:var(--accent);font-weight:700}
+  .statgrid{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px;margin-top:14px}
+  .box{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:10px 12px}
+  .box .k{font-size:.72rem;color:var(--muted)}
+  .box .v{font-size:1.05rem;font-variant-numeric:tabular-nums;font-weight:700}
+  .eqbar{margin-top:12px;padding:10px 12px;border-radius:12px;text-align:center;font-weight:700}
+  .bar{display:flex;gap:14px;flex-wrap:wrap;align-items:flex-end;background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:14px 16px;margin-top:14px}
+  .sld{flex:1;min-width:150px}
+  .sld label{display:flex;justify-content:space-between;font-size:.82rem;color:var(--muted);margin-bottom:5px}
+  .sld label .v{font-variant-numeric:tabular-nums;font-weight:700;color:var(--accent)}
+  .sld.l label .v{color:#4cc2ff}.sld.r label .v{color:#ff6b9d}
+  .sld input{width:100%;accent-color:var(--accent)}
+  .presets{display:flex;gap:7px;flex-wrap:wrap;align-items:center;margin-top:12px}
+  .presets span{color:var(--muted);font-size:.8rem}
+  .pbtn{background:var(--panel2);color:var(--txt);border:1px solid var(--line);padding:7px 12px;border-radius:9px;cursor:pointer;font-size:.83rem;font-family:inherit}
+  .pbtn:hover{border-color:var(--accent)}
+  .note{background:var(--panel);border-left:3px solid var(--accent2);border-radius:8px;padding:12px 14px;color:var(--muted);font-size:.86rem;line-height:1.7;margin-top:14px}
   .note b{color:var(--txt)}.note code{background:var(--bg2);padding:1px 6px;border-radius:5px;color:var(--green);font-size:.85em}
-  footer{color:var(--muted);font-size:.78rem;margin-top:26px;text-align:center;line-height:1.7}
+  footer{color:var(--muted);font-size:.78rem;margin-top:24px;text-align:center;line-height:1.7}
 </style>
 </head>
 <body data-demo="槓桿與滑輪">
@@ -51,170 +50,126 @@
        但要拉 N 倍長的繩——<b>省力但費距離</b>，功（力×距離）守恆。</p>
   </header>
 
-  <div class="modes">
-    <button class="btn on" id="mLever">槓桿（力矩）</button>
-    <button class="btn" id="mPulley">滑輪組</button>
-    <span id="leverPresets"><span style="color:var(--muted);font-size:.8rem;margin-left:6px">情境：</span>
-      <button class="btn" data-preset="bal">恰好平衡</button>
-      <button class="btn" data-preset="adv">小力撬大物</button></span>
+  <div class="scene-wrap">
+    <canvas id="scene"></canvas>
+    <div class="toolbar">
+      <button id="mLever" class="on">槓桿（力矩）</button>
+      <button id="mPulley">滑輪組</button>
+    </div>
   </div>
 
-  <div class="stage">
-    <div class="label"><span id="canvasLabel">槓桿：藍=左側力矩，紅=右側力矩，相等則水平平衡</span><span id="sub"></span></div>
-    <canvas id="cv" width="1040" height="340"></canvas>
-  </div>
-
-  <div class="stat" id="stats"></div>
+  <div class="statgrid" id="stats"></div>
   <div class="eqbar" id="eq"></div>
 
-  <div class="grid" id="controls" style="margin-top:14px"></div>
+  <div class="bar" id="sliders"></div>
+  <div class="presets" id="leverPresets">
+    <span>情境：</span>
+    <button class="pbtn" data-preset="bal">恰好平衡</button>
+    <button class="pbtn" data-preset="adv">小力撬大物</button>
+  </div>
 
   <div class="note" id="note"></div>
-
-  <footer>純前端 HTML / Canvas，無外部相依。</footer>
+  <footer>純前端 HTML / Canvas（SIM 工具庫）。</footer>
 </div>
 
 <script>
-let mode='lever';
-const lever={w1:20,d1:3,w2:30,d2:2};
-const pulley={W:120,N:2};
-const cv=document.getElementById('cv'),cc=cv.getContext('2d');
-const ctrl=document.getElementById('controls');
+const S=SIM; let mode='lever';
+const lever={w1:20,d1:3,w2:30,d2:2}, pulley={W:120,N:2};
+let sc;
+const LAB={skyTop:'#18223a',skyBottom:'#0b1120',ground:'#222c44',groundDark:'#121829',grid:'rgba(120,150,210,.22)',horizon:'rgba(150,180,230,.3)',vignette:'rgba(0,0,0,.45)'};
 function fmt(x){return (Math.round(x*100)/100).toString();}
-
-function buildControls(){
-  ctrl.innerHTML='';
-  const specs = mode==='lever' ? [
+const sBar=document.getElementById('sliders');
+function buildControls(){ sBar.innerHTML='';
+  const specs= mode==='lever' ? [
     {obj:lever,id:'w1',name:'左重 W₁',min:5,max:60,step:1,val:lever.w1,unit:'N',cls:'l'},
-    {obj:lever,id:'d1',name:'左力臂 d₁',min:0.5,max:5,step:.1,val:lever.d1,unit:'m',cls:'l'},
+    {obj:lever,id:'d1',name:'左力臂 d₁',min:.5,max:5,step:.1,val:lever.d1,unit:'m',cls:'l'},
     {obj:lever,id:'w2',name:'右重 W₂',min:5,max:60,step:1,val:lever.w2,unit:'N',cls:'r'},
-    {obj:lever,id:'d2',name:'右力臂 d₂',min:0.5,max:5,step:.1,val:lever.d2,unit:'m',cls:'r'},
+    {obj:lever,id:'d2',name:'右力臂 d₂',min:.5,max:5,step:.1,val:lever.d2,unit:'m',cls:'r'},
   ] : [
     {obj:pulley,id:'W',name:'載重 W',min:20,max:300,step:10,val:pulley.W,unit:'N'},
     {obj:pulley,id:'N',name:'支撐繩數 N',min:1,max:5,step:1,val:pulley.N,unit:'條'},
   ];
-  specs.forEach(s=>{
-    const box=document.createElement('div');box.className='ctrl '+(s.cls||'');
-    box.innerHTML=`<label><span>${s.name}</span><span class="val" id="v_${s.id}">${fmt(s.val)} ${s.unit}</span></label>
+  specs.forEach(s=>{const d=document.createElement('div');d.className='sld '+(s.cls||'');
+    d.innerHTML=`<label><span>${s.name}</span><span class="v" id="v_${s.id}">${fmt(s.val)} ${s.unit}</span></label>
       <input type="range" id="r_${s.id}" min="${s.min}" max="${s.max}" step="${s.step}" value="${s.val}">`;
-    ctrl.appendChild(box);
-    box.querySelector('input').addEventListener('input',e=>{
-      s.obj[s.id]=parseFloat(e.target.value);
-      document.getElementById('v_'+s.id).textContent=`${fmt(s.obj[s.id])} ${s.unit}`;
-      if(mode==='lever')targetAngle=null; draw();
-    });
-  });
+    sBar.appendChild(d);
+    d.querySelector('input').addEventListener('input',e=>{s.obj[s.id]=parseFloat(e.target.value);
+      document.getElementById('v_'+s.id).textContent=`${fmt(s.obj[s.id])} ${s.unit}`;if(mode==='lever')targetAngle=null;draw();});});
 }
+function setSlider(id,val,obj){obj[id]=val;const r=document.getElementById('r_'+id);if(r)r.value=val;const el=document.getElementById('v_'+id);if(el)el.textContent=fmt(val)+' '+(el.textContent.split(' ')[1]||'');}
 
-// ===== 槓桿 =====
-let angle=0, targetAngle=null;
-function leverTorques(){return {L:lever.w1*lever.d1, R:lever.w2*lever.d2};}
-function drawLever(){
-  const W=cv.width,H=cv.height,px=W/2,py=H*0.5,PM=42,Lm=4.6;cc.clearRect(0,0,W,H);
-  const {L,R}=leverTorques();
-  const bal=Math.abs(L-R)<0.5;
-  const goal=bal?0:Math.sign(R-L)*0.32;             // 傾倒方向
-  if(targetAngle===null)targetAngle=goal;
-  const th=angle;
-  // 支點三角
-  cc.fillStyle='#3a4756';cc.beginPath();cc.moveTo(px,py);cc.lineTo(px-26,py+50);cc.lineTo(px+26,py+50);cc.closePath();cc.fill();
-  cc.strokeStyle='#26303f';cc.beginPath();cc.moveTo(px-180,py+50);cc.lineTo(px+180,py+50);cc.stroke();
-  // 橫桿
-  const pt=s=>({x:px+s*PM*Math.cos(th), y:py+s*PM*Math.sin(th)});
+// 槓桿物理（已驗證）
+let angle=0,targetAngle=null;
+function leverTorques(){return {L:lever.w1*lever.d1,R:lever.w2*lever.d2};}
+function setupCanvases(){sc=S.fit(document.getElementById('scene'),2.05);}
+function drawWeightBox(px,py,w,hsl,lab){const sz=18+w*0.45,[h,s,l]=hsl;
+  sc.strokeStyle=`hsl(${h},${s}%,${l}%)`;sc.lineWidth=2;sc.beginPath();sc.moveTo(px,py);sc.lineTo(px,py+24);sc.stroke();
+  const g=sc.createLinearGradient(0,py+24,0,py+24+sz);g.addColorStop(0,`hsl(${h},${s}%,${l+16}%)`);g.addColorStop(1,`hsl(${h},${s}%,${l-14}%)`);
+  sc.fillStyle=g;rr(px-sz/2,py+24,sz,sz,4);sc.fill();sc.fillStyle='rgba(255,255,255,.22)';rr(px-sz/2+3,py+27,sz-6,4,2);sc.fill();
+  sc.fillStyle='#fff';sc.font='600 11px system-ui';sc.textAlign='center';sc.fillText(lab,px,py+24+sz/2+4);sc.textAlign='left';}
+function rr(x,y,w,h,r){sc.beginPath();sc.moveTo(x+r,y);sc.arcTo(x+w,y,x+w,y+h,r);sc.arcTo(x+w,y+h,x,y+h,r);sc.arcTo(x,y+h,x,y,r);sc.arcTo(x,y,x+w,y,r);sc.closePath();}
+function drawLever(){const W=sc._w,H=sc._h,px=W/2,py=H*0.46,PM=Math.min(46,(W*0.4)/4.6),Lm=4.6;
+  S.scene(sc,LAB,{ground:py+54,perspective:true});
+  const {L,R}=leverTorques(),bal=Math.abs(L-R)<0.5,goal=bal?0:Math.sign(R-L)*0.3;
+  if(targetAngle===null)targetAngle=goal;const th=angle;
+  // 支點(著色楔)
+  const fg=sc.createLinearGradient(px-26,0,px+26,0);fg.addColorStop(0,'#8a96ac');fg.addColorStop(.5,'#cfd8e6');fg.addColorStop(1,'#5e6878');
+  sc.fillStyle=fg;sc.beginPath();sc.moveTo(px,py);sc.lineTo(px-26,py+52);sc.lineTo(px+26,py+52);sc.closePath();sc.fill();
+  // 橫桿(金屬，旋轉)
+  const pt=s=>({x:px+s*PM*Math.cos(th),y:py+s*PM*Math.sin(th)});
   const a=pt(-Lm),b=pt(Lm);
-  cc.strokeStyle='#5a7bb0';cc.lineWidth=8;cc.lineCap='round';cc.beginPath();cc.moveTo(a.x,a.y);cc.lineTo(b.x,b.y);cc.stroke();cc.lineCap='butt';
-  // 刻度
-  cc.fillStyle='#46566b';cc.font='10px sans-serif';
-  for(let s=-4;s<=4;s++){if(s===0)continue;const p=pt(s);cc.beginPath();cc.arc(p.x,p.y,2,0,7);cc.fill();}
-  // 兩側重物
-  function weight(s,w,col,lab){const p=pt(s);
-    cc.strokeStyle=col;cc.lineWidth=2;cc.beginPath();cc.moveTo(p.x,p.y);cc.lineTo(p.x,p.y+26);cc.stroke();
-    const sz=14+w*0.5;cc.fillStyle=col;cc.fillRect(p.x-sz/2,p.y+26,sz,sz);
-    cc.fillStyle='#04121c';cc.font='bold 11px sans-serif';cc.textAlign='center';cc.fillText(w+'N',p.x,p.y+26+sz/2+4);cc.textAlign='left';
-  }
-  weight(-lever.d1,lever.w1,'#4cc2ff');
-  weight(lever.d2,lever.w2,'#ff6b9d');
-  // 力臂標註
-  cc.fillStyle='#4cc2ff';cc.font='11px sans-serif';cc.fillText('d₁='+lever.d1+'m',pt(-lever.d1).x-20,py-12);
-  cc.fillStyle='#ff6b9d';cc.fillText('d₂='+lever.d2+'m',pt(lever.d2).x-20,py-12);
-  document.getElementById('sub').textContent=bal?'平衡':'向'+(R>L?'右':'左')+'傾倒';
+  sc.save();sc.translate(px,py);sc.rotate(th);S.metal(sc,-Lm*PM,-5,2*Lm*PM,10);sc.restore();
+  for(let s=-4;s<=4;s++){if(!s)continue;const p=pt(s);sc.fillStyle='rgba(255,255,255,.35)';sc.beginPath();sc.arc(p.x,p.y,2,0,7);sc.fill();}
+  // 配重(垂直懸掛)
+  const p1=pt(-lever.d1),p2=pt(lever.d2);
+  drawWeightBox(p1.x,p1.y,lever.w1,[205,75,55],lever.w1+'N');
+  drawWeightBox(p2.x,p2.y,lever.w2,[340,75,60],lever.w2+'N');
+  sc.fillStyle='#6cd0ff';sc.font='11px system-ui';sc.fillText('d₁='+lever.d1+'m',p1.x-18,py-14);
+  sc.fillStyle='#ff8fb0';sc.fillText('d₂='+lever.d2+'m',p2.x-18,py-14);
 }
-
-// ===== 滑輪 =====
-function drawPulley(){
-  const W=cv.width,H=cv.height;cc.clearRect(0,0,W,H);
-  const N=pulley.N, load=pulley.W, F=load/N;
-  const topY=40, bx=W/2, botY=topY+150;
-  // 頂梁
-  cc.fillStyle='#3a4756';cc.fillRect(bx-150,topY-10,300,10);
-  // N 條支撐繩
-  cc.strokeStyle='#7CFFB2';cc.lineWidth=2;
-  for(let i=0;i<N;i++){const x=bx-60+ i*(120/Math.max(1,N-1||1));cc.beginPath();cc.moveTo(x,topY);cc.lineTo(x,botY);cc.stroke();}
-  // 動滑輪塊 + 載重
-  cc.fillStyle='#1b2740';cc.strokeStyle='#5a7bb0';cc.lineWidth=2;cc.fillRect(bx-70,botY,140,18);cc.strokeRect(bx-70,botY,140,18);
-  const lsz=46+load*0.12;cc.fillStyle='#ff6b9d';cc.fillRect(bx-lsz/2,botY+30,lsz,lsz*0.7);
-  cc.fillStyle='#04121c';cc.font='bold 13px sans-serif';cc.textAlign='center';cc.fillText(load+' N',bx,botY+30+lsz*0.35+4);cc.textAlign='left';
-  cc.strokeStyle='#5a7bb0';cc.beginPath();cc.moveTo(bx,botY+18);cc.lineTo(bx,botY+30);cc.stroke();
-  // 施力端（右側繩往下拉）
-  const ex=bx+60;cc.strokeStyle='#4cc2ff';cc.lineWidth=2;cc.beginPath();cc.moveTo(ex,topY);cc.lineTo(ex,botY+70);cc.stroke();
-  cc.fillStyle='#4cc2ff';cc.beginPath();cc.moveTo(ex,botY+70);cc.lineTo(ex-6,botY+58);cc.lineTo(ex+6,botY+58);cc.closePath();cc.fill();
-  cc.font='bold 13px sans-serif';cc.fillText('施力 F = '+F.toFixed(1)+' N',ex+10,botY+60);
-  cc.fillStyle='#7CFFB2';cc.font='12px sans-serif';cc.fillText(N+' 條繩分擔載重',bx-150,botY+90);
-  cc.fillStyle='#46566b';cc.fillText('要把載重拉高 1，需拉繩 '+N+'（省力但費距離）',bx-150,botY+110);
-  document.getElementById('sub').textContent='機械利益 ='+N;
+function drawPulley(){const W=sc._w,H=sc._h,N=pulley.N,load=pulley.W,F=load/N,bx=W/2,topY=44,botY=topY+H*0.42;
+  S.scene(sc,LAB,{});
+  S.metal(sc,bx-160,topY-12,320,12); // 頂梁
+  // 支撐繩
+  sc.strokeStyle='#7CFFB2';sc.lineWidth=2.5;
+  for(let i=0;i<N;i++){const x=bx-60+(N>1?i*(120/(N-1)):0);sc.beginPath();sc.moveTo(x,topY);sc.lineTo(x,botY);sc.stroke();}
+  // 動滑輪塊
+  S.metal(sc,bx-72,botY,144,18);
+  for(const dx of [-72,72])S.sphere(sc,bx+dx,botY+9,9,[210,12,55]);
+  // 載重
+  const lsz=46+load*0.12;const g=sc.createLinearGradient(0,botY+30,0,botY+30+lsz*0.7);g.addColorStop(0,'#ff8fa3');g.addColorStop(1,'#c83a55');
+  S.shadow(sc,bx,botY+30+lsz*0.7+4,lsz*0.5,0);sc.fillStyle=g;rr(bx-lsz/2,botY+30,lsz,lsz*0.7,6);sc.fill();
+  sc.strokeStyle='#5a7bb0';sc.lineWidth=2;sc.beginPath();sc.moveTo(bx,botY+18);sc.lineTo(bx,botY+30);sc.stroke();
+  sc.fillStyle='#fff';sc.font='600 13px system-ui';sc.textAlign='center';sc.fillText(load+' N',bx,botY+30+lsz*0.35+4);sc.textAlign='left';
+  // 施力端
+  const ex=bx+60;sc.strokeStyle='#4cc2ff';sc.lineWidth=2.5;sc.beginPath();sc.moveTo(ex,topY);sc.lineTo(ex,botY+70);sc.stroke();
+  S.arrow(sc,ex,botY+50,ex,botY+76,{color:'#4cc2ff',width:3.5,label:'F='+F.toFixed(1)+'N'});
+  sc.fillStyle='rgba(124,255,178,.8)';sc.font='12px system-ui';sc.fillText(N+' 條繩分擔載重',bx-150,botY+96);
+  sc.fillStyle='rgba(160,180,220,.6)';sc.fillText('載重升高 1，需拉繩 '+N+'（省力但費距離）',bx-150,botY+114);
 }
-
-function draw(){
-  if(mode==='lever')drawLever(); else drawPulley();
-  drawStats();
-}
-function drawStats(){
-  let rows,eqt,eqc,eqbg;
-  if(mode==='lever'){
-    const {L,R}=leverTorques();const bal=Math.abs(L-R)<0.5;
-    rows=[['左力矩 W₁·d₁',L.toFixed(1)+' N·m','#4cc2ff'],['右力矩 W₂·d₂',R.toFixed(1)+' N·m','#ff6b9d'],
-      ['力矩差',(R-L).toFixed(1)+' N·m','#ffce54']];
+function draw(){if(mode==='lever')drawLever();else drawPulley();drawStats();}
+function drawStats(){let rows,eqt,eqc,eqbg;
+  if(mode==='lever'){const {L,R}=leverTorques(),bal=Math.abs(L-R)<0.5;
+    rows=[['左力矩 W₁·d₁',L.toFixed(1)+' N·m','#4cc2ff'],['右力矩 W₂·d₂',R.toFixed(1)+' N·m','#ff6b9d'],['力矩差',(R-L).toFixed(1)+' N·m','#ffce54']];
     if(bal){eqt='✓ 力矩相等 → 槓桿水平平衡';eqc='#7CFFB2';eqbg='rgba(124,255,178,.15)';}
     else{eqt='力矩不等 → 向'+(R>L?'右':'左')+'傾倒（該側力矩較大）';eqc='#ffce54';eqbg='rgba(255,206,84,.12)';}
-  }else{
-    const N=pulley.N,F=pulley.W/N;
-    rows=[['機械利益 MA',''+N,'#7CFFB2'],['施力 F = W/N',F.toFixed(1)+' N','#4cc2ff'],
-      ['省力倍數',N+' 倍','#ffce54'],['需拉繩長 (相對載重上升)',N+' 倍','#ff6b9d']];
-    eqt='功守恆：F × (N·h) = W × h　→ 省力 '+N+' 倍、費距離 '+N+' 倍';eqc='#8a99ad';eqbg='rgba(138,153,173,.12)';
-  }
-  document.getElementById('stats').innerHTML=rows.map(r=>
-    `<div class="box"><div class="k">${r[0]}</div><div class="v" style="color:${r[2]}">${r[1]}</div></div>`).join('');
-  const eq=document.getElementById('eq');eq.textContent=eqt;eq.style.color=eqc;eq.style.background=eqbg;
-}
-function setNote(){
-  document.getElementById('note').innerHTML = mode==='lever' ?
-    '<b>物理重點：</b>力矩（轉動效果）= 力 × 力臂 <code>τ = F·d</code>。槓桿在 <code>W₁·d₁ = W₂·d₂</code> 時平衡。'+
-    '所以<b>小力配長力臂</b>可以撬動<b>大重量配短力臂</b>——這就是「給我一根夠長的槓桿」的原理。力臂是支點到力作用線的<b>垂直距離</b>。'
-    :
-    '<b>物理重點：</b>滑輪組用 <code>N</code> 條繩共同吊住載重，每條分擔 <code>W/N</code>，所以施力 <code>F = W/N</code>，'+
-    '<b>機械利益 = N</b>。但天下沒有白吃的午餐：要把載重升高 h，必須拉繩 <code>N·h</code>。'+
-    '功 <code>W×h = F×(N·h)</code> 守恆——機械只能<b>省力</b>或<b>省距離</b>，不能省功。';
-}
-
-// 動畫（槓桿傾倒緩動）
-function loop(){
-  if(mode==='lever'&&targetAngle!==null){angle+=(targetAngle-angle)*0.12;drawLever();}
-  requestAnimationFrame(loop);
-}
+  }else{const N=pulley.N,F=pulley.W/N;
+    rows=[['機械利益 MA',''+N,'#7CFFB2'],['施力 F=W/N',F.toFixed(1)+' N','#4cc2ff'],['省力倍數',N+' 倍','#ffce54'],['需拉繩長',N+' 倍','#ff6b9d']];
+    eqt='功守恆：F×(N·h) = W×h → 省力 '+N+' 倍、費距離 '+N+' 倍';eqc='#8a99ad';eqbg='rgba(138,153,173,.12)';}
+  document.getElementById('stats').innerHTML=rows.map(r=>`<div class="box"><div class="k">${r[0]}</div><div class="v" style="color:${r[2]}">${r[1]}</div></div>`).join('');
+  const eq=document.getElementById('eq');eq.textContent=eqt;eq.style.color=eqc;eq.style.background=eqbg;}
+function setNote(){document.getElementById('note').innerHTML= mode==='lever'?
+  '<b>物理重點：</b>力矩 = 力 × 力臂 <code>τ = F·d</code>。槓桿在 <code>W₁·d₁ = W₂·d₂</code> 時平衡。所以<b>小力配長力臂</b>可以撬動<b>大重量配短力臂</b>。力臂是支點到力作用線的<b>垂直距離</b>。'
+  :'<b>物理重點：</b>滑輪組用 <code>N</code> 條繩共同吊住載重，每條分擔 <code>W/N</code>，施力 <code>F = W/N</code>，<b>機械利益 = N</b>。但要把載重升高 h，必須拉繩 <code>N·h</code>。功 <code>W×h = F×(N·h)</code> 守恆——機械只能<b>省力</b>或<b>省距離</b>，不能省功。';}
 const mL=document.getElementById('mLever'),mP=document.getElementById('mPulley');
 function switchMode(m){mode=m;mL.classList.toggle('on',m==='lever');mP.classList.toggle('on',m==='pulley');
-  document.getElementById('leverPresets').style.display=m==='lever'?'inline':'none';
-  document.getElementById('canvasLabel').textContent=m==='lever'?'槓桿：藍=左側力矩，紅=右側力矩，相等則水平平衡':'滑輪組：綠=支撐繩（共 N 條），藍=施力端';
-  targetAngle=null;angle=0;buildControls();setNote();draw();}
+  document.getElementById('leverPresets').style.display=m==='lever'?'flex':'none';targetAngle=null;angle=0;buildControls();setNote();draw();}
 mL.onclick=()=>switchMode('lever');mP.onclick=()=>switchMode('pulley');
 const PRE={bal:{w1:20,d1:3,w2:30,d2:2},adv:{w1:10,d1:5,w2:50,d2:1}};
-document.querySelectorAll('[data-preset]').forEach(b=>b.onclick=()=>{
-  const p=PRE[b.dataset.preset];if(!p)return;Object.assign(lever,p);targetAngle=null;buildControls();draw();
-});
-
-buildControls();setNote();draw();
-requestAnimationFrame(loop);
-window.addEventListener('resize',draw);
+document.querySelectorAll('[data-preset]').forEach(b=>b.onclick=()=>{const p=PRE[b.dataset.preset];if(!p)return;Object.assign(lever,p);targetAngle=null;buildControls();draw();});
+function loop(){if(mode==='lever'&&targetAngle!==null){angle+=(targetAngle-angle)*0.12;drawLever();drawStats();}requestAnimationFrame(loop);}
+window.addEventListener('load',()=>{setupCanvases();buildControls();setNote();draw();requestAnimationFrame(loop);});
+window.addEventListener('resize',()=>{setupCanvases();draw();});
 </script>
 </body>
 </html>

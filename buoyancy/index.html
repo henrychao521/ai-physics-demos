@@ -6,41 +6,38 @@
 <title>浮力與密度 ｜ 阿基米德原理・浮沉</title>
 <link rel="icon" href="../assets/favicon.svg" type="image/svg+xml">
 <link rel="stylesheet" href="../assets/site.css">
+<script src="../assets/sim.js"></script>
 <script defer src="../assets/nav.js"></script>
 <style>
   *{box-sizing:border-box}
-  html,body{margin:0;padding:0;background:var(--bg);color:var(--txt);
-    font-family:"Noto Sans TC","PingFang TC","Microsoft JhengHei",system-ui,sans-serif}
+  html,body{margin:0;padding:0;background:var(--bg);color:var(--txt);font-family:"Noto Sans TC","PingFang TC","Microsoft JhengHei",system-ui,sans-serif}
   a{color:var(--accent)}
-  .wrap{max-width:1100px;margin:0 auto;padding:18px 16px 60px}
+  .wrap{max-width:1120px;margin:0 auto;padding:18px 16px 60px}
   header h1{font-size:1.5rem;margin:.2em 0}
   header p{color:var(--muted);margin:.2em 0 1em;line-height:1.6}
-  .badge{display:inline-block;background:var(--panel2);border:1px solid var(--line);
-    color:var(--muted);font-size:.72rem;padding:2px 8px;border-radius:99px;margin-right:6px}
-  .layout{display:grid;grid-template-columns:1fr .8fr;gap:16px}
-  @media(max-width:760px){.layout{grid-template-columns:1fr}}
-  .stage{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:14px;margin-bottom:16px}
-  canvas{width:100%;display:block;border-radius:8px;background:#05070b}
-  .label{font-size:.8rem;color:var(--muted);margin:0 0 6px;display:flex;justify-content:space-between;flex-wrap:wrap;gap:8px}
-  .grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:14px}
-  .ctrl{background:var(--panel2);border:1px solid var(--line);border-radius:10px;padding:10px 12px}
-  .ctrl label{display:flex;justify-content:space-between;font-size:.85rem;margin-bottom:6px}
-  .ctrl .val{color:var(--accent);font-variant-numeric:tabular-nums}
-  input[type=range]{width:100%;accent-color:var(--accent)}
-  .modes{display:flex;gap:8px;margin:6px 0 14px;flex-wrap:wrap;align-items:center}
-  .modes button,.btn{background:var(--panel2);color:var(--txt);border:1px solid var(--line);
-    padding:8px 14px;border-radius:9px;cursor:pointer;font-size:.85rem;font-family:inherit}
-  .modes button.on{background:var(--accent);color:#04121c;border-color:var(--accent);font-weight:700}
-  .btn:hover,.modes button:hover{border-color:var(--accent)}
-  .stat{display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:10px}
-  .stat .box{background:var(--panel2);border:1px solid var(--line);border-radius:10px;padding:9px 11px}
-  .stat .box .k{font-size:.72rem;color:var(--muted)}
-  .stat .box .v{font-size:1.02rem;font-variant-numeric:tabular-nums;font-weight:700}
-  .eqbar{margin-top:12px;padding:10px 12px;border-radius:10px;text-align:center;font-weight:700}
-  .note{background:var(--panel);border-left:3px solid var(--accent2);border-radius:8px;
-    padding:12px 14px;color:var(--muted);font-size:.86rem;line-height:1.7;margin-top:18px}
+  .badge{display:inline-block;background:var(--panel2);border:1px solid var(--line);color:var(--muted);font-size:.72rem;padding:2px 8px;border-radius:99px;margin-right:6px}
+  .grid2{display:grid;grid-template-columns:1fr .82fr;gap:14px}
+  @media(max-width:740px){.grid2{grid-template-columns:1fr}}
+  .scene-wrap{position:relative;border-radius:16px;overflow:hidden;border:1px solid var(--line);box-shadow:0 18px 50px rgba(0,0,0,.45)}
+  #scene{display:block;width:100%}
+  .side{display:flex;flex-direction:column;gap:12px}
+  .statgrid{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+  .box{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:10px 12px}
+  .box .k{font-size:.72rem;color:var(--muted)}
+  .box .v{font-size:1.08rem;font-variant-numeric:tabular-nums;font-weight:700}
+  .eqbar{padding:10px 12px;border-radius:12px;text-align:center;font-weight:700}
+  .presets{display:flex;gap:7px;flex-wrap:wrap;align-items:center;margin-top:14px}
+  .presets span{color:var(--muted);font-size:.8rem}
+  .pbtn{background:var(--panel2);color:var(--txt);border:1px solid var(--line);padding:7px 12px;border-radius:9px;cursor:pointer;font-size:.83rem;font-family:inherit}
+  .pbtn:hover{border-color:var(--accent)}
+  .bar{display:flex;gap:14px;flex-wrap:wrap;align-items:flex-end;background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:14px 16px;margin-top:14px}
+  .sld{flex:1;min-width:160px}
+  .sld label{display:flex;justify-content:space-between;font-size:.82rem;color:var(--muted);margin-bottom:5px}
+  .sld label .v{color:var(--accent);font-variant-numeric:tabular-nums;font-weight:700}
+  .sld input{width:100%;accent-color:var(--accent)}
+  .note{background:var(--panel);border-left:3px solid var(--accent2);border-radius:8px;padding:12px 14px;color:var(--muted);font-size:.86rem;line-height:1.7;margin-top:14px}
   .note b{color:var(--txt)}.note code{background:var(--bg2);padding:1px 6px;border-radius:5px;color:var(--green);font-size:.85em}
-  footer{color:var(--muted);font-size:.78rem;margin-top:26px;text-align:center;line-height:1.7}
+  footer{color:var(--muted);font-size:.78rem;margin-top:24px;text-align:center;line-height:1.7}
 </style>
 </head>
 <body data-demo="浮力與密度">
@@ -48,153 +45,110 @@
   <header>
     <span class="badge">壓力・浮力</span>
     <h1>浮力與密度</h1>
-    <p>物體放入液體，受到向上的<b>浮力</b>＝它排開液體的重量（<b>阿基米德原理</b>）。
-       比較<b>物體密度</b>與<b>液體密度</b>：較小就漂浮（露出一部分）、相等則懸浮、較大就下沉。</p>
+    <p>物體放入液體，受到向上的<b>浮力</b>＝它排開液體的重量（<b>阿基米德原理</b>）。比較<b>物體密度</b>與<b>液體密度</b>：
+       較小就漂浮（露出一部分）、相等則懸浮、較大就下沉。</p>
   </header>
 
-  <div class="modes">
-    <button class="btn" id="reset">↺ 重新放入</button>
-    <span style="color:var(--muted);font-size:.8rem;margin-left:4px">情境：</span>
-    <button class="btn" data-preset="wood">木頭浮水</button>
-    <button class="btn" data-preset="ice">冰山(露1/10)</button>
-    <button class="btn" data-preset="iron">鐵塊下沉</button>
-    <button class="btn" data-preset="deadsea">死海高鹽</button>
-  </div>
-
-  <div class="layout">
-    <div class="stage">
-      <div class="label"><span>水槽（藍=浮力 F_浮，黃=重力 W）</span><span id="sub"></span></div>
-      <canvas id="cv" width="560" height="470"></canvas>
-    </div>
-    <div>
-      <div class="stat" id="stats"></div>
+  <div class="grid2">
+    <div class="scene-wrap"><canvas id="scene"></canvas></div>
+    <div class="side">
+      <div class="statgrid" id="stats"></div>
       <div class="eqbar" id="eq"></div>
+      <div class="presets" style="margin-top:0">
+        <span>情境：</span>
+        <button class="pbtn" data-preset="wood">木頭浮水</button>
+        <button class="pbtn" data-preset="ice">冰山</button>
+        <button class="pbtn" data-preset="iron">鐵塊下沉</button>
+        <button class="pbtn" data-preset="deadsea">死海高鹽</button>
+      </div>
     </div>
   </div>
 
-  <div class="grid" id="controls" style="margin-top:14px"></div>
+  <div class="bar" id="sliders"></div>
 
   <div class="note">
-    <b>物理重點：</b>浮力 <code>F_浮 = ρ_液 · V_沒入 · g</code>（排開液體的重量）。物體重 <code>W = ρ_物 · V · g</code>。
-    漂浮平衡時 F_浮 = W，可推得<b>沒入比例 = ρ_物 / ρ_液</b>——所以冰（917）在海水（1025）約露出 1/10，這就是「冰山一角」。
-    當 ρ_物 &gt; ρ_液，即使完全沒入，浮力仍小於重量 → 下沉；此時在水中的<b>視重 = W − F_浮</b>（物體變「輕」了）。
-    把液體換成高密度的<b>死海鹽水</b>，連人都能輕鬆浮起來。
+    <b>物理重點：</b>浮力 <code>F_浮 = ρ_液·V_沒入·g</code>（排開液體的重量）。物體重 <code>W = ρ_物·V·g</code>。
+    漂浮平衡時 F_浮 = W，可推得<b>沒入比例 = ρ_物 / ρ_液</b>——所以冰（917）在海水（1025）約露出 1/10（冰山一角）。
+    當 ρ_物 &gt; ρ_液，即使完全沒入浮力仍小於重量 → 下沉；此時水中的<b>視重 = W − F_浮</b>（變輕了）。
   </div>
 
-  <footer>純前端 HTML / Canvas，無外部相依。以阻尼動力學模擬沉降至平衡。</footer>
+  <footer>純前端 HTML / Canvas（SIM 工具庫）。阻尼動力學模擬沉降至平衡。</footer>
 </div>
 
 <script>
+const S=SIM, g=9.8;
 const sliders=[
-  {id:'rhoO',name:'物體密度 ρ_物',min:100,max:2500,step:10,val:600, unit:'kg/m³'},
+  {id:'rhoO',name:'物體密度 ρ_物',min:100,max:2500,step:10,val:600,unit:'kg/m³'},
   {id:'rhoL',name:'液體密度 ρ_液',min:600,max:1300,step:10,val:1000,unit:'kg/m³'},
-  {id:'V',   name:'物體體積 V',   min:2,  max:16,  step:.5,val:8,   unit:'L'},
+  {id:'V',name:'物體體積 V',min:2,max:16,step:.5,val:8,unit:'L'},
 ];
 const state={};
-const ctrl=document.getElementById('controls');
-sliders.forEach(s=>{
-  state[s.id]=s.val;
-  const box=document.createElement('div');box.className='ctrl';
-  box.innerHTML=`<label><span>${s.name}</span><span class="val" id="v_${s.id}">${fmt(s.val)} ${s.unit}</span></label>
+const sBar=document.getElementById('sliders');
+sliders.forEach(s=>{ state[s.id]=s.val;
+  const d=document.createElement('div');d.className='sld';
+  d.innerHTML=`<label><span>${s.name}</span><span class="v" id="v_${s.id}">${fmt(s.val)} ${s.unit}</span></label>
     <input type="range" id="r_${s.id}" min="${s.min}" max="${s.max}" step="${s.step}" value="${s.val}">`;
-  ctrl.appendChild(box);
-  box.querySelector('input').addEventListener('input',e=>{
-    state[s.id]=parseFloat(e.target.value);
-    document.getElementById('v_'+s.id).textContent=`${fmt(state[s.id])} ${s.unit}`;
-  });
+  sBar.appendChild(d);
+  d.querySelector('input').addEventListener('input',e=>{state[s.id]=parseFloat(e.target.value);
+    document.getElementById('v_'+s.id).textContent=`${fmt(state[s.id])} ${s.unit}`;});
 });
 function fmt(x){return (Math.round(x*100)/100).toString();}
 function setSlider(id,val){state[id]=val;const r=document.getElementById('r_'+id);if(r)r.value=val;
   const s=sliders.find(z=>z.id===id);if(s)document.getElementById('v_'+id).textContent=`${fmt(val)} ${s.unit}`;}
 
-// ---- 物理（公尺、SI）----
-const g=9.8;
-function Vm3(){return state.V/1000;}                 // L→m³
-function Lside(){return Math.cbrt(Vm3());}           // 立方體邊長(m)
-const Hbasin=0.42;                                    // 水深(m)
-let yTop=-0.15, vy=0;                                 // 物體頂部位置(m, 從水面向下為正), 速度
-function physics(dt){
-  const V=Vm3(),L=Lside(),m=state.rhoO*V;
-  const cubeBot=yTop+L;
-  const subLen=Math.max(0,Math.min(cubeBot,Hbasin)-Math.max(yTop,0));
-  const frac=subLen/L;
-  const buoy=state.rhoL*frac*V*g;
-  const weight=m*g;
-  let a=(weight-buoy)/m;                              // 向下為正
-  a-= vy*2.2;                                         // 水/空氣阻尼
-  vy+=a*dt; yTop+=vy*dt;
-  // 觸底
-  if(yTop+L>Hbasin){yTop=Hbasin-L; if(vy>0)vy=0;}
-  if(yTop< -0.25){yTop=-0.25; if(vy<0)vy=0;}
-  return {frac,buoy,weight,L,V,m};
-}
+// ---- 物理（已驗證）----
+function Vm3(){return state.V/1000;} function Lside(){return Math.cbrt(Vm3());}
+const Hbasin=0.42; let yTop=-0.15,vy=0;
+function physics(dt){const V=Vm3(),L=Lside(),m=state.rhoO*V,cubeBot=yTop+L;
+  const subLen=Math.max(0,Math.min(cubeBot,Hbasin)-Math.max(yTop,0)),frac=subLen/L;
+  const buoy=state.rhoL*frac*V*g,weight=m*g;let a=(weight-buoy)/m;a-=vy*2.2;vy+=a*dt;yTop+=vy*dt;
+  if(yTop+L>Hbasin){yTop=Hbasin-L;if(vy>0)vy=0;}if(yTop<-0.25){yTop=-0.25;if(vy<0)vy=0;}
+  return {frac,buoy,weight,L,V,m};}
 
-// ---- 視圖 ----
-const cv=document.getElementById('cv'),cc=cv.getContext('2d');
-function draw(info){
-  const W=cv.width,H=cv.height;cc.clearRect(0,0,W,H);
-  const PXR=(H-90)/Hbasin*0.92, yWaterPx=70;
-  const Y=ym=>yWaterPx+ym*PXR;
-  const basinL=70,basinR=W-70,basinBot=Y(Hbasin);
-  // 水
-  cc.fillStyle='rgba(76,140,200,.22)';cc.fillRect(basinL,yWaterPx,basinR-basinL,basinBot-yWaterPx);
-  cc.strokeStyle='#4c8cc8';cc.lineWidth=2;cc.beginPath();cc.moveTo(basinL,yWaterPx);cc.lineTo(basinR,yWaterPx);cc.stroke();
-  // 水槽壁
-  cc.strokeStyle='#3a4756';cc.lineWidth=3;cc.beginPath();cc.moveTo(basinL,40);cc.lineTo(basinL,basinBot);cc.lineTo(basinR,basinBot);cc.lineTo(basinR,40);cc.stroke();
-  cc.fillStyle='#4c8cc8';cc.font='11px sans-serif';cc.fillText('水面',basinR-40,yWaterPx-5);
+let sc,tt=0;
+const AQUA={skyTop:'#16314a',skyBottom:'#0a1622',vignette:'rgba(0,0,0,.4)'};
+function setupCanvases(){sc=S.fit(document.getElementById('scene'),1.0);}
+function draw(info){const W=sc._w,H=sc._h;
+  S.scene(sc,AQUA,{});
+  const PXR=(H-90)/Hbasin*0.92,yWaterPx=64,Y=ym=>yWaterPx+ym*PXR;
+  const bL=54,bR=W-54,bBot=Y(Hbasin);
+  // 玻璃槽水
+  S.water(sc,bL,yWaterPx,bR-bL,bBot-yWaterPx,tt);
+  // 槽壁(玻璃)
+  sc.strokeStyle='rgba(180,210,240,.5)';sc.lineWidth=3;sc.beginPath();sc.moveTo(bL,34);sc.lineTo(bL,bBot);sc.lineTo(bR,bBot);sc.lineTo(bR,34);sc.stroke();
+  sc.fillStyle='rgba(190,225,255,.7)';sc.font='11px system-ui';sc.fillText('水面',bR-40,yWaterPx-5);
   // 物體
-  const L=info.L*PXR, cxm=(basinL+basinR)/2, ctop=Y(yTop), cb=ctop+L;
-  const col= state.rhoO<state.rhoL? '#7CFFB2': state.rhoO>state.rhoL? '#ff6b9d':'#ffce54';
-  cc.fillStyle=col;cc.fillRect(cxm-L/2,ctop,L,L);
-  // 沒入部分加深
-  const subTop=Math.max(ctop,yWaterPx),subBot=Math.min(cb,basinBot);
-  if(subBot>subTop){cc.fillStyle='rgba(20,40,70,.45)';cc.fillRect(cxm-L/2,subTop,L,subBot-subTop);}
-  cc.strokeStyle='#0a0e17';cc.lineWidth=2;cc.strokeRect(cxm-L/2,ctop,L,L);
-  cc.fillStyle='#04121c';cc.font='bold 11px sans-serif';cc.textAlign='center';
-  cc.fillText(state.rhoO+'',cxm,ctop+L/2-2);cc.fillText('kg/m³',cxm,ctop+L/2+12);cc.textAlign='left';
-  // 力箭頭
-  const cy=(ctop+cb)/2, sF=0.10;
-  arrow(cxm-L/2-18,cy,cxm-L/2-18,cy-info.buoy*sF,'#4cc2ff',3,'F浮');
-  arrow(cxm+L/2+18,cy,cxm+L/2+18,cy+info.weight*sF,'#ffce54',3,'W');
-  document.getElementById('sub').textContent='沒入 '+(info.frac*100).toFixed(0)+'%';
+  const L=info.L*PXR,cxm=(bL+bR)/2,ctop=Y(yTop),cb=ctop+L;
+  const hue= state.rhoO<state.rhoL?140:state.rhoO>state.rhoL?345:45;
+  const grd=sc.createLinearGradient(cxm-L/2,ctop,cxm-L/2,cb);grd.addColorStop(0,`hsl(${hue},65%,62%)`);grd.addColorStop(1,`hsl(${hue},65%,40%)`);
+  sc.fillStyle=grd;sc.fillRect(cxm-L/2,ctop,L,L);
+  // 沒入部分(偏色折射感)
+  const subTop=Math.max(ctop,yWaterPx),subBot=Math.min(cb,bBot);
+  if(subBot>subTop){sc.fillStyle='rgba(20,60,90,.4)';sc.fillRect(cxm-L/2,subTop,L,subBot-subTop);}
+  sc.strokeStyle='rgba(0,0,0,.4)';sc.lineWidth=2;sc.strokeRect(cxm-L/2,ctop,L,L);
+  sc.fillStyle='rgba(255,255,255,.25)';sc.fillRect(cxm-L/2+3,ctop+3,L-6,5);
+  sc.fillStyle='#fff';sc.font='600 11px system-ui';sc.textAlign='center';sc.fillText(state.rhoO,cxm,(ctop+cb)/2-2);sc.fillText('kg/m³',cxm,(ctop+cb)/2+12);sc.textAlign='left';
+  // 力箭頭：浮力在沒入部分中心(向上)、重力在質心(向下)
+  const cy=(ctop+cb)/2,sF=0.1,subCy=subBot>subTop?(subTop+subBot)/2:cy;
+  if(info.buoy>1)S.arrow(sc,cxm,subCy,cxm,subCy-info.buoy*sF,{color:S.C.normal,width:3.5,label:'F浮'});
+  S.arrow(sc,cxm+0,cy,cxm,cy+info.weight*sF,{color:S.C.gravity,width:3,label:'W'});
   drawStats(info);
 }
-function arrow(x1,y1,x2,y2,col,w,lab){
-  if(Math.abs(y2-y1)<2)return;
-  cc.strokeStyle=col;cc.fillStyle=col;cc.lineWidth=w;cc.beginPath();cc.moveTo(x1,y1);cc.lineTo(x2,y2);cc.stroke();
-  const d=Math.sign(y2-y1);cc.beginPath();cc.moveTo(x2,y2);cc.lineTo(x2-5,y2-d*9);cc.lineTo(x2+5,y2-d*9);cc.closePath();cc.fill();
-  cc.font='bold 11px sans-serif';cc.fillText(lab,x2-8,y2+d*12);
-}
-function drawStats(info){
-  const apparent=Math.max(0,info.weight-info.buoy);
-  const rows=[
-    ['重量 W=ρ_物·V·g',info.weight.toFixed(1)+' N','#ffce54'],
-    ['浮力 F_浮',info.buoy.toFixed(1)+' N','#4cc2ff'],
-    ['沒入比例',(info.frac*100).toFixed(0)+' %','#7CFFB2'],
-    ['水中視重 W−F_浮',apparent.toFixed(1)+' N','#ff6b9d'],
-  ];
-  document.getElementById('stats').innerHTML=rows.map(r=>
-    `<div class="box"><div class="k">${r[0]}</div><div class="v" style="color:${r[2]}">${r[1]}</div></div>`).join('');
+function drawStats(info){const apparent=Math.max(0,info.weight-info.buoy);
+  const rows=[['重量 W=ρ_物Vg',info.weight.toFixed(1)+' N','#c06bff'],['浮力 F_浮',info.buoy.toFixed(1)+' N','#4cc2ff'],
+    ['沒入比例',(info.frac*100).toFixed(0)+' %','#7CFFB2'],['水中視重 W−F_浮',apparent.toFixed(1)+' N','#ff6b9d']];
+  document.getElementById('stats').innerHTML=rows.map(r=>`<div class="box"><div class="k">${r[0]}</div><div class="v" style="color:${r[2]}">${r[1]}</div></div>`).join('');
   const eq=document.getElementById('eq');
   if(state.rhoO<state.rhoL-5){eq.textContent='✓ 漂浮：沒入比例 ≈ ρ_物/ρ_液 = '+(state.rhoO/state.rhoL*100).toFixed(0)+'%';eq.style.background='rgba(124,255,178,.15)';eq.style.color='#7CFFB2';}
   else if(state.rhoO>state.rhoL+5){eq.textContent='✗ 下沉：浮力 < 重量（完全沒入仍不夠）';eq.style.background='rgba(255,107,157,.13)';eq.style.color='#ff6b9d';}
   else{eq.textContent='≈ 懸浮：密度相同，浮力 = 重量';eq.style.background='rgba(255,206,84,.12)';eq.style.color='#ffce54';}
 }
-
-let last=0;
-function loop(ts){const dt=Math.min((ts-last)/1000,0.04)||0.016;last=ts;
-  let info;for(let i=0;i<3;i++)info=physics(dt/3);draw(info);requestAnimationFrame(loop);}
-document.getElementById('reset').onclick=()=>{yTop=-0.18;vy=0;};
-const PRE={
-  wood:   {rhoO:600, rhoL:1000,V:8},
-  ice:    {rhoO:917, rhoL:1025,V:10},
-  iron:   {rhoO:2500,rhoL:1000,V:6},
-  deadsea:{rhoO:1050,rhoL:1240,V:9},
-};
-document.querySelectorAll('[data-preset]').forEach(b=>b.onclick=()=>{
-  const p=PRE[b.dataset.preset];if(!p)return;['rhoO','rhoL','V'].forEach(k=>setSlider(k,p[k]));yTop=-0.18;vy=0;
-});
-requestAnimationFrame(loop);
+let lastTs=0;
+function loop(ts){const dt=lastTs?Math.min((ts-lastTs)/1000,0.04):0;lastTs=ts;tt+=dt;let info;for(let i=0;i<3;i++)info=physics((dt||0.016)/3);draw(info);requestAnimationFrame(loop);}
+const PRE={wood:{rhoO:600,rhoL:1000,V:8},ice:{rhoO:917,rhoL:1025,V:10},iron:{rhoO:2500,rhoL:1000,V:6},deadsea:{rhoO:1050,rhoL:1240,V:9}};
+document.querySelectorAll('[data-preset]').forEach(b=>b.onclick=()=>{const p=PRE[b.dataset.preset];if(!p)return;['rhoO','rhoL','V'].forEach(k=>setSlider(k,p[k]));yTop=-0.18;vy=0;});
+window.addEventListener('load',()=>{setupCanvases();requestAnimationFrame(loop);});
+window.addEventListener('resize',()=>{setupCanvases();});
 </script>
 </body>
 </html>
