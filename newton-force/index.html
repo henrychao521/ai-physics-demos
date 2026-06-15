@@ -3,44 +3,49 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>牛頓第二定律 ｜ 施力・質量・摩擦與 F = ma</title>
+<title>牛頓第二定律 ｜ 施力・摩擦・F = ma</title>
 <link rel="icon" href="../assets/favicon.svg" type="image/svg+xml">
 <link rel="stylesheet" href="../assets/site.css">
+<script src="../assets/sim.js"></script>
 <script defer src="../assets/nav.js"></script>
 <style>
   *{box-sizing:border-box}
-  html,body{margin:0;padding:0;background:var(--bg);color:var(--txt);
-    font-family:"Noto Sans TC","PingFang TC","Microsoft JhengHei",system-ui,sans-serif}
+  html,body{margin:0;padding:0;background:var(--bg);color:var(--txt);font-family:"Noto Sans TC","PingFang TC","Microsoft JhengHei",system-ui,sans-serif}
   a{color:var(--accent)}
-  .wrap{max-width:1100px;margin:0 auto;padding:18px 16px 60px}
+  .wrap{max-width:1120px;margin:0 auto;padding:18px 16px 60px}
   header h1{font-size:1.5rem;margin:.2em 0}
   header p{color:var(--muted);margin:.2em 0 1em;line-height:1.6}
-  .badge{display:inline-block;background:var(--panel2);border:1px solid var(--line);
-    color:var(--muted);font-size:.72rem;padding:2px 8px;border-radius:99px;margin-right:6px}
-  .stage{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:14px;margin-bottom:16px}
-  canvas{width:100%;display:block;border-radius:8px;background:#05070b}
-  .label{font-size:.8rem;color:var(--muted);margin:0 0 6px;display:flex;justify-content:space-between;flex-wrap:wrap;gap:8px}
-  .grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(210px,1fr));gap:14px}
-  .ctrl{background:var(--panel2);border:1px solid var(--line);border-radius:10px;padding:10px 12px}
-  .ctrl label{display:flex;justify-content:space-between;font-size:.85rem;margin-bottom:6px}
-  .ctrl .val{color:var(--accent);font-variant-numeric:tabular-nums}
-  input[type=range]{width:100%;accent-color:var(--accent)}
-  .modes{display:flex;gap:8px;margin:6px 0 14px;flex-wrap:wrap;align-items:center}
-  .modes button,.btn{background:var(--panel2);color:var(--txt);border:1px solid var(--line);
-    padding:8px 14px;border-radius:9px;cursor:pointer;font-size:.85rem;font-family:inherit}
-  .modes button.on{background:var(--accent);color:#04121c;border-color:var(--accent);font-weight:700}
-  .btn:hover,.modes button:hover{border-color:var(--accent)}
-  .eq{background:var(--panel2);border:1px solid var(--line);border-radius:10px;padding:10px 14px;margin-bottom:14px;
-    font-size:1.05rem;text-align:center;font-variant-numeric:tabular-nums}
-  .eq b{color:var(--accent2)}.eq .gray{color:var(--muted)}
-  .stat{display:grid;grid-template-columns:repeat(auto-fit,minmax(120px,1fr));gap:10px;margin:2px 0}
-  .stat .box{background:var(--panel2);border:1px solid var(--line);border-radius:10px;padding:9px 11px}
-  .stat .box .k{font-size:.72rem;color:var(--muted)}
-  .stat .box .v{font-size:1.02rem;font-variant-numeric:tabular-nums;font-weight:700}
-  .note{background:var(--panel);border-left:3px solid var(--accent2);border-radius:8px;
-    padding:12px 14px;color:var(--muted);font-size:.86rem;line-height:1.7;margin-top:18px}
+  .badge{display:inline-block;background:var(--panel2);border:1px solid var(--line);color:var(--muted);font-size:.72rem;padding:2px 8px;border-radius:99px;margin-right:6px}
+  .scene-wrap{position:relative;border-radius:16px;overflow:hidden;border:1px solid var(--line);box-shadow:0 18px 50px rgba(0,0,0,.45)}
+  #scene{display:block;width:100%}
+  .hud{position:absolute;top:12px;left:12px;display:flex;gap:8px;flex-wrap:wrap;pointer-events:none}
+  .chip{background:rgba(20,12,6,.6);backdrop-filter:blur(6px);border:1px solid rgba(255,220,170,.16);border-radius:10px;padding:6px 11px;color:#ffeede;font-size:.8rem;line-height:1.25}
+  .chip b{display:block;font-size:1.02rem;font-variant-numeric:tabular-nums;color:#fff}
+  .chip.amber b{color:#ffce54}.chip.cyan b{color:#6cd0ff}.chip.rose b{color:#ff8fa3}
+  .eqbar{position:absolute;top:12px;right:12px;background:rgba(20,12,6,.62);backdrop-filter:blur(6px);border:1px solid rgba(255,220,170,.16);
+    border-radius:10px;padding:8px 12px;font-size:.92rem;color:#ffeede;font-variant-numeric:tabular-nums;max-width:60%;text-align:right}
+  .eqbar b{color:#ffce54}
+  .toolbar{position:absolute;bottom:12px;left:12px;display:flex;gap:7px;flex-wrap:wrap}
+  .toolbar button{background:rgba(20,12,6,.6);backdrop-filter:blur(6px);color:#ffeede;border:1px solid rgba(255,220,170,.18);border-radius:9px;padding:7px 11px;font-size:.82rem;cursor:pointer;font-family:inherit}
+  .toolbar button.on{background:#ffce54;color:#2a1a06;border-color:#ffce54;font-weight:700}
+  .bar{display:flex;gap:14px;flex-wrap:wrap;align-items:flex-end;background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:14px 16px;margin-top:14px}
+  .sld{flex:1;min-width:140px}
+  .sld label{display:flex;justify-content:space-between;font-size:.82rem;color:var(--muted);margin-bottom:5px}
+  .sld label .v{color:var(--accent2);font-variant-numeric:tabular-nums;font-weight:700}
+  .sld input{width:100%;accent-color:var(--accent2)}
+  .presets{display:flex;gap:7px;flex-wrap:wrap;align-items:center;margin-top:12px}
+  .presets span{color:var(--muted);font-size:.8rem}
+  .pbtn{background:var(--panel2);color:var(--txt);border:1px solid var(--line);padding:7px 12px;border-radius:9px;cursor:pointer;font-size:.83rem;font-family:inherit}
+  .pbtn:hover{border-color:var(--accent2)}
+  .lower{display:grid;grid-template-columns:1fr;gap:14px;margin-top:14px}
+  .panel{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:12px 14px}
+  .panel .lab{font-size:.78rem;color:var(--muted);margin-bottom:6px}
+  #plot{display:block;width:100%;border-radius:8px;background:#0a1018}
+  .note{background:var(--panel);border-left:3px solid var(--accent2);border-radius:8px;padding:12px 14px;color:var(--muted);font-size:.86rem;line-height:1.7;margin-top:14px}
   .note b{color:var(--txt)}.note code{background:var(--bg2);padding:1px 6px;border-radius:5px;color:var(--green);font-size:.85em}
-  footer{color:var(--muted);font-size:.78rem;margin-top:26px;text-align:center;line-height:1.7}
+  .legend{display:flex;gap:13px;flex-wrap:wrap;font-size:.76rem;color:var(--muted);margin-top:8px}
+  .legend i{display:inline-block;width:16px;height:3px;border-radius:2px;vertical-align:middle;margin-right:4px}
+  footer{color:var(--muted);font-size:.78rem;margin-top:24px;text-align:center;line-height:1.7}
 </style>
 </head>
 <body data-demo="牛頓第二定律推箱子">
@@ -48,197 +53,153 @@
   <header>
     <span class="badge">力學・牛頓運動定律</span>
     <h1>牛頓第二定律：推箱子</h1>
-    <p>對箱子施一水平力，觀察<b>自由體圖</b>（施力、摩擦力、重力、正向力）、<b>合力</b>與<b>加速度</b>。
-       體會 <b>F<sub>合</sub> = ma</b>：合力決定加速度、質量是「抗拒被加速」的慣性。摩擦不夠大就推不動。</p>
+    <p>對木箱施一水平力。每個力都畫在<b>真正的作用點</b>：施力在被推的側面、摩擦與正向力在地面接觸處、重力在質心。
+       體會 <b>F<sub>合</sub> = ma</b>，以及施力不夠大時被靜摩擦平衡而<b>推不動</b>。</p>
   </header>
 
-  <div class="modes">
-    <button id="play" class="on">⏸ 暫停</button>
-    <button class="btn" id="reset">↺ 重設</button>
-    <button class="btn" id="fric">摩擦：開（粗糙）</button>
-    <span style="color:var(--muted);font-size:.8rem;margin-left:4px">情境：</span>
-    <button class="btn" data-preset="smooth">光滑加速</button>
-    <button class="btn" data-preset="push">克服摩擦</button>
-    <button class="btn" data-preset="stuck">推不動</button>
-    <button class="btn" data-preset="heavy">重物難推</button>
+  <div class="scene-wrap">
+    <canvas id="scene"></canvas>
+    <div class="hud" id="hud"></div>
+    <div class="eqbar" id="eq"></div>
+    <div class="toolbar">
+      <button id="play" class="on">⏸ 暫停</button>
+      <button id="fric" class="on">摩擦：粗糙</button>
+    </div>
   </div>
 
-  <div class="eq" id="eq"></div>
-
-  <div class="stage">
-    <div class="label"><span>自由體圖與運動（藍=施力 F，紅=摩擦 f，黃=合力，灰=重力/正向力）</span><span id="tlabel">t = 0.00 s</span></div>
-    <canvas id="scene" width="1040" height="300"></canvas>
+  <div class="legend" style="padding:0 4px">
+    <span><i style="background:#4cc2ff"></i>施力 F</span><span><i style="background:#ff7a45"></i>摩擦 f</span>
+    <span><i style="background:#4cc2ff"></i>正向力 N</span><span><i style="background:#c06bff"></i>重力 W</span><span><i style="background:#ffce54"></i>合力 F合</span>
   </div>
 
-  <div class="stat" id="stats"></div>
-
-  <div class="stage">
-    <div class="label"><span>速度 v(t)（斜率＝加速度 a）與 位移 x(t)</span><span>白點＝目前</span></div>
-    <canvas id="plot" width="1040" height="220"></canvas>
+  <div class="bar" id="sliders"></div>
+  <div class="presets">
+    <span>情境：</span>
+    <button class="pbtn" data-preset="smooth">光滑加速</button>
+    <button class="pbtn" data-preset="push">克服摩擦</button>
+    <button class="pbtn" data-preset="stuck">推不動</button>
+    <button class="pbtn" data-preset="heavy">重物難推</button>
+    <button class="pbtn" id="reset" style="margin-left:auto">↺ 重設</button>
   </div>
 
-  <div class="grid" id="controls"></div>
-
-  <div class="note">
-    <b>物理重點：</b>合力 <code>F合 = F − f</code>，加速度 <code>a = F合 / m</code>。
-    摩擦力先當「靜摩擦」抵抗：當施力 <code>F ≤ μmg</code> 時，靜摩擦剛好等於 F、合力為 0、<b>箱子不動</b>（推不動）；
-    一旦 <code>F > μmg</code> 箱子開始滑動，動摩擦 <code>f = μmg</code> 固定，箱子以定加速度前進，v-t 為直線、x-t 為拋物線。
-    比較<b>光滑</b>(μ=0)與<b>粗糙</b>：同樣的 F，質量越大或摩擦越大，加速度越小。
+  <div class="lower">
+    <div class="panel">
+      <div class="lab">速度 v(t)（斜率＝加速度 a）與 位移 x(t)</div>
+      <canvas id="plot"></canvas>
+    </div>
+    <div class="note" style="margin-top:0">
+      <b>物理重點：</b>合力 <code>F合 = F − f</code>，加速度 <code>a = F合 / m</code>。摩擦先當靜摩擦抵抗：
+      當 <code>F ≤ μmg</code> 時靜摩擦剛好等於 F、合力為 0、<b>箱子不動</b>；一旦 <code>F &gt; μmg</code> 開始滑動，
+      動摩擦 <code>f = μmg</code> 固定，箱子以定加速度前進（v-t 直線、x-t 拋物線）。同樣的 F，質量或摩擦越大，加速度越小。
+    </div>
   </div>
 
-  <footer>純前端 HTML / Canvas，無外部相依。以單一摩擦係數近似靜/動摩擦門檻（國高中常見簡化）。</footer>
+  <footer>純前端 HTML / Canvas（SIM 工具庫）。以單一摩擦係數近似靜/動摩擦門檻（國高中常見簡化）。</footer>
 </div>
 
 <script>
+const S=SIM;
 const sliders=[
   {id:'F', name:'施力 F',   min:0, max:60, step:1, val:20, unit:'N'},
   {id:'m', name:'質量 m',   min:1, max:20, step:.5,val:4,  unit:'kg'},
-  {id:'mu',name:'摩擦係數 μ',min:0, max:.8, step:.02,val:0.3,unit:''},
+  {id:'mu',name:'摩擦係數 μ',min:0, max:.8, step:.02,val:.3,unit:''},
   {id:'g', name:'重力 g',   min:1, max:20, step:.1,val:9.8,unit:'m/s²'},
 ];
 const state={}; let fricOn=true;
-const ctrl=document.getElementById('controls');
-sliders.forEach(s=>{
-  state[s.id]=s.val;
-  const box=document.createElement('div');box.className='ctrl';
-  box.innerHTML=`<label><span>${s.name}</span><span class="val" id="v_${s.id}">${fmt(s.val)}${s.unit?' '+s.unit:''}</span></label>
+const sBar=document.getElementById('sliders');
+sliders.forEach(s=>{ state[s.id]=s.val;
+  const d=document.createElement('div'); d.className='sld';
+  d.innerHTML=`<label><span>${s.name}</span><span class="v" id="v_${s.id}">${fmt(s.val)}${s.unit?' '+s.unit:''}</span></label>
     <input type="range" id="r_${s.id}" min="${s.min}" max="${s.max}" step="${s.step}" value="${s.val}">`;
-  ctrl.appendChild(box);
-  box.querySelector('input').addEventListener('input',e=>{
-    state[s.id]=parseFloat(e.target.value);
-    document.getElementById('v_'+s.id).textContent=`${fmt(state[s.id])}${s.unit?' '+s.unit:''}`;
-    rebuild();
-  });
+  sBar.appendChild(d);
+  d.querySelector('input').addEventListener('input',e=>{ state[s.id]=parseFloat(e.target.value);
+    document.getElementById('v_'+s.id).textContent=`${fmt(state[s.id])}${s.unit?' '+s.unit:''}`; rebuild(); });
 });
 function fmt(x){return (Math.round(x*100)/100).toString();}
 function setSlider(id,val){state[id]=val;const r=document.getElementById('r_'+id);if(r)r.value=val;
   const s=sliders.find(z=>z.id===id);if(s)document.getElementById('v_'+id).textContent=`${fmt(val)}${s.unit?' '+s.unit:''}`;}
 
-// ---- 物理 ----
-let A=0, FRIC=0, FNET=0, MOVES=false, playT=0, playing=true, last=0;
-const TTOT=5;
-function compute(){
-  const F=state.F,m=state.m,g=state.g,mu=fricOn?state.mu:0;
-  const N=m*g, fmax=mu*N;
-  if(F<=fmax){ MOVES=false; FRIC=F; FNET=0; A=0; }       // 靜摩擦平衡，推不動
-  else { MOVES=true; FRIC=fmax; FNET=F-fmax; A=FNET/m; }  // 滑動，定加速度
-}
-function xAt(t){return 0.5*A*t*t;}
-function vAt(t){return A*t;}
+// ---- 物理（已驗證）----
+let A=0,FRIC=0,FNET=0,MOVES=false,playT=0,playing=true; const TTOT=5;
+function compute(){const F=state.F,m=state.m,g=state.g,mu=fricOn?state.mu:0,N=m*g,fmax=mu*N;
+  if(F<=fmax){MOVES=false;FRIC=F;FNET=0;A=0;}else{MOVES=true;FRIC=fmax;FNET=F-fmax;A=FNET/m;}}
+function xAt(t){return 0.5*A*t*t;} function vAt(t){return A*t;}
 
 // ---- 視圖 ----
-const sc=document.getElementById('scene'),cc=sc.getContext('2d');
-const plot=document.getElementById('plot'),pc=plot.getContext('2d');
-function arrow(c,x1,y1,x2,y2,col,w,lab){
-  if(Math.hypot(x2-x1,y2-y1)<1)return;
-  c.strokeStyle=col;c.fillStyle=col;c.lineWidth=w;
-  c.beginPath();c.moveTo(x1,y1);c.lineTo(x2,y2);c.stroke();
-  const a=Math.atan2(y2-y1,x2-x1),h=9;
-  c.beginPath();c.moveTo(x2,y2);c.lineTo(x2-h*Math.cos(a-.4),y2-h*Math.sin(a-.4));
-  c.lineTo(x2-h*Math.cos(a+.4),y2-h*Math.sin(a+.4));c.closePath();c.fill();
-  if(lab){c.font='12px sans-serif';c.fillText(lab,(x1+x2)/2-6,(y1+y2)/2-8);}
+let sc,pc;
+const WARM={skyTop:'#3a2c1c',skyBottom:'#1a120a',ground:'#473322',groundDark:'#241810',grid:'rgba(255,200,140,.3)',horizon:'rgba(255,210,160,.4)',vignette:'rgba(10,6,2,.5)'};
+function setupCanvases(){sc=S.fit(document.getElementById('scene'),2.1);pc=S.fit(document.getElementById('plot'),3.2);}
+function drawScene(t){const W=sc._w,H=sc._h,gy=H-52;
+  S.scene(sc,WARM,{ground:gy,perspective:true});
+  // 地面木紋線
+  sc.strokeStyle='rgba(255,210,160,.08)';sc.lineWidth=1;
+  for(let y=gy+8;y<H;y+=12){sc.beginPath();sc.moveTo(0,y);sc.lineTo(W,y);sc.stroke();}
+  // 箱子位置（自動捲動）
+  const span=Math.max(xAt(TTOT),2),boxX=90+(xAt(t)/span)*(W-280);
+  const bw=46+state.m*3.2,bh=bw,bx=boxX,by=gy-bh,cx=bx+bw/2,cyy=by+bh/2;
+  // 接觸陰影
+  S.shadow(sc,cx,gy,bw*0.55,0);
+  // 木箱
+  drawCrate(bx,by,bw,bh);
+  // ===== 受力箭頭（各自作用點）=====
+  const sF=2.3;
+  // 重力 W：質心
+  S.arrow(sc,cx,cyy,cx,cyy+state.m*state.g*0.42*sF*0.5,{color:S.C.gravity,width:3,label:'W'});
+  // 正向力 N：底部接觸點(中)，向上
+  S.arrow(sc,cx,gy,cx,gy-state.m*state.g*0.42*sF*0.5,{color:S.C.normal,width:3,label:'N'});
+  // 施力 F：被推的左側面(質心高度)，向右
+  if(state.F>0.5)S.arrow(sc,bx-state.F*sF,cyy,bx,cyy,{color:'#4cc2ff',width:4,label:'F'});
+  // 摩擦 f：底部接觸面，向左
+  if(FRIC>0.1)S.arrow(sc,bx+bw*0.5,gy-3,bx+bw*0.5-FRIC*sF,gy-3,{color:S.C.friction,width:3.5,label:'f'});
+  // 合力：箱子上方
+  if(Math.abs(FNET)>0.1)S.arrow(sc,cx,by-16,cx+FNET*sF,by-16,{color:S.C.acc,width:4,label:'F合 → a='+A.toFixed(2)});
+  else{sc.fillStyle='#ff8fa3';sc.font='bold 13px system-ui';sc.fillText('合力 = 0 → 推不動（靜摩擦平衡）',cx-70,by-12);}
+  // 推手示意（手掌）
+  if(state.F>0.5){sc.fillStyle='#e8b98a';sc.beginPath();sc.arc(bx-state.F*sF-6,cyy,7,0,7);sc.fill();}
+  updateHud(t);
 }
-function drawScene(t){
-  const W=sc.width,H=sc.height,gy=H-58;cc.clearRect(0,0,W,H);
-  // 地面（粗糙以斜線表示）
-  cc.strokeStyle='#3a4756';cc.lineWidth=2;
-  cc.beginPath();cc.moveTo(0,gy);cc.lineTo(W,gy);cc.stroke();
-  if(fricOn&&state.mu>0){cc.strokeStyle='#26303f';cc.lineWidth=1;for(let x=0;x<W;x+=14){cc.beginPath();cc.moveTo(x,gy);cc.lineTo(x-8,gy+10);cc.stroke();}}
-  // 箱子位置（自動捲動：箱子在視窗內前進，超出則循環）
-  const xMeters=xAt(t);
-  const span=Math.max(xAt(TTOT),2);                 // 視窗對應的距離
-  const boxX=80+ (xMeters/span)*(W-260);
-  const bw=44+state.m*3.2, bh=bw;                    // 箱子大小∝質量
-  const bx=boxX, by=gy-bh;
-  cc.fillStyle='#1b2740';cc.strokeStyle='#5a7bb0';cc.lineWidth=2;
-  cc.fillRect(bx,by,bw,bh);cc.strokeRect(bx,by,bw,bh);
-  cc.fillStyle='#8a99ad';cc.font='12px sans-serif';cc.fillText(state.m+' kg',bx+8,by+bh/2+4);
-  const cx=bx+bw/2, cyy=by+bh/2;
-  // 力箭頭（長度∝力，限制顯示比例）
-  const sF=2.4;
-  arrow(cc,cx,cyy,cx+state.F*sF,cyy,'#4cc2ff',4,'F='+state.F+'N');
-  if(FRIC>0.05) arrow(cc,cx,cyy+0,cx-FRIC*sF,cyy,'#ff6b9d',4,'f='+FRIC.toFixed(0)+'N');
-  // 重力 / 正向力（灰，示意）
-  arrow(cc,cx,by+bh,cx,by+bh+state.m*state.g*0.5,'#5b6880',2,null);
-  arrow(cc,cx-14,by+bh,cx-14,by+bh-state.m*state.g*0.5,'#5b6880',2,null);
-  cc.fillStyle='#5b6880';cc.fillText('重力',cx+6,by+bh+state.m*state.g*0.5+4);cc.fillText('正向力 N',cx-70,by+bh-state.m*state.g*0.5-4);
-  // 合力（黃，畫在箱子上方）
-  const topY=by-20;
-  if(Math.abs(FNET)>0.05){arrow(cc,cx,topY,cx+FNET*sF,topY,'#ffce54',4,'F合='+FNET.toFixed(0)+'N → a='+A.toFixed(2)+'m/s²');}
-  else{cc.fillStyle='#ff6b9d';cc.font='bold 13px sans-serif';cc.fillText('合力 = 0 → 推不動（靜摩擦平衡）',cx-30,topY);}
-  document.getElementById('tlabel').textContent='t = '+t.toFixed(2)+' s';
+function drawCrate(x,y,w,h){
+  const g=sc.createLinearGradient(0,y,0,y+h);g.addColorStop(0,'#b88347');g.addColorStop(.5,'#8a5a2b');g.addColorStop(1,'#5e3d1c');
+  sc.fillStyle=g;sc.fillRect(x,y,w,h);
+  sc.strokeStyle='#3a2510';sc.lineWidth=3;sc.strokeRect(x,y,w,h);
+  // 木板紋與對角加固
+  sc.strokeStyle='rgba(60,40,20,.6)';sc.lineWidth=2;
+  sc.beginPath();sc.moveTo(x,y);sc.lineTo(x+w,y+h);sc.moveTo(x+w,y);sc.lineTo(x,y+h);sc.stroke();
+  sc.strokeStyle='rgba(255,235,200,.25)';sc.lineWidth=1.5;sc.strokeRect(x+4,y+4,w-8,h-8);
+  sc.fillStyle='rgba(255,235,200,.18)';sc.fillRect(x+4,y+4,w-8,5);
+  sc.fillStyle='#ffe9c8';sc.font='600 11px system-ui';sc.textAlign='center';sc.fillText(state.m+' kg',x+w/2,y+h/2+4);sc.textAlign='left';
 }
-function drawPlot(t){
-  const W=plot.width,H=plot.height,mL=44,mR=44,mT=14,mB=24;pc.clearRect(0,0,W,H);
-  const vmax=Math.max(vAt(TTOT),1), xmax=Math.max(xAt(TTOT),1);
-  const X=tt=>mL+tt/TTOT*(W-mL-mR);
-  const Yv=v=>H-mB-(v/vmax)*(H-mT-mB);
-  const Yx=x=>H-mB-(x/xmax)*(H-mT-mB);
-  pc.strokeStyle='#16202f';pc.lineWidth=1;
-  for(let i=0;i<=5;i++){const tx=X(TTOT*i/5);pc.beginPath();pc.moveTo(tx,mT);pc.lineTo(tx,H-mB);pc.stroke();
-    pc.fillStyle='#46566b';pc.font='11px sans-serif';pc.fillText((TTOT*i/5).toFixed(0)+'s',tx-7,H-9);}
-  // v(t)
-  pc.strokeStyle='#4cc2ff';pc.lineWidth=2;pc.beginPath();
-  for(let i=0;i<=200;i++){const tt=TTOT*i/200;const px=X(tt),py=Yv(vAt(tt));i?pc.lineTo(px,py):pc.moveTo(px,py);}pc.stroke();
-  // x(t)
-  pc.strokeStyle='#7CFFB2';pc.lineWidth=2;pc.beginPath();
-  for(let i=0;i<=200;i++){const tt=TTOT*i/200;const px=X(tt),py=Yx(xAt(tt));i?pc.lineTo(px,py):pc.moveTo(px,py);}pc.stroke();
-  pc.fillStyle='#4cc2ff';pc.fillText('● 速度 v（直線，斜率=a）',mL+4,mT+12);
-  pc.fillStyle='#7CFFB2';pc.fillText('● 位移 x（拋物線）',mL+180,mT+12);
+function drawPlot(t){const W=pc._w,H=pc._h,mL=40,mR=40,mT=12,mB=22;pc.clearRect(0,0,W,H);
+  const vmax=Math.max(vAt(TTOT),1),xmax=Math.max(xAt(TTOT),1);
+  const X=tt=>mL+tt/TTOT*(W-mL-mR),Yv=v=>H-mB-(v/vmax)*(H-mT-mB),Yx=x=>H-mB-(x/xmax)*(H-mT-mB);
+  pc.strokeStyle='#1b2738';pc.lineWidth=1;for(let i=0;i<=5;i++){const tx=X(TTOT*i/5);pc.beginPath();pc.moveTo(tx,mT);pc.lineTo(tx,H-mB);pc.stroke();
+    pc.fillStyle='#46566b';pc.font='11px system-ui';pc.fillText((TTOT*i/5).toFixed(0)+'s',tx-7,H-7);}
+  pc.strokeStyle='#6cd0ff';pc.lineWidth=2.5;pc.beginPath();for(let i=0;i<=120;i++){const tt=TTOT*i/120;const x=X(tt),y=Yv(vAt(tt));i?pc.lineTo(x,y):pc.moveTo(x,y);}pc.stroke();
+  pc.strokeStyle='#7CFFB2';pc.lineWidth=2.5;pc.beginPath();for(let i=0;i<=120;i++){const tt=TTOT*i/120;const x=X(tt),y=Yx(xAt(tt));i?pc.lineTo(x,y):pc.moveTo(x,y);}pc.stroke();
+  pc.fillStyle='#6cd0ff';pc.fillText('● 速度 v（直線，斜率=a）',mL+4,mT+11);pc.fillStyle='#7CFFB2';pc.fillText('● 位移 x',mL+184,mT+11);
   const cx=X(t);pc.strokeStyle='#fff';pc.beginPath();pc.moveTo(cx,mT);pc.lineTo(cx,H-mB);pc.stroke();
-  pc.fillStyle='#fff';pc.beginPath();pc.arc(cx,Yv(vAt(t)),3.5,0,7);pc.fill();
-  pc.beginPath();pc.arc(cx,Yx(xAt(t)),3.5,0,7);pc.fill();
-}
-function drawEq(){
-  const F=state.F,m=state.m;
-  document.getElementById('eq').innerHTML=
-   `F<sub>合</sub> = F − f = <b>${state.F}</b> − <b>${FRIC.toFixed(1)}</b> = <b>${FNET.toFixed(1)} N</b>`+
-   `　<span class="gray">→</span>　a = F<sub>合</sub> / m = ${FNET.toFixed(1)} / ${m} = <b>${A.toFixed(2)} m/s²</b>`;
-}
-function drawStats(t){
-  const rows=[
-    ['施力 F',state.F+' N','#4cc2ff'],
-    ['摩擦力 f',FRIC.toFixed(1)+' N','#ff6b9d'],
-    ['合力 F合',FNET.toFixed(1)+' N','#ffce54'],
-    ['加速度 a',A.toFixed(2)+' m/s²','#e8eef6'],
-    ['速度 v',vAt(t).toFixed(2)+' m/s','#4cc2ff'],
-    ['位移 x',xAt(t).toFixed(2)+' m','#7CFFB2'],
-  ];
-  document.getElementById('stats').innerHTML=rows.map(r=>
-    `<div class="box"><div class="k">${r[0]}</div><div class="v" style="color:${r[2]}">${r[1]}</div></div>`).join('');
-}
-function render(t){drawScene(t);drawEq();drawStats(t);drawPlot(t);}
+  pc.fillStyle='#fff';[Yv(vAt(t)),Yx(xAt(t))].forEach(y=>{pc.beginPath();pc.arc(cx,y,3,0,7);pc.fill();});}
+function updateHud(t){
+  document.getElementById('hud').innerHTML=chip('施力 F',state.F+' N','cyan')+chip('摩擦 f',FRIC.toFixed(1)+' N','rose')+chip('合力',FNET.toFixed(1)+' N','amber')+chip('加速度 a',A.toFixed(2)+' m/s²','');
+  document.getElementById('eq').innerHTML=`F<sub>合</sub>=F−f=<b>${state.F}</b>−<b>${FRIC.toFixed(1)}</b>=<b>${FNET.toFixed(1)}N</b> → a=${FNET.toFixed(1)}/${state.m}=<b>${A.toFixed(2)} m/s²</b>`;}
+function chip(k,v,cls){return `<div class="chip ${cls}">${k}<b>${v}</b></div>`;}
+function render(t){drawScene(t);drawPlot(t);}
 function rebuild(){compute();playT=Math.min(playT,TTOT);render(playT);}
 
-// ---- 動畫 ----
-function loop(ts){
-  if(playing){const dt=(ts-last)/1000;last=ts;playT+=Math.min(dt,0.05);
-    if(playT>=TTOT)playT=0;                         // 循環重播
-    render(playT);}
-  else last=ts;
-  requestAnimationFrame(loop);
-}
+let lastTs=0;
+function loop(ts){const dt=lastTs?Math.min((ts-lastTs)/1000,0.05):0;lastTs=ts;
+  if(playing){playT+=dt;if(playT>=TTOT)playT=0;}render(playT);requestAnimationFrame(loop);}
 const pb=document.getElementById('play');
-pb.onclick=()=>{playing=!playing;pb.classList.toggle('on',playing);pb.textContent=playing?'⏸ 暫停':'▶ 播放';last=performance.now();};
-document.getElementById('reset').onclick=()=>{playT=0;playing=true;pb.classList.add('on');pb.textContent='⏸ 暫停';last=performance.now();render(0);};
+pb.onclick=()=>{playing=!playing;pb.classList.toggle('on',playing);pb.textContent=playing?'⏸ 暫停':'▶ 播放';};
+document.getElementById('reset').onclick=()=>{playT=0;playing=true;pb.classList.add('on');pb.textContent='⏸ 暫停';};
 const fb=document.getElementById('fric');
-fb.onclick=()=>{fricOn=!fricOn;fb.textContent='摩擦：'+(fricOn?'開（粗糙）':'關（光滑）');fb.classList.toggle('on',fricOn);rebuild();};
-const PRESETS={
-  smooth:{F:20,m:4,mu:0.3,g:9.8,fric:false},
-  push:  {F:30,m:4,mu:0.3,g:9.8,fric:true},
-  stuck: {F:8, m:4,mu:0.5,g:9.8,fric:true},
-  heavy: {F:30,m:15,mu:0.3,g:9.8,fric:true},
-};
-document.querySelectorAll('[data-preset]').forEach(b=>b.onclick=()=>{
-  const p=PRESETS[b.dataset.preset];if(!p)return;
-  ['F','m','mu','g'].forEach(k=>setSlider(k,p[k]));
-  fricOn=p.fric;fb.textContent='摩擦：'+(fricOn?'開（粗糙）':'關（光滑）');fb.classList.toggle('on',fricOn);
-  playT=0;playing=true;pb.classList.add('on');pb.textContent='⏸ 暫停';last=performance.now();compute();render(0);
-});
-
-compute();render(0);
-requestAnimationFrame(loop);
-window.addEventListener('resize',()=>render(playT));
+fb.onclick=()=>{fricOn=!fricOn;fb.textContent='摩擦：'+(fricOn?'粗糙':'光滑');fb.classList.toggle('on',fricOn);rebuild();};
+const PRE={smooth:{F:20,m:4,mu:.3,g:9.8,fric:false},push:{F:30,m:4,mu:.3,g:9.8,fric:true},stuck:{F:8,m:4,mu:.5,g:9.8,fric:true},heavy:{F:30,m:15,mu:.3,g:9.8,fric:true}};
+document.querySelectorAll('[data-preset]').forEach(b=>b.onclick=()=>{const p=PRE[b.dataset.preset];if(!p)return;
+  ['F','m','mu','g'].forEach(k=>setSlider(k,p[k]));fricOn=p.fric;fb.textContent='摩擦：'+(fricOn?'粗糙':'光滑');fb.classList.toggle('on',fricOn);
+  playT=0;playing=true;pb.classList.add('on');pb.textContent='⏸ 暫停';compute();render(0);});
+window.addEventListener('load',()=>{setupCanvases();compute();render(0);requestAnimationFrame(loop);});
+window.addEventListener('resize',()=>{setupCanvases();render(playT);});
 </script>
 </body>
 </html>
