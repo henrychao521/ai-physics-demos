@@ -6,41 +6,37 @@
 <title>折射與全反射 ｜ Snell 定律・臨界角・光纖</title>
 <link rel="icon" href="../assets/favicon.svg" type="image/svg+xml">
 <link rel="stylesheet" href="../assets/site.css">
+<script src="../assets/sim.js"></script>
 <script defer src="../assets/nav.js"></script>
 <style>
   *{box-sizing:border-box}
-  html,body{margin:0;padding:0;background:var(--bg);color:var(--txt);
-    font-family:"Noto Sans TC","PingFang TC","Microsoft JhengHei",system-ui,sans-serif}
+  html,body{margin:0;padding:0;background:var(--bg);color:var(--txt);font-family:"Noto Sans TC","PingFang TC","Microsoft JhengHei",system-ui,sans-serif}
   a{color:var(--accent)}
-  .wrap{max-width:1100px;margin:0 auto;padding:18px 16px 60px}
+  .wrap{max-width:1120px;margin:0 auto;padding:18px 16px 60px}
   header h1{font-size:1.5rem;margin:.2em 0}
   header p{color:var(--muted);margin:.2em 0 1em;line-height:1.6}
-  .badge{display:inline-block;background:var(--panel2);border:1px solid var(--line);
-    color:var(--muted);font-size:.72rem;padding:2px 8px;border-radius:99px;margin-right:6px}
-  .layout{display:grid;grid-template-columns:1fr .7fr;gap:16px}
-  @media(max-width:760px){.layout{grid-template-columns:1fr}}
-  .stage{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:14px;margin-bottom:16px}
-  canvas{width:100%;display:block;border-radius:8px;background:#05070b;touch-action:none}
-  .label{font-size:.8rem;color:var(--muted);margin:0 0 6px;display:flex;justify-content:space-between;flex-wrap:wrap;gap:8px}
-  .grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:14px}
-  .ctrl{background:var(--panel2);border:1px solid var(--line);border-radius:10px;padding:10px 12px}
-  .ctrl label{display:flex;justify-content:space-between;font-size:.85rem;margin-bottom:6px}
-  .ctrl .val{color:var(--accent);font-variant-numeric:tabular-nums}
-  input[type=range]{width:100%;accent-color:var(--accent)}
-  .modes{display:flex;gap:8px;margin:6px 0 14px;flex-wrap:wrap;align-items:center}
-  .modes button,.btn{background:var(--panel2);color:var(--txt);border:1px solid var(--line);
-    padding:8px 14px;border-radius:9px;cursor:pointer;font-size:.85rem;font-family:inherit}
-  .modes button.on{background:var(--accent);color:#04121c;border-color:var(--accent);font-weight:700}
-  .btn:hover,.modes button:hover{border-color:var(--accent)}
-  .stat{display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:10px;margin:2px 0}
-  .stat .box{background:var(--panel2);border:1px solid var(--line);border-radius:10px;padding:9px 11px}
-  .stat .box .k{font-size:.72rem;color:var(--muted)}
-  .stat .box .v{font-size:1.02rem;font-variant-numeric:tabular-nums;font-weight:700}
-  .state{margin-top:12px;padding:10px 12px;border-radius:10px;text-align:center;font-weight:700}
-  .note{background:var(--panel);border-left:3px solid var(--accent2);border-radius:8px;
-    padding:12px 14px;color:var(--muted);font-size:.86rem;line-height:1.7;margin-top:18px}
+  .badge{display:inline-block;background:var(--panel2);border:1px solid var(--line);color:var(--muted);font-size:.72rem;padding:2px 8px;border-radius:99px;margin-right:6px}
+  .grid2{display:grid;grid-template-columns:1.1fr .7fr;gap:14px}
+  @media(max-width:740px){.grid2{grid-template-columns:1fr}}
+  .scene-wrap{position:relative;border-radius:16px;overflow:hidden;border:1px solid var(--line);box-shadow:0 18px 50px rgba(0,0,0,.45)}
+  #scene{display:block;width:100%;touch-action:none}
+  .side{display:flex;flex-direction:column;gap:12px}
+  .statgrid{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+  .box{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:10px 12px}
+  .box .k{font-size:.72rem;color:var(--muted)}.box .v{font-size:1.05rem;font-variant-numeric:tabular-nums;font-weight:700}
+  .state{padding:10px 12px;border-radius:12px;text-align:center;font-weight:700}
+  .presets{display:flex;gap:7px;flex-wrap:wrap;align-items:center;margin-top:0}
+  .presets span{color:var(--muted);font-size:.8rem}
+  .pbtn{background:var(--panel2);color:var(--txt);border:1px solid var(--line);padding:7px 12px;border-radius:9px;cursor:pointer;font-size:.83rem;font-family:inherit}
+  .pbtn:hover{border-color:var(--accent)}
+  .bar{display:flex;gap:14px;flex-wrap:wrap;align-items:flex-end;background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:14px 16px;margin-top:14px}
+  .sld{flex:1;min-width:160px}
+  .sld label{display:flex;justify-content:space-between;font-size:.82rem;color:var(--muted);margin-bottom:5px}
+  .sld label .v{color:var(--accent);font-variant-numeric:tabular-nums;font-weight:700}
+  .sld input{width:100%;accent-color:var(--accent)}
+  .note{background:var(--panel);border-left:3px solid var(--accent2);border-radius:8px;padding:12px 14px;color:var(--muted);font-size:.86rem;line-height:1.7;margin-top:14px}
   .note b{color:var(--txt)}.note code{background:var(--bg2);padding:1px 6px;border-radius:5px;color:var(--green);font-size:.85em}
-  footer{color:var(--muted);font-size:.78rem;margin-top:26px;text-align:center;line-height:1.7}
+  footer{color:var(--muted);font-size:.78rem;margin-top:24px;text-align:center;line-height:1.7}
 </style>
 </head>
 <body data-demo="折射與全反射">
@@ -48,136 +44,112 @@
   <header>
     <span class="badge">光學・折射</span>
     <h1>折射與全反射</h1>
-    <p>光從一種介質進入另一種，會在界面<b>轉彎（折射）</b>，遵守 <b>n₁ sinθ₁ = n₂ sinθ₂</b>。
-       從<b>密介質進入疏介質</b>（如水→空氣）且入射角超過<b>臨界角</b>時，光無法折射出去、<b>全部反射</b>回來——這就是光纖傳光的原理。</p>
+    <p>光從一種介質進入另一種，在界面<b>轉彎（折射）</b>，遵守 <b>n₁ sinθ₁ = n₂ sinθ₂</b>。
+       從<b>密介質進入疏介質</b>且入射角超過<b>臨界角</b>時，光無法折射出去、<b>全部反射</b>回來——這就是光纖傳光原理。</p>
   </header>
 
-  <div class="modes">
-    <span style="color:var(--muted);font-size:.8rem">情境：</span>
-    <button class="btn" data-preset="aw">空氣→水</button>
-    <button class="btn" data-preset="wa">水→空氣</button>
-    <button class="btn" data-preset="ga">玻璃→空氣</button>
-    <button class="btn" data-preset="tir">全反射示範</button>
-  </div>
-
-  <div class="layout">
-    <div class="stage">
-      <div class="label"><span>界面（青=入射，灰=反射，黃=折射；可拖曳入射光）</span><span id="sub"></span></div>
-      <canvas id="cv" width="560" height="500"></canvas>
-    </div>
-    <div>
-      <div class="stat" id="stats"></div>
+  <div class="grid2">
+    <div class="scene-wrap"><canvas id="scene"></canvas></div>
+    <div class="side">
+      <div class="statgrid" id="stats"></div>
       <div class="state" id="stateBar"></div>
+      <div class="presets">
+        <span>情境：</span>
+        <button class="pbtn" data-preset="aw">空氣→水</button>
+        <button class="pbtn" data-preset="wa">水→空氣</button>
+        <button class="pbtn" data-preset="ga">玻璃→空氣</button>
+        <button class="pbtn" data-preset="tir">全反射</button>
+      </div>
     </div>
   </div>
 
-  <div class="grid" id="controls" style="margin-top:14px"></div>
+  <div class="bar" id="sliders"></div>
 
   <div class="note">
-    <b>物理重點：</b>折射率 n 越大，光在其中越慢、越「難轉」。<b>Snell 定律</b> <code>n₁ sinθ₁ = n₂ sinθ₂</code>：
-    進入較密介質（n 變大）光<b>偏向法線</b>；進入較疏介質（n 變小）光<b>偏離法線</b>，當入射角大到讓 sinθ₂ 算出來 &gt; 1，
-    就沒有折射光、發生<b>全反射</b>。臨界角 <code>θc = sin⁻¹(n₂/n₁)</code>（須 n₁ &gt; n₂）。
-    光纖、鑽石的閃耀、海市蜃樓、水中看岸上物體變形，都是折射與全反射的應用。
+    <b>物理重點：</b>折射率 n 越大，光在其中越慢、越「難轉」。<b>Snell 定律</b> <code>n₁ sinθ₁ = n₂ sinθ₂</code>：進入較密介質（n 變大）光<b>偏向法線</b>；
+    進入較疏介質光<b>偏離法線</b>，當入射角大到 sinθ₂ &gt; 1 就<b>全反射</b>。臨界角 <code>θc = sin⁻¹(n₂/n₁)</code>（須 n₁ &gt; n₂）。
+    光纖、鑽石的閃耀、海市蜃樓都是折射與全反射的應用。
   </div>
 
-  <footer>純前端 HTML / Canvas，無外部相依。</footer>
+  <footer>純前端 HTML / Canvas（SIM 工具庫）。拖曳上半部可調入射角。</footer>
 </div>
 
 <script>
+const S=SIM;
 const sliders=[
   {id:'th1',name:'入射角 θ₁',min:0,max:89,step:1,val:35,unit:'°'},
-  {id:'n1', name:'介質1 折射率 n₁',min:1,max:2.5,step:.01,val:1.0,unit:''},
-  {id:'n2', name:'介質2 折射率 n₂',min:1,max:2.5,step:.01,val:1.33,unit:''},
+  {id:'n1',name:'介質1 折射率 n₁',min:1,max:2.5,step:.01,val:1,unit:''},
+  {id:'n2',name:'介質2 折射率 n₂',min:1,max:2.5,step:.01,val:1.33,unit:''},
 ];
 const state={};
-const ctrl=document.getElementById('controls');
-sliders.forEach(s=>{
-  state[s.id]=s.val;
-  const box=document.createElement('div');box.className='ctrl';
-  box.innerHTML=`<label><span>${s.name}</span><span class="val" id="v_${s.id}">${fmt(s.val)} ${s.unit}</span></label>
+const sBar=document.getElementById('sliders');
+sliders.forEach(s=>{ state[s.id]=s.val;
+  const d=document.createElement('div');d.className='sld';
+  d.innerHTML=`<label><span>${s.name}</span><span class="v" id="v_${s.id}">${fmt(s.val)} ${s.unit}</span></label>
     <input type="range" id="r_${s.id}" min="${s.min}" max="${s.max}" step="${s.step}" value="${s.val}">`;
-  ctrl.appendChild(box);
-  box.querySelector('input').addEventListener('input',e=>{
-    state[s.id]=parseFloat(e.target.value);
-    document.getElementById('v_'+s.id).textContent=`${fmt(state[s.id])} ${s.unit}`;draw();
-  });
+  sBar.appendChild(d);
+  d.querySelector('input').addEventListener('input',e=>{state[s.id]=parseFloat(e.target.value);
+    document.getElementById('v_'+s.id).textContent=`${fmt(state[s.id])} ${s.unit}`;draw();});
 });
 function fmt(x){return (Math.round(x*100)/100).toString();}
 function setSlider(id,val){state[id]=val;const r=document.getElementById('r_'+id);if(r)r.value=val;
   const s=sliders.find(z=>z.id===id);if(s)document.getElementById('v_'+id).textContent=`${fmt(val)} ${s.unit}`;}
+function solve(){const th1=state.th1*Math.PI/180,s2=state.n1/state.n2*Math.sin(th1);
+  const tir=s2>1,th2=tir?null:Math.asin(s2),tc=state.n1>state.n2?Math.asin(state.n2/state.n1)*180/Math.PI:null;return {th1,th2,tir,tc};}
 
-const cv=document.getElementById('cv'),cc=cv.getContext('2d');
-function solve(){
-  const th1=state.th1*Math.PI/180;const s2=state.n1/state.n2*Math.sin(th1);
-  const tir=s2>1;const th2=tir?null:Math.asin(s2);
-  const tc=state.n1>state.n2?Math.asin(state.n2/state.n1)*180/Math.PI:null;
-  return {th1,th2,tir,tc};
-}
-function arrowRay(O,dx,dy,len,col,w,dash){
-  const ex=O.x+dx*len,ey=O.y+dy*len;cc.strokeStyle=col;cc.fillStyle=col;cc.lineWidth=w;cc.setLineDash(dash||[]);
-  cc.beginPath();cc.moveTo(O.x,O.y);cc.lineTo(ex,ey);cc.stroke();cc.setLineDash([]);
-  const a=Math.atan2(dy,dx),h=10;cc.beginPath();cc.moveTo(ex,ey);
-  cc.lineTo(ex-h*Math.cos(a-.4),ey-h*Math.sin(a-.4));cc.lineTo(ex-h*Math.cos(a+.4),ey-h*Math.sin(a+.4));cc.closePath();cc.fill();
-}
-function draw(){
-  const W=cv.width,H=cv.height,O={x:W/2,y:H/2};cc.clearRect(0,0,W,H);
+let sc;
+function setupCanvases(){sc=S.fit(document.getElementById('scene'),1.18);}
+function rayA(O,dx,dy,len,col,w,dash){const ex=O.x+dx*len,ey=O.y+dy*len;sc.strokeStyle=col;sc.fillStyle=col;sc.lineWidth=w;sc.setLineDash(dash||[]);
+  sc.beginPath();sc.moveTo(O.x,O.y);sc.lineTo(ex,ey);sc.stroke();sc.setLineDash([]);
+  const a=Math.atan2(dy,dx),h=10;sc.beginPath();sc.moveTo(ex,ey);sc.lineTo(ex-h*Math.cos(a-.4),ey-h*Math.sin(a-.4));sc.lineTo(ex-h*Math.cos(a+.4),ey-h*Math.sin(a+.4));sc.closePath();sc.fill();}
+function draw(){const W=sc._w,H=sc._h,O={x:W/2,y:H/2};
   const {th1,th2,tir,tc}=solve();
-  // 介質底色（n 大→較藍）
-  cc.fillStyle=`rgba(76,140,200,${(state.n1-1)/2*0.4+0.04})`;cc.fillRect(0,0,W,H/2);
-  cc.fillStyle=`rgba(76,140,200,${(state.n2-1)/2*0.4+0.04})`;cc.fillRect(0,H/2,W,H/2);
+  // 介質：上層偏亮(n小)、下層偏藍(n大)
+  const g1=sc.createLinearGradient(0,0,0,H/2);g1.addColorStop(0,'#eef4fb');g1.addColorStop(1,'#dce8f4');sc.fillStyle=g1;sc.fillRect(0,0,W,H/2);
+  const tint=(state.n2-1)/1.5;const g2=sc.createLinearGradient(0,H/2,0,H);
+  g2.addColorStop(0,`rgba(${Math.round(150-tint*90)},${Math.round(200-tint*70)},${Math.round(235-tint*20)},1)`);g2.addColorStop(1,`rgba(${Math.round(70-tint*30)},${Math.round(130-tint*40)},${Math.round(190-tint*20)},1)`);
+  sc.fillStyle=g2;sc.fillRect(0,H/2,W,H/2);
   // 界面 + 法線
-  cc.strokeStyle='#4c8cc8';cc.lineWidth=2;cc.beginPath();cc.moveTo(0,O.y);cc.lineTo(W,O.y);cc.stroke();
-  cc.strokeStyle='#3a4756';cc.setLineDash([5,5]);cc.beginPath();cc.moveTo(O.x,30);cc.lineTo(O.x,H-30);cc.stroke();cc.setLineDash([]);
-  cc.fillStyle='#6b7785';cc.font='11px sans-serif';cc.fillText('法線',O.x+6,40);
-  cc.fillText('介質1  n₁='+state.n1.toFixed(2),12,20);cc.fillText('介質2  n₂='+state.n2.toFixed(2),12,H-12);
-  // 入射光（從上方來，往下打到 O）
+  sc.strokeStyle='#3a6a9a';sc.lineWidth=2;sc.beginPath();sc.moveTo(0,O.y);sc.lineTo(W,O.y);sc.stroke();
+  sc.strokeStyle='rgba(60,90,120,.55)';sc.setLineDash([6,5]);sc.beginPath();sc.moveTo(O.x,24);sc.lineTo(O.x,H-24);sc.stroke();sc.setLineDash([]);
+  sc.fillStyle='#4a5a6a';sc.font='11px system-ui';sc.fillText('法線',O.x+6,36);
+  sc.fillText('介質1  n₁='+state.n1.toFixed(2),12,20);sc.fillStyle='#e8f0fb';sc.fillText('介質2  n₂='+state.n2.toFixed(2),12,H-12);
+  // 入射光
   const din={x:Math.sin(th1),y:Math.cos(th1)};
-  arrowRay(O,-din.x,-din.y,210,'#4cc2ff',2.5);          // 從 O 往來源方向畫(反向)
-  arrowRay(O,din.x*0,din.y*0,0,'#4cc2ff',1);            // (no-op)
-  // 入射方向的小箭頭指向 O
-  arrowRay({x:O.x-din.x*120,y:O.y-din.y*120},din.x,din.y,60,'#4cc2ff',2.5);
-  // 反射光（回到介質1）
-  arrowRay(O,din.x,-din.y,tir?230:170,tir?'#7CFFB2':'#6b86a8',tir?3:2);
-  // 折射光（介質2）
-  if(!tir){arrowRay(O,Math.sin(th2),Math.cos(th2),220,'#ffce54',2.5);}
+  rayA({x:O.x-din.x*200,y:O.y-din.y*200},din.x,din.y,200,'#1f9d55',3.5);
+  // 反射光(半透明，強度暗示)
+  rayA(O,din.x,-din.y,tir?220:160,tir?'#e8453c':'rgba(120,150,180,.6)',tir?4:2.5);
+  // 折射光(亮)
+  if(!tir)rayA(O,Math.sin(th2),Math.cos(th2),220,'#e8a000',3.5);
   // 角弧
-  cc.strokeStyle='#4cc2ff';cc.lineWidth=1.2;cc.beginPath();cc.arc(O.x,O.y,34,-Math.PI/2-th1,-Math.PI/2,false);cc.stroke();
-  cc.fillStyle='#4cc2ff';cc.fillText('θ₁='+state.th1+'°',O.x-58,O.y-40);
-  if(!tir){cc.strokeStyle='#ffce54';cc.beginPath();cc.arc(O.x,O.y,34,Math.PI/2,Math.PI/2-th2,true);cc.stroke();
-    cc.fillStyle='#ffce54';cc.fillText('θ₂='+(th2*180/Math.PI).toFixed(0)+'°',O.x+10,O.y+48);}
+  sc.strokeStyle='#1f9d55';sc.lineWidth=1.4;sc.beginPath();sc.arc(O.x,O.y,34,-Math.PI/2-th1,-Math.PI/2,false);sc.stroke();
+  sc.fillStyle='#1f9d55';sc.fillText('θ₁='+state.th1+'°',O.x-58,O.y-40);
+  if(!tir){sc.strokeStyle='#e8a000';sc.beginPath();sc.arc(O.x,O.y,34,Math.PI/2,Math.PI/2-th2,true);sc.stroke();
+    sc.fillStyle='#e8a000';sc.fillText('θ₂='+(th2*180/Math.PI).toFixed(0)+'°',O.x+10,O.y+48);}
   // 臨界角線
-  if(tc!==null){const tcr=tc*Math.PI/180;cc.strokeStyle='rgba(255,107,157,.5)';cc.setLineDash([3,4]);
-    arrowRay(O,-Math.sin(tcr),-Math.cos(tcr),200,'rgba(255,107,157,.5)',1.5,[3,4]);cc.setLineDash([]);
-    cc.fillStyle='#ff6b9d';cc.fillText('臨界角 '+tc.toFixed(1)+'°',O.x-Math.sin(tcr)*210-20,O.y-Math.cos(tcr)*210);}
+  if(tc!==null){const tcr=tc*Math.PI/180;rayA(O,-Math.sin(tcr),-Math.cos(tcr),200,'rgba(232,69,60,.5)',1.5,[3,4]);
+    sc.fillStyle='#c0392b';sc.fillText('臨界角 '+tc.toFixed(1)+'°',O.x-Math.sin(tcr)*210-20,O.y-Math.cos(tcr)*210);}
   drawStats(th2,tir,tc);
 }
 function drawStats(th2,tir,tc){
-  const rows=[
-    ['入射角 θ₁',state.th1+'°','#4cc2ff'],
-    ['折射角 θ₂',tir?'— (全反射)':(th2*180/Math.PI).toFixed(1)+'°','#ffce54'],
-    ['n₁ / n₂',state.n1.toFixed(2)+' / '+state.n2.toFixed(2),'#e8eef6'],
-    ['臨界角 θc',tc!==null?tc.toFixed(1)+'°':'—(無)','#ff6b9d'],
-  ];
-  document.getElementById('stats').innerHTML=rows.map(r=>
-    `<div class="box"><div class="k">${r[0]}</div><div class="v" style="color:${r[2]}">${r[1]}</div></div>`).join('');
+  const rows=[['入射角 θ₁',state.th1+'°','#1f9d55'],['折射角 θ₂',tir?'—(全反射)':(th2*180/Math.PI).toFixed(1)+'°','#e8a000'],
+    ['n₁ / n₂',state.n1.toFixed(2)+' / '+state.n2.toFixed(2),'#e8eef6'],['臨界角 θc',tc!==null?tc.toFixed(1)+'°':'—(無)','#ff6b9d']];
+  document.getElementById('stats').innerHTML=rows.map(r=>`<div class="box"><div class="k">${r[0]}</div><div class="v" style="color:${r[2]}">${r[1]}</div></div>`).join('');
   const sb=document.getElementById('stateBar');
   if(tir){sb.textContent='💎 全反射！θ₁ > 臨界角，光全部反射回介質1（光纖原理）';sb.style.background='rgba(124,255,178,.16)';sb.style.color='#7CFFB2';}
   else if(state.n2>state.n1){sb.textContent='進入較密介質 → 折射光偏向法線（θ₂ < θ₁）';sb.style.background='rgba(76,194,255,.12)';sb.style.color='#4cc2ff';}
-  else{sb.textContent='進入較疏介質 → 折射光偏離法線（θ₂ > θ₁），再加大角度會全反射';sb.style.background='rgba(255,206,84,.12)';sb.style.color='#ffce54';}
-}
-// 拖曳入射光調角度
+  else{sb.textContent='進入較疏介質 → 折射光偏離法線（θ₂ > θ₁），再加大角度會全反射';sb.style.background='rgba(255,206,84,.12)';sb.style.color='#ffce54';}}
 let drag=false;
-function pos(e){const r=cv.getBoundingClientRect();return {x:(e.clientX-r.left)*cv.width/r.width,y:(e.clientY-r.top)*cv.height/r.height};}
-cv.addEventListener('pointerdown',e=>{const p=pos(e);if(p.y<cv.height/2){drag=true;updateAngle(p);cv.setPointerCapture(e.pointerId);}});
-cv.addEventListener('pointermove',e=>{if(drag)updateAngle(pos(e));});
+const cvEl=document.getElementById('scene');
+function pos(e){const r=cvEl.getBoundingClientRect();return {x:(e.clientX-r.left)*cvEl.width/r.width/sc._dpr,y:(e.clientY-r.top)*cvEl.height/r.height/sc._dpr};}
+cvEl.addEventListener('pointerdown',e=>{const p=pos(e);if(p.y<sc._h/2){drag=true;upd(p);cvEl.setPointerCapture(e.pointerId);}});
+cvEl.addEventListener('pointermove',e=>{if(drag)upd(pos(e));});
 window.addEventListener('pointerup',()=>{drag=false;});
-function updateAngle(p){const O={x:cv.width/2,y:cv.height/2};const dx=p.x-O.x,dy=O.y-p.y;
-  let a=Math.atan2(Math.abs(dx),Math.abs(dy))*180/Math.PI;setSlider('th1',Math.max(0,Math.min(89,Math.round(a))));draw();}
+function upd(p){const O={x:sc._w/2,y:sc._h/2},dx=p.x-O.x,dy=O.y-p.y;let a=Math.atan2(Math.abs(dx),Math.abs(dy))*180/Math.PI;setSlider('th1',Math.max(0,Math.min(89,Math.round(a))));draw();}
 const PRE={aw:{th1:35,n1:1,n2:1.33},wa:{th1:35,n1:1.33,n2:1},ga:{th1:30,n1:1.5,n2:1},tir:{th1:55,n1:1.5,n2:1}};
-document.querySelectorAll('[data-preset]').forEach(b=>b.onclick=()=>{const p=PRE[b.dataset.preset];if(!p)return;
-  ['th1','n1','n2'].forEach(k=>setSlider(k,p[k]));draw();});
-draw();
-window.addEventListener('resize',draw);
+document.querySelectorAll('[data-preset]').forEach(b=>b.onclick=()=>{const p=PRE[b.dataset.preset];if(!p)return;['th1','n1','n2'].forEach(k=>setSlider(k,p[k]));draw();});
+window.addEventListener('load',()=>{setupCanvases();draw();});
+window.addEventListener('resize',()=>{setupCanvases();draw();});
 </script>
 </body>
 </html>

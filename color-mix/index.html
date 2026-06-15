@@ -6,43 +6,41 @@
 <title>加法混色盤 ｜ 光的三原色・RGB</title>
 <link rel="icon" href="../assets/favicon.svg" type="image/svg+xml">
 <link rel="stylesheet" href="../assets/site.css">
+<script src="../assets/sim.js"></script>
 <script defer src="../assets/nav.js"></script>
 <style>
   *{box-sizing:border-box}
-  html,body{margin:0;padding:0;background:var(--bg);color:var(--txt);
-    font-family:"Noto Sans TC","PingFang TC","Microsoft JhengHei",system-ui,sans-serif}
+  html,body{margin:0;padding:0;background:var(--bg);color:var(--txt);font-family:"Noto Sans TC","PingFang TC","Microsoft JhengHei",system-ui,sans-serif}
   a{color:var(--accent)}
-  .wrap{max-width:1100px;margin:0 auto;padding:18px 16px 60px}
+  .wrap{max-width:1120px;margin:0 auto;padding:18px 16px 60px}
   header h1{font-size:1.5rem;margin:.2em 0}
   header p{color:var(--muted);margin:.2em 0 1em;line-height:1.6}
-  .badge{display:inline-block;background:var(--panel2);border:1px solid var(--line);
-    color:var(--muted);font-size:.72rem;padding:2px 8px;border-radius:99px;margin-right:6px}
-  .layout{display:grid;grid-template-columns:1fr .72fr;gap:16px}
-  @media(max-width:760px){.layout{grid-template-columns:1fr}}
-  .stage{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:14px;margin-bottom:16px}
-  canvas{width:100%;display:block;border-radius:8px;background:#000}
-  .label{font-size:.8rem;color:var(--muted);margin:0 0 6px;display:flex;justify-content:space-between;flex-wrap:wrap;gap:8px}
-  .grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:14px}
-  .ctrl{background:var(--panel2);border:1px solid var(--line);border-radius:10px;padding:10px 12px}
-  .ctrl label{display:flex;justify-content:space-between;font-size:.85rem;margin-bottom:6px}
-  .ctrl .val{font-variant-numeric:tabular-nums}
-  input[type=range]{width:100%}
-  #r_R{accent-color:#ff5b5b}#r_G{accent-color:#5bff8f}#r_B{accent-color:#5b8fff}
-  .modes{display:flex;gap:8px;margin:6px 0 14px;flex-wrap:wrap;align-items:center}
-  .modes button,.btn{background:var(--panel2);color:var(--txt);border:1px solid var(--line);
-    padding:8px 14px;border-radius:9px;cursor:pointer;font-size:.85rem;font-family:inherit}
-  .btn:hover{border-color:var(--accent)}
-  .result{display:flex;align-items:center;gap:14px;background:var(--panel2);border:1px solid var(--line);border-radius:12px;padding:12px}
-  .swatch{width:72px;height:72px;border-radius:10px;border:1px solid var(--line);flex:none}
-  .result .info{font-size:.9rem;line-height:1.7}
+  .badge{display:inline-block;background:var(--panel2);border:1px solid var(--line);color:var(--muted);font-size:.72rem;padding:2px 8px;border-radius:99px;margin-right:6px}
+  .grid2{display:grid;grid-template-columns:1fr .72fr;gap:14px}
+  @media(max-width:740px){.grid2{grid-template-columns:1fr}}
+  .scene-wrap{position:relative;border-radius:16px;overflow:hidden;border:1px solid var(--line);box-shadow:0 18px 50px rgba(0,0,0,.5)}
+  #scene{display:block;width:100%;background:#000}
+  .sub{position:absolute;top:12px;left:12px;background:rgba(0,0,0,.5);border:1px solid rgba(255,255,255,.15);border-radius:10px;padding:6px 12px;font-weight:700;font-size:.95rem}
+  .side{display:flex;flex-direction:column;gap:12px}
+  .result{display:flex;align-items:center;gap:14px;background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:12px}
+  .swatch{width:70px;height:70px;border-radius:10px;border:1px solid var(--line);flex:none}
   .result .hex{font-variant-numeric:tabular-nums;font-weight:700;font-size:1.1rem}
-  .cmy{display:flex;gap:10px;margin-top:12px}
-  .cmy div{flex:1;text-align:center;font-size:.75rem;color:var(--muted)}
-  .cmy .sw{height:46px;border-radius:8px;margin-bottom:5px;border:1px solid var(--line)}
-  .note{background:var(--panel);border-left:3px solid var(--accent2);border-radius:8px;
-    padding:12px 14px;color:var(--muted);font-size:.86rem;line-height:1.7;margin-top:18px}
+  .cmy{display:flex;gap:10px}
+  .cmy div{flex:1;text-align:center;font-size:.74rem;color:var(--muted)}
+  .cmy .sw{height:42px;border-radius:8px;margin-bottom:5px;border:1px solid var(--line)}
+  .presets{display:flex;gap:7px;flex-wrap:wrap;align-items:center}
+  .presets span{color:var(--muted);font-size:.8rem}
+  .pbtn{background:var(--panel2);color:var(--txt);border:1px solid var(--line);padding:7px 12px;border-radius:9px;cursor:pointer;font-size:.83rem;font-family:inherit}
+  .pbtn:hover{border-color:var(--accent)}
+  .bar{display:flex;gap:14px;flex-wrap:wrap;align-items:flex-end;background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:14px 16px;margin-top:14px}
+  .sld{flex:1;min-width:160px}
+  .sld label{display:flex;justify-content:space-between;font-size:.82rem;margin-bottom:5px}
+  .sld label .v{font-variant-numeric:tabular-nums;font-weight:700}
+  .sld input{width:100%}
+  #r_R{accent-color:#ff5b5b}#r_G{accent-color:#5bff8f}#r_B{accent-color:#5b8fff}
+  .note{background:var(--panel);border-left:3px solid var(--accent2);border-radius:8px;padding:12px 14px;color:var(--muted);font-size:.86rem;line-height:1.7;margin-top:14px}
   .note b{color:var(--txt)}.note code{background:var(--bg2);padding:1px 6px;border-radius:5px;color:var(--green);font-size:.85em}
-  footer{color:var(--muted);font-size:.78rem;margin-top:26px;text-align:center;line-height:1.7}
+  footer{color:var(--muted);font-size:.78rem;margin-top:24px;text-align:center;line-height:1.7}
 </style>
 </head>
 <body data-demo="加法混色盤">
@@ -54,112 +52,90 @@
        紅+藍=<b>洋紅</b>、三者全亮=<b>白</b>。這和顏料「越混越暗」的<b>減法</b>相反——螢幕就是用 RGB 加法發光的。</p>
   </header>
 
-  <div class="modes">
-    <span style="color:var(--muted);font-size:.8rem">情境：</span>
-    <button class="btn" data-preset="white">白光 (R+G+B)</button>
-    <button class="btn" data-preset="yellow">黃 (R+G)</button>
-    <button class="btn" data-preset="cyan">青 (G+B)</button>
-    <button class="btn" data-preset="magenta">洋紅 (R+B)</button>
-    <button class="btn" data-preset="off">全暗</button>
-  </div>
-
-  <div class="layout">
-    <div class="stage">
-      <div class="label"><span>三光源疊加（黑底，越疊越亮）</span><span id="sub"></span></div>
-      <canvas id="cv" width="520" height="460"></canvas>
-    </div>
-    <div>
+  <div class="grid2">
+    <div class="scene-wrap"><div class="sub" id="sub"></div><canvas id="scene"></canvas></div>
+    <div class="side">
       <div class="result">
         <div class="swatch" id="sw"></div>
-        <div class="info">
-          <div>混合結果（中心三色疊加）</div>
-          <div class="hex" id="hex"></div>
-          <div style="color:var(--muted)" id="rgbtxt"></div>
-        </div>
+        <div><div>混合結果（中心三色疊加）</div><div class="hex" id="hex"></div><div style="color:var(--muted)" id="rgbtxt"></div></div>
       </div>
-      <div class="stage" style="margin-top:12px">
-        <div class="label"><span>對照：顏料的減法三原色（白底，越混越暗）</span></div>
+      <div style="background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:12px">
+        <div style="font-size:.78rem;color:var(--muted);margin-bottom:8px">對照：顏料的減法三原色（白底，越混越暗）</div>
         <div class="cmy">
-          <div><div class="sw" style="background:#00ffff"></div>青 Cyan</div>
-          <div><div class="sw" style="background:#ff00ff"></div>洋紅 Magenta</div>
-          <div><div class="sw" style="background:#ffff00"></div>黃 Yellow</div>
+          <div><div class="sw" style="background:#00ffff"></div>青 C</div>
+          <div><div class="sw" style="background:#ff00ff"></div>洋紅 M</div>
+          <div><div class="sw" style="background:#ffff00"></div>黃 Y</div>
           <div><div class="sw" style="background:#1a1a1a"></div>三混→黑</div>
         </div>
       </div>
+      <div class="presets">
+        <span>情境：</span>
+        <button class="pbtn" data-preset="white">白光</button>
+        <button class="pbtn" data-preset="yellow">黃</button>
+        <button class="pbtn" data-preset="cyan">青</button>
+        <button class="pbtn" data-preset="magenta">洋紅</button>
+        <button class="pbtn" data-preset="off">全暗</button>
+      </div>
     </div>
   </div>
 
-  <div class="grid" id="controls" style="margin-top:6px"></div>
+  <div class="bar" id="sliders"></div>
 
   <div class="note">
     <b>物理重點：</b><b>加法混色</b>（光）：從黑暗開始，每加一種色光就更亮，三原色 RGB 等量全亮就是<b>白光</b>。
     電視、手機、電腦螢幕都是讓無數紅綠藍小點發光，靠加法混出所有顏色。
-    <b>減法混色</b>（顏料、印刷）：從白紙開始，每種顏料<b>吸收（減掉）</b>部分色光，用青/洋紅/黃 (CMY) 三原色，
-    全混則幾乎吸光變黑。<b>黃色顏料</b>之所以黃，是因為它吸收藍光、反射紅+綠（=黃）。同一個「黃」，光是相加、顏料是相減而來。
+    <b>減法混色</b>（顏料、印刷）：從白紙開始，每種顏料<b>吸收</b>部分色光，用 CMY 三原色，全混幾乎吸光變黑。
+    <b>黃色顏料</b>之所以黃，是因為它吸收藍光、反射紅+綠（=黃）。同一個「黃」，光是相加、顏料是相減而來。
   </div>
 
-  <footer>純前端 HTML / Canvas，無外部相依。以 'lighter' 合成模式實現真實加法混光。</footer>
+  <footer>純前端 HTML / Canvas（SIM 工具庫）。以 'lighter' 合成模式實現真實加法混光。</footer>
 </div>
 
 <script>
+const S=SIM;
 const sliders=[
   {id:'R',name:'紅光 R',min:0,max:255,step:5,val:255,col:'#ff6b6b'},
   {id:'G',name:'綠光 G',min:0,max:255,step:5,val:255,col:'#6bff9a'},
   {id:'B',name:'藍光 B',min:0,max:255,step:5,val:255,col:'#6b9aff'},
 ];
 const state={};
-const ctrl=document.getElementById('controls');
-sliders.forEach(s=>{
-  state[s.id]=s.val;
-  const box=document.createElement('div');box.className='ctrl';
-  box.innerHTML=`<label><span style="color:${s.col}">${s.name}</span><span class="val" id="v_${s.id}" style="color:${s.col}">${s.val}</span></label>
+const sBar=document.getElementById('sliders');
+sliders.forEach(s=>{ state[s.id]=s.val;
+  const d=document.createElement('div');d.className='sld';
+  d.innerHTML=`<label><span style="color:${s.col}">${s.name}</span><span class="v" id="v_${s.id}" style="color:${s.col}">${s.val}</span></label>
     <input type="range" id="r_${s.id}" min="${s.min}" max="${s.max}" step="${s.step}" value="${s.val}">`;
-  ctrl.appendChild(box);
-  box.querySelector('input').addEventListener('input',e=>{
-    state[s.id]=parseFloat(e.target.value);
-    document.getElementById('v_'+s.id).textContent=state[s.id];draw();
-  });
+  sBar.appendChild(d);
+  d.querySelector('input').addEventListener('input',e=>{state[s.id]=parseFloat(e.target.value);document.getElementById('v_'+s.id).textContent=state[s.id];draw();});
 });
-function setSlider(id,val){state[id]=val;const r=document.getElementById('r_'+id);if(r)r.value=val;
-  document.getElementById('v_'+id).textContent=val;}
-
-const cv=document.getElementById('cv'),cc=cv.getContext('2d');
-function draw(){
-  const W=cv.width,H=cv.height;cc.globalCompositeOperation='source-over';cc.fillStyle='#000';cc.fillRect(0,0,W,H);
-  const cx=W/2,cy=H/2-10,Rr=120,off=68;
+function setSlider(id,val){state[id]=val;const r=document.getElementById('r_'+id);if(r)r.value=val;document.getElementById('v_'+id).textContent=val;}
+let sc;
+function setupCanvases(){sc=S.fit(document.getElementById('scene'),1.08);}
+function softLight(cx,cy,r,rgb){const g=sc.createRadialGradient(cx,cy,0,cx,cy,r);
+  g.addColorStop(0,`rgb(${rgb})`);g.addColorStop(.72,`rgb(${rgb})`);g.addColorStop(1,'rgba(0,0,0,0)');
+  sc.fillStyle=g;sc.beginPath();sc.arc(cx,cy,r,0,7);sc.fill();}
+function draw(){const W=sc._w,H=sc._h;sc.globalCompositeOperation='source-over';sc.fillStyle='#000';sc.fillRect(0,0,W,H);
+  const cx=W/2,cy=H/2-8,Rr=Math.min(W,H)*0.30,off=Rr*0.62;
   const centers=[[cx,cy-off],[cx-off,cy+off*0.7],[cx+off,cy+off*0.7]];
-  const cols=[`rgb(${state.R},0,0)`,`rgb(0,${state.G},0)`,`rgb(0,0,${state.B})`];
-  cc.globalCompositeOperation='lighter';
-  for(let i=0;i<3;i++){cc.fillStyle=cols[i];cc.beginPath();cc.arc(centers[i][0],centers[i][1],Rr,0,7);cc.fill();}
-  cc.globalCompositeOperation='source-over';
-  // 標籤
-  cc.fillStyle='#888';cc.font='12px sans-serif';
-  cc.fillText('R',centers[0][0]-5,centers[0][1]-Rr-6);
-  cc.fillText('G',centers[1][0]-Rr-2,centers[1][1]+Rr+16);
-  cc.fillText('B',centers[2][0]+Rr-8,centers[2][1]+Rr+16);
-  // 結果色
+  const cols=[`${state.R},0,0`,`0,${state.G},0`,`0,0,${state.B}`];
+  sc.globalCompositeOperation='lighter';
+  for(let i=0;i<3;i++)softLight(centers[i][0],centers[i][1],Rr,cols[i]);
+  sc.globalCompositeOperation='source-over';
+  // 投影機示意
+  sc.fillStyle='rgba(255,255,255,.5)';sc.font='12px system-ui';
+  sc.fillText('R',centers[0][0]-5,centers[0][1]-Rr-8);sc.fillText('G',centers[1][0]-Rr-2,centers[1][1]+Rr+18);sc.fillText('B',centers[2][0]+Rr-8,centers[2][1]+Rr+18);
   const hex='#'+[state.R,state.G,state.B].map(v=>v.toString(16).padStart(2,'0')).join('');
   document.getElementById('sw').style.background=`rgb(${state.R},${state.G},${state.B})`;
   document.getElementById('hex').textContent=hex.toUpperCase();
   document.getElementById('rgbtxt').textContent=`R ${state.R} · G ${state.G} · B ${state.B}`;
-  const name=colorName();document.getElementById('sub').textContent=name;
-}
-function colorName(){const {R,G,B}=state;const hi=v=>v>200,lo=v=>v<60;
-  if(hi(R)&&hi(G)&&hi(B))return '白光';
-  if(lo(R)&&lo(G)&&lo(B))return '全暗（黑）';
-  if(hi(R)&&hi(G)&&lo(B))return '黃 (R+G)';
-  if(lo(R)&&hi(G)&&hi(B))return '青 (G+B)';
-  if(hi(R)&&lo(G)&&hi(B))return '洋紅 (R+B)';
-  if(hi(R)&&lo(G)&&lo(B))return '紅';
-  if(lo(R)&&hi(G)&&lo(B))return '綠';
-  if(lo(R)&&lo(G)&&hi(B))return '藍';
-  return '混合色';
-}
+  document.getElementById('sub').textContent=colorName();}
+function colorName(){const {R,G,B}=state,hi=v=>v>200,lo=v=>v<60;
+  if(hi(R)&&hi(G)&&hi(B))return '白光';if(lo(R)&&lo(G)&&lo(B))return '全暗（黑）';
+  if(hi(R)&&hi(G)&&lo(B))return '黃 (R+G)';if(lo(R)&&hi(G)&&hi(B))return '青 (G+B)';if(hi(R)&&lo(G)&&hi(B))return '洋紅 (R+B)';
+  if(hi(R)&&lo(G)&&lo(B))return '紅';if(lo(R)&&hi(G)&&lo(B))return '綠';if(lo(R)&&lo(G)&&hi(B))return '藍';return '混合色';}
 const PRE={white:{R:255,G:255,B:255},yellow:{R:255,G:255,B:0},cyan:{R:0,G:255,B:255},magenta:{R:255,G:0,B:255},off:{R:0,G:0,B:0}};
-document.querySelectorAll('[data-preset]').forEach(b=>b.onclick=()=>{const p=PRE[b.dataset.preset];if(!p)return;
-  ['R','G','B'].forEach(k=>setSlider(k,p[k]));draw();});
-draw();
-window.addEventListener('resize',draw);
+document.querySelectorAll('[data-preset]').forEach(b=>b.onclick=()=>{const p=PRE[b.dataset.preset];if(!p)return;['R','G','B'].forEach(k=>setSlider(k,p[k]));draw();});
+window.addEventListener('load',()=>{setupCanvases();draw();});
+window.addEventListener('resize',()=>{setupCanvases();draw();});
 </script>
 </body>
 </html>
