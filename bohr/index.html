@@ -6,38 +6,36 @@
 <title>波耳原子模型 ｜ 能階躍遷・氫原子光譜</title>
 <link rel="icon" href="../assets/favicon.svg" type="image/svg+xml">
 <link rel="stylesheet" href="../assets/site.css">
+<script src="../assets/sim.js"></script>
 <script defer src="../assets/nav.js"></script>
 <style>
   *{box-sizing:border-box}
-  html,body{margin:0;padding:0;background:var(--bg);color:var(--txt);
-    font-family:"Noto Sans TC","PingFang TC","Microsoft JhengHei",system-ui,sans-serif}
+  html,body{margin:0;padding:0;background:var(--bg);color:var(--txt);font-family:"Noto Sans TC","PingFang TC","Microsoft JhengHei",system-ui,sans-serif}
   a{color:var(--accent)}
-  .wrap{max-width:1100px;margin:0 auto;padding:18px 16px 60px}
+  .wrap{max-width:1120px;margin:0 auto;padding:18px 16px 60px}
   header h1{font-size:1.5rem;margin:.2em 0}
   header p{color:var(--muted);margin:.2em 0 1em;line-height:1.6}
-  .badge{display:inline-block;background:var(--panel2);border:1px solid var(--line);
-    color:var(--muted);font-size:.72rem;padding:2px 8px;border-radius:99px;margin-right:6px}
-  .layout{display:grid;grid-template-columns:1fr .8fr;gap:16px}
-  @media(max-width:760px){.layout{grid-template-columns:1fr}}
-  .stage{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:14px;margin-bottom:16px}
-  canvas{width:100%;display:block;border-radius:8px;background:#05070b}
-  .label{font-size:.8rem;color:var(--muted);margin:0 0 6px;display:flex;justify-content:space-between;flex-wrap:wrap;gap:8px}
-  .modes{display:flex;gap:8px;margin:6px 0 14px;flex-wrap:wrap;align-items:center}
-  .modes button,.btn{background:var(--panel2);color:var(--txt);border:1px solid var(--line);
-    padding:8px 13px;border-radius:9px;cursor:pointer;font-size:.85rem;font-family:inherit}
-  .modes button.on{background:var(--accent);color:#04121c;border-color:var(--accent);font-weight:700}
-  .btn:hover,.modes button:hover{border-color:var(--accent)}
+  .badge{display:inline-block;background:var(--panel2);border:1px solid var(--line);color:var(--muted);font-size:.72rem;padding:2px 8px;border-radius:99px;margin-right:6px}
   .row{display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-bottom:10px}
   .row .lab{font-size:.82rem;color:var(--muted);min-width:54px}
-  .nbtn{width:34px;height:34px;padding:0;border-radius:8px}
-  .stat{display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:10px;margin:10px 0 2px}
-  .stat .box{background:var(--panel2);border:1px solid var(--line);border-radius:10px;padding:9px 11px}
-  .stat .box .k{font-size:.72rem;color:var(--muted)}
-  .stat .box .v{font-size:1.02rem;font-variant-numeric:tabular-nums;font-weight:700}
-  .note{background:var(--panel);border-left:3px solid var(--accent2);border-radius:8px;
-    padding:12px 14px;color:var(--muted);font-size:.86rem;line-height:1.7;margin-top:18px}
+  .nbtn{width:34px;height:34px;padding:0;border-radius:8px;background:var(--panel2);color:var(--txt);border:1px solid var(--line);cursor:pointer;font-family:inherit}
+  .nbtn.on{background:var(--accent);color:#04121c;border-color:var(--accent);font-weight:700}
+  .btn{background:var(--panel2);color:var(--txt);border:1px solid var(--line);padding:8px 13px;border-radius:9px;cursor:pointer;font-size:.85rem;font-family:inherit}
+  .btn:hover{border-color:var(--accent)}
+  .modes{display:flex;gap:8px;margin-bottom:14px;flex-wrap:wrap;align-items:center}
+  .modes span{color:var(--muted);font-size:.8rem}
+  .grid2{display:grid;grid-template-columns:1fr .8fr;gap:14px}
+  @media(max-width:740px){.grid2{grid-template-columns:1fr}}
+  .stage{position:relative;border-radius:16px;overflow:hidden;border:1px solid var(--line);box-shadow:0 12px 36px rgba(0,0,0,.4)}
+  .stage .lab{position:absolute;top:10px;left:12px;font-size:.78rem;color:#b8b0e0;z-index:2}
+  .stage .sub{position:absolute;top:10px;right:12px;font-size:.78rem;color:#b8b0e0;z-index:2}
+  canvas{display:block;width:100%}
+  .statgrid{display:grid;grid-template-columns:repeat(auto-fit,minmax(120px,1fr));gap:10px;margin-top:14px}
+  .box{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:10px 12px}
+  .box .k{font-size:.72rem;color:var(--muted)}.box .v{font-size:1.02rem;font-variant-numeric:tabular-nums;font-weight:700}
+  .note{background:var(--panel);border-left:3px solid var(--accent2);border-radius:8px;padding:12px 14px;color:var(--muted);font-size:.86rem;line-height:1.7;margin-top:14px}
   .note b{color:var(--txt)}.note code{background:var(--bg2);padding:1px 6px;border-radius:5px;color:var(--green);font-size:.85em}
-  footer{color:var(--muted);font-size:.78rem;margin-top:26px;text-align:center;line-height:1.7}
+  footer{color:var(--muted);font-size:.78rem;margin-top:24px;text-align:center;line-height:1.7}
 </style>
 </head>
 <body data-demo="波耳原子模型">
@@ -45,148 +43,85 @@
   <header>
     <span class="badge">近代物理・原子</span>
     <h1>波耳原子模型與氫原子光譜</h1>
-    <p>波耳說：電子只能待在特定的<b>能階</b>（n=1,2,3…），能量 <b>E_n = −13.6/n² eV</b>。電子從高能階<b>跳到低能階</b>時，
-       會放出一顆光子，能量正好等於兩能階差 <b>hf = E_高 − E_低</b>——這就是為何氫氣只發出幾條固定顏色的<b>光譜線</b>。</p>
+    <p>電子只能待在特定<b>能階</b>（n=1,2,3…），能量 <b>E_n = −13.6/n² eV</b>。電子從高能階<b>跳到低能階</b>時放出一顆光子，
+       能量等於兩能階差 <b>hf = E_高 − E_低</b>——這就是氫氣只發出幾條固定顏色<b>光譜線</b>的原因。</p>
   </header>
 
-  <div class="row">
-    <span class="lab">起始 n：</span><span id="niRow"></span>
+  <div class="row"><span class="lab">起始 n：</span><span id="niRow"></span>
     <span class="lab" style="margin-left:10px">落到 n：</span><span id="nfRow"></span>
-    <button class="btn" id="emit" style="margin-left:8px;background:var(--accent);color:#04121c;font-weight:700">⚡ 放出光子</button>
-  </div>
-  <div class="modes">
-    <span style="color:var(--muted);font-size:.8rem">經典譜線：</span>
-    <button class="btn" data-tr="3,2">Hα (3→2)</button>
-    <button class="btn" data-tr="4,2">Hβ (4→2)</button>
-    <button class="btn" data-tr="5,2">Hγ (5→2)</button>
-    <button class="btn" data-tr="2,1">Lyman-α (2→1)</button>
+    <button class="btn" id="emit" style="margin-left:8px;background:var(--accent);color:#04121c;font-weight:700">⚡ 放出光子</button></div>
+  <div class="modes"><span>經典譜線：</span>
+    <button class="btn" data-tr="3,2">Hα (3→2)</button><button class="btn" data-tr="4,2">Hβ (4→2)</button>
+    <button class="btn" data-tr="5,2">Hγ (5→2)</button><button class="btn" data-tr="2,1">Lyman-α (2→1)</button></div>
+
+  <div class="grid2">
+    <div class="stage"><div class="lab">波耳軌域（電子躍遷放出光子）</div><div class="sub" id="sub"></div><canvas id="atom" width="430" height="360"></canvas></div>
+    <div class="stage"><div class="lab">能階圖（箭頭＝躍遷）</div><canvas id="levels" width="430" height="360"></canvas></div>
   </div>
 
-  <div class="layout">
-    <div class="stage">
-      <div class="label"><span>波耳軌域（電子躍遷放出光子）</span><span id="sub"></span></div>
-      <canvas id="atom" width="420" height="360"></canvas>
-    </div>
-    <div class="stage">
-      <div class="label"><span>能階圖（箭頭＝躍遷）</span><span></span></div>
-      <canvas id="levels" width="420" height="360"></canvas>
-    </div>
-  </div>
+  <div class="stage" style="margin-top:14px"><div class="lab">氫原子發射光譜（這條躍遷的譜線位置）</div><div class="sub" id="serlab"></div><canvas id="spec" width="1080" height="92"></canvas></div>
 
-  <div class="stage">
-    <div class="label"><span>氫原子發射光譜（這條躍遷的譜線位置）</span><span id="serlab"></span></div>
-    <canvas id="spec" width="1040" height="90"></canvas>
-  </div>
-
-  <div class="stat" id="stats"></div>
+  <div class="statgrid" id="stats"></div>
 
   <div class="note">
-    <b>物理重點：</b>能階能量 <code>E_n = −13.6/n²</code> eV（負號表示束縛態，n=1 最低最穩定）。
-    躍遷放出的光子能量 <code>ΔE = E_n_i − E_n_f = 13.6(1/n_f² − 1/n_i²)</code>，波長 <code>λ = 1240/ΔE</code> nm。
-    落到 <b>n=1</b> 的是<b>來曼系</b>（紫外）、落到 <b>n=2</b> 的是<b>巴耳末系</b>（可見光，就是我們看得到的氫光譜：Hα 紅、Hβ 青、Hγ 紫）、
-    落到 <b>n=3</b> 是帕申系（紅外）。反過來，原子吸收剛好這些能量的光子會被「激發」往上跳。光譜線是每種元素的<b>指紋</b>，
-    天文學家就靠它判斷遙遠恆星的成分。
+    <b>物理重點：</b>能階能量 <code>E_n = −13.6/n²</code> eV（負號＝束縛態，n=1 最低最穩）。躍遷放出光子能量 <code>ΔE = 13.6(1/n_f² − 1/n_i²)</code>，波長 <code>λ = 1240/ΔE</code> nm。
+    落到 <b>n=1</b> 是<b>來曼系</b>（紫外）、<b>n=2</b> 是<b>巴耳末系</b>（可見光：Hα 紅、Hβ 青、Hγ 紫）、<b>n=3</b> 是帕申系（紅外）。光譜線是每種元素的<b>指紋</b>，天文學家靠它判斷遙遠恆星成分。
   </div>
 
-  <footer>純前端 HTML / Canvas，無外部相依。氫原子，hc=1240 eV·nm。</footer>
+  <footer>純前端 HTML / Canvas（SIM 工具庫）。氫原子，hc=1240 eV·nm。</footer>
 </div>
 
 <script>
-let ni=3, nf=2, anim=0;
-function En(n){return -13.6/(n*n);}
-function dE(){return En(ni)-En(nf);}                     // >0
-function lambda(){return 1240/dE();}                     // nm
+const S=SIM; let ni=3,nf=2,anim=1;
+function En(n){return -13.6/(n*n);} function dE(){return En(ni)-En(nf);} function lambda(){return 1240/dE();}
 function series(){return nf===1?'來曼系 (紫外)':nf===2?'巴耳末系 (可見光)':nf===3?'帕申系 (紅外)':'n_f='+nf;}
-function wl2rgb(lam){let r,g,b;
-  if(lam<380)return[160,120,255];if(lam>720)return[140,40,40];
-  if(lam<440){r=-(lam-440)/60;g=0;b=1;}else if(lam<490){r=0;g=(lam-440)/50;b=1;}
-  else if(lam<510){r=0;g=1;b=-(lam-510)/20;}else if(lam<580){r=(lam-510)/70;g=1;b=0;}
-  else if(lam<645){r=1;g=-(lam-645)/65;b=0;}else{r=1;g=0;b=0;}
+function wl2rgb(lam){let r,g,b;if(lam<380)return[170,130,255];if(lam>720)return[150,50,50];
+  if(lam<440){r=-(lam-440)/60;g=0;b=1;}else if(lam<490){r=0;g=(lam-440)/50;b=1;}else if(lam<510){r=0;g=1;b=-(lam-510)/20;}
+  else if(lam<580){r=(lam-510)/70;g=1;b=0;}else if(lam<645){r=1;g=-(lam-645)/65;b=0;}else{r=1;g=0;b=0;}
   return[Math.round(r*255),Math.round(g*255),Math.round(b*255)];}
-
-// 控制按鈕
 function buildN(rowId,vals,getCur,onPick){const row=document.getElementById(rowId);row.innerHTML='';
-  vals.forEach(v=>{const b=document.createElement('button');b.className='btn nbtn';b.textContent=v;
-    if(v===getCur())b.classList.add('on');b.onclick=()=>{onPick(v);refreshBtns();};row.appendChild(b);});}
-function refreshBtns(){
-  buildN('niRow',[2,3,4,5,6],()=>ni,v=>{ni=v;if(nf>=ni)nf=ni-1;});
-  buildN('nfRow',[1,2,3,4,5].filter(v=>v<ni),()=>nf,v=>{nf=v;});
-  draw();
-}
-
-const atom=document.getElementById('atom'),ac=atom.getContext('2d');
-const lv=document.getElementById('levels'),lc=lv.getContext('2d');
-const spec=document.getElementById('spec'),sc=spec.getContext('2d');
-function drawAtom(){
-  const W=atom.width,H=atom.height,cx=W/2,cy=H/2;ac.clearRect(0,0,W,H);
-  // 軌域
-  for(let n=1;n<=6;n++){const r=18+n*26;ac.strokeStyle=(n===ni||n===nf)?'#4cc2ff':'#1f2937';ac.lineWidth=n===ni||n===nf?1.6:1;
-    ac.beginPath();ac.arc(cx,cy,r,0,7);ac.stroke();
-    ac.fillStyle='#46566b';ac.font='10px sans-serif';ac.fillText('n='+n,cx+r-12,cy-3);}
-  // 原子核
-  ac.fillStyle='#ff6b9d';ac.beginPath();ac.arc(cx,cy,8,0,7);ac.fill();
-  // 電子(動畫: 從 ni 落到 nf)
-  const rI=18+ni*26,rF=18+nf*26;const r=rI+(rF-rI)*anim;
-  const ang=anim*Math.PI*2;
-  const ex=cx+Math.cos(ang)*r,ey=cy+Math.sin(ang)*r;
-  ac.fillStyle='#4cc2ff';ac.strokeStyle='#fff';ac.lineWidth=1.5;ac.beginPath();ac.arc(ex,ey,6,0,7);ac.fill();ac.stroke();
-  // 放出的光子(動畫後段)
-  if(anim>=1){const [R,G,B]=wl2rgb(lambda());const px=cx+anim*0,py=cy;
-    ac.strokeStyle=`rgb(${R},${G},${B})`;ac.lineWidth=2.5;ac.beginPath();
-    const ph=(performance.now? 0:0);for(let i=0;i<40;i++){const x=cx+18+ni*26+i*4;const y=cy-Math.sin(i*0.6)*8;i?ac.lineTo(x,y):ac.moveTo(x,y);}ac.stroke();}
-  document.getElementById('sub').textContent=ni+' → '+nf+' 躍遷';
-}
-function drawLevels(){
-  const W=lv.width,H=lv.height,mL=40,mR=80,mT=20,mB=20;lc.clearRect(0,0,W,H);
-  const Y=E=>mT+(-E)/13.6*(H-mT-mB);                     // E=0 頂, E=-13.6 底
-  for(let n=1;n<=6;n++){const y=Y(En(n));lc.strokeStyle=(n===ni||n===nf)?'#4cc2ff':'#314056';lc.lineWidth=n===ni||n===nf?2:1;
-    lc.beginPath();lc.moveTo(mL,y);lc.lineTo(W-mR,y);lc.stroke();
-    lc.fillStyle='#8a99ad';lc.font='11px sans-serif';lc.fillText('n='+n,W-mR+6,y+4);
-    lc.fillStyle='#5b6880';lc.fillText(En(n).toFixed(2)+'eV',W-mR+34,y+4);}
-  // 躍遷箭頭
-  const x=mL+(W-mL-mR)*0.42,y1=Y(En(ni)),y2=Y(En(nf));
-  const [R,G,B]=wl2rgb(lambda());lc.strokeStyle=`rgb(${R},${G},${B})`;lc.fillStyle=`rgb(${R},${G},${B})`;lc.lineWidth=2.5;
-  lc.beginPath();lc.moveTo(x,y1);lc.lineTo(x,y2);lc.stroke();
-  lc.beginPath();lc.moveTo(x,y2);lc.lineTo(x-5,y2+9);lc.lineTo(x+5,y2+9);lc.closePath();lc.fill();
-  lc.fillText('放出光子 '+dE().toFixed(2)+'eV',x+10,(y1+y2)/2);
-}
-function drawSpec(){
-  const W=spec.width,H=spec.height;sc.clearRect(0,0,W,H);
-  // 可見光譜底(380-700)
-  for(let x=0;x<W;x++){const lam=380+x/W*(720-380);const [R,G,B]=wl2rgb(lam);
-    sc.fillStyle=`rgb(${R},${G},${B})`;sc.globalAlpha=.55;sc.fillRect(x,20,1,H-40);}
-  sc.globalAlpha=1;
-  sc.fillStyle='#46566b';sc.font='11px sans-serif';
-  for(let lam=400;lam<=700;lam+=50){const x=(lam-380)/(720-380)*W;sc.fillText(lam+'nm',x-12,H-6);}
-  // 這條譜線
-  const lam=lambda();
-  if(lam>=380&&lam<=720){const x=(lam-380)/(720-380)*W;sc.strokeStyle='#fff';sc.lineWidth=2;
-    sc.beginPath();sc.moveTo(x,12);sc.lineTo(x,H-20);sc.stroke();
-    sc.fillStyle='#fff';sc.fillText(lam.toFixed(0)+'nm',x-16,12);}
-  else{sc.fillStyle='#8a99ad';sc.fillText('λ='+lam.toFixed(0)+'nm 落在可見光範圍外（'+(lam<380?'紫外':'紅外')+'），人眼看不到',W/2-160,H/2);}
-  document.getElementById('serlab').textContent=series()+'　λ='+lam.toFixed(0)+'nm';
-}
+  vals.forEach(v=>{const b=document.createElement('button');b.className='nbtn';b.textContent=v;if(v===getCur())b.classList.add('on');b.onclick=()=>{onPick(v);refreshBtns();};row.appendChild(b);});}
+function refreshBtns(){buildN('niRow',[2,3,4,5,6],()=>ni,v=>{ni=v;if(nf>=ni)nf=ni-1;});buildN('nfRow',[1,2,3,4,5].filter(v=>v<ni),()=>nf,v=>{nf=v;});draw();}
+const ac=document.getElementById('atom').getContext('2d'),atom=document.getElementById('atom');
+const lc=document.getElementById('levels').getContext('2d'),lv=document.getElementById('levels');
+const spc=document.getElementById('spec').getContext('2d'),spec=document.getElementById('spec');
+function drawAtom(){const W=atom.width,H=atom.height,cx=W/2,cy=H/2;
+  const bg=ac.createRadialGradient(cx,cy,0,cx,cy,W*0.6);bg.addColorStop(0,'#141030');bg.addColorStop(1,'#070512');ac.fillStyle=bg;ac.fillRect(0,0,W,H);
+  for(let s=0;s<40;s++){ac.fillStyle='rgba(255,255,255,.25)';ac.fillRect((s*97)%W,(s*53)%H,1,1);}
+  for(let n=1;n<=6;n++){const r=18+n*26,act=(n===ni||n===nf);ac.strokeStyle=act?'rgba(108,200,255,.9)':'rgba(90,110,150,.3)';ac.lineWidth=act?1.8:1;
+    ac.beginPath();ac.arc(cx,cy,r,0,7);ac.stroke();ac.fillStyle='rgba(150,160,200,.5)';ac.font='10px system-ui';ac.fillText('n='+n,cx+r-12,cy-3);}
+  // 核(發光)
+  S.bulb(ac,cx,cy,7,'255,120,120',1);
+  // 電子
+  const rI=18+ni*26,rF=18+nf*26,r=rI+(rF-rI)*anim,ang=anim*Math.PI*2,ex=cx+Math.cos(ang)*r,ey=cy+Math.sin(ang)*r;
+  S.bulb(ac,ex,ey,5,'108,208,255',1);
+  // 光子(發射後)
+  if(anim>=1){const[R,G,B]=wl2rgb(lambda());ac.strokeStyle=`rgb(${R},${G},${B})`;ac.lineWidth=2.5;ac.save();ac.shadowColor=`rgb(${R},${G},${B})`;ac.shadowBlur=8;ac.beginPath();
+    for(let i=0;i<40;i++){const x=cx+18+ni*26+i*4,y=cy-Math.sin(i*0.6)*8;i?ac.lineTo(x,y):ac.moveTo(x,y);}ac.stroke();ac.restore();}
+  document.getElementById('sub').textContent=ni+' → '+nf+' 躍遷';}
+function drawLevels(){const W=lv.width,H=lv.height,mL=40,mR=80,mT=20,mB=20;lc.fillStyle='#0a0818';lc.fillRect(0,0,W,H);
+  const Y=E=>mT+(-E)/13.6*(H-mT-mB);
+  for(let n=1;n<=6;n++){const y=Y(En(n)),act=(n===ni||n===nf);lc.strokeStyle=act?'#6cc8ff':'#314056';lc.lineWidth=act?2:1;lc.beginPath();lc.moveTo(mL,y);lc.lineTo(W-mR,y);lc.stroke();
+    lc.fillStyle='#8a99ad';lc.font='11px system-ui';lc.fillText('n='+n,W-mR+6,y+4);lc.fillStyle='#5b6880';lc.fillText(En(n).toFixed(2)+'eV',W-mR+34,y+4);}
+  const x=mL+(W-mL-mR)*0.42,y1=Y(En(ni)),y2=Y(En(nf)),[R,G,B]=wl2rgb(lambda());lc.strokeStyle=`rgb(${R},${G},${B})`;lc.fillStyle=`rgb(${R},${G},${B})`;lc.lineWidth=2.5;
+  lc.beginPath();lc.moveTo(x,y1);lc.lineTo(x,y2);lc.stroke();lc.beginPath();lc.moveTo(x,y2);lc.lineTo(x-5,y2+9);lc.lineTo(x+5,y2+9);lc.closePath();lc.fill();
+  lc.fillText('放出光子 '+dE().toFixed(2)+'eV',x+10,(y1+y2)/2);}
+function drawSpec(){const W=spec.width,H=spec.height;spc.fillStyle='#05030a';spc.fillRect(0,0,W,H);
+  for(let x=0;x<W;x++){const lam=380+x/W*(720-380),[R,G,B]=wl2rgb(lam);spc.fillStyle=`rgb(${R},${G},${B})`;spc.globalAlpha=.5;spc.fillRect(x,20,1,H-40);}
+  spc.globalAlpha=1;spc.fillStyle='#46566b';spc.font='11px system-ui';for(let lam=400;lam<=700;lam+=50){const x=(lam-380)/(720-380)*W;spc.fillText(lam+'nm',x-12,H-6);}
+  const lam=lambda();if(lam>=380&&lam<=720){const x=(lam-380)/(720-380)*W;spc.save();spc.shadowColor='#fff';spc.shadowBlur=8;spc.strokeStyle='#fff';spc.lineWidth=2.5;spc.beginPath();spc.moveTo(x,12);spc.lineTo(x,H-20);spc.stroke();spc.restore();spc.fillStyle='#fff';spc.fillText(lam.toFixed(0)+'nm',x-16,12);}
+  else{spc.fillStyle='#8a99ad';spc.fillText('λ='+lam.toFixed(0)+'nm 落在可見光範圍外（'+(lam<380?'紫外':'紅外')+'），人眼看不到',W/2-160,H/2);}
+  document.getElementById('serlab').textContent=series()+'　λ='+lam.toFixed(0)+'nm';}
 function draw(){drawAtom();drawLevels();drawSpec();drawStats();}
 function drawStats(){
-  const lam=lambda(),[R,G,B]=wl2rgb(lam);
-  const rows=[
-    ['起始能量 E_'+ni,En(ni).toFixed(2)+' eV','#4cc2ff'],
-    ['末態能量 E_'+nf,En(nf).toFixed(2)+' eV','#7CFFB2'],
-    ['光子能量 ΔE',dE().toFixed(2)+' eV','#ffce54'],
-    ['波長 λ=1240/ΔE',lam.toFixed(0)+' nm','#ff6b9d'],
-    ['光譜系列',series().split(' ')[0],'#8b9cff'],
-  ];
-  document.getElementById('stats').innerHTML=rows.map(r=>
-    `<div class="box"><div class="k">${r[0]}</div><div class="v" style="color:${r[2]}">${r[1]}</div></div>`).join('');
-}
+  const rows=[['起始能量 E_'+ni,En(ni).toFixed(2)+' eV','#6cc8ff'],['末態能量 E_'+nf,En(nf).toFixed(2)+' eV','#7CFFB2'],
+    ['光子能量 ΔE',dE().toFixed(2)+' eV','#ffce54'],['波長 λ=1240/ΔE',lambda().toFixed(0)+' nm','#ff6b9d'],['光譜系列',series().split(' ')[0],'#8b9cff']];
+  document.getElementById('stats').innerHTML=rows.map(r=>`<div class="box"><div class="k">${r[0]}</div><div class="v" style="color:${r[2]}">${r[1]}</div></div>`).join('');}
 let animating=false;
-function emitPhoton(){animating=true;anim=0;const t0=performance.now();
-  function go(){const e=Math.min(1,(performance.now()-t0)/700);anim=e;draw();if(e<1)requestAnimationFrame(go);else{anim=1;draw();animating=false;}}
-  requestAnimationFrame(go);}
+function emitPhoton(){anim=0;const t0=performance.now();(function go(){const e=Math.min(1,(performance.now()-t0)/700);anim=e;draw();if(e<1)requestAnimationFrame(go);else{anim=1;draw();}})();}
 document.getElementById('emit').onclick=emitPhoton;
 document.querySelectorAll('[data-tr]').forEach(b=>b.onclick=()=>{const[a,c]=b.dataset.tr.split(',').map(Number);ni=a;nf=c;refreshBtns();emitPhoton();});
-refreshBtns();anim=1;draw();
-window.addEventListener('resize',draw);
+window.addEventListener('load',()=>{refreshBtns();anim=1;draw();});
 </script>
 </body>
 </html>

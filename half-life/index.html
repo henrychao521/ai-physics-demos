@@ -6,40 +6,38 @@
 <title>放射性半衰期 ｜ 指數衰變・N=N₀(1/2)^(t/T)</title>
 <link rel="icon" href="../assets/favicon.svg" type="image/svg+xml">
 <link rel="stylesheet" href="../assets/site.css">
+<script src="../assets/sim.js"></script>
 <script defer src="../assets/nav.js"></script>
 <style>
   *{box-sizing:border-box}
-  html,body{margin:0;padding:0;background:var(--bg);color:var(--txt);
-    font-family:"Noto Sans TC","PingFang TC","Microsoft JhengHei",system-ui,sans-serif}
+  html,body{margin:0;padding:0;background:var(--bg);color:var(--txt);font-family:"Noto Sans TC","PingFang TC","Microsoft JhengHei",system-ui,sans-serif}
   a{color:var(--accent)}
-  .wrap{max-width:1100px;margin:0 auto;padding:18px 16px 60px}
+  .wrap{max-width:1120px;margin:0 auto;padding:18px 16px 60px}
   header h1{font-size:1.5rem;margin:.2em 0}
   header p{color:var(--muted);margin:.2em 0 1em;line-height:1.6}
-  .badge{display:inline-block;background:var(--panel2);border:1px solid var(--line);
-    color:var(--muted);font-size:.72rem;padding:2px 8px;border-radius:99px;margin-right:6px}
-  .layout{display:grid;grid-template-columns:.8fr 1fr;gap:16px}
-  @media(max-width:760px){.layout{grid-template-columns:1fr}}
-  .stage{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:14px;margin-bottom:16px}
-  canvas{width:100%;display:block;border-radius:8px;background:#05070b}
-  .label{font-size:.8rem;color:var(--muted);margin:0 0 6px;display:flex;justify-content:space-between;flex-wrap:wrap;gap:8px}
-  .grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:14px}
-  .ctrl{background:var(--panel2);border:1px solid var(--line);border-radius:10px;padding:10px 12px}
-  .ctrl label{display:flex;justify-content:space-between;font-size:.85rem;margin-bottom:6px}
-  .ctrl .val{color:var(--accent);font-variant-numeric:tabular-nums}
-  input[type=range]{width:100%;accent-color:var(--accent)}
-  .modes{display:flex;gap:8px;margin:6px 0 14px;flex-wrap:wrap;align-items:center}
-  .modes button,.btn{background:var(--panel2);color:var(--txt);border:1px solid var(--line);
-    padding:8px 14px;border-radius:9px;cursor:pointer;font-size:.85rem;font-family:inherit}
+  .badge{display:inline-block;background:var(--panel2);border:1px solid var(--line);color:var(--muted);font-size:.72rem;padding:2px 8px;border-radius:99px;margin-right:6px}
+  .modes{display:flex;gap:7px;flex-wrap:wrap;align-items:center;margin:6px 0 14px}
+  .modes button{background:var(--panel2);color:var(--txt);border:1px solid var(--line);padding:8px 13px;border-radius:9px;cursor:pointer;font-size:.85rem;font-family:inherit}
   .modes button.on{background:var(--accent);color:#04121c;border-color:var(--accent);font-weight:700}
-  .btn:hover,.modes button:hover{border-color:var(--accent)}
-  .stat{display:grid;grid-template-columns:repeat(auto-fit,minmax(120px,1fr));gap:10px;margin:2px 0}
-  .stat .box{background:var(--panel2);border:1px solid var(--line);border-radius:10px;padding:9px 11px}
-  .stat .box .k{font-size:.72rem;color:var(--muted)}
-  .stat .box .v{font-size:1.02rem;font-variant-numeric:tabular-nums;font-weight:700}
-  .note{background:var(--panel);border-left:3px solid var(--accent2);border-radius:8px;
-    padding:12px 14px;color:var(--muted);font-size:.86rem;line-height:1.7;margin-top:18px}
+  .pbtn{background:var(--panel2);color:var(--txt);border:1px solid var(--line);padding:7px 12px;border-radius:9px;cursor:pointer;font-size:.83rem;font-family:inherit}
+  .pbtn:hover{border-color:var(--accent)}
+  .grid2{display:grid;grid-template-columns:.78fr 1fr;gap:14px}
+  @media(max-width:740px){.grid2{grid-template-columns:1fr}}
+  .scene-wrap,.curvewrap{position:relative;border-radius:16px;overflow:hidden;border:1px solid var(--line);box-shadow:0 12px 36px rgba(0,0,0,.4)}
+  #grid,#plot{display:block;width:100%}
+  .lab{position:absolute;top:10px;left:12px;font-size:.78rem;color:#9fe8c0;z-index:2}
+  .sub{position:absolute;top:10px;right:12px;font-size:.78rem;color:#9fe8c0;z-index:2}
+  .statgrid{display:grid;grid-template-columns:repeat(auto-fit,minmax(120px,1fr));gap:10px;margin-top:14px}
+  .box{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:10px 12px}
+  .box .k{font-size:.72rem;color:var(--muted)}.box .v{font-size:1.02rem;font-variant-numeric:tabular-nums;font-weight:700}
+  .bar{display:flex;gap:14px;flex-wrap:wrap;align-items:flex-end;background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:14px 16px;margin-top:14px}
+  .sld{flex:1;min-width:170px}
+  .sld label{display:flex;justify-content:space-between;font-size:.82rem;color:var(--muted);margin-bottom:5px}
+  .sld label .v{color:var(--accent);font-variant-numeric:tabular-nums;font-weight:700}
+  .sld input{width:100%;accent-color:var(--accent)}
+  .note{background:var(--panel);border-left:3px solid var(--accent2);border-radius:8px;padding:12px 14px;color:var(--muted);font-size:.86rem;line-height:1.7;margin-top:14px}
   .note b{color:var(--txt)}.note code{background:var(--bg2);padding:1px 6px;border-radius:5px;color:var(--green);font-size:.85em}
-  footer{color:var(--muted);font-size:.78rem;margin-top:26px;text-align:center;line-height:1.7}
+  footer{color:var(--muted);font-size:.78rem;margin-top:24px;text-align:center;line-height:1.7}
 </style>
 </head>
 <body data-demo="放射性半衰期">
@@ -47,128 +45,90 @@
   <header>
     <span class="badge">近代物理・核物理</span>
     <h1>放射性半衰期</h1>
-    <p>放射性原子何時衰變是<b>隨機</b>的，無法預測單一顆；但一大群原子整體上每經過一個<b>半衰期 T</b>，
-       就有<b>一半</b>衰變掉。所以數量按 <b>N = N₀·(½)^(t/T)</b> 指數衰減：T 後剩 1/2、2T 後剩 1/4、3T 後剩 1/8…</p>
+    <p>放射性原子何時衰變是<b>隨機</b>的，無法預測單一顆；但一大群原子整體上每經過一個<b>半衰期 T</b>，就有<b>一半</b>衰變掉。
+       所以數量按 <b>N = N₀·(½)^(t/T)</b> 指數衰減：T 後剩 1/2、2T 後剩 1/4…</p>
   </header>
 
   <div class="modes">
     <button id="play" class="on">⏸ 暫停</button>
-    <button class="btn" id="reset">↺ 重新裝填</button>
-    <span style="color:var(--muted);font-size:.8rem;margin-left:4px">情境：</span>
-    <button class="btn" data-preset="fast">短半衰期</button>
-    <button class="btn" data-preset="many">大量原子(更平滑)</button>
+    <button id="reset" class="pbtn">↺ 重新裝填</button>
+    <span style="color:var(--muted);font-size:.8rem;margin-left:6px">情境：</span>
+    <button class="pbtn" data-preset="fast">短半衰期</button>
+    <button class="pbtn" data-preset="many">大量原子(更平滑)</button>
   </div>
 
-  <div class="layout">
-    <div class="stage">
-      <div class="label"><span>原子（綠=未衰變，灰=已衰變）</span><span id="sub"></span></div>
-      <canvas id="grid" width="400" height="380"></canvas>
-    </div>
-    <div class="stage">
-      <div class="label"><span>剩餘數量 N(t)：實際（綠）vs 理論 N₀(½)^(t/T)（虛線）</span><span id="tlabel"></span></div>
-      <canvas id="plot" width="640" height="380"></canvas>
-    </div>
+  <div class="grid2">
+    <div class="scene-wrap"><div class="lab">原子（綠＝未衰變，灰＝已衰變）</div><div class="sub" id="sub"></div><canvas id="grid" width="380" height="380"></canvas></div>
+    <div class="curvewrap"><div class="lab">剩餘數量 N(t)：實際(綠) vs 理論 N₀(½)^(t/T)(虛線)</div><canvas id="plot" width="560" height="380"></canvas></div>
   </div>
 
-  <div class="stat" id="stats"></div>
-  <div class="grid" id="controls" style="margin-top:14px"></div>
+  <div class="statgrid" id="stats"></div>
+  <div class="bar" id="sliders"></div>
 
   <div class="note">
-    <b>物理重點：</b>衰變是<b>機率事件</b>——每顆原子在單位時間有固定機率衰變，與它「活了多久」無關（沒有記憶）。
-    對大量原子，剩餘數 <code>N(t) = N₀·(½)^(t/T) = N₀·e^(−λt)</code>，衰變常數 <code>λ = ln2 / T</code>。
-    半衰期是物質的指紋：碳-14（5730 年）用來定年古物、碘-131（8 天）用於醫療、鈾-238（45 億年）用來推定地球年齡。
-    注意原子數少時曲線<b>鋸齒不平滑</b>（統計漲落明顯）、數量越多越貼近理論平滑曲線——這就是統計物理的精髓。
+    <b>物理重點：</b>衰變是<b>機率事件</b>——每顆原子單位時間有固定機率衰變，與它「活了多久」無關（無記憶）。對大量原子，
+    <code>N(t) = N₀·(½)^(t/T) = N₀·e^(−λt)</code>，衰變常數 <code>λ = ln2 / T</code>。碳-14（5730 年）定年、碘-131（8 天）醫療、鈾-238（45 億年）推定地球年齡。
+    原子少時曲線<b>鋸齒不平滑</b>（統計漲落），越多越貼近理論——這就是統計物理的精髓。
   </div>
 
-  <footer>純前端 HTML / Canvas，無外部相依。每顆原子獨立以機率 1−2^(−dt/T) 衰變。</footer>
+  <footer>純前端 HTML / Canvas（SIM 工具庫）。每顆原子獨立以機率 1−2^(−dt/T) 衰變。</footer>
 </div>
 
 <script>
+const S=SIM;
 const sliders=[
   {id:'T',name:'半衰期 T',min:1,max:8,step:.5,val:3,unit:'s'},
   {id:'N0',name:'初始原子數 N₀',min:36,max:400,step:4,val:144,unit:'顆'},
 ];
 const state={};
-const ctrl=document.getElementById('controls');
-sliders.forEach(s=>{
-  state[s.id]=s.val;
-  const box=document.createElement('div');box.className='ctrl';
-  box.innerHTML=`<label><span>${s.name}</span><span class="val" id="v_${s.id}">${fmt(s.val)} ${s.unit}</span></label>
+const sBar=document.getElementById('sliders');
+sliders.forEach(s=>{ state[s.id]=s.val;
+  const d=document.createElement('div');d.className='sld';
+  d.innerHTML=`<label><span>${s.name}</span><span class="v" id="v_${s.id}">${fmt(s.val)} ${s.unit}</span></label>
     <input type="range" id="r_${s.id}" min="${s.min}" max="${s.max}" step="${s.step}" value="${s.val}">`;
-  ctrl.appendChild(box);
-  box.querySelector('input').addEventListener('input',e=>{state[s.id]=parseFloat(e.target.value);
-    document.getElementById('v_'+s.id).textContent=`${fmt(state[s.id])} ${s.unit}`;reset();});
+  sBar.appendChild(d);
+  d.querySelector('input').addEventListener('input',e=>{state[s.id]=parseFloat(e.target.value);document.getElementById('v_'+s.id).textContent=`${fmt(state[s.id])} ${s.unit}`;reset();});
 });
 function fmt(x){return (Math.round(x*100)/100).toString();}
 function setSlider(id,val){state[id]=val;const r=document.getElementById('r_'+id);if(r)r.value=val;
   const s=sliders.find(z=>z.id===id);if(s)document.getElementById('v_'+id).textContent=`${fmt(val)} ${s.unit}`;}
-
-let atoms=[],t=0,hist=[],playing=true,last=0,cols=12;
-function reset(){atoms=[];cols=Math.ceil(Math.sqrt(state.N0*400/380));
-  for(let i=0;i<state.N0;i++)atoms.push(true);t=0;hist=[{t:0,n:state.N0}];}
+let atoms=[],t=0,hist=[],playing=true;
+function reset(){atoms=[];for(let i=0;i<state.N0;i++)atoms.push(true);t=0;hist=[{t:0,n:state.N0}];}
 function remaining(){let n=0;for(const a of atoms)if(a)n++;return n;}
-function step(dt){
-  const prob=1-Math.pow(2,-dt/state.T);
-  for(let i=0;i<atoms.length;i++)if(atoms[i]&&Math.random()<prob)atoms[i]=false;
-  t+=dt;hist.push({t,n:remaining()});if(hist.length>3000)hist.shift();
-  if(t>6*state.T)t=6*state.T;
-}
-const gridC=document.getElementById('grid'),gc=gridC.getContext('2d');
-const plot=document.getElementById('plot'),pc=plot.getContext('2d');
-function drawGrid(){
-  const W=gridC.width,H=gridC.height;gc.clearRect(0,0,W,H);
-  const n=atoms.length,cols=Math.ceil(Math.sqrt(n*W/H)),rows=Math.ceil(n/cols);
-  const cw=W/cols,ch=H/rows,r=Math.min(cw,ch)*0.32;
+function step(dt){const prob=1-Math.pow(2,-dt/state.T);for(let i=0;i<atoms.length;i++)if(atoms[i]&&Math.random()<prob)atoms[i]=false;
+  t+=dt;hist.push({t,n:remaining()});if(hist.length>3000)hist.shift();if(t>6*state.T)t=6*state.T;}
+const gc=document.getElementById('grid').getContext('2d'),gridC=document.getElementById('grid');
+const pc=document.getElementById('plot').getContext('2d'),plot=document.getElementById('plot');
+function drawGrid(){const W=gridC.width,H=gridC.height;gc.fillStyle='#070f0b';gc.fillRect(0,0,W,H);
+  const n=atoms.length,cols=Math.ceil(Math.sqrt(n*W/H)),rows=Math.ceil(n/cols),cw=W/cols,ch=H/rows,r=Math.min(cw,ch)*0.3;
   for(let i=0;i<n;i++){const x=(i%cols+0.5)*cw,y=(Math.floor(i/cols)+0.5)*ch;
-    gc.fillStyle=atoms[i]?'#7CFFB2':'#2a3340';gc.beginPath();gc.arc(x,y,r,0,7);gc.fill();
-    if(atoms[i]){gc.fillStyle='rgba(124,255,178,.2)';gc.beginPath();gc.arc(x,y,r*1.8,0,7);gc.fill();}}
-  document.getElementById('sub').textContent=remaining()+' / '+state.N0+' 未衰變';
-}
-function drawPlot(){
-  const W=plot.width,H=plot.height,mL=40,mR=14,mT=14,mB=24;pc.clearRect(0,0,W,H);
-  const tEnd=6*state.T;
-  const X=tt=>mL+tt/tEnd*(W-mL-mR),Y=n=>H-mB-n/state.N0*(H-mT-mB);
-  // 半衰期格線 + N0/2^k 水平線
-  pc.font='10px sans-serif';
-  for(let k=0;k<=6;k++){const tx=X(k*state.T);pc.strokeStyle='#16202f';pc.beginPath();pc.moveTo(tx,mT);pc.lineTo(tx,H-mB);pc.stroke();
-    pc.fillStyle='#46566b';pc.fillText(k+'T',tx-6,H-9);}
-  for(let k=1;k<=4;k++){const ny=state.N0/Math.pow(2,k);pc.strokeStyle='#243042';pc.setLineDash([3,4]);
-    pc.beginPath();pc.moveTo(mL,Y(ny));pc.lineTo(W-mR,Y(ny));pc.stroke();pc.setLineDash([]);
-    pc.fillStyle='#46566b';pc.fillText('N₀/'+Math.pow(2,k),mL+2,Y(ny)-3);}
-  // 理論曲線
-  pc.strokeStyle='#8a99ad';pc.lineWidth=1.5;pc.setLineDash([5,4]);pc.beginPath();
-  for(let i=0;i<=200;i++){const tt=tEnd*i/200;const n=state.N0*Math.pow(0.5,tt/state.T);const x=X(tt),y=Y(n);i?pc.lineTo(x,y):pc.moveTo(x,y);}pc.stroke();pc.setLineDash([]);
-  // 實際(鋸齒)
-  pc.strokeStyle='#7CFFB2';pc.lineWidth=2;pc.beginPath();
-  hist.forEach((h,i)=>{const x=X(h.t),y=Y(h.n);i?pc.lineTo(x,y):pc.moveTo(x,y);});pc.stroke();
-  pc.fillStyle='#7CFFB2';pc.fillText('實際',mL+4,mT+10);pc.fillStyle='#8a99ad';pc.fillText('理論',mL+44,mT+10);
-  document.getElementById('tlabel').textContent='t = '+t.toFixed(1)+'s = '+(t/state.T).toFixed(2)+' T';
-}
+    if(atoms[i]){gc.save();gc.globalCompositeOperation='lighter';const g=gc.createRadialGradient(x,y,0,x,y,r*2);
+      g.addColorStop(0,'rgba(124,255,178,.7)');g.addColorStop(1,'rgba(124,255,178,0)');gc.fillStyle=g;gc.beginPath();gc.arc(x,y,r*2,0,7);gc.fill();gc.restore();
+      gc.fillStyle='#7CFFB2';gc.beginPath();gc.arc(x,y,r,0,7);gc.fill();}
+    else{gc.fillStyle='#27332c';gc.beginPath();gc.arc(x,y,r*0.85,0,7);gc.fill();}}
+  document.getElementById('sub').textContent=remaining()+' / '+state.N0+' 未衰變';}
+function drawPlot(){const W=plot.width,H=plot.height,mL=38,mR=14,mT=14,mB=24;pc.fillStyle='#08120c';pc.fillRect(0,0,W,H);
+  const tEnd=6*state.T,X=tt=>mL+tt/tEnd*(W-mL-mR),Y=n=>H-mB-n/state.N0*(H-mT-mB);
+  pc.font='10px system-ui';
+  for(let k=0;k<=6;k++){const tx=X(k*state.T);pc.strokeStyle='#13251a';pc.beginPath();pc.moveTo(tx,mT);pc.lineTo(tx,H-mB);pc.stroke();pc.fillStyle='#5a7a66';pc.fillText(k+'T',tx-6,H-9);}
+  for(let k=1;k<=4;k++){const ny=state.N0/Math.pow(2,k);pc.strokeStyle='#1c3328';pc.setLineDash([3,4]);pc.beginPath();pc.moveTo(mL,Y(ny));pc.lineTo(W-mR,Y(ny));pc.stroke();pc.setLineDash([]);pc.fillStyle='#5a7a66';pc.fillText('N₀/'+Math.pow(2,k),mL+2,Y(ny)-3);}
+  pc.strokeStyle='#8a99ad';pc.lineWidth=1.5;pc.setLineDash([5,4]);pc.beginPath();for(let i=0;i<=200;i++){const tt=tEnd*i/200,n=state.N0*Math.pow(.5,tt/state.T);pc[i?'lineTo':'moveTo'](X(tt),Y(n));}pc.stroke();pc.setLineDash([]);
+  pc.strokeStyle='#7CFFB2';pc.lineWidth=2;pc.beginPath();hist.forEach((h,i)=>{i?pc.lineTo(X(h.t),Y(h.n)):pc.moveTo(X(h.t),Y(h.n));});pc.stroke();
+  pc.fillStyle='#7CFFB2';pc.fillText('實際',mL+4,mT+10);pc.fillStyle='#8a99ad';pc.fillText('理論',mL+44,mT+10);}
 function draw(){drawGrid();drawPlot();drawStats();}
-function drawStats(){
-  const n=remaining(),frac=n/state.N0,theo=state.N0*Math.pow(0.5,t/state.T);
-  const rows=[
-    ['剩餘原子數',n+'','#7CFFB2'],
-    ['已衰變',(state.N0-n)+'','#8a99ad'],
-    ['經過時間',t.toFixed(1)+' s','#e8eef6'],
-    ['＝幾個半衰期',(t/state.T).toFixed(2)+' T','#ffce54'],
-    ['剩餘比例',(frac*100).toFixed(1)+' %','#4cc2ff'],
-    ['理論剩餘',theo.toFixed(0)+'','#ff6b9d'],
-  ];
-  document.getElementById('stats').innerHTML=rows.map(r=>
-    `<div class="box"><div class="k">${r[0]}</div><div class="v" style="color:${r[2]}">${r[1]}</div></div>`).join('');
-}
-let acc=0;
-function loop(ts){if(playing){const dt=Math.min((ts-last)/1000,0.05);last=ts;acc+=dt;
-  if(acc>0.1){if(t<6*state.T)step(acc);acc=0;}draw();}else last=ts;requestAnimationFrame(loop);}
+function drawStats(){const n=remaining(),frac=n/state.N0,theo=state.N0*Math.pow(.5,t/state.T);
+  const rows=[['剩餘原子數',n+'','#7CFFB2'],['已衰變',(state.N0-n)+'','#8a99ad'],['經過時間',t.toFixed(1)+' s','#e8eef6'],
+    ['＝幾個半衰期',(t/state.T).toFixed(2)+' T','#ffce54'],['剩餘比例',(frac*100).toFixed(1)+'%','#4cc2ff'],['理論剩餘',theo.toFixed(0)+'','#ff6b9d']];
+  document.getElementById('stats').innerHTML=rows.map(r=>`<div class="box"><div class="k">${r[0]}</div><div class="v" style="color:${r[2]}">${r[1]}</div></div>`).join('');}
+
+let acc=0,lastTs=0;
+function loop(ts){const dt=lastTs?Math.min((ts-lastTs)/1000,0.05):0;lastTs=ts;if(playing){acc+=dt;if(acc>0.1){if(t<6*state.T)step(acc);acc=0;}}draw();requestAnimationFrame(loop);}
 const pb=document.getElementById('play');
-pb.onclick=()=>{playing=!playing;pb.classList.toggle('on',playing);pb.textContent=playing?'⏸ 暫停':'▶ 播放';last=performance.now();};
-document.getElementById('reset').onclick=()=>{reset();playing=true;pb.classList.add('on');pb.textContent='⏸ 暫停';last=performance.now();};
+pb.onclick=()=>{playing=!playing;pb.classList.toggle('on',playing);pb.textContent=playing?'⏸ 暫停':'▶ 播放';};
+document.getElementById('reset').onclick=()=>{reset();playing=true;pb.classList.add('on');pb.textContent='⏸ 暫停';};
 const PRE={fast:{T:1.5,N0:144},many:{T:3,N0:400}};
-document.querySelectorAll('[data-preset]').forEach(b=>b.onclick=()=>{const p=PRE[b.dataset.preset];if(!p)return;
-  ['T','N0'].forEach(k=>setSlider(k,p[k]));reset();});
-reset();requestAnimationFrame(loop);
-window.addEventListener('resize',draw);
+document.querySelectorAll('[data-preset]').forEach(b=>b.onclick=()=>{const p=PRE[b.dataset.preset];if(!p)return;['T','N0'].forEach(k=>setSlider(k,p[k]));reset();});
+window.addEventListener('load',()=>{reset();requestAnimationFrame(loop);});
 </script>
 </body>
 </html>
