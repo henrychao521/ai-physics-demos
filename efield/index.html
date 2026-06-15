@@ -81,15 +81,16 @@ const sBar=document.getElementById('sliders');
  d.innerHTML=`<label><span>新增電荷量 |q|</span><span class="v" id="v_mag">4</span></label><input type="range" id="r_mag" min="1" max="8" step="1" value="4">`;
  sBar.appendChild(d);d.querySelector('input').addEventListener('input',e=>{state.mag=parseFloat(e.target.value);document.getElementById('v_mag').textContent=state.mag;});}
 
-const cv=document.getElementById('cv'),cc=cv.getContext('2d');
+function _hd(c,w,h){var d=window.devicePixelRatio||1;c.width=w*d;c.height=h*d;var x=c.getContext('2d');x.setTransform(d,0,0,d,0,0);return x;}
+const cv=document.getElementById('cv'),cc=_hd(cv,900,470);
 let charges=[{x:300,y:235,q:5},{x:600,y:235,q:-5}];
 function potential(x,y){let v=0;for(const c of charges){const r=Math.hypot(x-c.x,y-c.y);v+=c.q/Math.max(r,9);}return v;}
 function field(x,y){let ex=0,ey=0;for(const c of charges){const dx=x-c.x,dy=y-c.y,r=Math.max(Math.hypot(dx,dy),9),e=c.q/(r*r*r);ex+=e*dx;ey+=e*dy;}return {ex,ey};}
 function fieldLine(sx,sy,sign){cc.beginPath();cc.moveTo(sx,sy);let x=sx,y=sy;
   for(let i=0;i<420;i++){const {ex,ey}=field(x,y),m=Math.hypot(ex,ey)||1e-6;x+=sign*ex/m*3;y+=sign*ey/m*3;
-    if(x<0||x>cv.width||y<0||y>cv.height)break;let near=false;for(const c of charges)if(Math.hypot(x-c.x,y-c.y)<10){near=true;break;}cc.lineTo(x,y);if(near)break;}
+    if(x<0||x>900||y<0||y>470)break;let near=false;for(const c of charges)if(Math.hypot(x-c.x,y-c.y)<10){near=true;break;}cc.lineTo(x,y);if(near)break;}
   cc.strokeStyle='rgba(220,230,255,.45)';cc.lineWidth=1.3;cc.stroke();}
-function draw(){const W=cv.width,H=cv.height;
+function draw(){const W=900,H=470;
   // 電位熱圖(等位面)
   const cell=5,img=cc.createImageData(W,H);
   for(let y=0;y<H;y+=cell)for(let x=0;x<W;x+=cell){const v=potential(x+cell/2,y+cell/2),t=Math.tanh(v*0.06),band=Math.round(t*9)/9;
@@ -113,8 +114,8 @@ function draw(){const W=cv.width,H=cv.height;
   document.getElementById('sub').textContent=charges.length+' 個電荷　白線＝電場線，色帶＝等位面';
 }
 let drag=-1;
-function pos(e){const r=cv.getBoundingClientRect();return {x:(e.clientX-r.left)*cv.width/r.width,y:(e.clientY-r.top)*cv.height/r.height};}
-cv.addEventListener('pointerdown',e=>{const p=pos(e);const hit=Math.max(18,16*cv.width/cv.getBoundingClientRect().width);for(let i=0;i<charges.length;i++)if(Math.hypot(p.x-charges[i].x,p.y-charges[i].y)<hit){drag=i;cv.setPointerCapture(e.pointerId);cv.style.cursor='grabbing';return;}});
+function pos(e){const r=cv.getBoundingClientRect();return {x:(e.clientX-r.left)*900/r.width,y:(e.clientY-r.top)*470/r.height};}
+cv.addEventListener('pointerdown',e=>{const p=pos(e);const hit=Math.max(18,16*900/cv.getBoundingClientRect().width);for(let i=0;i<charges.length;i++)if(Math.hypot(p.x-charges[i].x,p.y-charges[i].y)<hit){drag=i;cv.setPointerCapture(e.pointerId);cv.style.cursor='grabbing';return;}});
 cv.addEventListener('pointermove',e=>{if(drag<0)return;const p=pos(e);charges[drag].x=p.x;charges[drag].y=p.y;draw();});
 window.addEventListener('pointerup',()=>{drag=-1;cv.style.cursor='grab';});
 document.getElementById('addPos').onclick=()=>{charges.push({x:450,y:235,q:state.mag});draw();};

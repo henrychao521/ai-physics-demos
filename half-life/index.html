@@ -97,9 +97,10 @@ function reset(){atoms=[];for(let i=0;i<state.N0;i++)atoms.push(true);t=0;hist=[
 function remaining(){let n=0;for(const a of atoms)if(a)n++;return n;}
 function step(dt){const prob=1-Math.pow(2,-dt/state.T);for(let i=0;i<atoms.length;i++)if(atoms[i]&&Math.random()<prob)atoms[i]=false;
   t+=dt;hist.push({t,n:remaining()});if(hist.length>3000)hist.shift();if(t>6*state.T)t=6*state.T;}
-const gc=document.getElementById('grid').getContext('2d'),gridC=document.getElementById('grid');
-const pc=document.getElementById('plot').getContext('2d'),plot=document.getElementById('plot');
-function drawGrid(){const W=gridC.width,H=gridC.height;gc.fillStyle='#070f0b';gc.fillRect(0,0,W,H);
+function _hd(c,w,h){var d=window.devicePixelRatio||1;c.width=w*d;c.height=h*d;var x=c.getContext('2d');x.setTransform(d,0,0,d,0,0);return x;}
+const gridC=document.getElementById('grid'),gc=_hd(gridC,380,380);
+const plot=document.getElementById('plot'),pc=_hd(plot,560,380);
+function drawGrid(){const W=380,H=380;gc.fillStyle='#070f0b';gc.fillRect(0,0,W,H);
   const n=atoms.length,cols=Math.ceil(Math.sqrt(n*W/H)),rows=Math.ceil(n/cols),cw=W/cols,ch=H/rows,r=Math.min(cw,ch)*0.3;
   for(let i=0;i<n;i++){const x=(i%cols+0.5)*cw,y=(Math.floor(i/cols)+0.5)*ch;
     if(atoms[i]){gc.save();gc.globalCompositeOperation='lighter';const g=gc.createRadialGradient(x,y,0,x,y,r*2);
@@ -107,7 +108,7 @@ function drawGrid(){const W=gridC.width,H=gridC.height;gc.fillStyle='#070f0b';gc
       gc.fillStyle='#7CFFB2';gc.beginPath();gc.arc(x,y,r,0,7);gc.fill();}
     else{gc.fillStyle='#27332c';gc.beginPath();gc.arc(x,y,r*0.85,0,7);gc.fill();}}
   document.getElementById('sub').textContent=remaining()+' / '+state.N0+' 未衰變';}
-function drawPlot(){const W=plot.width,H=plot.height,mL=38,mR=14,mT=14,mB=24;pc.fillStyle='#08120c';pc.fillRect(0,0,W,H);
+function drawPlot(){const W=560,H=380,mL=38,mR=14,mT=14,mB=24;pc.fillStyle='#08120c';pc.fillRect(0,0,W,H);
   const tEnd=6*state.T,X=tt=>mL+tt/tEnd*(W-mL-mR),Y=n=>H-mB-n/state.N0*(H-mT-mB);
   pc.font='10px system-ui';
   for(let k=0;k<=6;k++){const tx=X(k*state.T);pc.strokeStyle='#13251a';pc.beginPath();pc.moveTo(tx,mT);pc.lineTo(tx,H-mB);pc.stroke();pc.fillStyle='#5a7a66';pc.fillText(k+'T',tx-6,H-9);}

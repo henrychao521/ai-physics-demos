@@ -85,8 +85,9 @@ sliders.forEach(s=>{state[s.id]=s.val;
     document.getElementById('v_'+s.id).textContent=`${state[s.id]} ${s.unit}`;draw();});
 });
 
-const cv=document.getElementById('cv'), g=cv.getContext('2d');
-const W=cv.width,H=cv.height;
+function _hd(c,w,h){var d=window.devicePixelRatio||1;c.width=w*d;c.height=h*d;var x=c.getContext('2d');x.setTransform(d,0,0,d,0,0);return x;}
+const cv=document.getElementById('cv'), g=_hd(cv,1000,560);
+const W=1000,H=560;
 const tableY=H-70;            // 檯面 y
 const lampCx=W/2, lampCy=70, lampR=300; // 燈具弧中心與半徑
 
@@ -203,7 +204,7 @@ function draw(){
 let dragMode=false, dragging=false;
 document.getElementById('drag').onclick=()=>{dragMode=!dragMode;
   document.getElementById('drag').textContent=dragMode?'✋ 拖曳中（再按關閉）':'🟠 點此切換：拖曳遮擋物';};
-function pos(e){const r=cv.getBoundingClientRect();const sx=cv.width/r.width,sy=cv.height/r.height;
+function pos(e){const r=cv.getBoundingClientRect();const sx=1000/r.width,sy=560/r.height;
   const cx=(e.touches?e.touches[0].clientX:e.clientX), cy=(e.touches?e.touches[0].clientY:e.clientY);
   return {x:(cx-r.left)*sx,y:(cy-r.top)*sy};}
 cv.addEventListener('pointerdown',e=>{const p=pos(e);const ob=obstacle();

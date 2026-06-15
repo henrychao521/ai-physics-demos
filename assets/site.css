@@ -64,6 +64,11 @@ a{color:var(--accent)}
 .btn.on{background:var(--accent);color:#04121c;border-color:var(--accent);font-weight:700}
 
 input[type=range]{accent-color:var(--accent)}
+/* 觸控裝置：放大按鈕與滑桿命中區到 >=40px，桌面滑鼠不受影響 */
+@media (pointer:coarse){
+  button,.btn,.pbtn,.toolbar button,.modes button{min-height:40px}
+  input[type=range]{min-height:30px}
+}
 ::-webkit-scrollbar{width:9px;height:9px}
 ::-webkit-scrollbar-track{background:var(--bg2)}
 ::-webkit-scrollbar-thumb{background:#2f3b56;border-radius:5px}

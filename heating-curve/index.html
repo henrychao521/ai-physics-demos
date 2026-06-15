@@ -177,7 +177,7 @@ const pb=document.getElementById('play');
 pb.onclick=()=>{playing=!playing;pb.classList.toggle('on',playing);pb.textContent=playing?'⏸ 暫停':'▶ 播放';};
 document.getElementById('reset').onclick=()=>{t=0;playing=true;pb.classList.add('on');pb.textContent='⏸ 暫停';};
 const PRE={std:{m:150,P:800,c:4.18},fast:{m:150,P:1800,c:4.18},big:{m:450,P:800,c:4.18}};
-document.querySelectorAll('[data-preset]').forEach(b=>b.onclick=()=>{const p=PRE[b.dataset.preset];if(!p)return;['m','P','c'].forEach(k=>setSlider(k,p[k]));buildSeg();t=0;});
+document.querySelectorAll('[data-preset]').forEach(b=>b.onclick=()=>{const p=PRE[b.dataset.preset];if(!p)return;['m','P','c'].forEach(k=>setSlider(k,p[k]));buildSeg();t=0;playing=true;pb.classList.add('on');pb.textContent='⏸ 暫停';});
 window.addEventListener('load',()=>{setupCanvases();buildSeg();draw();requestAnimationFrame(loop);});
 window.addEventListener('resize',()=>{setupCanvases();draw();});
 </script>

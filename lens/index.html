@@ -139,11 +139,17 @@ function arrowObj(xc,yc,col,lab,dashed){sc.strokeStyle=col;sc.fillStyle=col;sc.l
   const dir=yc>=0?-1:1;sc.beginPath();sc.moveTo(X(xc),Y(yc));sc.lineTo(X(xc)-6,Y(yc)-dir*10);sc.lineTo(X(xc)+6,Y(yc)-dir*10);sc.closePath();sc.fill();
   sc.font='600 12px system-ui';sc.fillText(lab,X(xc)+8,Y(yc)+(yc>=0?-4:14));}
 function drawStats(q,m){const real=q>0;
-  const rows=[['物距 p',state.p+' cm','#1f9d55'],['焦距 f',f()+' cm','#2e6da4'],['像距 q',isFinite(q)?q.toFixed(1)+' cm':'∞','#c0392b'],['放大率 m',m.toFixed(2),'#d68a00']];
+  const rows=[['物距 p',state.p+' cm','#1f9d55'],['焦距 f',f()+' cm','#2e6da4'],['像距 q',isFinite(q)?q.toFixed(1)+' cm':'∞','#c0392b'],['放大率 m',isFinite(m)?m.toFixed(2):'∞','#d68a00']];
   document.getElementById('stats').innerHTML=rows.map(r=>`<div class="box"><div class="k">${r[0]}</div><div class="v" style="color:${r[2]}">${r[1]}</div></div>`).join('');
-  const d=document.getElementById('desc'),kind=real?'實像':'虛像',ori=m<0?'倒立':'正立',sz=Math.abs(m)>1.02?'放大':Math.abs(m)<0.98?'縮小':'等大';
-  d.textContent=`成像：${kind}、${ori}、${sz}　(q=${q.toFixed(1)}cm, m=${m.toFixed(2)})`;
-  d.style.background=real?'rgba(255,206,84,.12)':'rgba(255,179,209,.12)';d.style.color=real?'#ffce54':'#ff9ec0';}
+  const d=document.getElementById('desc');
+  if(!isFinite(q)){
+    d.textContent='物距 p = 焦距 f：折射後光線平行射出，成像於無窮遠（不成實像或虛像）。';
+    d.style.background='rgba(140,160,200,.12)';d.style.color='#9fb2cc';
+  }else{
+    const kind=real?'實像':'虛像',ori=m<0?'倒立':'正立',sz=Math.abs(m)>1.02?'放大':Math.abs(m)<0.98?'縮小':'等大';
+    d.textContent=`成像：${kind}、${ori}、${sz}　(q=${q.toFixed(1)}cm, m=${m.toFixed(2)})`;
+    d.style.background=real?'rgba(255,206,84,.12)':'rgba(255,179,209,.12)';d.style.color=real?'#ffce54':'#ff9ec0';
+  }}
 // 拖曳物距
 let dragP=false;
 function setupReady(){}

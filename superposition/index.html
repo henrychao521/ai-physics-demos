@@ -97,8 +97,9 @@ sliders.forEach(s=>{state[s.id]=s.val;
     document.getElementById('v_'+s.id).textContent=`${state[s.id]} ${s.unit}`;if(!running)draw();});
 });
 
-const cv=document.getElementById('cv'), g=cv.getContext('2d');
-const W=cv.width,H=cv.height;
+function _hd(c,w,h){var d=window.devicePixelRatio||1;c.width=w*d;c.height=h*d;var x=c.getContext('2d');x.setTransform(d,0,0,d,0,0);return x;}
+const cv=document.getElementById('cv'), g=_hd(cv,1000,360);
+const W=1000,H=360;
 const readoutEl=document.getElementById('readout');
 let phase=0;
 

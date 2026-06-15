@@ -179,8 +179,8 @@ function buildSources(){
 function draw(){
   const lam=state.lambda*1e-9, L=state.L*1e-3;
   const pts=buildSources();
-  const plot=document.getElementById('plot'), pc=plot.getContext('2d');
-  const W=plot.width, H=plot.height;
+  const plot=document.getElementById('plot'), pc=_hd(plot,1040,320);
+  const W=1040, H=320;
   pc.clearRect(0,0,W,H);
 
   // screen half-range chosen ~ to show a useful span of fringes
@@ -248,14 +248,15 @@ function draw(){
 }
 
 // ===== 互動式狹縫示意圖（擋板可拖曳）=====
+function _hd(c,w,h){var d=window.devicePixelRatio||1;c.width=w*d;c.height=h*d;var x=c.getContext('2d');x.setTransform(d,0,0,d,0,0);return x;}
 const schemCanvas=document.getElementById('schem');
 const SC=0.34, XOFF=0.13;          // 垂直 px/µm、水平 px/µm（前後差）
-function schemGeo(){const W=schemCanvas.width,H=schemCanvas.height;return{W,H,bx:Math.round(W*0.42),cy:Math.round(H/2)};}
+function schemGeo(){const W=1040,H=180;return{W,H,bx:Math.round(W*0.42),cy:Math.round(H/2)};}
 
 function barrier(x,px,yy,hh,col){   // 一面擋板：上下兩段不透光，中間 hh 高為透光縫
   x.fillStyle='#2c3646';
   x.fillRect(px-7,10,14,Math.max(0,(yy-hh/2)-10));
-  const H=schemCanvas.height;
+  const H=180;
   x.fillRect(px-7,yy+hh/2,14,Math.max(0,(H-10)-(yy+hh/2)));
   x.fillStyle=col;x.globalAlpha=.85;x.fillRect(px-7,yy-hh/2,14,hh);x.globalAlpha=1;
 }
@@ -266,7 +267,7 @@ function handle(x,px,yy,col){       // 白色拖曳把手
 }
 
 function drawSchem(){
-  const x=schemCanvas.getContext('2d');
+  const x=_hd(schemCanvas,1040,180);
   const {W,H,bx,cy}=schemGeo();
   x.clearRect(0,0,W,H);
   const [R,G,B]=wl2rgb(state.lambda); const col=`rgb(${R},${G},${B})`;
@@ -315,7 +316,7 @@ function drawSchem(){
 
 // 拖曳互動
 let schDrag=null;
-function schPos(e){const r=schemCanvas.getBoundingClientRect();const sx=schemCanvas.width/r.width,sy=schemCanvas.height/r.height;
+function schPos(e){const r=schemCanvas.getBoundingClientRect();const sx=1040/r.width,sy=180/r.height;
   const cx=e.clientX,cyc=e.clientY;return{x:(cx-r.left)*sx,y:(cyc-r.top)*sy};}
 function setSlider(id,val){state[id]=val;const r=document.getElementById('r_'+id);if(r)r.value=val;
   const s=sliders.find(z=>z.id===id);if(s)document.getElementById('v_'+id).textContent=`${val} ${s.unit}`;}
