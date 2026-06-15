@@ -3,42 +3,57 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>拋體運動實驗室 ｜ 初速・仰角・重力・空氣阻力</title>
+<title>拋體運動實驗室 ｜ 大砲・軌跡・受力分析</title>
 <link rel="icon" href="../assets/favicon.svg" type="image/svg+xml">
 <link rel="stylesheet" href="../assets/site.css">
+<script src="../assets/sim.js"></script>
 <script defer src="../assets/nav.js"></script>
 <style>
   *{box-sizing:border-box}
   html,body{margin:0;padding:0;background:var(--bg);color:var(--txt);
     font-family:"Noto Sans TC","PingFang TC","Microsoft JhengHei",system-ui,sans-serif}
   a{color:var(--accent)}
-  .wrap{max-width:1100px;margin:0 auto;padding:18px 16px 60px}
+  .wrap{max-width:1120px;margin:0 auto;padding:18px 16px 60px}
   header h1{font-size:1.5rem;margin:.2em 0}
   header p{color:var(--muted);margin:.2em 0 1em;line-height:1.6}
   .badge{display:inline-block;background:var(--panel2);border:1px solid var(--line);
     color:var(--muted);font-size:.72rem;padding:2px 8px;border-radius:99px;margin-right:6px}
-  .stage{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:14px;margin-bottom:16px}
-  canvas{width:100%;display:block;border-radius:8px;background:#05070b}
-  .label{font-size:.8rem;color:var(--muted);margin:0 0 6px;display:flex;justify-content:space-between;flex-wrap:wrap;gap:8px}
-  .grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(210px,1fr));gap:14px}
-  .ctrl{background:var(--panel2);border:1px solid var(--line);border-radius:10px;padding:10px 12px}
-  .ctrl label{display:flex;justify-content:space-between;font-size:.85rem;margin-bottom:6px}
-  .ctrl .val{color:var(--accent);font-variant-numeric:tabular-nums}
-  input[type=range]{width:100%;accent-color:var(--accent)}
-  .modes{display:flex;gap:8px;margin:6px 0 14px;flex-wrap:wrap;align-items:center}
-  .modes button,.btn{background:var(--panel2);color:var(--txt);border:1px solid var(--line);
-    padding:8px 14px;border-radius:9px;cursor:pointer;font-size:.85rem;font-family:inherit}
-  .modes button.on{background:var(--accent);color:#04121c;border-color:var(--accent);font-weight:700}
-  .btn:hover,.modes button:hover{border-color:var(--accent)}
-  .stat{display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:10px;margin:4px 0 2px}
-  .stat .box{background:var(--panel2);border:1px solid var(--line);border-radius:10px;padding:9px 11px}
-  .stat .box .k{font-size:.72rem;color:var(--muted)}
-  .stat .box .v{font-size:1.05rem;color:var(--accent2);font-variant-numeric:tabular-nums;font-weight:700}
+  .scene-wrap{position:relative;border-radius:16px;overflow:hidden;border:1px solid var(--line);
+    box-shadow:0 18px 50px rgba(0,0,0,.45)}
+  #scene{display:block;width:100%}
+  .hud{position:absolute;top:12px;left:12px;display:flex;gap:8px;flex-wrap:wrap;pointer-events:none}
+  .chip{background:rgba(8,14,24,.62);backdrop-filter:blur(6px);border:1px solid rgba(255,255,255,.12);
+    border-radius:10px;padding:6px 11px;color:#eaf2ff;font-size:.8rem;line-height:1.25}
+  .chip b{display:block;font-size:1.02rem;font-variant-numeric:tabular-nums;color:#fff}
+  .chip.amber b{color:#ffce54}.chip.green b{color:#7CFFB2}.chip.cyan b{color:#6cd0ff}
+  .toolbar{position:absolute;bottom:12px;right:12px;display:flex;gap:7px;flex-wrap:wrap;justify-content:flex-end}
+  .toolbar button{background:rgba(8,14,24,.62);backdrop-filter:blur(6px);color:#eaf2ff;
+    border:1px solid rgba(255,255,255,.14);border-radius:9px;padding:7px 11px;font-size:.82rem;cursor:pointer;font-family:inherit}
+  .toolbar button.on{background:var(--accent);color:#04121c;border-color:var(--accent);font-weight:700}
+  .toolbar button:hover{border-color:var(--accent)}
+  .bar{display:flex;gap:14px;flex-wrap:wrap;align-items:flex-end;background:var(--panel);border:1px solid var(--line);
+    border-radius:14px;padding:14px 16px;margin-top:14px}
+  .sld{flex:1;min-width:150px}
+  .sld label{display:flex;justify-content:space-between;font-size:.82rem;color:var(--muted);margin-bottom:5px}
+  .sld label .v{color:var(--accent);font-variant-numeric:tabular-nums;font-weight:700}
+  .sld input{width:100%;accent-color:var(--accent)}
+  .presets{display:flex;gap:7px;flex-wrap:wrap;align-items:center;margin-top:12px}
+  .presets span{color:var(--muted);font-size:.8rem}
+  .presets button,.pbtn{background:var(--panel2);color:var(--txt);border:1px solid var(--line);
+    padding:7px 12px;border-radius:9px;cursor:pointer;font-size:.83rem;font-family:inherit}
+  .presets button:hover,.pbtn:hover{border-color:var(--accent)}
+  .pbtn.on{background:var(--accent);color:#04121c;border-color:var(--accent);font-weight:700}
+  .lower{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-top:14px}
+  @media(max-width:680px){.lower{grid-template-columns:1fr}}
+  .panel{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:12px 14px}
+  .panel .lab{font-size:.78rem;color:var(--muted);margin-bottom:6px}
+  #plot{display:block;width:100%;border-radius:8px;background:#0a1018}
   .note{background:var(--panel);border-left:3px solid var(--accent2);border-radius:8px;
-    padding:12px 14px;color:var(--muted);font-size:.86rem;line-height:1.7;margin-top:18px}
-  .note b{color:var(--txt)}
-  .note code{background:var(--bg2);padding:1px 6px;border-radius:5px;color:var(--green);font-size:.85em}
-  footer{color:var(--muted);font-size:.78rem;margin-top:26px;text-align:center;line-height:1.7}
+    padding:12px 14px;color:var(--muted);font-size:.86rem;line-height:1.7;margin-top:14px}
+  .note b{color:var(--txt)}.note code{background:var(--bg2);padding:1px 6px;border-radius:5px;color:var(--green);font-size:.85em}
+  .legend{display:flex;gap:14px;flex-wrap:wrap;font-size:.78rem;color:var(--muted);margin-top:8px}
+  .legend i{display:inline-block;width:18px;height:3px;border-radius:2px;vertical-align:middle;margin-right:5px}
+  footer{color:var(--muted);font-size:.78rem;margin-top:24px;text-align:center;line-height:1.7}
 </style>
 </head>
 <body data-demo="拋體運動實驗室">
@@ -46,240 +61,207 @@
   <header>
     <span class="badge">力學・運動學</span>
     <h1>拋體運動實驗室</h1>
-    <p>調整 <b>初速 v₀</b>、<b>仰角 θ</b>、<b>重力 g</b> 與 <b>空氣阻力</b>，即時觀察拋物線軌跡、速度的
-       <b>水平／鉛直分量</b>，以及高度與速度的時間圖。核心概念：水平與鉛直方向<b>互不影響</b>，只有鉛直方向受重力。</p>
+    <p>調整大砲的<b>初速</b>與<b>仰角</b>發射砲彈。水平方向<b>等速度</b>、鉛直方向<b>等加速度（重力）</b>，
+       兩者互不影響，合成出拋物線。箭頭錨定在砲彈質心：<span style="color:#43d17a">綠＝速度</span>（含水平/鉛直分量），
+       <span style="color:#ffb02e">橙＝重力加速度</span>。</p>
   </header>
 
-  <div class="modes">
-    <button id="play" class="on">▶ 播放</button>
-    <button class="btn" id="reset">↺ 重設</button>
-    <button class="btn" id="drag">空氣阻力：關（理想）</button>
-    <span style="color:var(--muted);font-size:.8rem;margin-left:4px">情境：</span>
-    <button class="btn" data-preset="45">45° 最遠</button>
-    <button class="btn" data-preset="steep">高仰角</button>
-    <button class="btn" data-preset="cliff">懸崖平拋</button>
-    <button class="btn" data-preset="moon">月球重力</button>
+  <div class="scene-wrap">
+    <canvas id="scene"></canvas>
+    <div class="hud" id="hud"></div>
+    <div class="toolbar">
+      <button id="play" class="on">⏸ 暫停</button>
+      <button id="vecBtn" class="on">向量：開</button>
+      <button id="compBtn" class="on">分量：開</button>
+      <button id="dragBtn">空氣阻力：關</button>
+    </div>
   </div>
 
-  <div class="stage">
-    <div class="label"><span>軌跡（側視，藍=水平分量 vₓ，黃=鉛直分量 v_y）</span><span id="tlabel">t = 0.00 s</span></div>
-    <canvas id="traj" width="1040" height="430"></canvas>
+  <div class="bar" id="sliders"></div>
+
+  <div class="presets">
+    <span>情境：</span>
+    <button class="pbtn" data-preset="45">45° 最遠</button>
+    <button class="pbtn" data-preset="steep">高仰角</button>
+    <button class="pbtn" data-preset="cliff">懸崖平拋</button>
+    <button class="pbtn" data-preset="moon">月球重力</button>
+    <button class="pbtn" id="reset" style="margin-left:auto">↺ 重新發射</button>
   </div>
 
-  <div class="stat" id="stats"></div>
-
-  <div class="stage">
-    <div class="label"><span>高度 y(t)　與　鉛直速度 v_y(t)</span><span>白點＝目前時刻</span></div>
-    <canvas id="plot" width="1040" height="240"></canvas>
+  <div class="lower">
+    <div class="panel">
+      <div class="lab">速度分量對時間：vₓ（藍，定值）與 v_y（橙，每秒 −g）</div>
+      <canvas id="plot"></canvas>
+      <div class="legend"><span><i style="background:#6cd0ff"></i>水平速度 vₓ</span><span><i style="background:#ffb02e"></i>鉛直速度 v_y</span><span><i style="background:#7CFFB2"></i>高度 y</span></div>
+    </div>
+    <div class="note" style="margin-top:0">
+      <b>物理重點：</b>水平方向沒有受力（忽略空氣阻力）→ vₓ 不變；鉛直方向只受重力 → v_y 等加速度變化。
+      最高點時 <b>v_y = 0 但 vₓ 仍在</b>。平地射程 <code>R = v₀²·sin(2θ)/g</code> 在 <b>θ=45°</b> 最大，
+      最高點 <code>H = (v₀sinθ)²/2g</code>。打開<b>空氣阻力</b>後軌跡不再左右對稱、射程縮短、落點提前——這就是真實與理想的差距。
+    </div>
   </div>
 
-  <div class="grid" id="controls"></div>
-
-  <div class="note">
-    <b>物理重點：</b>理想情況下水平方向<b>等速度</b>（vₓ 不變），鉛直方向<b>等加速度</b>（v_y 每秒減少 g）。
-    最高點時 v_y = 0 但 vₓ 仍在 → 物體仍在前進。射程公式 <code>R = v₀²·sin(2θ)/g</code>（平地發射）在
-    <b>θ = 45°</b> 時最大；最高點 <code>H = (v₀·sinθ)²/2g</code>。打開<b>空氣阻力</b>後，軌跡不再對稱、射程變短、落點提前，
-    這正是真實世界與課本理想模型的差異。
-  </div>
-
-  <footer>純前端 HTML / Canvas，無外部相依。空氣阻力採二次阻力數值積分（半隱式 Euler）。</footer>
+  <footer>純前端 HTML / Canvas（SIM 工具庫）。高清渲染、半隱式積分、空氣阻力為二次阻力。</footer>
 </div>
 
 <script>
+const S=SIM;
 const sliders=[
-  {id:'v0', name:'初速 v₀', min:5,  max:60, step:1, val:25, unit:'m/s'},
-  {id:'ang',name:'仰角 θ',  min:0,  max:90, step:1, val:45, unit:'°'},
+  {id:'v0', name:'初速 v₀', min:5,  max:60, step:1, val:28, unit:'m/s'},
+  {id:'ang',name:'仰角 θ',  min:0,  max:90, step:1, val:50, unit:'°'},
   {id:'g',  name:'重力 g',  min:1,  max:25, step:.1,val:9.8,unit:'m/s²'},
-  {id:'h0', name:'初始高度 h₀', min:0, max:60, step:1, val:0, unit:'m'},
-  {id:'k',  name:'阻力係數 k', min:0, max:.04, step:.001, val:.01, unit:'/m'},
+  {id:'h0', name:'發射高度', min:0, max:50, step:1, val:0, unit:'m'},
+  {id:'k',  name:'阻力係數', min:0, max:.04,step:.001,val:.012,unit:''},
 ];
-const state={}; let dragOn=false;
-const ctrl=document.getElementById('controls');
-sliders.forEach(s=>{
-  state[s.id]=s.val;
-  const box=document.createElement('div'); box.className='ctrl';
-  box.innerHTML=`<label><span>${s.name}</span><span class="val" id="v_${s.id}">${fmt(s.val)} ${s.unit}</span></label>
+const st={}; let dragOn=false, showVec=true, showComp=true;
+const sBar=document.getElementById('sliders');
+sliders.forEach(s=>{ st[s.id]=s.val;
+  const d=document.createElement('div'); d.className='sld';
+  d.innerHTML=`<label><span>${s.name}</span><span class="v" id="v_${s.id}">${fmt(s.val)} ${s.unit}</span></label>
     <input type="range" id="r_${s.id}" min="${s.min}" max="${s.max}" step="${s.step}" value="${s.val}">`;
-  ctrl.appendChild(box);
-  box.querySelector('input').addEventListener('input',e=>{
-    state[s.id]=parseFloat(e.target.value);
-    document.getElementById('v_'+s.id).textContent=`${fmt(state[s.id])} ${s.unit}`;
-    rebuild();
-  });
+  sBar.appendChild(d);
+  d.querySelector('input').addEventListener('input',e=>{ st[s.id]=parseFloat(e.target.value);
+    document.getElementById('v_'+s.id).textContent=`${fmt(st[s.id])} ${s.unit}`; rebuild(); });
 });
-function fmt(x){return (Math.round(x*100)/100).toString();}
-function setSlider(id,val){state[id]=val;const r=document.getElementById('r_'+id);if(r)r.value=val;
+function fmt(x){return (Math.round(x*1000)/1000).toString();}
+function setSlider(id,val){st[id]=val;const r=document.getElementById('r_'+id);if(r)r.value=val;
   const s=sliders.find(z=>z.id===id);if(s)document.getElementById('v_'+id).textContent=`${fmt(val)} ${s.unit}`;}
 
-// ---- 物理模擬 ----
-let PATH=[], STATS={}, playT=0, playing=true, last=0;
+// ---- 物理：半隱式積分（含二次阻力）----
+let PATH=[],STATS={},playT=0,playing=true;
 function simulate(){
-  const v0=state.v0, th=state.ang*Math.PI/180, g=state.g, h0=state.h0;
-  const k=dragOn?state.k:0;
+  const v0=st.v0,th=st.ang*Math.PI/180,g=st.g,h0=st.h0,k=dragOn?st.k:0;
   let x=0,y=h0,vx=v0*Math.cos(th),vy=v0*Math.sin(th),t=0;
-  const dt=0.004, path=[{t,x,y,vx,vy}]; let guard=0;
-  while(guard++<300000){
-    const sp=Math.hypot(vx,vy);
-    vx+=(-k*sp*vx)*dt;
-    vy+=(-g-k*sp*vy)*dt;
-    const nx=x+vx*dt, ny=y+vy*dt, nt=t+dt;
-    if(ny<0){ const f=y/(y-ny);
-      path.push({t:t+dt*f, x:x+(nx-x)*f, y:0, vx, vy}); break; }
-    x=nx;y=ny;t=nt; path.push({t,x,y,vx,vy});
-    if(t>120) break;
-  }
-  PATH=path;
-  let H=0,Hi=0; path.forEach((p,i)=>{if(p.y>H){H=p.y;Hi=i;}});
+  const dt=0.004,path=[{t,x,y,vx,vy}];let guard=0;
+  while(guard++<300000){const sp=Math.hypot(vx,vy);
+    vx+=(-k*sp*vx)*dt; vy+=(-g-k*sp*vy)*dt;
+    const nx=x+vx*dt,ny=y+vy*dt,nt=t+dt;
+    if(ny<0){const f=y/(y-ny);path.push({t:t+dt*f,x:x+(nx-x)*f,y:0,vx,vy});break;}
+    x=nx;y=ny;t=nt;path.push({t,x,y,vx,vy});if(t>120)break;}
+  PATH=path; let H=0,Hi=0;path.forEach((p,i)=>{if(p.y>H){H=p.y;Hi=i;}});
   const L=path[path.length-1];
-  STATS={T:L.t, R:L.x, H, vImp:Math.hypot(L.vx,L.vy), tH:path[Hi].t};
+  STATS={T:L.t,R:L.x,H,vImp:Math.hypot(L.vx,L.vy),tH:path[Hi].t};
 }
-function stateAt(tt){
-  if(tt<=0) return PATH[0];
-  if(tt>=STATS.T) return PATH[PATH.length-1];
-  let lo=0,hi=PATH.length-1;
-  while(hi-lo>1){const m=(lo+hi)>>1; if(PATH[m].t<tt)lo=m;else hi=m;}
+function at(tt){ if(tt<=0)return PATH[0]; if(tt>=STATS.T)return PATH[PATH.length-1];
+  let lo=0,hi=PATH.length-1; while(hi-lo>1){const m=(lo+hi)>>1; if(PATH[m].t<tt)lo=m;else hi=m;}
   const a=PATH[lo],b=PATH[hi],f=(tt-a.t)/(b.t-a.t||1);
-  return {t:tt,x:a.x+(b.x-a.x)*f,y:a.y+(b.y-a.y)*f,vx:a.vx+(b.vx-a.vx)*f,vy:a.vy+(b.vy-a.vy)*f};
-}
+  return {t:tt,x:a.x+(b.x-a.x)*f,y:a.y+(b.y-a.y)*f,vx:a.vx+(b.vx-a.vx)*f,vy:a.vy+(b.vy-a.vy)*f}; }
 
 // ---- 視圖 ----
-const traj=document.getElementById('traj'), tc=traj.getContext('2d');
-const plot=document.getElementById('plot'), pc=plot.getContext('2d');
-function bounds(){
-  let xmax=Math.max(STATS.R,1), ymax=Math.max(STATS.H,state.h0,1);
-  return {xmax:xmax*1.06, ymax:ymax*1.18};
-}
-function drawTraj(cur){
-  const W=traj.width,H=traj.height,mL=52,mR=20,mT=16,mB=40;
-  tc.clearRect(0,0,W,H);
-  const {xmax,ymax}=bounds();
-  const sx=(W-mL-mR)/xmax, sy=(H-mT-mB)/ymax, s=Math.min(sx,sy);
-  const X=x=>mL+x*s, Y=y=>H-mB-y*s;
-  // 格線
-  tc.strokeStyle='#16202f';tc.lineWidth=1;tc.fillStyle='#46566b';tc.font='11px sans-serif';
-  const gx=niceStep(xmax);
-  for(let x=0;x<=xmax;x+=gx){tc.beginPath();tc.moveTo(X(x),mT);tc.lineTo(X(x),H-mB);tc.stroke();
-    tc.fillText(x.toFixed(0), X(x)-6, H-mB+15);}
-  const gy=niceStep(ymax);
-  for(let y=0;y<=ymax;y+=gy){tc.beginPath();tc.moveTo(mL,Y(y));tc.lineTo(W-mR,Y(y));tc.stroke();
-    tc.fillText(y.toFixed(0), 8, Y(y)+4);}
-  tc.fillStyle='#6b7785';tc.fillText('水平距離 x (m)',W-130,H-mB+15);tc.fillText('高度 y (m)',8,mT+2);
-  // 地面
-  tc.strokeStyle='#3a4756';tc.lineWidth=2;tc.beginPath();tc.moveTo(mL,Y(0));tc.lineTo(W-mR,Y(0));tc.stroke();
-  // 完整軌跡（淡）
-  tc.strokeStyle='#2f6d8c';tc.lineWidth=1.5;tc.beginPath();
-  PATH.forEach((p,i)=>{const px=X(p.x),py=Y(p.y); i?tc.lineTo(px,py):tc.moveTo(px,py);});tc.stroke();
-  // 已走過（亮）
-  tc.strokeStyle='#4cc2ff';tc.lineWidth=2.5;tc.beginPath();
-  for(let i=0;i<PATH.length&&PATH[i].t<=cur.t;i++){const px=X(PATH[i].x),py=Y(PATH[i].y);i?tc.lineTo(px,py):tc.moveTo(px,py);}
-  tc.lineTo(X(cur.x),Y(cur.y));tc.stroke();
+let sc,pc,trail=new S.Trail(40);
+function setupCanvases(){ const cv=document.getElementById('scene');
+  sc=S.fit(cv, 2.15); // 場景畫布寬高比
+  pc=S.fit(document.getElementById('plot'), 2.4); }
+function bounds(){ const xmax=Math.max(STATS.R,5)*1.08, ymax=Math.max(STATS.H,st.h0,3)*1.18; return {xmax,ymax}; }
+function drawScene(cur){
+  const W=sc._w,H=sc._h,mL=24,mR=24,mT=18,mB=46;
+  const {xmax,ymax}=bounds(); const s=Math.min((W-mL-mR)/xmax,(H-mT-mB)/ymax);
+  const gY=H-mB; const X=x=>mL+x*s, Y=y=>gY-y*s;
+  S.scene(sc, S.PALETTES.sky, {ground:gY, perspective:true});
+  // 遠山
+  sc.fillStyle='rgba(40,70,55,.5)';
+  sc.beginPath();sc.moveTo(0,gY);for(let i=0;i<=W;i+=40)sc.lineTo(i,gY-30-22*Math.sin(i*0.012+1)-14*Math.sin(i*0.03));sc.lineTo(W,gY);sc.closePath();sc.fill();
+  // 距離刻度
+  sc.fillStyle='rgba(255,255,255,.55)';sc.font='11px system-ui';
+  const gx=niceStep(xmax); for(let x=0;x<=xmax;x+=gx){sc.fillStyle='rgba(255,255,255,.14)';sc.fillRect(X(x),mT,1,gY-mT);
+    sc.fillStyle='rgba(255,255,255,.5)';sc.fillText(x.toFixed(0)+'m',X(x)+3,gY+15);}
+  // 完整預測軌跡(虛點)
+  sc.fillStyle='rgba(255,255,255,.4)';
+  for(let i=0;i<PATH.length;i+=7){sc.beginPath();sc.arc(X(PATH[i].x),Y(PATH[i].y),1.3,0,7);sc.fill();}
+  // 已走拖尾
+  trail.draw(sc,'120,200,255',6);
+  // 大砲（發射點 x=0,y=h0）
+  drawCannon(X(0),Y(st.h0),st.ang,s);
   // 最高點標記
-  if(STATS.H>0.3){const p=stateAt(STATS.tH);tc.fillStyle='#ff6b9d';tc.beginPath();tc.arc(X(p.x),Y(p.y),3,0,7);tc.fill();
-    tc.fillText('最高點 H='+STATS.H.toFixed(1)+'m',X(p.x)+6,Y(p.y)-4);}
-  // 物體 + 速度向量
-  const ox=X(cur.x),oy=Y(cur.y);
-  const vscale=s*0.5;
-  arrow(tc,ox,oy,ox+cur.vx*vscale,oy,'#4cc2ff',2);              // vx 水平
-  arrow(tc,ox,oy,ox,oy-cur.vy*vscale,'#ffce54',2);              // vy 鉛直
-  arrow(tc,ox,oy,ox+cur.vx*vscale,oy-cur.vy*vscale,'#ffffff',2.5);// 合速度
-  tc.setLineDash([3,3]);tc.strokeStyle='#5b6880';
-  tc.beginPath();tc.moveTo(ox+cur.vx*vscale,oy);tc.lineTo(ox+cur.vx*vscale,oy-cur.vy*vscale);tc.stroke();
-  tc.beginPath();tc.moveTo(ox,oy-cur.vy*vscale);tc.lineTo(ox+cur.vx*vscale,oy-cur.vy*vscale);tc.stroke();tc.setLineDash([]);
-  tc.fillStyle='#0b1220';tc.strokeStyle='#fff';tc.lineWidth=2;tc.beginPath();tc.arc(ox,oy,6,0,7);tc.fill();tc.stroke();
-  document.getElementById('tlabel').textContent='t = '+cur.t.toFixed(2)+' s';
+  if(STATS.H>0.5){const p=at(STATS.tH);sc.fillStyle='#ff6b9d';sc.beginPath();sc.arc(X(p.x),Y(p.y),3,0,7);sc.fill();
+    sc.fillStyle='rgba(255,255,255,.85)';sc.font='11px system-ui';sc.fillText('最高點 '+STATS.H.toFixed(1)+'m',X(p.x)+6,Y(p.y)-5);}
+  // 砲彈 + 接觸陰影
+  const bx=X(cur.x),by=Y(cur.y), ballR=8;
+  S.shadow(sc,bx,gY,ballR,cur.y*s);
+  S.sphere(sc,bx,by,ballR,[16,12,86]); // 近白鐵球
+  // 向量（錨定質心）
+  if(showVec){ const vs=s*0.42;
+    if(showComp){ // 分量：vx 水平、vy 鉛直（虛線直角）
+      S.arrow(sc,bx,by,bx+cur.vx*vs,by,{color:'#6cd0ff',width:2.5,dash:true,label:'vₓ'});
+      S.arrow(sc,bx,by,bx,by-cur.vy*vs,{color:'#ffd36a',width:2.5,dash:true,label:'v_y'});
+      sc.strokeStyle='rgba(255,255,255,.3)';sc.setLineDash([4,4]);sc.lineWidth=1;
+      sc.beginPath();sc.moveTo(bx+cur.vx*vs,by);sc.lineTo(bx+cur.vx*vs,by-cur.vy*vs);sc.stroke();
+      sc.beginPath();sc.moveTo(bx,by-cur.vy*vs);sc.lineTo(bx+cur.vx*vs,by-cur.vy*vs);sc.stroke();sc.setLineDash([]); }
+    S.arrow(sc,bx,by,bx+cur.vx*vs,by-cur.vy*vs,{color:S.C.vel,width:3.5,label:'v'}); // 合速度
+    S.arrow(sc,bx,by,bx,by+st.g*s*0.5,{color:S.C.acc,width:3,label:'g'}); // 重力加速度(向下)
+  }
+  updateHud(cur);
 }
-function niceStep(span){const raw=span/6;const p=Math.pow(10,Math.floor(Math.log10(raw)));const n=raw/p;
-  return (n<1.5?1:n<3?2:n<7?5:10)*p;}
-function arrow(c,x1,y1,x2,y2,col,w){
-  if(Math.hypot(x2-x1,y2-y1)<2)return;
-  c.strokeStyle=col;c.fillStyle=col;c.lineWidth=w;
-  c.beginPath();c.moveTo(x1,y1);c.lineTo(x2,y2);c.stroke();
-  const a=Math.atan2(y2-y1,x2-x1),h=7;
-  c.beginPath();c.moveTo(x2,y2);c.lineTo(x2-h*Math.cos(a-.4),y2-h*Math.sin(a-.4));
-  c.lineTo(x2-h*Math.cos(a+.4),y2-h*Math.sin(a+.4));c.closePath();c.fill();
+function niceStep(span){const raw=span/7,p=Math.pow(10,Math.floor(Math.log10(raw))),n=raw/p;return (n<1.5?1:n<3?2:n<7?5:10)*p;}
+function drawCannon(px,py,angDeg,s){
+  const a=angDeg*Math.PI/180, L=46, w=15;
+  // 砲座輪
+  sc.save();
+  for(const dx of [-12,12]){S.sphere(sc,px+dx,py+16,9,[210,12,45]);}
+  // 砲身（金屬，旋轉）
+  sc.translate(px,py); sc.rotate(-a);
+  const g=sc.createLinearGradient(0,-w/2,0,w/2);
+  g.addColorStop(0,'#aeb6c0');g.addColorStop(.3,'#eef2f5');g.addColorStop(.55,'#5b636e');g.addColorStop(1,'#3a4048');
+  sc.fillStyle=g; roundRect(sc,-6,-w/2,L,w,6); sc.fill();
+  sc.fillStyle='#2a2f36'; sc.beginPath(); sc.arc(L-6,0,w/2-1.5,0,7); sc.fill(); // 砲口
+  sc.restore();
+  // 砲座底
+  S.sphere(sc,px,py+10,11,[212,15,38]);
 }
+function roundRect(c,x,y,w,h,r){c.beginPath();c.moveTo(x+r,y);c.arcTo(x+w,y,x+w,y+h,r);c.arcTo(x+w,y+h,x,y+h,r);c.arcTo(x,y+h,x,y,r);c.arcTo(x,y,x+w,y,r);c.closePath();}
 function drawPlot(cur){
-  const W=plot.width,H=plot.height,mL=46,mR=46,mT=14,mB=26;
-  pc.clearRect(0,0,W,H);
-  const T=Math.max(STATS.T,0.1);
-  let ymax=Math.max(STATS.H,state.h0,1)*1.1;
-  let vmax=0;PATH.forEach(p=>{vmax=Math.max(vmax,Math.abs(p.vy));});vmax=Math.max(vmax,1)*1.1;
-  const X=t=>mL+t/T*(W-mL-mR);
-  const Yy=y=>H-mB-(y/ymax)*(H-mT-mB);
-  const Yv=v=>mT+(H-mT-mB)/2 - v/vmax*(H-mT-mB)/2;
-  // 軸線
-  pc.strokeStyle='#16202f';pc.lineWidth=1;
-  for(let i=0;i<=5;i++){const tx=X(T*i/5);pc.beginPath();pc.moveTo(tx,mT);pc.lineTo(tx,H-mB);pc.stroke();
-    pc.fillStyle='#46566b';pc.font='11px sans-serif';pc.fillText((T*i/5).toFixed(1)+'s',tx-9,H-9);}
-  pc.strokeStyle='#314056';pc.setLineDash([4,4]);pc.beginPath();pc.moveTo(mL,Yv(0));pc.lineTo(W-mR,Yv(0));pc.stroke();pc.setLineDash([]);
+  const W=pc._w,H=pc._h,mL=34,mR=12,mT=10,mB=20; pc.clearRect(0,0,W,H);
+  const T=Math.max(STATS.T,0.1); let vmax=0,ymax=Math.max(STATS.H,st.h0,1)*1.1;
+  PATH.forEach(p=>vmax=Math.max(vmax,Math.abs(p.vx),Math.abs(p.vy)));vmax=Math.max(vmax,1)*1.1;
+  const X=t=>mL+t/T*(W-mL-mR), midY=mT+(H-mT-mB)/2;
+  const Yv=v=>midY-v/vmax*(H-mT-mB)/2, Yy=y=>H-mB-y/ymax*(H-mT-mB);
+  pc.strokeStyle='#1b2738';pc.lineWidth=1;pc.beginPath();pc.moveTo(mL,midY);pc.lineTo(W-mR,midY);pc.stroke();
   // y(t)
-  pc.strokeStyle='#7CFFB2';pc.lineWidth=2;pc.beginPath();
-  PATH.forEach((p,i)=>{const px=X(p.t),py=Yy(p.y);i?pc.lineTo(px,py):pc.moveTo(px,py);});pc.stroke();
-  // vy(t)
-  pc.strokeStyle='#ffce54';pc.lineWidth=2;pc.beginPath();
-  PATH.forEach((p,i)=>{const px=X(p.t),py=Yv(p.vy);i?pc.lineTo(px,py):pc.moveTo(px,py);});pc.stroke();
-  // 圖例
-  pc.fillStyle='#7CFFB2';pc.fillText('● 高度 y',mL+4,mT+12);
-  pc.fillStyle='#ffce54';pc.fillText('● 鉛直速度 v_y（過零=最高點）',mL+74,mT+12);
-  // 時間游標
-  const cx=X(cur.t);pc.strokeStyle='#ffffff';pc.lineWidth=1;pc.beginPath();pc.moveTo(cx,mT);pc.lineTo(cx,H-mB);pc.stroke();
-  pc.fillStyle='#fff';pc.beginPath();pc.arc(cx,Yy(cur.y),3.5,0,7);pc.fill();
-  pc.beginPath();pc.arc(cx,Yv(cur.vy),3.5,0,7);pc.fill();
+  pc.strokeStyle='#7CFFB2';pc.lineWidth=2;pc.beginPath();PATH.forEach((p,i)=>{const x=X(p.t),y=Yy(p.y);i?pc.lineTo(x,y):pc.moveTo(x,y);});pc.stroke();
+  // vx,vy
+  pc.strokeStyle='#6cd0ff';pc.lineWidth=2;pc.beginPath();PATH.forEach((p,i)=>{const x=X(p.t),y=Yv(p.vx);i?pc.lineTo(x,y):pc.moveTo(x,y);});pc.stroke();
+  pc.strokeStyle='#ffb02e';pc.lineWidth=2;pc.beginPath();PATH.forEach((p,i)=>{const x=X(p.t),y=Yv(p.vy);i?pc.lineTo(x,y):pc.moveTo(x,y);});pc.stroke();
+  const cx=X(cur.t);pc.strokeStyle='rgba(255,255,255,.6)';pc.lineWidth=1;pc.beginPath();pc.moveTo(cx,mT);pc.lineTo(cx,H-mB);pc.stroke();
+  pc.fillStyle='#fff';[Yv(cur.vx),Yv(cur.vy),Yy(cur.y)].forEach(y=>{pc.beginPath();pc.arc(cx,y,3,0,7);pc.fill();});
 }
-function drawStats(cur){
-  const rows=[
-    ['飛行時間 T', STATS.T.toFixed(2)+' s'],
-    ['水平射程 R', STATS.R.toFixed(1)+' m'],
-    ['最高點 H', STATS.H.toFixed(1)+' m'],
-    ['落地速率', STATS.vImp.toFixed(1)+' m/s'],
-    ['目前 vₓ', cur.vx.toFixed(1)+' m/s'],
-    ['目前 v_y', cur.vy.toFixed(1)+' m/s'],
-  ];
-  document.getElementById('stats').innerHTML=rows.map(r=>
-    `<div class="box"><div class="k">${r[0]}</div><div class="v">${r[1]}</div></div>`).join('');
+function updateHud(cur){
+  document.getElementById('hud').innerHTML=
+   chip('飛行時間',STATS.T.toFixed(2)+' s','')+chip('水平射程',STATS.R.toFixed(1)+' m','amber')+
+   chip('最高點',STATS.H.toFixed(1)+' m','green')+chip('落地速率',STATS.vImp.toFixed(1)+' m/s','cyan');
 }
-function render(cur){drawTraj(cur);drawPlot(cur);drawStats(cur);}
-
-function rebuild(){simulate();playT=Math.min(playT,STATS.T);render(stateAt(playT));}
+function chip(k,v,cls){return `<div class="chip ${cls}">${k}<b>${v}</b></div>`;}
+function render(cur){drawScene(cur);drawPlot(cur);}
+function rebuild(){simulate();playT=Math.min(playT,STATS.T);trail.clear();render(at(playT));}
 
 // ---- 動畫 ----
-function loop(ts){
-  if(playing){
-    const dt=(ts-last)/1000; last=ts;
-    playT+=Math.min(dt,0.05);
-    if(playT>=STATS.T){playT=STATS.T;playing=false;document.getElementById('play').classList.remove('on');document.getElementById('play').textContent='▶ 重新播放';}
-    render(stateAt(playT));
-  } else last=ts;
+let lastTs=0;
+function loop(ts){ const dt=lastTs?Math.min((ts-lastTs)/1000,0.05):0; lastTs=ts;
+  if(playing){ playT+=dt;
+    if(playT>=STATS.T){playT=STATS.T;playing=false;pb.classList.remove('on');pb.textContent='▶ 重新播放';}
+    const cur=at(playT);
+    const W=sc._w,H=sc._h,mL=24,mR=24,mT=18,mB=46,b=bounds(),s=Math.min((W-mL-mR)/b.xmax,(H-mT-mB)/b.ymax),gY=H-mB;
+    trail.push(mL+cur.x*s, gY-cur.y*s);
+  }
+  render(at(playT));
   requestAnimationFrame(loop);
 }
-const playBtn=document.getElementById('play');
-playBtn.onclick=()=>{
-  if(playT>=STATS.T)playT=0;
-  playing=!playing;
-  playBtn.classList.toggle('on',playing);
-  playBtn.textContent=playing?'⏸ 暫停':'▶ 播放';
-  last=performance.now();
-};
-document.getElementById('reset').onclick=()=>{playT=0;playing=true;playBtn.classList.add('on');playBtn.textContent='⏸ 暫停';last=performance.now();render(stateAt(0));};
-const dragBtn=document.getElementById('drag');
-dragBtn.onclick=()=>{dragOn=!dragOn;dragBtn.textContent='空氣阻力：'+(dragOn?'開（真實）':'關（理想）');dragBtn.classList.toggle('on',dragOn);rebuild();};
-const PRESETS={
-  '45':  {v0:25,ang:45,g:9.8,h0:0,drag:false},
-  steep: {v0:25,ang:75,g:9.8,h0:0,drag:false},
-  cliff: {v0:20,ang:0, g:9.8,h0:40,drag:false},
-  moon:  {v0:25,ang:45,g:1.6,h0:0,drag:false},
-};
-document.querySelectorAll('[data-preset]').forEach(b=>b.onclick=()=>{
-  const p=PRESETS[b.dataset.preset];if(!p)return;
+const pb=document.getElementById('play');
+pb.onclick=()=>{ if(playT>=STATS.T){playT=0;trail.clear();} playing=!playing;
+  pb.classList.toggle('on',playing); pb.textContent=playing?'⏸ 暫停':'▶ 播放'; };
+document.getElementById('reset').onclick=()=>{playT=0;playing=true;trail.clear();pb.classList.add('on');pb.textContent='⏸ 暫停';};
+document.getElementById('vecBtn').onclick=function(){showVec=!showVec;this.classList.toggle('on',showVec);this.textContent='向量：'+(showVec?'開':'關');};
+document.getElementById('compBtn').onclick=function(){showComp=!showComp;this.classList.toggle('on',showComp);this.textContent='分量：'+(showComp?'開':'關');};
+const dragBtn=document.getElementById('dragBtn');
+dragBtn.onclick=function(){dragOn=!dragOn;this.classList.toggle('on',dragOn);this.textContent='空氣阻力：'+(dragOn?'開':'關');rebuild();};
+const PRESETS={'45':{v0:28,ang:45,g:9.8,h0:0,drag:false},steep:{v0:28,ang:75,g:9.8,h0:0,drag:false},
+  cliff:{v0:22,ang:0,g:9.8,h0:38,drag:false},moon:{v0:28,ang:45,g:1.6,h0:0,drag:false}};
+document.querySelectorAll('[data-preset]').forEach(b=>b.onclick=()=>{const p=PRESETS[b.dataset.preset];if(!p)return;
   ['v0','ang','g','h0'].forEach(k=>setSlider(k,p[k]));
-  dragOn=p.drag;dragBtn.textContent='空氣阻力：'+(dragOn?'開（真實）':'關（理想）');dragBtn.classList.toggle('on',dragOn);
-  playT=0;playing=true;playBtn.classList.add('on');playBtn.textContent='⏸ 暫停';last=performance.now();
-  simulate();render(stateAt(0));
-});
+  dragOn=p.drag;dragBtn.classList.toggle('on',dragOn);dragBtn.textContent='空氣阻力：'+(dragOn?'開':'關');
+  playT=0;playing=true;trail.clear();pb.classList.add('on');pb.textContent='⏸ 暫停';rebuild();});
 
-simulate();render(stateAt(0));
-requestAnimationFrame(loop);
-window.addEventListener('resize',()=>render(stateAt(playT)));
+window.addEventListener('load',()=>{ setupCanvases(); simulate(); render(at(0)); requestAnimationFrame(loop); });
+window.addEventListener('resize',()=>{ setupCanvases(); render(at(playT)); });
 </script>
 </body>
 </html>
