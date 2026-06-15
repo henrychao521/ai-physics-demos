@@ -6,40 +6,35 @@
 <title>RC 充放電 ｜ 時間常數 τ=RC・指數曲線</title>
 <link rel="icon" href="../assets/favicon.svg" type="image/svg+xml">
 <link rel="stylesheet" href="../assets/site.css">
+<script src="../assets/sim.js"></script>
 <script defer src="../assets/nav.js"></script>
 <style>
   *{box-sizing:border-box}
-  html,body{margin:0;padding:0;background:var(--bg);color:var(--txt);
-    font-family:"Noto Sans TC","PingFang TC","Microsoft JhengHei",system-ui,sans-serif}
+  html,body{margin:0;padding:0;background:var(--bg);color:var(--txt);font-family:"Noto Sans TC","PingFang TC","Microsoft JhengHei",system-ui,sans-serif}
   a{color:var(--accent)}
-  .wrap{max-width:1100px;margin:0 auto;padding:18px 16px 60px}
+  .wrap{max-width:1120px;margin:0 auto;padding:18px 16px 60px}
   header h1{font-size:1.5rem;margin:.2em 0}
   header p{color:var(--muted);margin:.2em 0 1em;line-height:1.6}
-  .badge{display:inline-block;background:var(--panel2);border:1px solid var(--line);
-    color:var(--muted);font-size:.72rem;padding:2px 8px;border-radius:99px;margin-right:6px}
-  .layout{display:grid;grid-template-columns:.62fr 1fr;gap:16px}
-  @media(max-width:760px){.layout{grid-template-columns:1fr}}
-  .stage{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:14px;margin-bottom:16px}
-  canvas{width:100%;display:block;border-radius:8px;background:#05070b}
-  .label{font-size:.8rem;color:var(--muted);margin:0 0 6px;display:flex;justify-content:space-between;flex-wrap:wrap;gap:8px}
-  .grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:14px}
-  .ctrl{background:var(--panel2);border:1px solid var(--line);border-radius:10px;padding:10px 12px}
-  .ctrl label{display:flex;justify-content:space-between;font-size:.85rem;margin-bottom:6px}
-  .ctrl .val{color:var(--accent);font-variant-numeric:tabular-nums}
-  input[type=range]{width:100%;accent-color:var(--accent)}
-  .modes{display:flex;gap:8px;margin:6px 0 14px;flex-wrap:wrap;align-items:center}
-  .modes button,.btn{background:var(--panel2);color:var(--txt);border:1px solid var(--line);
-    padding:8px 14px;border-radius:9px;cursor:pointer;font-size:.85rem;font-family:inherit}
-  .modes button.on{background:var(--accent);color:#04121c;border-color:var(--accent);font-weight:700}
-  .btn:hover,.modes button:hover{border-color:var(--accent)}
-  .stat{display:grid;grid-template-columns:repeat(auto-fit,minmax(120px,1fr));gap:10px;margin:2px 0}
-  .stat .box{background:var(--panel2);border:1px solid var(--line);border-radius:10px;padding:9px 11px}
-  .stat .box .k{font-size:.72rem;color:var(--muted)}
-  .stat .box .v{font-size:1.02rem;font-variant-numeric:tabular-nums;font-weight:700}
-  .note{background:var(--panel);border-left:3px solid var(--accent2);border-radius:8px;
-    padding:12px 14px;color:var(--muted);font-size:.86rem;line-height:1.7;margin-top:18px}
+  .badge{display:inline-block;background:var(--panel2);border:1px solid var(--line);color:var(--muted);font-size:.72rem;padding:2px 8px;border-radius:99px;margin-right:6px}
+  .grid2{display:grid;grid-template-columns:.62fr 1fr;gap:14px}
+  @media(max-width:740px){.grid2{grid-template-columns:1fr}}
+  .scene-wrap,.curvewrap{position:relative;border-radius:16px;overflow:hidden;border:1px solid var(--line);box-shadow:0 12px 36px rgba(0,0,0,.4)}
+  #circ,#plot{display:block;width:100%}
+  .lab{position:absolute;top:10px;left:12px;font-size:.78rem;color:#9fd8e8;z-index:2}
+  .toolbar{position:absolute;bottom:12px;left:12px;display:flex;gap:7px;flex-wrap:wrap}
+  .toolbar button{background:rgba(6,16,24,.6);backdrop-filter:blur(6px);color:#d8f0ff;border:1px solid rgba(120,200,255,.2);border-radius:9px;padding:7px 11px;font-size:.82rem;cursor:pointer;font-family:inherit}
+  .toolbar button.on{background:var(--accent);color:#04121c;border-color:var(--accent);font-weight:700}
+  .statgrid{display:grid;grid-template-columns:repeat(auto-fit,minmax(120px,1fr));gap:10px;margin-top:14px}
+  .box{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:10px 12px}
+  .box .k{font-size:.72rem;color:var(--muted)}.box .v{font-size:1.02rem;font-variant-numeric:tabular-nums;font-weight:700}
+  .bar{display:flex;gap:14px;flex-wrap:wrap;align-items:flex-end;background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:14px 16px;margin-top:14px}
+  .sld{flex:1;min-width:150px}
+  .sld label{display:flex;justify-content:space-between;font-size:.82rem;color:var(--muted);margin-bottom:5px}
+  .sld label .v{color:var(--accent);font-variant-numeric:tabular-nums;font-weight:700}
+  .sld input{width:100%;accent-color:var(--accent)}
+  .note{background:var(--panel);border-left:3px solid var(--accent2);border-radius:8px;padding:12px 14px;color:var(--muted);font-size:.86rem;line-height:1.7;margin-top:14px}
   .note b{color:var(--txt)}.note code{background:var(--bg2);padding:1px 6px;border-radius:5px;color:var(--green);font-size:.85em}
-  footer{color:var(--muted);font-size:.78rem;margin-top:26px;text-align:center;line-height:1.7}
+  footer{color:var(--muted);font-size:.78rem;margin-top:24px;text-align:center;line-height:1.7}
 </style>
 </head>
 <body data-demo="RC 充放電">
@@ -47,145 +42,103 @@
   <header>
     <span class="badge">電磁・RC 電路</span>
     <h1>RC 電路：充電與放電</h1>
-    <p>電容透過電阻充電／放電，電壓與電流呈<b>指數變化</b>。<b>時間常數 τ = RC</b> 是快慢的量度：
-       充電經過一個 τ 充到約 <b>63%</b>，放電降到約 <b>37%</b>；約 5τ 後幾乎完成。R 或 C 越大，過程越慢。</p>
+    <p>電容透過電阻充電／放電，電壓與電流呈<b>指數變化</b>。<b>時間常數 τ = RC</b>：充電一個 τ 充到約 <b>63%</b>、
+       放電降到約 <b>37%</b>，約 5τ 完成。R 或 C 越大過程越慢。</p>
   </header>
 
-  <div class="modes">
-    <button id="play" class="on">⏸ 暫停</button>
-    <button class="btn" id="reset">↺ 重新開始</button>
-    <button class="btn on" id="mCharge">充電</button>
-    <button class="btn" id="mDischarge">放電</button>
-  </div>
-
-  <div class="layout">
-    <div class="stage">
-      <div class="label"><span>電路（電容填充＝電量）</span><span id="sub"></span></div>
-      <canvas id="circ" width="360" height="300"></canvas>
+  <div class="grid2">
+    <div class="scene-wrap">
+      <div class="lab">電路（電容填充＝電量）</div>
+      <canvas id="circ"></canvas>
+      <div class="toolbar">
+        <button id="mCharge" class="on">充電</button>
+        <button id="mDischarge">放電</button>
+      </div>
     </div>
-    <div class="stage">
-      <div class="label"><span>電容電壓 V_C（青）與 電流 I（黃）對時間</span><span id="tlabel"></span></div>
-      <canvas id="plot" width="640" height="300"></canvas>
+    <div class="curvewrap">
+      <div class="lab">電容電壓 V_C（青）與 電流 I（黃）</div>
+      <canvas id="plot"></canvas>
     </div>
   </div>
 
-  <div class="stat" id="stats"></div>
-  <div class="grid" id="controls" style="margin-top:14px"></div>
+  <div class="statgrid" id="stats"></div>
+  <div class="bar" id="sliders"></div>
 
   <div class="note">
-    <b>物理重點：</b>充電時 <code>V_C(t) = V(1 − e^(−t/τ))</code>、電流 <code>I(t) = (V/R)e^(−t/τ)</code>（電流由大變小，電容充飽就不再流）。
-    放電時 <code>V_C(t) = V₀·e^(−t/τ)</code>。<b>時間常數 τ = RC</b>：t = τ 時充到 1−1/e ≈ 63.2%，t = 5τ 時 &gt; 99%。
-    這個指數行為是計時電路、相機閃光燈充電、心律調節器、訊號濾波（高通／低通）的基礎。注意電流在<b>開關瞬間最大</b>、之後衰減。
+    <b>物理重點：</b>充電 <code>V_C(t) = V(1 − e^(−t/τ))</code>、電流 <code>I(t) = (V/R)e^(−t/τ)</code>（電流由大變小）。放電 <code>V_C(t) = V₀·e^(−t/τ)</code>。
+    <b>時間常數 τ = RC</b>：t = τ 充到 1−1/e ≈ 63.2%，t = 5τ 時 &gt; 99%。這是計時電路、相機閃光燈充電、訊號濾波的基礎。電流在<b>開關瞬間最大</b>、之後衰減。
   </div>
 
-  <footer>純前端 HTML / Canvas，無外部相依。一階 RC 電路解析解。</footer>
+  <footer>純前端 HTML / Canvas（SIM 工具庫）。一階 RC 電路解析解。</footer>
 </div>
 
 <script>
+const S=SIM; let charging=true,t=0,playing=true;
 const sliders=[
   {id:'R',name:'電阻 R',min:100,max:2000,step:50,val:1000,unit:'Ω'},
   {id:'C',name:'電容 C',min:100,max:2000,step:50,val:1000,unit:'µF'},
   {id:'V',name:'電源電壓 V',min:1,max:12,step:.5,val:6,unit:'V'},
 ];
-const state={}; let charging=true, t=0, playing=true, last=0;
-const ctrl=document.getElementById('controls');
-sliders.forEach(s=>{
-  state[s.id]=s.val;
-  const box=document.createElement('div');box.className='ctrl';
-  box.innerHTML=`<label><span>${s.name}</span><span class="val" id="v_${s.id}">${fmt(s.val)} ${s.unit}</span></label>
+const state={};
+const sBar=document.getElementById('sliders');
+sliders.forEach(s=>{ state[s.id]=s.val;
+  const d=document.createElement('div');d.className='sld';
+  d.innerHTML=`<label><span>${s.name}</span><span class="v" id="v_${s.id}">${fmt(s.val)} ${s.unit}</span></label>
     <input type="range" id="r_${s.id}" min="${s.min}" max="${s.max}" step="${s.step}" value="${s.val}">`;
-  ctrl.appendChild(box);
-  box.querySelector('input').addEventListener('input',e=>{state[s.id]=parseFloat(e.target.value);
-    document.getElementById('v_'+s.id).textContent=`${fmt(state[s.id])} ${s.unit}`;draw();});
+  sBar.appendChild(d);
+  d.querySelector('input').addEventListener('input',e=>{state[s.id]=parseFloat(e.target.value);document.getElementById('v_'+s.id).textContent=`${fmt(state[s.id])} ${s.unit}`;});
 });
 function fmt(x){return (Math.round(x*100)/100).toString();}
-function tau(){return state.R*state.C*1e-6;}            // 秒
-function Vc(tt){const T=tau();return charging? state.V*(1-Math.exp(-tt/T)) : state.V*Math.exp(-tt/T);}
-function Ic(tt){const T=tau();const i=state.V/state.R*Math.exp(-tt/T);return charging? i : -i;}
+function tau(){return state.R*state.C*1e-6;}
+function Vc(tt){const T=tau();return charging?state.V*(1-Math.exp(-tt/T)):state.V*Math.exp(-tt/T);}
+function Ic(tt){const T=tau(),i=state.V/state.R*Math.exp(-tt/T);return charging?i:-i;}
 
-const circ=document.getElementById('circ'),ccx=circ.getContext('2d');
-const plot=document.getElementById('plot'),pc=plot.getContext('2d');
-function drawCirc(){
-  const W=circ.width,H=circ.height;ccx.clearRect(0,0,W,H);
-  const vc=Vc(t),frac=vc/state.V;
-  // 外框線路
-  ccx.strokeStyle='#4c8cc8';ccx.lineWidth=2.5;
-  ccx.strokeRect(50,50,W-100,H-100);
+let circ,pc,flow=0;
+function setupCanvases(){circ=S.fit(document.getElementById('circ'),1.1);pc=S.fit(document.getElementById('plot'),2.0);}
+const COOL={skyTop:'#08202c',skyBottom:'#03101a',grid:'rgba(80,180,230,.16)',vignette:'rgba(0,0,0,.5)'};
+function wire(x1,y1,x2,y2,I){circ.lineCap='round';circ.strokeStyle='#123440';circ.lineWidth=7;circ.beginPath();circ.moveTo(x1,y1);circ.lineTo(x2,y2);circ.stroke();
+  circ.strokeStyle='#3a7a92';circ.lineWidth=4;circ.beginPath();circ.moveTo(x1,y1);circ.lineTo(x2,y2);circ.stroke();
+  if(Math.abs(I)>0.0002){circ.strokeStyle='#ffce54';circ.lineWidth=3;circ.setLineDash([3,15]);circ.lineDashOffset=-flow*Math.sign(I)*Math.min(1,Math.abs(I)*1000)*40;
+    circ.beginPath();circ.moveTo(x1,y1);circ.lineTo(x2,y2);circ.stroke();circ.setLineDash([]);circ.lineDashOffset=0;}}
+function drawCirc(){const W=circ._w,H=circ._h,vc=Vc(t),frac=vc/state.V,I=Ic(t);
+  S.scene(circ,COOL,{});
+  const L=46,R=W-46,T=46,B=H-46;
+  wire(L,T,R,T,I);wire(R,T,R,B,I);wire(R,B,L,B,I);wire(L,B,L,T,I);
   // 電池(左)
-  ccx.strokeStyle='#7CFFB2';ccx.lineWidth=3;ccx.beginPath();ccx.moveTo(50,H/2-18);ccx.lineTo(50,H/2+18);ccx.stroke();
-  ccx.lineWidth=6;ccx.beginPath();ccx.moveTo(60,H/2-10);ccx.lineTo(60,H/2+10);ccx.stroke();
-  ccx.fillStyle='#7CFFB2';ccx.font='11px sans-serif';ccx.fillText(state.V+'V',30,H/2+38);
-  // 電阻(上)
-  ccx.strokeStyle='#ffce54';ccx.lineWidth=2.5;const rx=W/2-30;
-  ccx.beginPath();ccx.moveTo(rx,50);for(let i=0;i<6;i++)ccx.lineTo(rx+5+i*10,50+(i%2?8:-8));ccx.lineTo(rx+60,50);ccx.stroke();
-  ccx.fillStyle='#ffce54';ccx.fillText('R',W/2-2,38);
-  // 電容(右)
-  const cx=W-50;ccx.strokeStyle='#4cc2ff';ccx.lineWidth=3;
-  ccx.beginPath();ccx.moveTo(cx-14,H/2-22);ccx.lineTo(cx+14,H/2-22);ccx.stroke();
-  ccx.beginPath();ccx.moveTo(cx-14,H/2+22);ccx.lineTo(cx+14,H/2+22);ccx.stroke();
-  // 電容電量填充(板間)
-  ccx.fillStyle=`rgba(76,194,255,${0.15+frac*0.6})`;ccx.fillRect(cx-13,H/2-20,26,40*0+ Math.max(2,40*frac));
-  ccx.fillStyle='#4cc2ff';ccx.fillText('C',cx+18,H/2+4);
-  ccx.fillStyle='#8a99ad';ccx.fillText('V_C='+vc.toFixed(2)+'V',cx-50,H-30);
-  // 電流動畫點
-  const I=Math.abs(Ic(t)),dir=charging?1:-1,speed=I*1500;
-  if(I>1e-4){ccx.fillStyle='#ffce54';for(let k=0;k<8;k++){
-    const ph=((t*speed+k/8)%1);drawDot(ph,dir);}}
-  document.getElementById('sub').textContent=charging?'充電中':'放電中';
-}
-function drawDot(ph,dir){ // 沿矩形路徑放一個點
-  const W=circ.width,H=circ.height,L=50,R=W-50,T=50,B=H-50,per=2*((R-L)+(B-T));
-  let d=(dir>0?ph:1-ph)*per;
-  let x,y;
-  if(d< (R-L)){x=L+d;y=T;} else if(d<(R-L)+(B-T)){x=R;y=T+(d-(R-L));}
-  else if(d<2*(R-L)+(B-T)){x=R-(d-((R-L)+(B-T)));y=B;} else{x=L;y=B-(d-(2*(R-L)+(B-T)));}
-  ccx.beginPath();ccx.arc(x,y,3,0,7);ccx.fill();
-}
-function drawPlot(){
-  const W=plot.width,H=plot.height,mL=44,mR=44,mT=14,mB=26;pc.clearRect(0,0,W,H);
-  const T=tau(),tEnd=5*T;
-  const X=tt=>mL+tt/tEnd*(W-mL-mR);
-  const Yv=v=>H-mB-(v/state.V)*(H-mT-mB);
-  const Imax=state.V/state.R,Yi=i=>H-mB-(Math.abs(i)/Imax)*(H-mT-mB);
-  // τ 標記 + 63%/37% 線
-  pc.strokeStyle='#2a3850';pc.setLineDash([4,4]);pc.beginPath();pc.moveTo(X(T),mT);pc.lineTo(X(T),H-mB);pc.stroke();
+  const bg=circ.createLinearGradient(L-9,0,L+9,0);bg.addColorStop(0,'#5ad0a0');bg.addColorStop(.5,'#aef0d6');bg.addColorStop(1,'#2a8a68');
+  circ.fillStyle=bg;rr(L-9,H/2-22,18,44,4);circ.fill();circ.fillStyle='#d8f0ff';circ.font='11px system-ui';circ.fillText(state.V+'V',L-18,H/2+40);
+  // 電阻(上,鋸齒)
+  circ.strokeStyle='#ffce54';circ.lineWidth=3;const rx=W/2-30;circ.beginPath();circ.moveTo(rx,T);for(let i=0;i<6;i++)circ.lineTo(rx+5+i*10,T+(i%2?9:-9));circ.lineTo(rx+60,T);circ.stroke();
+  circ.fillStyle='#ffce54';circ.fillText('R',W/2-2,T-12);
+  // 電容(右,填充)
+  const cx=R,cyt=H/2-24,cyb=H/2+24;circ.strokeStyle='#6cd0ff';circ.lineWidth=4;
+  circ.beginPath();circ.moveTo(cx-16,cyt);circ.lineTo(cx+16,cyt);circ.moveTo(cx-16,cyb);circ.lineTo(cx+16,cyb);circ.stroke();
+  circ.fillStyle=`rgba(108,208,255,${0.15+frac*0.65})`;circ.fillRect(cx-15,cyt+2,30,Math.max(2,(cyb-cyt-4)*frac));
+  circ.fillStyle='#6cd0ff';circ.fillText('C',cx+22,H/2+4);circ.fillStyle='#9fd8e8';circ.fillText('V_C='+vc.toFixed(2)+'V',cx-40,B-10);}
+function rr(x,y,w,h,r){circ.beginPath();circ.moveTo(x+r,y);circ.arcTo(x+w,y,x+w,y+h,r);circ.arcTo(x+w,y+h,x,y+h,r);circ.arcTo(x,y+h,x,y,r);circ.arcTo(x,y,x+w,y,r);circ.closePath();}
+function drawPlot(){const W=pc._w,H=pc._h,mL=42,mR=42,mT=14,mB=24;pc.fillStyle='#08121c';pc.fillRect(0,0,W,H);
+  const T=tau(),tEnd=5*T,X=tt=>mL+tt/tEnd*(W-mL-mR),Yv=v=>H-mB-(v/state.V)*(H-mT-mB),Imax=state.V/state.R,Yi=i=>H-mB-(Math.abs(i)/Imax)*(H-mT-mB);
+  pc.strokeStyle='#1a3038';pc.setLineDash([4,4]);pc.beginPath();pc.moveTo(X(T),mT);pc.lineTo(X(T),H-mB);pc.stroke();
   const lvl=charging?0.632:0.368;pc.beginPath();pc.moveTo(mL,Yv(state.V*lvl));pc.lineTo(W-mR,Yv(state.V*lvl));pc.stroke();pc.setLineDash([]);
-  pc.fillStyle='#8a99ad';pc.font='11px sans-serif';pc.fillText('τ='+T.toFixed(2)+'s',X(T)-14,H-9);
-  pc.fillText((lvl*100).toFixed(0)+'%',mL+4,Yv(state.V*lvl)-4);
-  // V_C 曲線
-  pc.strokeStyle='#4cc2ff';pc.lineWidth=2.5;pc.beginPath();
-  for(let i=0;i<=240;i++){const tt=tEnd*i/240;const x=X(tt),y=Yv(Vc(tt));i?pc.lineTo(x,y):pc.moveTo(x,y);}pc.stroke();
-  // I 曲線
-  pc.strokeStyle='#ffce54';pc.lineWidth=2.5;pc.beginPath();
-  for(let i=0;i<=240;i++){const tt=tEnd*i/240;const x=X(tt),y=Yi(Ic(tt));i?pc.lineTo(x,y):pc.moveTo(x,y);}pc.stroke();
+  pc.fillStyle='#8a99ad';pc.font='11px system-ui';pc.fillText('τ='+T.toFixed(2)+'s',X(T)-14,H-9);pc.fillText((lvl*100).toFixed(0)+'%',mL+4,Yv(state.V*lvl)-4);
+  pc.strokeStyle='#4cc2ff';pc.lineWidth=2.5;pc.beginPath();for(let i=0;i<=240;i++){const tt=tEnd*i/240;pc[i?'lineTo':'moveTo'](X(tt),Yv(Vc(tt)));}pc.stroke();
+  pc.strokeStyle='#ffce54';pc.lineWidth=2.5;pc.beginPath();for(let i=0;i<=240;i++){const tt=tEnd*i/240;pc[i?'lineTo':'moveTo'](X(tt),Yi(Ic(tt)));}pc.stroke();
   pc.fillStyle='#4cc2ff';pc.fillText('V_C',mL+4,mT+10);pc.fillStyle='#ffce54';pc.fillText('I',mL+40,mT+10);
-  // 游標
   const cx=X(Math.min(t,tEnd));pc.strokeStyle='#fff';pc.lineWidth=1;pc.beginPath();pc.moveTo(cx,mT);pc.lineTo(cx,H-mB);pc.stroke();
-  pc.fillStyle='#fff';pc.beginPath();pc.arc(cx,Yv(Vc(t)),3.5,0,7);pc.fill();pc.beginPath();pc.arc(cx,Yi(Ic(t)),3.5,0,7);pc.fill();
-  document.getElementById('tlabel').textContent='t = '+t.toFixed(2)+'s ('+(t/T).toFixed(2)+'τ)';
-}
+  pc.fillStyle='#fff';pc.beginPath();pc.arc(cx,Yv(Vc(t)),3.5,0,7);pc.fill();pc.beginPath();pc.arc(cx,Yi(Ic(t)),3.5,0,7);pc.fill();}
 function draw(){drawCirc();drawPlot();drawStats();}
-function drawStats(){
-  const vc=Vc(t),i=Ic(t),Q=state.C*1e-6*vc;
-  const rows=[
-    ['時間常數 τ=RC',tau().toFixed(2)+' s','#e8eef6'],
-    ['電容電壓 V_C',vc.toFixed(2)+' V','#4cc2ff'],
-    ['電流 I',(i*1000).toFixed(1)+' mA','#ffce54'],
-    ['電量 Q=CV_C',(Q*1000).toFixed(2)+' mC','#7CFFB2'],
-    ['充電程度',(vc/state.V*100).toFixed(0)+' %','#ff6b9d'],
-  ];
-  document.getElementById('stats').innerHTML=rows.map(r=>
-    `<div class="box"><div class="k">${r[0]}</div><div class="v" style="color:${r[2]}">${r[1]}</div></div>`).join('');
-}
-function loop(ts){if(playing){const dt=Math.min((ts-last)/1000,0.05);last=ts;t+=dt;if(t>5*tau())t=0;draw();}else last=ts;requestAnimationFrame(loop);}
-const pb=document.getElementById('play');
-pb.onclick=()=>{playing=!playing;pb.classList.toggle('on',playing);pb.textContent=playing?'⏸ 暫停':'▶ 播放';last=performance.now();};
-document.getElementById('reset').onclick=()=>{t=0;playing=true;pb.classList.add('on');pb.textContent='⏸ 暫停';last=performance.now();};
+function drawStats(){const vc=Vc(t),i=Ic(t),Q=state.C*1e-6*vc;
+  const rows=[['時間常數 τ=RC',tau().toFixed(2)+' s','#e8eef6'],['電容電壓 V_C',vc.toFixed(2)+' V','#4cc2ff'],['電流 I',(i*1000).toFixed(1)+' mA','#ffce54'],
+    ['電量 Q=CV_C',(Q*1000).toFixed(2)+' mC','#7CFFB2'],['充電程度',(vc/state.V*100).toFixed(0)+'%','#ff6b9d']];
+  document.getElementById('stats').innerHTML=rows.map(r=>`<div class="box"><div class="k">${r[0]}</div><div class="v" style="color:${r[2]}">${r[1]}</div></div>`).join('');}
+
+let lastTs=0;
+function loop(ts){const dt=lastTs?Math.min((ts-lastTs)/1000,0.05):0;lastTs=ts;flow+=dt;if(playing){t+=dt;if(t>5*tau())t=0;}draw();requestAnimationFrame(loop);}
 const mC=document.getElementById('mCharge'),mD=document.getElementById('mDischarge');
-mC.onclick=()=>{charging=true;mC.classList.add('on');mD.classList.remove('on');t=0;draw();};
-mD.onclick=()=>{charging=false;mD.classList.add('on');mC.classList.remove('on');t=0;draw();};
-draw();requestAnimationFrame(loop);
-window.addEventListener('resize',draw);
+mC.onclick=()=>{charging=true;mC.classList.add('on');mD.classList.remove('on');t=0;};
+mD.onclick=()=>{charging=false;mD.classList.add('on');mC.classList.remove('on');t=0;};
+window.addEventListener('load',()=>{setupCanvases();requestAnimationFrame(loop);});
+window.addEventListener('resize',()=>{setupCanvases();});
 </script>
 </body>
 </html>

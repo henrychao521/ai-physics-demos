@@ -6,34 +6,34 @@
 <title>電場與電位 ｜ 庫侖定律・電場線・等位面</title>
 <link rel="icon" href="../assets/favicon.svg" type="image/svg+xml">
 <link rel="stylesheet" href="../assets/site.css">
+<script src="../assets/sim.js"></script>
 <script defer src="../assets/nav.js"></script>
 <style>
   *{box-sizing:border-box}
-  html,body{margin:0;padding:0;background:var(--bg);color:var(--txt);
-    font-family:"Noto Sans TC","PingFang TC","Microsoft JhengHei",system-ui,sans-serif}
+  html,body{margin:0;padding:0;background:var(--bg);color:var(--txt);font-family:"Noto Sans TC","PingFang TC","Microsoft JhengHei",system-ui,sans-serif}
   a{color:var(--accent)}
-  .wrap{max-width:1100px;margin:0 auto;padding:18px 16px 60px}
+  .wrap{max-width:1120px;margin:0 auto;padding:18px 16px 60px}
   header h1{font-size:1.5rem;margin:.2em 0}
   header p{color:var(--muted);margin:.2em 0 1em;line-height:1.6}
-  .badge{display:inline-block;background:var(--panel2);border:1px solid var(--line);
-    color:var(--muted);font-size:.72rem;padding:2px 8px;border-radius:99px;margin-right:6px}
-  .stage{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:14px;margin-bottom:16px}
-  canvas{width:100%;display:block;border-radius:8px;background:#05070b;touch-action:none}
-  .label{font-size:.8rem;color:var(--muted);margin:0 0 6px;display:flex;justify-content:space-between;flex-wrap:wrap;gap:8px}
-  .grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(210px,1fr));gap:14px}
-  .ctrl{background:var(--panel2);border:1px solid var(--line);border-radius:10px;padding:10px 12px}
-  .ctrl label{display:flex;justify-content:space-between;font-size:.85rem;margin-bottom:6px}
-  .ctrl .val{color:var(--accent);font-variant-numeric:tabular-nums}
-  input[type=range]{width:100%;accent-color:var(--accent)}
-  .modes{display:flex;gap:8px;margin:6px 0 14px;flex-wrap:wrap;align-items:center}
-  .modes button,.btn{background:var(--panel2);color:var(--txt);border:1px solid var(--line);
-    padding:8px 14px;border-radius:9px;cursor:pointer;font-size:.85rem;font-family:inherit}
-  .modes button.on{background:var(--accent);color:#04121c;border-color:var(--accent);font-weight:700}
-  .btn:hover,.modes button:hover{border-color:var(--accent)}
-  .note{background:var(--panel);border-left:3px solid var(--accent2);border-radius:8px;
-    padding:12px 14px;color:var(--muted);font-size:.86rem;line-height:1.7;margin-top:18px}
+  .badge{display:inline-block;background:var(--panel2);border:1px solid var(--line);color:var(--muted);font-size:.72rem;padding:2px 8px;border-radius:99px;margin-right:6px}
+  .scene-wrap{position:relative;border-radius:16px;overflow:hidden;border:1px solid var(--line);box-shadow:0 18px 50px rgba(0,0,0,.45)}
+  #cv{display:block;width:100%;touch-action:none;cursor:grab}
+  .toolbar{position:absolute;top:12px;left:12px;display:flex;gap:7px;flex-wrap:wrap}
+  .toolbar button{background:rgba(8,10,24,.6);backdrop-filter:blur(6px);color:#dce6ff;border:1px solid rgba(160,180,255,.2);border-radius:9px;padding:7px 11px;font-size:.82rem;cursor:pointer;font-family:inherit}
+  .toolbar button:hover{border-color:var(--accent)}
+  .sub{position:absolute;bottom:12px;left:12px;background:rgba(8,10,24,.6);border:1px solid rgba(160,180,255,.18);border-radius:10px;padding:6px 11px;color:#dce6ff;font-size:.82rem}
+  .modes{display:flex;gap:7px;flex-wrap:wrap;align-items:center;margin-top:14px}
+  .modes span{color:var(--muted);font-size:.8rem}
+  .pbtn{background:var(--panel2);color:var(--txt);border:1px solid var(--line);padding:7px 12px;border-radius:9px;cursor:pointer;font-size:.83rem;font-family:inherit}
+  .pbtn:hover{border-color:var(--accent)}
+  .bar{display:flex;gap:14px;flex-wrap:wrap;align-items:flex-end;background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:14px 16px;margin-top:14px}
+  .sld{flex:1;min-width:200px}
+  .sld label{display:flex;justify-content:space-between;font-size:.82rem;color:var(--muted);margin-bottom:5px}
+  .sld label .v{color:var(--accent);font-variant-numeric:tabular-nums;font-weight:700}
+  .sld input{width:100%;accent-color:var(--accent)}
+  .note{background:var(--panel);border-left:3px solid var(--accent2);border-radius:8px;padding:12px 14px;color:var(--muted);font-size:.86rem;line-height:1.7;margin-top:14px}
   .note b{color:var(--txt)}.note code{background:var(--bg2);padding:1px 6px;border-radius:5px;color:var(--green);font-size:.85em}
-  footer{color:var(--muted);font-size:.78rem;margin-top:26px;text-align:center;line-height:1.7}
+  footer{color:var(--muted);font-size:.78rem;margin-top:24px;text-align:center;line-height:1.7}
 </style>
 </head>
 <body data-demo="電場與電位">
@@ -41,106 +41,88 @@
   <header>
     <span class="badge">電磁・靜電學</span>
     <h1>電場與電位</h1>
-    <p>電荷會在周圍空間建立<b>電場</b>。箭頭顯示電場方向（正電荷受力方向，<b>離開正電荷、指向負電荷</b>），
-       底色的<b>色帶邊界</b>就是<b>等位面</b>（電位相同的線）。拖曳電荷觀察電場如何重組。庫侖定律 <b>F = kq₁q₂/r²</b>。</p>
+    <p>電荷在周圍空間建立<b>電場</b>。<b>白色場線</b>從正電荷出發、終止於負電荷（箭頭＝正電荷受力方向）；
+       底色<b>色帶邊界</b>就是<b>等位面</b>。拖曳電荷觀察電場重組。庫侖定律 <b>F = kq₁q₂/r²</b>。</p>
   </header>
 
+  <div class="scene-wrap">
+    <canvas id="cv" width="900" height="470"></canvas>
+    <div class="toolbar">
+      <button id="addPos">＋ 加正電荷</button>
+      <button id="addNeg">－ 加負電荷</button>
+      <button id="clear">清除</button>
+    </div>
+    <div class="sub" id="sub"></div>
+  </div>
+
   <div class="modes">
-    <button class="btn" id="addPos">＋ 加正電荷</button>
-    <button class="btn" id="addNeg">－ 加負電荷</button>
-    <button class="btn" id="clear">清除</button>
-    <span style="color:var(--muted);font-size:.8rem;margin-left:6px">情境：</span>
-    <button class="btn" data-preset="single">單一正電荷</button>
-    <button class="btn" data-preset="dipole">電偶極(+−)</button>
-    <button class="btn" data-preset="two">兩同號(++)</button>
+    <span>情境：</span>
+    <button class="pbtn" data-preset="single">單一正電荷</button>
+    <button class="pbtn" data-preset="dipole">電偶極(+−)</button>
+    <button class="pbtn" data-preset="two">兩同號(++)</button>
   </div>
 
-  <div class="stage">
-    <div class="label"><span>拖曳電荷（紅＝正，藍＝負）｜箭頭＝電場 E，色帶＝等位面</span><span id="sub"></span></div>
-    <canvas id="cv" width="900" height="500"></canvas>
-  </div>
-
-  <div class="grid" id="controls"></div>
+  <div class="bar" id="sliders"></div>
 
   <div class="note">
-    <b>物理重點：</b>單一點電荷的電場大小 <code>E = kq/r²</code>（離電荷越遠越弱，平方反比），方向沿徑向：
-    正電荷<b>向外</b>、負電荷<b>向內</b>。電位 <code>V = kq/r</code> 是純量，正電荷附近電位高（紅）、負電荷附近電位低（藍）。
-    <b>等位面</b>上各點電位相同（移動電荷不作功），且電場線<b>永遠垂直</b>等位面。把正試驗電荷放進場中，
-    它會沿電場方向受力（<code>F = qE</code>）——電偶極的場線從正電荷出發、終止於負電荷，是最重要的基本圖樣。
+    <b>物理重點：</b>單一點電荷電場大小 <code>E = kq/r²</code>（平方反比），方向沿徑向：正電荷<b>向外</b>、負電荷<b>向內</b>。
+    電位 <code>V = kq/r</code> 是純量，正電荷附近高（紅）、負電荷附近低（藍）。<b>等位面</b>上各點電位相同（移動電荷不作功），且電場線<b>永遠垂直</b>等位面。
+    電偶極的場線從正出發、終止於負，是最重要的基本圖樣。
   </div>
 
-  <footer>純前端 HTML / Canvas，無外部相依。多電荷電場與電位疊加（k=1 相對單位）。</footer>
+  <footer>純前端 HTML / Canvas（SIM 工具庫）。多電荷電場與電位疊加（k=1 相對單位）。</footer>
 </div>
 
 <script>
-const sliders=[
-  {id:'mag',name:'新增電荷量 |q|',min:1,max:8,step:1,val:4,unit:''},
-];
+const S=SIM;
 const state={mag:4};
-const ctrl=document.getElementById('controls');
-sliders.forEach(s=>{
-  const box=document.createElement('div');box.className='ctrl';
-  box.innerHTML=`<label><span>${s.name}</span><span class="val" id="v_${s.id}">${s.val}</span></label>
-    <input type="range" id="r_${s.id}" min="${s.min}" max="${s.max}" step="${s.step}" value="${s.val}">`;
-  ctrl.appendChild(box);
-  box.querySelector('input').addEventListener('input',e=>{state[s.id]=parseFloat(e.target.value);
-    document.getElementById('v_'+s.id).textContent=state[s.id];});
-});
+const sBar=document.getElementById('sliders');
+{const d=document.createElement('div');d.className='sld';
+ d.innerHTML=`<label><span>新增電荷量 |q|</span><span class="v" id="v_mag">4</span></label><input type="range" id="r_mag" min="1" max="8" step="1" value="4">`;
+ sBar.appendChild(d);d.querySelector('input').addEventListener('input',e=>{state.mag=parseFloat(e.target.value);document.getElementById('v_mag').textContent=state.mag;});}
 
 const cv=document.getElementById('cv'),cc=cv.getContext('2d');
-let charges=[{x:340,y:250,q:5},{x:560,y:250,q:-5}];
+let charges=[{x:300,y:235,q:5},{x:600,y:235,q:-5}];
 function potential(x,y){let v=0;for(const c of charges){const r=Math.hypot(x-c.x,y-c.y);v+=c.q/Math.max(r,9);}return v;}
-function field(x,y){let ex=0,ey=0;for(const c of charges){const dx=x-c.x,dy=y-c.y;const r=Math.max(Math.hypot(dx,dy),9);
-  const e=c.q/(r*r*r);ex+=e*dx;ey+=e*dy;}return {ex,ey};}
-function draw(){
-  const W=cv.width,H=cv.height;cc.clearRect(0,0,W,H);
-  // 電位色帶(等位面)
-  const cell=5;const img=cc.createImageData(W,H);
-  for(let y=0;y<H;y+=cell)for(let x=0;x<W;x+=cell){
-    const v=potential(x+cell/2,y+cell/2);const t=Math.tanh(v*0.06);
-    const band=Math.round(t*9)/9;                      // 量化成色帶 → 等位面
-    let r,g,b;
-    if(band>=0){r=20+band*150;g=16+band*20;b=30+band*10;}
-    else{r=16-band*8;g=22-band*30;b=40-band*150;}
-    for(let yy=y;yy<Math.min(y+cell,H);yy++)for(let xx=x;xx<Math.min(x+cell,W);xx++){
-      const o=(yy*W+xx)*4;img.data[o]=r;img.data[o+1]=g;img.data[o+2]=b;img.data[o+3]=255;}
-  }
+function field(x,y){let ex=0,ey=0;for(const c of charges){const dx=x-c.x,dy=y-c.y,r=Math.max(Math.hypot(dx,dy),9),e=c.q/(r*r*r);ex+=e*dx;ey+=e*dy;}return {ex,ey};}
+function fieldLine(sx,sy,sign){cc.beginPath();cc.moveTo(sx,sy);let x=sx,y=sy;
+  for(let i=0;i<420;i++){const {ex,ey}=field(x,y),m=Math.hypot(ex,ey)||1e-6;x+=sign*ex/m*3;y+=sign*ey/m*3;
+    if(x<0||x>cv.width||y<0||y>cv.height)break;let near=false;for(const c of charges)if(Math.hypot(x-c.x,y-c.y)<10){near=true;break;}cc.lineTo(x,y);if(near)break;}
+  cc.strokeStyle='rgba(220,230,255,.45)';cc.lineWidth=1.3;cc.stroke();}
+function draw(){const W=cv.width,H=cv.height;
+  // 電位熱圖(等位面)
+  const cell=5,img=cc.createImageData(W,H);
+  for(let y=0;y<H;y+=cell)for(let x=0;x<W;x+=cell){const v=potential(x+cell/2,y+cell/2),t=Math.tanh(v*0.06),band=Math.round(t*9)/9;
+    let r,g,b;if(band>=0){r=18+band*150;g=14+band*22;b=30+band*12;}else{r=14-band*8;g=20-band*30;b=44-band*150;}
+    for(let yy=y;yy<Math.min(y+cell,H);yy++)for(let xx=x;xx<Math.min(x+cell,W);xx++){const o=(yy*W+xx)*4;img.data[o]=r;img.data[o+1]=g;img.data[o+2]=b;img.data[o+3]=255;}}
   cc.putImageData(img,0,0);
-  // 電場向量
-  const gx=46,gy=46;
-  for(let y=gy/2;y<H;y+=gy)for(let x=gx/2;x<W;x+=gx){
-    const {ex,ey}=field(x,y);const m=Math.hypot(ex,ey);if(m<1e-6)continue;
-    const len=Math.min(20,6+Math.log(1+m*4000)*3);const ux=ex/m,uy=ey/m;
-    const x2=x+ux*len,y2=y+uy*len;
-    cc.strokeStyle='rgba(232,238,246,.75)';cc.lineWidth=1.4;cc.beginPath();cc.moveTo(x,y);cc.lineTo(x2,y2);cc.stroke();
-    const a=Math.atan2(uy,ux);cc.fillStyle='rgba(232,238,246,.75)';cc.beginPath();cc.moveTo(x2,y2);
-    cc.lineTo(x2-6*Math.cos(a-.4),y2-6*Math.sin(a-.4));cc.lineTo(x2-6*Math.cos(a+.4),y2-6*Math.sin(a+.4));cc.closePath();cc.fill();
-  }
-  // 電荷
-  for(const c of charges){const pos=c.q>0;cc.fillStyle=pos?'#ff5b5b':'#5b8fff';cc.strokeStyle='#fff';cc.lineWidth=2;
-    const r=10+Math.abs(c.q)*1.4;cc.beginPath();cc.arc(c.x,c.y,r,0,7);cc.fill();cc.stroke();
-    cc.fillStyle='#fff';cc.font='bold 16px sans-serif';cc.textAlign='center';cc.fillText(pos?'+':'−',c.x,c.y+6);cc.textAlign='left';}
-  document.getElementById('sub').textContent=charges.length+' 個電荷';
+  // 場線
+  for(const c of charges)if(c.q>0){const nL=Math.min(16,6+Math.abs(c.q));for(let i=0;i<nL;i++){const a=i/nL*2*Math.PI;fieldLine(c.x+Math.cos(a)*11,c.y+Math.sin(a)*11,1);}}
+  // 場向量
+  for(let y=30;y<H;y+=48)for(let x=30;x<W;x+=48){const {ex,ey}=field(x,y),m=Math.hypot(ex,ey);if(m<1e-6)continue;
+    const len=Math.min(18,6+Math.log(1+m*4000)*3),ux=ex/m,uy=ey/m,x2=x+ux*len,y2=y+uy*len;
+    cc.strokeStyle='rgba(180,200,235,.5)';cc.lineWidth=1.2;cc.beginPath();cc.moveTo(x,y);cc.lineTo(x2,y2);cc.stroke();
+    const a=Math.atan2(uy,ux);cc.fillStyle='rgba(180,200,235,.5)';cc.beginPath();cc.moveTo(x2,y2);cc.lineTo(x2-5*Math.cos(a-.4),y2-5*Math.sin(a-.4));cc.lineTo(x2-5*Math.cos(a+.4),y2-5*Math.sin(a+.4));cc.closePath();cc.fill();}
+  // 電荷(發光球)
+  for(const c of charges){const pos=c.q>0,r=11+Math.abs(c.q)*1.2;
+    cc.save();cc.globalCompositeOperation='lighter';const halo=cc.createRadialGradient(c.x,c.y,0,c.x,c.y,r*2.4);
+    halo.addColorStop(0,pos?'rgba(255,90,90,.6)':'rgba(90,140,255,.6)');halo.addColorStop(1,'rgba(0,0,0,0)');cc.fillStyle=halo;cc.beginPath();cc.arc(c.x,c.y,r*2.4,0,7);cc.fill();cc.restore();
+    const g=cc.createRadialGradient(c.x-r*.35,c.y-r*.35,r*.1,c.x,c.y,r);
+    g.addColorStop(0,pos?'#ffb0b0':'#b0c8ff');g.addColorStop(1,pos?'#c01818':'#1840c0');cc.fillStyle=g;cc.beginPath();cc.arc(c.x,c.y,r,0,7);cc.fill();
+    cc.strokeStyle='#fff';cc.lineWidth=2;cc.stroke();cc.fillStyle='#fff';cc.font='bold 16px system-ui';cc.textAlign='center';cc.fillText(pos?'+':'−',c.x,c.y+6);cc.textAlign='left';}
+  document.getElementById('sub').textContent=charges.length+' 個電荷　白線＝電場線，色帶＝等位面';
 }
-// 拖曳
 let drag=-1;
 function pos(e){const r=cv.getBoundingClientRect();return {x:(e.clientX-r.left)*cv.width/r.width,y:(e.clientY-r.top)*cv.height/r.height};}
-cv.addEventListener('pointerdown',e=>{const p=pos(e);for(let i=0;i<charges.length;i++){const c=charges[i];
-  if(Math.hypot(p.x-c.x,p.y-c.y)<18){drag=i;cv.setPointerCapture(e.pointerId);return;}}});
+cv.addEventListener('pointerdown',e=>{const p=pos(e);for(let i=0;i<charges.length;i++)if(Math.hypot(p.x-charges[i].x,p.y-charges[i].y)<18){drag=i;cv.setPointerCapture(e.pointerId);cv.style.cursor='grabbing';return;}});
 cv.addEventListener('pointermove',e=>{if(drag<0)return;const p=pos(e);charges[drag].x=p.x;charges[drag].y=p.y;draw();});
-window.addEventListener('pointerup',()=>{drag=-1;});
-document.getElementById('addPos').onclick=()=>{charges.push({x:450,y:250,q:state.mag});draw();};
-document.getElementById('addNeg').onclick=()=>{charges.push({x:450,y:250,q:-state.mag});draw();};
+window.addEventListener('pointerup',()=>{drag=-1;cv.style.cursor='grab';});
+document.getElementById('addPos').onclick=()=>{charges.push({x:450,y:235,q:state.mag});draw();};
+document.getElementById('addNeg').onclick=()=>{charges.push({x:450,y:235,q:-state.mag});draw();};
 document.getElementById('clear').onclick=()=>{charges=[];draw();};
-const PRE={
-  single:[{x:450,y:250,q:6}],
-  dipole:[{x:340,y:250,q:5},{x:560,y:250,q:-5}],
-  two:[{x:340,y:250,q:5},{x:560,y:250,q:5}],
-};
-document.querySelectorAll('[data-preset]').forEach(b=>b.onclick=()=>{const p=PRE[b.dataset.preset];if(!p)return;
-  charges=p.map(c=>({...c}));draw();});
-draw();
-window.addEventListener('resize',draw);
+const PRE={single:[{x:450,y:235,q:6}],dipole:[{x:300,y:235,q:5},{x:600,y:235,q:-5}],two:[{x:300,y:235,q:5},{x:600,y:235,q:5}]};
+document.querySelectorAll('[data-preset]').forEach(b=>b.onclick=()=>{const p=PRE[b.dataset.preset];if(!p)return;charges=p.map(c=>({...c}));draw();});
+window.addEventListener('load',()=>{draw();});
 </script>
 </body>
 </html>
