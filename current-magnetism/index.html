@@ -1,0 +1,236 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>電流的磁效應 ｜ 安培右手定則・直導線/線圈/螺線管・B=μ₀I/2πr</title>
+<meta name="description" content="電流的磁效應互動模擬：直導線周圍的同心圓磁場 B=μ₀I/2πr、圓線圈中心 B=μ₀I/2R、螺線管內部均勻磁場 B=μ₀nI，配合安培右手定則與可拖曳磁場探針。">
+<link rel="icon" href="../assets/favicon.svg" type="image/svg+xml">
+<link rel="stylesheet" href="../assets/site.css">
+<script src="../assets/sim.js"></script>
+<script defer src="../assets/nav.js"></script>
+<style>
+  *{box-sizing:border-box}
+  html,body{margin:0;padding:0;background:var(--bg);color:var(--txt);font-family:"Noto Sans TC","PingFang TC","Microsoft JhengHei",system-ui,sans-serif}
+  a{color:var(--accent)}
+  .wrap{max-width:1120px;margin:0 auto;padding:18px 16px 60px}
+  header h1{font-size:1.5rem;margin:.2em 0}
+  header p{color:var(--muted);margin:.2em 0 1em;line-height:1.6}
+  .badge{display:inline-block;background:var(--panel2);border:1px solid var(--line);color:var(--muted);font-size:.72rem;padding:2px 8px;border-radius:99px;margin-right:6px}
+  .scene-wrap{position:relative;border-radius:16px;overflow:hidden;border:1px solid var(--line);box-shadow:0 18px 50px rgba(0,0,0,.45)}
+  #scene{display:block;width:100%;touch-action:none;cursor:crosshair}
+  .toolbar{position:absolute;top:12px;left:12px;display:flex;gap:7px;flex-wrap:wrap}
+  .toolbar button{background:rgba(8,10,24,.6);backdrop-filter:blur(6px);color:#dce6ff;border:1px solid rgba(160,180,255,.2);border-radius:9px;padding:7px 11px;font-size:.82rem;cursor:pointer;font-family:inherit}
+  .toolbar button.on{background:var(--accent);color:#04121c;border-color:var(--accent);font-weight:700}
+  .sub{position:absolute;bottom:12px;left:12px;background:rgba(8,10,24,.6);border:1px solid rgba(160,180,255,.18);border-radius:10px;padding:6px 11px;color:#dce6ff;font-size:.82rem}
+  .modes{display:flex;gap:7px;flex-wrap:wrap;align-items:center;margin-top:14px}
+  .modes span{color:var(--muted);font-size:.8rem}
+  .pbtn{background:var(--panel2);color:var(--txt);border:1px solid var(--line);padding:7px 12px;border-radius:9px;cursor:pointer;font-size:.83rem;font-family:inherit}
+  .pbtn:hover{border-color:var(--accent)}
+  .pbtn.on{background:var(--accent);color:#04121c;border-color:var(--accent);font-weight:700}
+  .bar{display:flex;gap:14px;flex-wrap:wrap;align-items:flex-end;background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:14px 16px;margin-top:14px}
+  .sld{flex:1;min-width:160px}
+  .sld label{display:flex;justify-content:space-between;font-size:.82rem;color:var(--muted);margin-bottom:5px}
+  .sld label .v{color:var(--accent);font-variant-numeric:tabular-nums;font-weight:700}
+  .sld input{width:100%;accent-color:var(--accent)}
+  .note{background:var(--panel);border-left:3px solid var(--accent2);border-radius:8px;padding:12px 14px;color:var(--muted);font-size:.86rem;line-height:1.7;margin-top:14px}
+  .note b{color:var(--txt)}.note code{background:var(--bg2);padding:1px 6px;border-radius:5px;color:var(--green);font-size:.85em}
+  footer{color:var(--muted);font-size:.78rem;margin-top:24px;text-align:center;line-height:1.7}
+</style>
+</head>
+<body data-demo="電流的磁效應">
+<div class="wrap">
+  <header>
+    <span class="badge">電磁・電流磁效應</span>
+    <h1>電流的磁效應（安培右手定則）</h1>
+    <p>電流會在周圍產生<b>磁場</b>。<b>直導線</b>外磁場成<b>同心圓</b> <b>B = μ₀I/2πr</b>（右手握住導線、拇指指電流、四指繞磁場）；
+       <b>圓線圈</b>中心 <b>B = μ₀I/2R</b>；<b>螺線管</b>內部接近<b>均勻</b> <b>B = μ₀nI</b>，像條形磁鐵。拖曳探針量任一點磁場。</p>
+  </header>
+
+  <div class="scene-wrap">
+    <canvas id="scene"></canvas>
+    <div class="toolbar">
+      <button id="mWire" class="on">直導線</button>
+      <button id="mLoop">圓線圈</button>
+      <button id="mSol">螺線管</button>
+      <button id="mDir">電流方向 ⊙出頁</button>
+    </div>
+    <div class="sub" id="sub"></div>
+  </div>
+
+  <div class="modes">
+    <span>提示：</span>
+    <button class="pbtn" id="hintRH">右手定則：握導線、拇指＝電流、四指＝磁場方向</button>
+  </div>
+
+  <div class="bar" id="sliders"></div>
+
+  <div class="formula" id="formula"></div>
+
+  <div class="note">
+    <b>物理重點：</b>電流生磁（厄斯特發現）。<b>直導線</b>：磁場繞導線成同心圓、<code>B = μ₀I/(2πr)</code>，離導線越遠越弱（∝1/r）。
+    <b>圓線圈</b>：把直導線彎成圈，中心磁場 <code>B = μ₀I/(2R)</code>。<b>螺線管</b>：許多圈疊起來，內部磁場近乎均勻 <code>B = μ₀nI</code>（n＝每公尺匝數），外形如條形磁鐵（一端 N、一端 S）。μ₀=4π×10⁻⁷ T·m/A。<b>右手定則</b>判方向：直導線握住、拇指順電流則四指繞向即磁場；線圈/螺線管四指順電流則拇指指向內部 N 極。
+  </div>
+
+  <footer>純前端 HTML / Canvas（SIM 工具庫）。磁場大小依安培定律精確計算；線圈／螺線管的場線形狀為示意。</footer>
+</div>
+
+<script>
+const S=SIM, MU0=4*Math.PI*1e-7;
+let mode='wire', dir=1;   // dir: +1 出頁(⊙), -1 入頁(⊗)
+const sliders=[
+  {id:'I',name:'電流 I',min:1,max:10,step:.5,val:5,unit:'A'},
+  {id:'d',name:'距離 r／線圈半徑 R',min:2,max:12,step:.5,val:5,unit:'cm'},
+  {id:'n',name:'螺線管匝密度 n',min:200,max:2000,step:100,val:1000,unit:'匝/m'},
+];
+const state={};
+const sBar=document.getElementById('sliders');
+sliders.forEach(s=>{ state[s.id]=s.val;
+  const d=document.createElement('div');d.className='sld';
+  d.innerHTML=`<label><span>${s.name}</span><span class="v" id="v_${s.id}">${fmt(s.val)} ${s.unit}</span></label>
+    <input type="range" id="r_${s.id}" min="${s.min}" max="${s.max}" step="${s.step}" value="${s.val}">`;
+  sBar.appendChild(d);
+  d.querySelector('input').addEventListener('input',e=>{state[s.id]=parseFloat(e.target.value);
+    document.getElementById('v_'+s.id).textContent=`${fmt(state[s.id])} ${s.unit}`; refresh(); });
+});
+function fmt(x){return (Math.round(x*100)/100).toString();}
+function Bfmt(T){const a=Math.abs(T); if(a>=1e-3)return (T*1e3).toFixed(2)+' mT'; return (T*1e6).toFixed(1)+' μT';}
+
+// ---- 磁場大小 ----
+function Bwire(r_m){return MU0*state.I/(2*Math.PI*Math.max(r_m,1e-4));}
+function Bloop(){return MU0*state.I/(2*(state.d/100));}
+function Bsol(){return MU0*state.n*state.I;}
+
+// ---- 公式面板 ----
+function frow(n,sym,sub,val){return `<div class="frow"><span class="fname">${n}</span><span class="fsym">${sym}</span><span class="fsub">= ${sub}</span><span class="fval">${val}</span></div>`;}
+function updateFormula(){const I=state.I;let html=`<h4>📐 計算公式（即時代入　μ₀=4π×10⁻⁷ T·m/A）</h4>`;
+  if(mode==='wire'){const r=state.d/100;
+    html+=frow('直導線磁場 B','μ₀I / (2πr)',`(4π×10⁻⁷·${I}) / (2π·${state.d}cm)`, Bfmt(Bwire(r)))
+      + `<div class="frel">📈 <b>B ∝ I</b>：電流加倍 → 磁場加倍　·　<b>B ∝ 1/r</b>：距離加倍 → 磁場減半（同心圓越外圈越疏）　·　方向用右手定則：拇指順電流、四指繞向即磁場。</div>`;
+  }else if(mode==='loop'){const R=state.d/100;
+    html+=frow('圓線圈中心 B','μ₀I / (2R)',`(4π×10⁻⁷·${I}) / (2·${state.d}cm)`, Bfmt(Bloop()))
+      + frow('比直導線強','×π（同 I、同 r=R）','μ₀I/2R ÷ μ₀I/2πR = π', '約 3.14 倍')
+      + `<div class="frel">📈 <b>B ∝ I</b>、<b>B ∝ 1/R</b>：線圈越小中心磁場越強　·　彎成圈使各段電流的磁場在中心同向疊加，比同距離的直導線強 π 倍　·　四指順電流 → 拇指指線圈軸的 N 極。</div>`;
+  }else{
+    html+=frow('螺線管內部 B','μ₀ n I',`4π×10⁻⁷·${state.n}·${I}`, Bfmt(Bsol()))
+      + frow('每公尺匝數 n','n = 總匝數 / 長度',`${state.n}`, state.n+' 匝/m')
+      + `<div class="frel">📈 <b>B ∝ n·I</b>：匝密度或電流加倍 → 磁場加倍，且<b>與半徑無關</b>　·　內部磁場近乎<b>均勻</b>（像條形磁鐵）　·　插入鐵芯（μ_r 大）可再放大數百倍 → 電磁鐵。</div>`;
+  }
+  document.getElementById('formula').innerHTML=html;
+}
+
+// ---- 視圖 ----
+let sc, probe={r:5}, drag=false;
+const FIELD={skyTop:'#0c1430',skyBottom:'#060a18',vignette:'rgba(0,0,0,.55)'};
+function setupCanvases(){sc=S.fit(document.getElementById('scene'),1.7);}
+function cross(x,y,r,col){sc.strokeStyle=col;sc.lineWidth=2;sc.beginPath();sc.arc(x,y,r,0,7);sc.stroke();
+  sc.beginPath();sc.moveTo(x-r*0.7,y-r*0.7);sc.lineTo(x+r*0.7,y+r*0.7);sc.moveTo(x+r*0.7,y-r*0.7);sc.lineTo(x-r*0.7,y+r*0.7);sc.stroke();}
+function dot(x,y,r,col){sc.strokeStyle=col;sc.lineWidth=2;sc.beginPath();sc.arc(x,y,r,0,7);sc.stroke();sc.fillStyle=col;sc.beginPath();sc.arc(x,y,r*0.32,0,7);sc.fill();}
+function arrowAt(x,y,ang,len,col,w){const ex=x+Math.cos(ang)*len,ey=y+Math.sin(ang)*len;
+  sc.strokeStyle=col;sc.lineWidth=w||2;sc.beginPath();sc.moveTo(x,y);sc.lineTo(ex,ey);sc.stroke();
+  sc.fillStyle=col;sc.beginPath();sc.moveTo(ex,ey);sc.lineTo(ex-Math.cos(ang-0.4)*7,ey-Math.sin(ang-0.4)*7);sc.lineTo(ex-Math.cos(ang+0.4)*7,ey-Math.sin(ang+0.4)*7);sc.closePath();sc.fill();}
+const PXPCM=()=>Math.min(sc._w,sc._h)*0.034;  // 像素/cm
+
+function draw(){const W=sc._w,H=sc._h,cx=W/2,cy=H/2;
+  S.scene(sc,FIELD,{});
+  if(mode==='wire')drawWire(cx,cy);
+  else if(mode==='loop')drawLoop(cx,cy);
+  else drawSol(cx,cy);
+}
+function drawWire(cx,cy){const ppc=PXPCM();
+  // 同心圓磁場
+  for(let rcm=2;rcm<=12;rcm+=2){const rp=rcm*ppc;if(rp>Math.min(sc._w,sc._h)*0.46)break;
+    const al=0.16+0.5*(2/rcm);
+    sc.strokeStyle=`rgba(108,176,255,${al})`;sc.lineWidth=1.4;sc.beginPath();sc.arc(cx,cy,rp,0,7);sc.stroke();
+    // 方向箭頭(右手定則：出頁⊙→逆時針)
+    const dirSign=dir>0?1:-1;
+    for(let k=0;k<4;k++){const a=k*Math.PI/2+0.4;const px=cx+Math.cos(a)*rp,py=cy+Math.sin(a)*rp;
+      const tang=a+dirSign*Math.PI/2; arrowAt(px,py,tang,9,`rgba(140,195,255,${al+0.2})`,1.6);}
+  }
+  // 導線(中心，垂直紙面)
+  if(dir>0)dot(cx,cy,11,'#ffce54'); else cross(cx,cy,11,'#ffce54');
+  sc.fillStyle='#ffce54';sc.font='12px system-ui';sc.fillText(dir>0?'I 出頁':'I 入頁',cx+16,cy-12);
+  // 探針
+  const rp=state.d*ppc, ang=-0.6, px=cx+Math.cos(ang)*rp, py=cy+Math.sin(ang)*rp;
+  sc.strokeStyle='rgba(255,255,255,.3)';sc.setLineDash([3,3]);sc.lineWidth=1;sc.beginPath();sc.moveTo(cx,cy);sc.lineTo(px,py);sc.stroke();sc.setLineDash([]);
+  const dirSign=dir>0?1:-1, tang=ang+dirSign*Math.PI/2;
+  const B=Bwire(state.d/100), blen=10+Math.min(34,B*1e6*1.4);
+  arrowAt(px,py,tang,blen,'#7CFFB2',3);
+  sc.fillStyle='#fff';sc.beginPath();sc.arc(px,py,4,0,7);sc.fill();
+  sc.fillStyle='#7CFFB2';sc.font='bold 12px system-ui';sc.fillText('B='+Bfmt(B),px+8,py-8);
+  sc.fillStyle='rgba(255,255,255,.7)';sc.fillText('探針 r='+state.d+'cm（可拖曳）',px+8,py+10);
+  document.getElementById('sub').textContent='直導線：磁場成同心圓，B=μ₀I/2πr，離導線越遠越弱';
+}
+function drawLoop(cx,cy){const ppc=PXPCM(),Rp=Math.min(state.d*ppc,Math.min(sc._w,sc._h)*0.34);
+  // 線圈兩截面(上⊙下⊗，電流繞行)，dir 控制方向
+  const top=dir>0, ty=cy-Rp, by=cy+Rp;
+  // 偶極場線
+  sc.strokeStyle='rgba(108,176,255,.5)';sc.lineWidth=1.5;
+  for(const s of [0.3,0.6,1.0,1.5]){sc.beginPath();
+    for(let t=-1;t<=1;t+=0.05){const yy=cy+t*Rp*1.0; const bulge=Rp*s*(1-t*t);
+      const xx=cx+(dir>0?1:-1)*( (Math.abs(t)<1?bulge:0) ); // 內部往一側
+      if(t===-1)sc.moveTo(cx+ (dir>0?1:-1)*Rp*s*0,yy); }
+    sc.stroke();}
+  // 簡化：畫穿過線圈的軸向場線(內部直、外部弧回)
+  sc.strokeStyle='rgba(124,180,255,.55)';sc.lineWidth=1.6;
+  for(const off of [-0.55,-0.25,0,0.25,0.55]){const y=cy+off*Rp;
+    sc.beginPath();sc.moveTo(cx-Rp*1.9,y);
+    sc.bezierCurveTo(cx-Rp*0.6,y,cx-Rp*0.2,cy+off*Rp*0.3,cx,cy+off*Rp*0.3);
+    sc.bezierCurveTo(cx+Rp*0.2,cy+off*Rp*0.3,cx+Rp*0.6,y,cx+Rp*1.9,y);sc.stroke();
+    const ax=cx+ (dir>0?1:-1)*Rp*0.5; arrowAt(ax,cy+off*Rp*0.3,dir>0?0:Math.PI,1,'rgba(150,200,255,.8)',1.5);}
+  // 線圈截面
+  if(top){dot(cx,ty,12,'#ffce54');cross(cx,by,12,'#ffce54');}else{cross(cx,ty,12,'#ffce54');dot(cx,by,12,'#ffce54');}
+  sc.strokeStyle='#c9d6ea';sc.lineWidth=3;sc.beginPath();sc.ellipse(cx,cy,Rp*0.36,Rp,0,0,7);sc.stroke();
+  // 中心 B
+  sc.fillStyle='#7CFFB2';sc.font='bold 12px system-ui';sc.fillText('中心 B='+Bfmt(Bloop()),cx-30,cy-Rp-12);
+  sc.fillStyle=dir>0?'#ff6b9d':'#6cd0ff';sc.font='12px system-ui';
+  sc.fillText(dir>0?'N→':'←N',cx+Rp*0.5,cy-4);
+  document.getElementById('sub').textContent='圓線圈：中心磁場 B=μ₀I/2R，兩端如磁鐵 N/S 極';
+}
+function drawSol(cx,cy){const W=sc._w,H=sc._h, len=Math.min(W*0.66,360), rr=Math.min(H*0.26,80);
+  const x0=cx-len/2,x1=cx+len/2, ty=cy-rr, by=cy+rr;
+  // 內部均勻場(水平箭頭)
+  const into=dir>0; // dir>0: 內部場向右
+  sc.strokeStyle='rgba(124,255,178,.5)';
+  for(let yy=ty+14;yy<by;yy+=18){arrowAt(into?x0+10:x1-10,yy,into?0:Math.PI,len-20,'rgba(124,200,255,.55)',1.6);}
+  // 外部回繞場線
+  sc.strokeStyle='rgba(108,176,255,.4)';sc.lineWidth=1.4;
+  for(const s of [1.25,1.6]){sc.beginPath();sc.moveTo(into?x1:x0,cy);
+    sc.bezierCurveTo(cx+(into?1:-1)*len*0.5,cy-rr*s*2,cx-(into?1:-1)*len*0.5,cy-rr*s*2,into?x0:x1,cy);sc.stroke();
+    sc.beginPath();sc.moveTo(into?x1:x0,cy);
+    sc.bezierCurveTo(cx+(into?1:-1)*len*0.5,cy+rr*s*2,cx-(into?1:-1)*len*0.5,cy+rr*s*2,into?x0:x1,cy);sc.stroke();}
+  // 線圈截面(上排⊙下排⊗ 或相反)
+  const N=Math.min(9,Math.round(len/40));
+  for(let i=0;i<N;i++){const x=x0+ (i+0.5)*len/N;
+    if(into){dot(x,ty,9,'#ffce54');cross(x,by,9,'#ffce54');}else{cross(x,ty,9,'#ffce54');dot(x,by,9,'#ffce54');}}
+  // 外殼
+  sc.strokeStyle='rgba(180,200,235,.35)';sc.lineWidth=1.5;sc.strokeRect(x0,ty,len,2*rr);
+  // 極性
+  sc.fillStyle='#ff6b9d';sc.font='bold 16px system-ui';sc.fillText('N',(into?x1+6:x0-22),cy+5);
+  sc.fillStyle='#6cd0ff';sc.fillText('S',(into?x0-22:x1+6),cy+5);
+  sc.fillStyle='#7CFFB2';sc.font='bold 12px system-ui';sc.fillText('內部 B='+Bfmt(Bsol())+'（均勻）',cx-50,ty-12);
+  document.getElementById('sub').textContent='螺線管：內部均勻 B=μ₀nI，外形如條形磁鐵';
+}
+
+function refresh(){updateFormula();draw();}
+// 探針拖曳(僅直導線)
+const cvEl=document.getElementById('scene');
+function pos(e){const r=cvEl.getBoundingClientRect();return {x:(e.clientX-r.left)*cvEl.width/r.width/sc._dpr,y:(e.clientY-r.top)*cvEl.height/r.height/sc._dpr};}
+cvEl.addEventListener('pointerdown',e=>{if(mode!=='wire')return;drag=true;cvEl.setPointerCapture(e.pointerId);movP(e);});
+cvEl.addEventListener('pointermove',e=>{if(drag)movP(e);});
+window.addEventListener('pointerup',()=>{drag=false;});
+function movP(e){const p=pos(e),cx=sc._w/2,cy=sc._h/2,ppc=PXPCM();
+  const r=Math.hypot(p.x-cx,p.y-cy)/ppc; setSlider('d',Math.max(2,Math.min(12,Math.round(r*2)/2)));refresh();}
+
+function setMode(m){mode=m;['mWire','mLoop','mSol'].forEach(id=>document.getElementById(id).classList.remove('on'));
+  document.getElementById({wire:'mWire',loop:'mLoop',sol:'mSol'}[m]).classList.add('on');refresh();}
+document.getElementById('mWire').onclick=()=>setMode('wire');
+document.getElementById('mLoop').onclick=()=>setMode('loop');
+document.getElementById('mSol').onclick=()=>setMode('sol');
+document.getElementById('mDir').onclick=function(){dir*=-1;this.textContent='電流方向 '+(dir>0?'⊙出頁':'⊗入頁');refresh();};
+
+window.addEventListener('load',()=>{setupCanvases();refresh();});
+window.addEventListener('resize',()=>{setupCanvases();draw();});
+</script>
+</body>
+</html>
