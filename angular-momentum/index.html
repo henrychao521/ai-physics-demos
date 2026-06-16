@@ -1,0 +1,162 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>角動量守恆 ｜ 溜冰者收手加速・L=Iω・I=I₀+2mr²</title>
+<meta name="description" content="角動量守恆互動模擬：旋轉平台上把配重往內收，轉動慣量 I 變小、角速度 ω 變大（L=Iω 守恆）。收手做功使轉動動能 KE=½Iω² 增加。溜冰者旋轉加速的原理。">
+<link rel="icon" href="../assets/favicon.svg" type="image/svg+xml">
+<link rel="stylesheet" href="../assets/site.css">
+<script src="../assets/sim.js"></script>
+<script defer src="../assets/nav.js"></script>
+<style>
+  *{box-sizing:border-box}
+  html,body{margin:0;padding:0;background:var(--bg);color:var(--txt);font-family:"Noto Sans TC","PingFang TC","Microsoft JhengHei",system-ui,sans-serif}
+  a{color:var(--accent)}
+  .wrap{max-width:1120px;margin:0 auto;padding:18px 16px 60px}
+  header h1{font-size:1.5rem;margin:.2em 0}
+  header p{color:var(--muted);margin:.2em 0 1em;line-height:1.6}
+  .badge{display:inline-block;background:var(--panel2);border:1px solid var(--line);color:var(--muted);font-size:.72rem;padding:2px 8px;border-radius:99px;margin-right:6px}
+  .scene-wrap{position:relative;border-radius:16px;overflow:hidden;border:1px solid var(--line);box-shadow:0 18px 50px rgba(0,0,0,.45)}
+  #scene{display:block;width:100%}
+  .hud{position:absolute;top:12px;left:12px;display:flex;gap:8px;flex-wrap:wrap;pointer-events:none}
+  .chip{background:rgba(10,16,24,.62);backdrop-filter:blur(6px);border:1px solid rgba(120,180,255,.16);border-radius:10px;padding:6px 11px;color:#dceaff;font-size:.8rem;line-height:1.25}
+  .chip b{display:block;font-size:1.02rem;font-variant-numeric:tabular-nums;color:#fff}
+  .chip.cyan b{color:#6cd0ff}.chip.amber b{color:#ffce54}.chip.green b{color:#7CFFB2}
+  .toolbar{position:absolute;bottom:12px;right:12px;display:flex;gap:7px;flex-wrap:wrap;justify-content:flex-end}
+  .toolbar button{background:rgba(10,16,24,.62);backdrop-filter:blur(6px);color:#dceaff;border:1px solid rgba(120,180,255,.2);border-radius:9px;padding:7px 11px;font-size:.82rem;cursor:pointer;font-family:inherit}
+  .toolbar button.on{background:var(--accent);color:#04121c;border-color:var(--accent);font-weight:700}
+  @media(max-width:560px){.toolbar{position:static;justify-content:center;padding:8px 10px;background:rgba(8,14,22,.5);border-top:1px solid var(--line)}}
+  .bar{display:flex;gap:14px;flex-wrap:wrap;align-items:flex-end;background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:14px 16px;margin-top:14px}
+  .sld{flex:1;min-width:160px}
+  .sld label{display:flex;justify-content:space-between;font-size:.82rem;color:var(--muted);margin-bottom:5px}
+  .sld label .v{color:var(--accent);font-variant-numeric:tabular-nums;font-weight:700}
+  .sld input{width:100%;accent-color:var(--accent)}
+  .presets{display:flex;gap:7px;flex-wrap:wrap;align-items:center;margin-top:12px}
+  .presets span{color:var(--muted);font-size:.8rem}
+  .pbtn{background:var(--panel2);color:var(--txt);border:1px solid var(--line);padding:7px 12px;border-radius:9px;cursor:pointer;font-size:.83rem;font-family:inherit}
+  .pbtn:hover{border-color:var(--accent)}
+  .note{background:var(--panel);border-left:3px solid var(--accent2);border-radius:8px;padding:12px 14px;color:var(--muted);font-size:.86rem;line-height:1.7;margin-top:14px}
+  .note b{color:var(--txt)}.note code{background:var(--bg2);padding:1px 6px;border-radius:5px;color:var(--green);font-size:.85em}
+  footer{color:var(--muted);font-size:.78rem;margin-top:24px;text-align:center;line-height:1.7}
+</style>
+</head>
+<body data-demo="角動量守恆">
+<div class="wrap">
+  <header>
+    <span class="badge">力學・轉動與角動量</span>
+    <h1>角動量守恆（溜冰者效應）</h1>
+    <p>沒有外力矩時<b>角動量 L = Iω 守恆</b>。把配重往<b>內收</b>，轉動慣量 <b>I = I₀ + 2mr²</b> 變小，角速度 <b>ω = L/I</b> 就變大——
+       溜冰者收手轉得更快。注意此時<b>轉動動能 KE = ½Iω² 反而增加</b>，多出的能量來自你「收手」做的功。</p>
+  </header>
+
+  <div class="scene-wrap">
+    <canvas id="scene"></canvas>
+    <div class="hud" id="hud"></div>
+    <div class="toolbar"><button id="spin" class="on">⏸ 暫停旋轉</button></div>
+  </div>
+
+  <div class="bar" id="sliders"></div>
+  <div class="presets">
+    <span>情境：</span>
+    <button class="pbtn" data-preset="out">張開手臂（慢）</button>
+    <button class="pbtn" data-preset="in">收回手臂（快）</button>
+    <button class="pbtn" data-preset="heavy">重配重</button>
+  </div>
+
+  <div class="formula" id="formula"></div>
+
+  <div class="note">
+    <b>物理重點：</b>角動量 <code>L = Iω</code>，轉動慣量 <code>I = I₀ + 2mr²</code>（配重離軸越遠 I 越大）。系統不受外力矩時 <b>L 守恆</b>，
+    所以收手（r↓）→ I↓ → <code>ω = L/I</code> ↑，轉得更快。但 <b>轉動動能 KE = ½Iω² = L²/(2I)</b>：I 變小時 KE 反而<b>變大</b>，
+    這些能量是你<b>克服離心傾向把配重拉向中心所做的功</b>（不是能量憑空出現）。星球塌縮加速自轉、跳水team收身翻轉，都是同一原理。
+  </div>
+
+  <footer>純前端 HTML / Canvas（SIM 工具庫）。配重視為點質量；忽略摩擦，角動量嚴格守恆。</footer>
+</div>
+
+<script>
+const S=SIM, I0=1.5;   // 平台/身體本身的轉動慣量 (kg·m²)
+const sliders=[
+  {id:'L',name:'角動量 L（守恆量）',min:8,max:40,step:1,val:20,unit:'kg·m²/s'},
+  {id:'r',name:'配重離軸距離 r',min:.2,max:1.2,step:.05,val:1.0,unit:'m'},
+  {id:'m',name:'配重質量 m（×2）',min:1,max:6,step:.5,val:3,unit:'kg'},
+];
+const state={};
+const sBar=document.getElementById('sliders');
+sliders.forEach(s=>{ state[s.id]=s.val;
+  const d=document.createElement('div');d.className='sld';
+  d.innerHTML=`<label><span>${s.name}</span><span class="v" id="v_${s.id}">${fmt(s.val)} ${s.unit}</span></label>
+    <input type="range" id="r_${s.id}" min="${s.min}" max="${s.max}" step="${s.step}" value="${s.val}">`;
+  sBar.appendChild(d);
+  d.querySelector('input').addEventListener('input',e=>{state[s.id]=parseFloat(e.target.value);
+    document.getElementById('v_'+s.id).textContent=`${fmt(state[s.id])} ${s.unit}`; recompute(); });
+});
+function fmt(x){return (Math.round(x*100)/100).toString();}
+function setSlider(id,val){state[id]=val;const r=document.getElementById('r_'+id);if(r)r.value=val;
+  const s=sliders.find(z=>z.id===id);if(s)document.getElementById('v_'+id).textContent=`${fmt(val)} ${s.unit}`;}
+
+// ---- 物理 ----
+function I(){return I0+2*state.m*state.r*state.r;}
+function omega(){return state.L/I();}
+function KE(){return 0.5*I()*omega()*omega();}
+function recompute(){updateFormula();updateHud();}
+
+// ---- 公式面板 ----
+function frow(n,sym,sub,val){return `<div class="frow"><span class="fname">${n}</span><span class="fsym">${sym}</span><span class="fsub">= ${sub}</span><span class="fval">${val}</span></div>`;}
+function updateFormula(){const i=I(),w=omega(),ke=KE();
+  document.getElementById('formula').innerHTML=
+    `<h4>📐 計算公式（即時代入　角動量守恆，平台 I₀=1.5）</h4>`
+    + frow('轉動慣量 I','I₀ + 2·m·r²',`1.5 + 2·${state.m}·${state.r}²`, i.toFixed(2)+' kg·m²')
+    + frow('角速度 ω','L / I',`${state.L} / ${i.toFixed(2)}`, w.toFixed(2)+' rad/s')
+    + frow('每秒轉數','ω / 2π',`${w.toFixed(2)} / 2π`, (w/(2*Math.PI)).toFixed(2)+' 轉/秒')
+    + frow('轉動動能 KE','½·I·ω² = L²/(2I)',`${state.L}² / (2·${i.toFixed(2)})`, ke.toFixed(1)+' J')
+    + `<div class="frel">📈 <b>L=Iω 守恆</b>：收手 r↓ → I↓ → ω↑（轉更快）　·　<b>KE=L²/(2I)：I 變小 KE 反而變大</b>，能量來自收手做的功(對抗離心)　·　ω ∝ 1/I：I 減半 → ω 加倍。</div>`;
+}
+function updateHud(){
+  document.getElementById('hud').innerHTML=
+   `<div class="chip green">角動量 L<b>${state.L} (守恆)</b></div>`+
+   `<div class="chip cyan">轉動慣量 I<b>${I().toFixed(2)}</b></div>`+
+   `<div class="chip amber">角速度 ω<b>${omega().toFixed(2)} rad/s</b></div>`;
+}
+
+// ---- 視圖 ----
+let sc, ang=0, spinning=true;
+const RINK={skyTop:'#0e1828',skyBottom:'#070d18',vignette:'rgba(0,0,0,.45)'};
+function setupCanvases(){sc=S.fit(document.getElementById('scene'),1.7);}
+function draw(){const W=sc._w,H=sc._h,cx=W/2,cy=H/2;
+  S.scene(sc,RINK,{});
+  const Rmax=Math.min(W,H)*0.4, rpx=Rmax*(state.r/1.2);
+  // 平台圓盤
+  const g=sc.createRadialGradient(cx-10,cy-10,4,cx,cy,Rmax);g.addColorStop(0,'#2a3850');g.addColorStop(1,'#141d2e');
+  sc.fillStyle=g;sc.beginPath();sc.arc(cx,cy,Rmax,0,7);sc.fill();sc.strokeStyle='#3a4a66';sc.lineWidth=2;sc.stroke();
+  // 旋轉刻度(看轉速)
+  sc.strokeStyle='rgba(124,200,255,.35)';sc.lineWidth=2;
+  for(let k=0;k<8;k++){const a=ang+k*Math.PI/4;sc.beginPath();sc.moveTo(cx+Math.cos(a)*Rmax*0.82,cy+Math.sin(a)*Rmax*0.82);sc.lineTo(cx+Math.cos(a)*Rmax*0.96,cy+Math.sin(a)*Rmax*0.96);sc.stroke();}
+  // 手臂 + 配重(沿 ang 兩側)
+  for(const sgn of [1,-1]){const ax=cx+Math.cos(ang)*rpx*sgn, ay=cy+Math.sin(ang)*rpx*sgn;
+    sc.strokeStyle='#9aa6c0';sc.lineWidth=5;sc.beginPath();sc.moveTo(cx,cy);sc.lineTo(ax,ay);sc.stroke();
+    S.sphere(sc,ax,ay,8+state.m*2.2,[230,140,70]);}
+  // 中心身體
+  S.sphere(sc,cx,cy,16,[108,160,230]);
+  // ω 旋轉箭頭
+  sc.strokeStyle='#6cd0ff';sc.lineWidth=2.5;sc.beginPath();sc.arc(cx,cy,Rmax*1.08,ang,ang+1.2);sc.stroke();
+  const ea=ang+1.2,ex=cx+Math.cos(ea)*Rmax*1.08,ey=cy+Math.sin(ea)*Rmax*1.08;
+  sc.fillStyle='#6cd0ff';sc.beginPath();sc.moveTo(ex,ey);sc.lineTo(ex-Math.cos(ea-0.5)*9,ey-Math.sin(ea-0.5)*9);sc.lineTo(ex-Math.cos(ea+0.3)*9,ey-Math.sin(ea+0.3)*9);sc.closePath();sc.fill();
+  sc.fillStyle='#6cd0ff';sc.font='12px system-ui';sc.fillText('ω',ex+6,ey);
+  updateHud();
+}
+let last=0;
+function loop(ts){const dt=last?Math.min((ts-last)/1000,0.05):0;last=ts;if(spinning)ang+=omega()*dt;draw();requestAnimationFrame(loop);}
+
+const sb=document.getElementById('spin');
+sb.onclick=()=>{spinning=!spinning;sb.classList.toggle('on',spinning);sb.textContent=spinning?'⏸ 暫停旋轉':'▶ 旋轉';};
+const PRE={out:{L:20,r:1.2,m:3},in:{L:20,r:0.3,m:3},heavy:{L:28,r:0.8,m:6}};
+document.querySelectorAll('[data-preset]').forEach(b=>b.onclick=()=>{const pr=PRE[b.dataset.preset];if(!pr)return;
+  ['L','r','m'].forEach(k=>setSlider(k,pr[k]));recompute();});
+
+window.addEventListener('load',()=>{setupCanvases();recompute();requestAnimationFrame(loop);});
+window.addEventListener('resize',()=>{setupCanvases();draw();});
+</script>
+</body>
+</html>
