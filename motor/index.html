@@ -1,0 +1,194 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>直流馬達 ｜ 電流線圈受力矩・F=BIL・τ=NBIA・換向器</title>
+<meta name="description" content="直流馬達互動模擬：通電線圈在磁場中，兩側導線受方向相反的力 F=BIL 形成力矩 τ=NBIA·sinθ 使線圈轉動，換向器每半圈反向電流維持同向旋轉。電能轉動能的原理。">
+<link rel="icon" href="../assets/favicon.svg" type="image/svg+xml">
+<link rel="stylesheet" href="../assets/site.css">
+<script src="../assets/sim.js"></script>
+<script defer src="../assets/nav.js"></script>
+<style>
+  *{box-sizing:border-box}
+  html,body{margin:0;padding:0;background:var(--bg);color:var(--txt);font-family:"Noto Sans TC","PingFang TC","Microsoft JhengHei",system-ui,sans-serif}
+  a{color:var(--accent)}
+  .wrap{max-width:1120px;margin:0 auto;padding:18px 16px 60px}
+  header h1{font-size:1.5rem;margin:.2em 0}
+  header p{color:var(--muted);margin:.2em 0 1em;line-height:1.6}
+  .badge{display:inline-block;background:var(--panel2);border:1px solid var(--line);color:var(--muted);font-size:.72rem;padding:2px 8px;border-radius:99px;margin-right:6px}
+  .scene-wrap{position:relative;border-radius:16px;overflow:hidden;border:1px solid var(--line);box-shadow:0 18px 50px rgba(0,0,0,.45)}
+  #scene{display:block;width:100%}
+  .hud{position:absolute;top:12px;left:12px;display:flex;gap:8px;flex-wrap:wrap;pointer-events:none}
+  .chip{background:rgba(10,16,24,.62);backdrop-filter:blur(6px);border:1px solid rgba(120,180,255,.16);border-radius:10px;padding:6px 11px;color:#dceaff;font-size:.8rem;line-height:1.25}
+  .chip b{display:block;font-size:1.02rem;font-variant-numeric:tabular-nums;color:#fff}
+  .chip.cyan b{color:#6cd0ff}.chip.rose b{color:#ff8fb0}.chip.green b{color:#7CFFB2}
+  .toolbar{position:absolute;bottom:12px;right:12px;display:flex;gap:7px;flex-wrap:wrap;justify-content:flex-end}
+  .toolbar button{background:rgba(10,16,24,.62);backdrop-filter:blur(6px);color:#dceaff;border:1px solid rgba(120,180,255,.2);border-radius:9px;padding:7px 11px;font-size:.82rem;cursor:pointer;font-family:inherit}
+  .toolbar button.on{background:var(--accent);color:#04121c;border-color:var(--accent);font-weight:700}
+  @media(max-width:560px){.toolbar{position:static;justify-content:center;padding:8px 10px;background:rgba(8,14,22,.5);border-top:1px solid var(--line)}}
+  .bar{display:flex;gap:14px;flex-wrap:wrap;align-items:flex-end;background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:14px 16px;margin-top:14px}
+  .sld{flex:1;min-width:160px}
+  .sld label{display:flex;justify-content:space-between;font-size:.82rem;color:var(--muted);margin-bottom:5px}
+  .sld label .v{color:var(--accent);font-variant-numeric:tabular-nums;font-weight:700}
+  .sld input{width:100%;accent-color:var(--accent)}
+  .presets{display:flex;gap:7px;flex-wrap:wrap;align-items:center;margin-top:12px}
+  .presets span{color:var(--muted);font-size:.8rem}
+  .pbtn{background:var(--panel2);color:var(--txt);border:1px solid var(--line);padding:7px 12px;border-radius:9px;cursor:pointer;font-size:.83rem;font-family:inherit}
+  .pbtn:hover{border-color:var(--accent)}
+  .note{background:var(--panel);border-left:3px solid var(--accent2);border-radius:8px;padding:12px 14px;color:var(--muted);font-size:.86rem;line-height:1.7;margin-top:14px}
+  .note b{color:var(--txt)}.note code{background:var(--bg2);padding:1px 6px;border-radius:5px;color:var(--green);font-size:.85em}
+  footer{color:var(--muted);font-size:.78rem;margin-top:24px;text-align:center;line-height:1.7}
+</style>
+</head>
+<body data-demo="直流馬達">
+<div class="wrap">
+  <header>
+    <span class="badge">電磁・電動機</span>
+    <h1>直流馬達（電流線圈受力矩）</h1>
+    <p>通電線圈放在磁場中，兩條邊的電流方向相反，受到的<b>磁力 F=BIL 也方向相反</b>，形成一對<b>力偶</b>使線圈<b>轉動</b>。
+       力矩 <b>τ = N·B·I·A·sinθ</b>。<b>換向器</b>在線圈轉到垂直時把電流<b>反向</b>，讓力矩始終推同一個轉向——這就是把電能變動能的<b>馬達</b>。</p>
+  </header>
+
+  <div class="scene-wrap">
+    <canvas id="scene"></canvas>
+    <div class="hud" id="hud"></div>
+    <div class="toolbar">
+      <button id="run" class="on">⏸ 暫停</button>
+      <button id="comm" class="on">換向器：開</button>
+    </div>
+  </div>
+
+  <div class="bar" id="sliders"></div>
+  <div class="presets">
+    <span>情境：</span>
+    <button class="pbtn" data-preset="strong">大力矩（高 B·I·N）</button>
+    <button class="pbtn" data-preset="weak">小力矩</button>
+    <button class="pbtn" data-preset="nocomm">關換向器看會卡住</button>
+  </div>
+
+  <div class="formula" id="formula"></div>
+
+  <div class="note">
+    <b>物理重點：</b>磁場對載流導線的力 <code>F = B·I·L</code>（方向用左手/右手定則）。線圈兩條與軸平行的邊電流相反 → 受力相反 → 形成<b>力偶</b>，
+    力矩 <code>τ = N·B·I·A·sinθ</code>（N 匝、A 線圈面積、θ 為線圈面與磁場的夾角）。線圈轉到與磁場垂直(θ=0)時力矩為零，靠<b>慣性</b>衝過，
+    <b>換向器</b>此刻把電流反向，使力矩繼續推同一轉向→持續旋轉。<b>關掉換向器</b>線圈只會在平衡位置來回擺盪、卡住。馬達是發電機的逆操作（電→動 vs 動→電）。
+  </div>
+
+  <footer>純前端 HTML / Canvas（SIM 工具庫）。軸向(端視)示意；含轉動慣性與阻尼，力矩 τ=NBIA·sinθ。</footer>
+</div>
+
+<script>
+const S=SIM;
+const sliders=[
+  {id:'B',name:'磁場 B',min:.1,max:1,step:.05,val:.5,unit:'T'},
+  {id:'I',name:'電流 I',min:.5,max:5,step:.5,val:2,unit:'A'},
+  {id:'N',name:'線圈匝數 N',min:1,max:200,step:1,val:50,unit:'匝'},
+];
+const state={};
+const sBar=document.getElementById('sliders');
+sliders.forEach(s=>{ state[s.id]=s.val;
+  const d=document.createElement('div');d.className='sld';
+  d.innerHTML=`<label><span>${s.name}</span><span class="v" id="v_${s.id}">${fmt(s.val)} ${s.unit}</span></label>
+    <input type="range" id="r_${s.id}" min="${s.min}" max="${s.max}" step="${s.step}" value="${s.val}">`;
+  sBar.appendChild(d);
+  d.querySelector('input').addEventListener('input',e=>{state[s.id]=parseFloat(e.target.value);
+    document.getElementById('v_'+s.id).textContent=`${fmt(state[s.id])} ${s.unit}`; recompute(); });
+});
+function fmt(x){return (Math.round(x*100)/100).toString();}
+function setSlider(id,val){state[id]=val;const r=document.getElementById('r_'+id);if(r)r.value=val;
+  const s=sliders.find(z=>z.id===id);if(s)document.getElementById('v_'+id).textContent=`${fmt(val)} ${s.unit}`;}
+
+// ---- 物理 ----
+const Acoil=0.01;  // 線圈面積 m²
+let phi=0.4, w=0, commOn=true;   // phi: 線圈面與磁場夾角 (rad), w: 角速度
+function Fside(){return state.B*state.I*0.1;}      // 單邊受力 F=BIL (L=0.1m)
+function torqueMax(){return state.N*state.B*state.I*Acoil;}
+function torque(){let dir=commOn?1:Math.sign(Math.cos(phi))||1; // 換向器:力矩恆同向; 關閉:隨幾何反向
+  return torqueMax()*Math.sin(phi)* (commOn?1:1) * (commOn? (Math.cos(phi)>=0?1:1):1);}
+function recompute(){updateFormula();}
+
+// ---- 公式面板 ----
+function frow(n,sym,sub,val){return `<div class="frow"><span class="fname">${n}</span><span class="fsym">${sym}</span><span class="fsub">= ${sub}</span><span class="fval">${val}</span></div>`;}
+function updateFormula(){const F=Fside(),tm=torqueMax();
+  document.getElementById('formula').innerHTML=
+    `<h4>📐 計算公式（即時代入　L=0.1m、線圈面積 A=0.01 m²）</h4>`
+    + frow('單邊磁力 F','B·I·L',`${state.B}·${state.I}·0.1`, F.toFixed(2)+' N')
+    + frow('最大力矩 τ','N·B·I·A',`${state.N}·${state.B}·${state.I}·0.01`, tm.toFixed(3)+' N·m')
+    + frow('瞬時力矩 τ(θ)','N·B·I·A·sinθ',`${tm.toFixed(3)}·sinθ`, '隨角度變化')
+    + `<div class="frel">📈 <b>τ_max = NBIA</b>：匝數 N、磁場 B、電流 I、面積 A 任一加倍 → 力矩加倍　·　<b>θ=0(線圈⊥磁場)力矩為零</b>，靠慣性+換向器衝過　·　<b>換向器每半圈反向電流</b>維持同向旋轉(關掉就會卡在平衡位置擺盪)。</div>`;
+}
+
+// ---- 視圖（端視）----
+let sc;
+const MTR={skyTop:'#0e1626',skyBottom:'#070d18',vignette:'rgba(0,0,0,.4)'};
+function setupCanvases(){sc=S.fit(document.getElementById('scene'),1.7);}
+function draw(){const W=sc._w,H=sc._h,cx=W/2,cy=H/2,R=Math.min(W,H)*0.3;
+  S.scene(sc,MTR,{});
+  // 磁鐵 N(左) S(右) + 水平磁場線
+  sc.fillStyle='rgba(255,107,157,.16)';sc.fillRect(W*0.06,cy-R*1.3,W*0.1,R*2.6);
+  sc.fillStyle='rgba(108,208,255,.16)';sc.fillRect(W*0.84,cy-R*1.3,W*0.1,R*2.6);
+  sc.fillStyle='#ff6b9d';sc.font='bold 18px system-ui';sc.fillText('N',W*0.09,cy+6);
+  sc.fillStyle='#6cd0ff';sc.fillText('S',W*0.87,cy+6);
+  sc.strokeStyle='rgba(150,170,210,.3)';sc.lineWidth=1.4;sc.fillStyle='rgba(150,170,210,.3)';
+  for(let k=-2;k<=2;k++){const y=cy+k*R*0.5;sc.beginPath();sc.moveTo(W*0.17,y);sc.lineTo(W*0.83,y);sc.stroke();
+    sc.beginPath();sc.moveTo(W*0.83,y);sc.lineTo(W*0.83-8,y-4);sc.lineTo(W*0.83-8,y+4);sc.closePath();sc.fill();}
+  // 線圈兩端(端視:線圈=一條線,兩端為導線截面)
+  const ex=Math.cos(phi)*R, ey=Math.sin(phi)*R;
+  // A1 導線的電流方向(⊙出頁/⊗入頁)。換向器開→每半圈(cosφ 變號)翻轉，使力矩恆同向；關→電流固定。
+  const topOut = commOn ? (Math.cos(phi)>=0) : true;
+  // 線圈框
+  sc.strokeStyle='#c98a3a';sc.lineWidth=4;sc.beginPath();sc.moveTo(cx-ex,cy-ey);sc.lineTo(cx+ex,cy+ey);sc.stroke();
+  // 兩端導線截面
+  const A1={x:cx-ex,y:cy-ey},A2={x:cx+ex,y:cy+ey};
+  drawWire(A1.x,A1.y,topOut); drawWire(A2.x,A2.y,!topOut);
+  // 受力箭頭 F=BIL：⊙出頁→受力朝上(−y)、⊗入頁→朝下(+y)；兩端相反成力偶
+  const F=Math.min(46,Fside()*120+14);
+  const fdir = topOut?1:-1;   // topOut(A1=⊙)時 A1 朝上、A2 朝下
+  S.arrow(sc,A1.x,A1.y,A1.x,A1.y - fdir*F,{color:'#7CFFB2',width:3,label:'F'});
+  S.arrow(sc,A2.x,A2.y,A2.x,A2.y + fdir*F,{color:'#7CFFB2',width:3,label:'F'});
+  // 轉軸
+  S.sphere(sc,cx,cy,7,[180,190,210]);
+  // 轉向指示
+  sc.fillStyle='rgba(124,255,178,.8)';sc.font='12px system-ui';sc.fillText('力偶→轉動',cx-30,cy+R+24);
+  updateHud();
+}
+function drawWire(x,y,out){sc.fillStyle='#1a2233';sc.strokeStyle='#e8b060';sc.lineWidth=2;sc.beginPath();sc.arc(x,y,10,0,7);sc.fill();sc.stroke();
+  sc.strokeStyle='#ffd9a0';sc.lineWidth=2;
+  if(out){sc.fillStyle='#ffd9a0';sc.beginPath();sc.arc(x,y,3,0,7);sc.fill();}      // ⊙ 出頁
+  else{sc.beginPath();sc.moveTo(x-5,y-5);sc.lineTo(x+5,y+5);sc.moveTo(x+5,y-5);sc.lineTo(x-5,y+5);sc.stroke();}  // ⊗ 入頁
+}
+function updateHud(){
+  document.getElementById('hud').innerHTML=
+   `<div class="chip cyan">最大力矩 τ<b>${torqueMax().toFixed(3)} N·m</b></div>`+
+   `<div class="chip rose">單邊力 F<b>${Fside().toFixed(2)} N</b></div>`+
+   `<div class="chip green">轉速 ω<b>${Math.abs(w).toFixed(1)} rad/s</b></div>`;
+}
+let last=0, running=true;
+function loop(ts){const dt=last?Math.min((ts-last)/1000,0.05):0;last=ts;
+  if(running){ // 轉動動力學: I_moment·dω/dt = τ − 阻尼
+    const Imom=0.02+state.N*2e-4;
+    // 換向器開:每半圈反向電流→力矩恆為同一轉向(∝|sinθ|)→持續轉動
+    // 換向器關:電流固定→回復力矩 −NBIA·sinθ→在平衡位置來回擺盪、卡住
+    const tq = commOn ? torqueMax()*Math.abs(Math.sin(phi))
+                      : -torqueMax()*Math.sin(phi);
+    w += (tq/Imom)*dt - w*1.2*dt;                                  // 阻尼
+    phi += w*dt;
+  }
+  draw();requestAnimationFrame(loop);}
+
+const rb=document.getElementById('run');
+rb.onclick=()=>{running=!running;rb.classList.toggle('on',running);rb.textContent=running?'⏸ 暫停':'▶ 轉動';};
+const cb=document.getElementById('comm');
+cb.onclick=()=>{commOn=!commOn;cb.classList.toggle('on',commOn);cb.textContent='換向器：'+(commOn?'開':'關');};
+const PRE={strong:{B:1,I:5,N:150},weak:{B:.2,I:1,N:20},nocomm:{B:.6,I:3,N:80}};
+document.querySelectorAll('[data-preset]').forEach(b=>b.onclick=()=>{const pr=PRE[b.dataset.preset];if(!pr)return;
+  ['B','I','N'].forEach(k=>setSlider(k,pr[k]));
+  if(b.dataset.preset==='nocomm'){commOn=false;cb.classList.remove('on');cb.textContent='換向器：關';}
+  recompute();});
+
+window.addEventListener('load',()=>{setupCanvases();recompute();requestAnimationFrame(loop);});
+window.addEventListener('resize',()=>{setupCanvases();draw();});
+</script>
+</body>
+</html>
