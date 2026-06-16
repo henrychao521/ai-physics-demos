@@ -1,0 +1,208 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>時間膨脹（光鐘）｜ 狹義相對論・γ=1/√(1−β²)・動鐘變慢</title>
+<meta name="description" content="狹義相對論光鐘互動模擬：靜止鐘的光子直上直下，運動鐘的光子走更長的斜路徑，所以運動鐘走得比較慢——時間膨脹 Δt=γΔt₀。同步比較兩鐘的滴答數，並看勞侖茲因子 γ 與長度收縮 L=L₀/γ。">
+<link rel="icon" href="../assets/favicon.svg" type="image/svg+xml">
+<link rel="stylesheet" href="../assets/site.css">
+<script src="../assets/sim.js"></script>
+<script defer src="../assets/nav.js"></script>
+<style>
+  *{box-sizing:border-box}
+  html,body{margin:0;padding:0;background:var(--bg);color:var(--txt);font-family:"Noto Sans TC","PingFang TC","Microsoft JhengHei",system-ui,sans-serif}
+  a{color:var(--accent)}
+  .wrap{max-width:1120px;margin:0 auto;padding:18px 16px 60px}
+  header h1{font-size:1.5rem;margin:.2em 0}
+  header p{color:var(--muted);margin:.2em 0 1em;line-height:1.6}
+  .badge{display:inline-block;background:var(--panel2);border:1px solid var(--line);color:var(--muted);font-size:.72rem;padding:2px 8px;border-radius:99px;margin-right:6px}
+  .scene-wrap{position:relative;border-radius:16px;overflow:hidden;border:1px solid var(--line);box-shadow:0 18px 50px rgba(0,0,0,.45)}
+  #scene{display:block;width:100%}
+  .hud{position:absolute;top:12px;left:12px;display:flex;gap:8px;flex-wrap:wrap;pointer-events:none}
+  .chip{background:rgba(10,16,24,.62);backdrop-filter:blur(6px);border:1px solid rgba(120,180,255,.16);border-radius:10px;padding:6px 11px;color:#dceaff;font-size:.8rem;line-height:1.25}
+  .chip b{display:block;font-size:1.02rem;font-variant-numeric:tabular-nums;color:#fff}
+  .chip.amber b{color:#ffd27a}.chip.cyan b{color:#6cd0ff}.chip.green b{color:#7CFFB2}
+  .toolbar{position:absolute;bottom:12px;right:12px;display:flex;gap:7px;flex-wrap:wrap;justify-content:flex-end}
+  .toolbar button{background:rgba(10,16,24,.62);backdrop-filter:blur(6px);color:#dceaff;border:1px solid rgba(120,180,255,.2);border-radius:9px;padding:7px 11px;font-size:.82rem;cursor:pointer;font-family:inherit}
+  .toolbar button.on{background:var(--accent);color:#04121c;border-color:var(--accent);font-weight:700}
+  @media(max-width:560px){.toolbar{position:static;justify-content:center;padding:8px 10px;background:rgba(8,14,22,.5);border-top:1px solid var(--line)}}
+  .bar{display:flex;gap:14px;flex-wrap:wrap;align-items:flex-end;background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:14px 16px;margin-top:14px}
+  .sld{flex:1;min-width:220px}
+  .sld label{display:flex;justify-content:space-between;font-size:.82rem;color:var(--muted);margin-bottom:5px}
+  .sld label .v{color:var(--accent);font-variant-numeric:tabular-nums;font-weight:700}
+  .sld input{width:100%;accent-color:var(--accent)}
+  .presets{display:flex;gap:7px;flex-wrap:wrap;align-items:center;margin-top:12px}
+  .presets span{color:var(--muted);font-size:.8rem}
+  .pbtn{background:var(--panel2);color:var(--txt);border:1px solid var(--line);padding:7px 12px;border-radius:9px;cursor:pointer;font-size:.83rem;font-family:inherit}
+  .pbtn:hover{border-color:var(--accent)}
+  .note{background:var(--panel);border-left:3px solid var(--accent2);border-radius:8px;padding:12px 14px;color:var(--muted);font-size:.86rem;line-height:1.7;margin-top:14px}
+  .note b{color:var(--txt)}.note code{background:var(--bg2);padding:1px 6px;border-radius:5px;color:var(--green);font-size:.85em}
+  footer{color:var(--muted);font-size:.78rem;margin-top:24px;text-align:center;line-height:1.7}
+</style>
+</head>
+<body data-demo="時間膨脹光鐘">
+<div class="wrap">
+  <header>
+    <span class="badge">近代物理・狹義相對論</span>
+    <h1>時間膨脹（光鐘）</h1>
+    <p>光速對每個人都一樣。<b>靜止鐘</b>的光子直上直下，一個來回就「滴答」一次；<b>運動鐘</b>的光子得走更長的<b>斜路徑</b>，
+       但光速不變，所以一次滴答要<b>更久</b>——這就是<b>運動的鐘走得慢</b>。膨脹倍率即勞侖茲因子 <b>γ = 1/√(1−β²)</b>，<b>Δt = γ·Δt₀</b>。</p>
+  </header>
+
+  <div class="scene-wrap">
+    <canvas id="scene"></canvas>
+    <div class="hud" id="hud"></div>
+    <div class="toolbar">
+      <button id="run" class="on">⏸ 暫停</button>
+      <button id="reset">↺ 重置滴答</button>
+    </div>
+  </div>
+
+  <div class="bar" id="sliders"></div>
+  <div class="presets">
+    <span>速度：</span>
+    <button class="pbtn" data-b="0.5">0.50 c</button>
+    <button class="pbtn" data-b="0.8">0.80 c</button>
+    <button class="pbtn" data-b="0.9">0.90 c</button>
+    <button class="pbtn" data-b="0.99">0.99 c</button>
+  </div>
+
+  <div class="formula" id="formula"></div>
+
+  <div class="note">
+    <b>物理重點：</b>用畢氏定理就能導出時間膨脹。光鐘鏡距 D，靜止時一次滴答 <code>Δt₀ = 2D/c</code>。
+    當鐘以速度 v 運動，光子走斜邊：<code>(c·Δt)² = (2D)² + (v·Δt)²</code> → <code>Δt = γ·Δt₀</code>，其中
+    <code>γ = 1/√(1−v²/c²)</code>。所以觀察者看「運動鐘」每滴答一次，自己已過了 γ 倍的時間。同時尺也會在運動方向<b>收縮</b>：<code>L = L₀/γ</code>。
+    β=0.5→γ≈1.15、0.9→2.29、0.99→7.09。日常 v≪c 時 γ≈1 幾乎沒差；但 GPS 衛星、加速器裡的粒子都必須修正。
+  </div>
+
+  <footer>純前端 HTML / Canvas（SIM 工具庫）。兩鐘同場比較，運動鐘光子走斜路徑(畢氏)，滴答數即時累積顯示動鐘變慢。</footer>
+</div>
+
+<script>
+const S=SIM;
+const state={beta:0.8};
+const sliders=[{id:'beta',name:'速度 v（以光速 c 為單位 β=v/c）',min:0,max:0.99,step:0.01,val:0.8,unit:'c'}];
+const sBar=document.getElementById('sliders');
+sliders.forEach(s=>{ state[s.id]=s.val;
+  const d=document.createElement('div');d.className='sld';
+  d.innerHTML=`<label><span>${s.name}</span><span class="v" id="v_${s.id}">${s.val.toFixed(2)} ${s.unit}</span></label>
+    <input type="range" id="r_${s.id}" min="${s.min}" max="${s.max}" step="${s.step}" value="${s.val}">`;
+  sBar.appendChild(d);
+  d.querySelector('input').addEventListener('input',e=>{state[s.id]=parseFloat(e.target.value);
+    document.getElementById('v_'+s.id).textContent=`${state[s.id].toFixed(2)} ${s.unit}`; recompute(); });
+});
+function setBeta(b){state.beta=b;const r=document.getElementById('r_beta');if(r)r.value=b;document.getElementById('v_beta').textContent=`${b.toFixed(2)} c`;recompute();}
+
+// ---- 物理 ----
+function gamma(){return 1/Math.sqrt(1-state.beta*state.beta);}
+function recompute(){updateFormula();}
+
+// ---- 公式面板 ----
+function frow(n,sym,sub,val){return `<div class="frow"><span class="fname">${n}</span><span class="fsym">${sym}</span><span class="fsub">= ${sub}</span><span class="fval">${val}</span></div>`;}
+function updateFormula(){const b=state.beta,g=gamma();
+  document.getElementById('formula').innerHTML=
+    `<h4>📐 計算公式（即時代入　β = v/c = ${b.toFixed(2)}）</h4>`
+    + frow('勞侖茲因子 γ','1/√(1−β²)',`1/√(1−${b.toFixed(2)}²)`, g.toFixed(3))
+    + frow('時間膨脹 Δt','γ·Δt₀',`${g.toFixed(3)}·Δt₀`, g.toFixed(2)+' 倍慢')
+    + frow('動鐘走速 Δt₀/Δt','1/γ',`1/${g.toFixed(3)}`, (1/g).toFixed(3))
+    + frow('長度收縮 L','L₀/γ',`L₀/${g.toFixed(3)}`, (1/g).toFixed(3)+'·L₀')
+    + `<div class="frel">📈 <b>β→1（接近光速）γ→∞</b>：動鐘幾乎停住、尺幾乎縮為零　·　<b>β≪1 時 γ≈1</b>：日常感覺不到　·　時間膨脹與長度收縮的倍率都是 γ。</div>`;
+}
+
+// ---- 視圖：兩個光鐘 ----
+let sc;
+const SKY={skyTop:'#0c1424',skyBottom:'#070d16',vignette:'rgba(0,0,0,.42)'};
+function setupCanvases(){sc=S.fit(document.getElementById('scene'),1.7);}
+const D=110;               // 鏡距(像素)，靜止鐘
+let cpx=180;               // 「光速」像素/秒
+// 鐘B(運動)狀態
+let labTime=0, properB=0, ticksA=0, ticksB=0;
+let xB=0, yA=0, yB=0, dirA=1, dirB=1;   // 光子垂直位置(0..D)與方向
+let trailB=[];
+function resetClocks(){labTime=0;properB=0;ticksA=0;ticksB=0;yA=0;yB=0;dirA=1;dirB=1;xB=0;trailB=[];}
+function layout(){const W=sc._w,H=sc._h;return {
+  W,H, ax:Math.min(120,W*0.16), ayTop:H*0.5-D-26, // 鐘A 固定
+  laneY:H*0.5+18                                    // 鐘B 軌道頂(鏡)
+};}
+function draw(){const W=sc._w,H=sc._h;S.scene(sc,SKY,{});
+  const g=gamma();
+  // ---- 鐘A：靜止 ----
+  const Ax=Math.min(130,W*0.18), AtopY=44, AbotY=44+D;
+  drawClockBody(Ax,AtopY,AbotY,46,'#6cd0ff');
+  sc.fillStyle='#9fd0ff';sc.font='12px system-ui';sc.fillText('靜止鐘（你）',Ax-30,AtopY-12);
+  // A 光子(直上直下)
+  const ApY=AtopY+yA;
+  S.sphere(sc,Ax,ApY,5,[255,238,150]);
+  // ---- 鐘B：運動 ----
+  const BtopY=H*0.52, BbotY=H*0.52+D, w0=52, wc=Math.max(8,w0/g); // 寬度收縮
+  // 光子斜路徑軌跡
+  sc.strokeStyle='rgba(255,225,120,.35)';sc.lineWidth=1.6;sc.beginPath();
+  trailB.forEach((p,i)=>{i?sc.lineTo(p.x,p.y):sc.moveTo(p.x,p.y);});sc.stroke();
+  drawClockBody(20+xB,BtopY,BbotY,wc,'#ffb86c');
+  const BpY=BtopY+yB;
+  S.sphere(sc,20+xB,BpY,5,[255,238,150]);
+  sc.fillStyle='#ffcf9a';sc.font='12px system-ui';sc.fillText('運動鐘 → v='+state.beta.toFixed(2)+'c',24+xB-6,BtopY-12);
+  // 速度箭頭
+  if(state.beta>0.01)S.arrow(sc,20+xB+wc/2+12,BbotY+18,20+xB+wc/2+12+34*Math.min(1,state.beta+0.2),BbotY+18,{color:'#ff8fb0',width:2.5});
+  // ---- 滴答比較盤 ----
+  const px=W-176,py=46;
+  panel(px,py,'滴答數',ticksA,ticksB,g);
+  updateHud(g);
+}
+function drawClockBody(cx,ty,by,w,col){ // 兩面鏡 + 側框
+  sc.strokeStyle=col;sc.lineCap='round';sc.lineWidth=4;
+  sc.beginPath();sc.moveTo(cx-w/2,ty);sc.lineTo(cx+w/2,ty);sc.stroke();   // 上鏡
+  sc.beginPath();sc.moveTo(cx-w/2,by);sc.lineTo(cx+w/2,by);sc.stroke();   // 下鏡
+  sc.lineWidth=1;sc.globalAlpha=.3;
+  sc.beginPath();sc.moveTo(cx-w/2,ty);sc.lineTo(cx-w/2,by);sc.moveTo(cx+w/2,ty);sc.lineTo(cx+w/2,by);sc.stroke();
+  sc.globalAlpha=1;
+}
+function panel(x,y,title,a,b,g){
+  sc.fillStyle='rgba(10,16,26,.6)';sc.strokeStyle='rgba(120,180,255,.2)';sc.lineWidth=1;
+  sc.beginPath();sc.rect(x,y,160,96);sc.fill();sc.stroke();
+  sc.fillStyle='#9fd0ff';sc.font='12px system-ui';sc.fillText('靜止鐘 滴答',x+12,y+24);
+  sc.fillStyle='#6cd0ff';sc.font='bold 20px system-ui';sc.fillText(a,x+120,y+25);
+  sc.fillStyle='#ffcf9a';sc.font='12px system-ui';sc.fillText('運動鐘 滴答',x+12,y+52);
+  sc.fillStyle='#ffb86c';sc.font='bold 20px system-ui';sc.fillText(b,x+120,y+53);
+  sc.strokeStyle='rgba(150,170,210,.25)';sc.beginPath();sc.moveTo(x+10,y+64);sc.lineTo(x+150,y+64);sc.stroke();
+  sc.fillStyle='#7CFFB2';sc.font='12px system-ui';sc.fillText('動鐘只跑 1/γ = '+(1/g).toFixed(2),x+12,y+82);
+}
+function updateHud(g){
+  document.getElementById('hud').innerHTML=
+   `<div class="chip cyan">β = v/c<b>${state.beta.toFixed(2)}</b></div>`+
+   `<div class="chip amber">勞侖茲 γ<b>${g.toFixed(3)}</b></div>`+
+   `<div class="chip green">動鐘速率 1/γ<b>${(1/g).toFixed(3)}</b></div>`;
+}
+
+let last=0, running=true;
+function step(dt){const g=gamma();
+  // 鐘A：光子速度 cpx，垂直來回；每半程 D/cpx 秒 → 一個來回(滴答) 2D/cpx
+  yA+=dirA*cpx*dt; if(yA>=D){yA=D-(yA-D);dirA=-1;halfA();} else if(yA<=0){yA=-yA;dirA=1;halfA();}
+  // 鐘B：水平隨鐘移動 v=β·cpx；光子垂直分量 = cpx/γ（斜邊仍為 cpx）
+  const vy=cpx/g, vx=state.beta*cpx;
+  xB+=vx*dt; yB+=dirB*vy*dt;
+  if(yB>=D){yB=D-(yB-D);dirB=-1;halfB();} else if(yB<=0){yB=-yB;dirB=1;halfB();}
+  trailB.push({x:20+xB, y:(sc?sc._h:600)*0.52+yB}); if(trailB.length>240)trailB.shift();
+  if(20+xB> (sc?sc._w:900)-30){xB=0;trailB=[];}   // 出右界回繞
+  labTime+=dt; properB+=dt/g;
+}
+let halfFlagA=0;
+function halfA(){halfFlagA^=1; if(halfFlagA===0)ticksA++;}   // 兩個半程=一次滴答
+let halfFlagB=0;
+function halfB(){halfFlagB^=1; if(halfFlagB===0)ticksB++;}
+function loop(ts){const dt=last?Math.min((ts-last)/1000,0.04):0;last=ts;
+  if(running)step(dt);
+  draw();requestAnimationFrame(loop);}
+
+const rb=document.getElementById('run');
+rb.onclick=()=>{running=!running;rb.classList.toggle('on',running);rb.textContent=running?'⏸ 暫停':'▶ 播放';};
+document.getElementById('reset').onclick=()=>resetClocks();
+document.querySelectorAll('[data-b]').forEach(b=>b.onclick=()=>{setBeta(parseFloat(b.dataset.b));resetClocks();});
+
+window.addEventListener('load',()=>{setupCanvases();resetClocks();recompute();requestAnimationFrame(loop);});
+window.addEventListener('resize',()=>{setupCanvases();draw();});
+</script>
+</body>
+</html>
