@@ -1,0 +1,191 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>熱傳導與熱平衡 ｜ 量熱・混合終溫・Q=mcΔT</title>
+<meta name="description" content="熱平衡互動模擬：兩個不同溫度的物體接觸，熱由高溫流向低溫直到溫度相同。終溫 T=(m₁c₁T₁+m₂c₂T₂)/(m₁c₁+m₂c₂)，A 放熱=B 吸熱，Q=mcΔT。可選水/鋁/鐵不同比熱。">
+<link rel="icon" href="../assets/favicon.svg" type="image/svg+xml">
+<link rel="stylesheet" href="../assets/site.css">
+<script src="../assets/sim.js"></script>
+<script defer src="../assets/nav.js"></script>
+<style>
+  *{box-sizing:border-box}
+  html,body{margin:0;padding:0;background:var(--bg);color:var(--txt);font-family:"Noto Sans TC","PingFang TC","Microsoft JhengHei",system-ui,sans-serif}
+  a{color:var(--accent)}
+  .wrap{max-width:1120px;margin:0 auto;padding:18px 16px 60px}
+  header h1{font-size:1.5rem;margin:.2em 0}
+  header p{color:var(--muted);margin:.2em 0 1em;line-height:1.6}
+  .badge{display:inline-block;background:var(--panel2);border:1px solid var(--line);color:var(--muted);font-size:.72rem;padding:2px 8px;border-radius:99px;margin-right:6px}
+  .grid2{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+  @media(max-width:740px){.grid2{grid-template-columns:1fr}}
+  .scene-wrap{position:relative;border-radius:16px;overflow:hidden;border:1px solid var(--line);box-shadow:0 18px 50px rgba(0,0,0,.45)}
+  #scene,#graph{display:block;width:100%}
+  .toolbar{position:absolute;bottom:12px;left:12px;display:flex;gap:7px;flex-wrap:wrap}
+  .toolbar button{background:rgba(20,12,8,.6);backdrop-filter:blur(6px);color:#ffe6db;border:1px solid rgba(255,180,150,.2);border-radius:9px;padding:7px 11px;font-size:.82rem;cursor:pointer;font-family:inherit}
+  .toolbar button.on{background:var(--accent);color:#04121c;border-color:var(--accent);font-weight:700}
+  .mats{display:flex;gap:7px;flex-wrap:wrap;align-items:center;margin-top:14px}
+  .mats span{color:var(--muted);font-size:.8rem}
+  .pbtn{background:var(--panel2);color:var(--txt);border:1px solid var(--line);padding:7px 12px;border-radius:9px;cursor:pointer;font-size:.83rem;font-family:inherit}
+  .pbtn:hover{border-color:var(--accent)}
+  .bar{display:flex;gap:14px;flex-wrap:wrap;align-items:flex-end;background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:14px 16px;margin-top:14px}
+  .sld{flex:1;min-width:140px}
+  .sld label{display:flex;justify-content:space-between;font-size:.82rem;color:var(--muted);margin-bottom:5px}
+  .sld label .v{font-variant-numeric:tabular-nums;font-weight:700}
+  .sld.a label .v{color:#ff7b54}.sld.b label .v{color:#4c9cff}
+  .sld input{width:100%;accent-color:var(--accent)}
+  .note{background:var(--panel);border-left:3px solid var(--accent2);border-radius:8px;padding:12px 14px;color:var(--muted);font-size:.86rem;line-height:1.7;margin-top:14px}
+  .note b{color:var(--txt)}.note code{background:var(--bg2);padding:1px 6px;border-radius:5px;color:var(--green);font-size:.85em}
+  footer{color:var(--muted);font-size:.78rem;margin-top:24px;text-align:center;line-height:1.7}
+</style>
+</head>
+<body data-demo="熱傳導與熱平衡">
+<div class="wrap">
+  <header>
+    <span class="badge">熱學・量熱與熱平衡</span>
+    <h1>熱傳導與熱平衡</h1>
+    <p>兩個不同溫度的物體接觸，<b>熱量由高溫流向低溫</b>，直到兩者<b>溫度相同</b>（熱平衡）。過程中
+       <b>高溫物體放出的熱 = 低溫物體吸收的熱</b>（能量守恆），<code>Q = mcΔT</code>。終溫是各物熱容量 mc 的加權平均，偏向 <b>mc 大</b>的一方。</p>
+  </header>
+
+  <div class="grid2">
+    <div class="scene-wrap"><canvas id="scene"></canvas>
+      <div class="toolbar"><button id="play" class="on">⏸ 暫停</button><button id="reset">↺ 重設</button></div>
+    </div>
+    <div class="scene-wrap"><canvas id="graph"></canvas></div>
+  </div>
+
+  <div class="mats">
+    <span>材質 A：</span><button class="pbtn" id="matA">水</button>
+    <span style="margin-left:10px">材質 B：</span><button class="pbtn" id="matB">鐵</button>
+    <span style="margin-left:10px;color:var(--faint)">（水 c=4.18、鋁 0.90、鐵 0.45 J/g·°C）</span>
+  </div>
+
+  <div class="bar" id="sliders"></div>
+
+  <div class="formula" id="formula"></div>
+
+  <div class="note">
+    <b>物理重點：</b>熱平衡時兩物溫度相等。能量守恆：<code>m₁c₁(T₁−T_f) = m₂c₂(T_f−T₂)</code>（A 放熱＝B 吸熱），
+    解得終溫 <code>T_f = (m₁c₁T₁ + m₂c₂T₂)/(m₁c₁ + m₂c₂)</code>——即以<b>熱容量 mc 為權重</b>的加權平均。
+    <b>mc 越大</b>（質量大或比熱大）的物體溫度變化越小、越能「主導」終溫。水的比熱特別大，所以海洋調節氣候、用水冷卻。終溫一定<b>介於兩初溫之間</b>。
+  </div>
+
+  <footer>純前端 HTML / Canvas（SIM 工具庫）。終溫由量熱方程式精確計算；溫度隨時間以指數鬆弛趨近熱平衡（兩物能量總和守恆）。</footer>
+</div>
+
+<script>
+const S=SIM;
+const MATS=[{n:'水',c:4.18},{n:'鋁',c:0.90},{n:'鐵',c:0.45}];
+let matA=0, matB=2;
+const sliders=[
+  {id:'m1',name:'質量 A m₁',min:50,max:500,step:10,val:200,unit:'g',cls:'a'},
+  {id:'T1',name:'溫度 A T₁',min:0,max:100,step:1,val:90,unit:'°C',cls:'a'},
+  {id:'m2',name:'質量 B m₂',min:50,max:500,step:10,val:300,unit:'g',cls:'b'},
+  {id:'T2',name:'溫度 B T₂',min:0,max:100,step:1,val:20,unit:'°C',cls:'b'},
+];
+const state={};
+const sBar=document.getElementById('sliders');
+sliders.forEach(s=>{ state[s.id]=s.val;
+  const d=document.createElement('div');d.className='sld '+(s.cls||'');
+  d.innerHTML=`<label><span>${s.name}</span><span class="v" id="v_${s.id}">${fmt(s.val)} ${s.unit}</span></label>
+    <input type="range" id="r_${s.id}" min="${s.min}" max="${s.max}" step="${s.step}" value="${s.val}">`;
+  sBar.appendChild(d);
+  d.querySelector('input').addEventListener('input',e=>{state[s.id]=parseFloat(e.target.value);
+    document.getElementById('v_'+s.id).textContent=`${fmt(state[s.id])} ${s.unit}`; restart(); });
+});
+function fmt(x){return (Math.round(x*100)/100).toString();}
+
+// ---- 物理 ----
+function c1(){return MATS[matA].c;} function c2(){return MATS[matB].c;}
+function Tf(){const C1=state.m1*c1(),C2=state.m2*c2();return (C1*state.T1+C2*state.T2)/(C1+C2);}
+let t=0, playing=true;
+const TAU=2.2;
+function TA(){return Tf()+(state.T1-Tf())*Math.exp(-t/TAU);}
+function TB(){return Tf()+(state.T2-Tf())*Math.exp(-t/TAU);}
+function restart(){t=0;updateFormula();}
+
+// ---- 公式面板 ----
+function frow(n,sym,sub,val){return `<div class="frow"><span class="fname">${n}</span><span class="fsym">${sym}</span><span class="fsub">= ${sub}</span><span class="fval">${val}</span></div>`;}
+function updateFormula(){const C1=state.m1*c1(),C2=state.m2*c2(),tf=Tf();
+  const Q=C1*Math.abs(state.T1-tf);
+  document.getElementById('formula').innerHTML=
+    `<h4>📐 計算公式（即時代入　Q=mcΔT，c：水4.18/鋁0.90/鐵0.45）</h4>`
+    + frow('A 熱容量 m₁c₁','m₁ · c₁',`${state.m1}·${c1()}`, C1.toFixed(0)+' J/°C')
+    + frow('B 熱容量 m₂c₂','m₂ · c₂',`${state.m2}·${c2()}`, C2.toFixed(0)+' J/°C')
+    + frow('終溫 T_f','(m₁c₁T₁+m₂c₂T₂)/(m₁c₁+m₂c₂)',`(${C1.toFixed(0)}·${state.T1}+${C2.toFixed(0)}·${state.T2})/(${C1.toFixed(0)}+${C2.toFixed(0)})`, tf.toFixed(1)+' °C')
+    + frow('交換熱量 Q','m₁c₁(T₁−T_f) = m₂c₂(T_f−T₂)',`${C1.toFixed(0)}·|${state.T1}−${tf.toFixed(1)}|`, (Q/1000).toFixed(2)+' kJ')
+    + `<div class="frel">📈 <b>終溫是 mc 加權平均、必介於兩初溫間</b>　·　<b>mc 越大主導力越強</b>（${C1>C2?'A':'B'} 的 mc 較大，終溫較靠近其初溫）　·　A 放出的熱 = B 吸收的熱（能量守恆）　·　水比熱大 → 同質量同熱量下溫度變化最小。</div>`;
+}
+
+// ---- 視圖 ----
+let sc,gc, hist=[];
+const ROOM={skyTop:'#1a1410',skyBottom:'#0c0806',vignette:'rgba(0,0,0,.45)'};
+function tcol(T){const f=Math.max(0,Math.min(1,T/100)); // 0冷藍→100熱紅
+  const r=Math.round(60+f*200),g=Math.round(120-f*70),b=Math.round(255-f*200);return `rgb(${r},${g},${b})`;}
+function setupCanvases(){sc=S.fit(document.getElementById('scene'),1.5);gc=S.fit(document.getElementById('graph'),1.5);}
+function drawScene(){const W=sc._w,H=sc._h;
+  S.scene(sc,ROOM,{ground:H-24});
+  const ta=TA(),tb=TB();
+  const baseY=H-30, maxBH=H*0.52;
+  const ha=Math.sqrt(state.m1/500), hb=Math.sqrt(state.m2/500);
+  const wA=W*0.3, wB=W*0.3, gapX=W*0.04;
+  const bxA=W*0.5-gapX-wA, bxB=W*0.5+gapX;
+  const bhA=maxBH*ha+30, bhB=maxBH*hb+30;
+  // 接觸面熱流箭頭
+  const hot=ta>tb;
+  // 方塊 A
+  block(bxA,baseY-bhA,wA,bhA,ta,'A',MATS[matA].n);
+  // 方塊 B
+  block(bxB,baseY-bhB,wB,bhB,tb,'B',MATS[matB].n);
+  // 熱流箭頭(由熱→冷)
+  if(Math.abs(ta-tb)>0.3){const ay=baseY-Math.min(bhA,bhB)*0.5, x0=W*0.5,len=gapX+Math.min(wA,wB)*0.3;
+    const dir=hot?-1:1; // hot=A(左)→流向右(B)
+    sc.strokeStyle='#ffce54';sc.lineWidth=3;sc.font='12px system-ui';sc.fillStyle='#ffce54';
+    for(let k=-1;k<=1;k++){const yy=ay+k*16;arr(W*0.5-dir*len,yy,W*0.5+dir*len,yy);}
+    sc.fillText('熱流 Q',W*0.5-16,ay-Math.min(bhA,bhB)*0.5-6);}
+  // 接觸線
+  sc.strokeStyle='rgba(255,255,255,.25)';sc.lineWidth=2;sc.beginPath();sc.moveTo(W*0.5,baseY-Math.max(bhA,bhB));sc.lineTo(W*0.5,baseY);sc.stroke();
+  function block(x,y,w,h,T,lab,mat){
+    const g2=sc.createLinearGradient(0,y,0,y+h);g2.addColorStop(0,tcol(T+8));g2.addColorStop(1,tcol(T-8));
+    sc.fillStyle=g2;roundRect(sc,x,y,w,h,8);sc.fill();sc.strokeStyle='rgba(255,255,255,.25)';sc.lineWidth=1.5;sc.stroke();
+    sc.fillStyle='#fff';sc.font='bold 16px system-ui';sc.textAlign='center';sc.fillText(T.toFixed(1)+'°C',x+w/2,y+h/2-2);
+    sc.font='12px system-ui';sc.fillStyle='rgba(255,255,255,.85)';sc.fillText(lab+'：'+mat,x+w/2,y+h/2+18);sc.textAlign='left';
+  }
+  function arr(x0,y,x1,yy){sc.beginPath();sc.moveTo(x0,y);sc.lineTo(x1,yy);sc.stroke();const d=Math.sign(x1-x0);
+    sc.beginPath();sc.moveTo(x1,yy);sc.lineTo(x1-d*8,yy-4);sc.lineTo(x1-d*8,yy+4);sc.closePath();sc.fill();}
+}
+function roundRect(c,x,y,w,h,r){c.beginPath();c.moveTo(x+r,y);c.arcTo(x+w,y,x+w,y+h,r);c.arcTo(x+w,y+h,x,y+h,r);c.arcTo(x,y+h,x,y,r);c.arcTo(x,y,x+w,y,r);c.closePath();}
+function drawGraph(){const W=gc._w,H=gc._h,mL=40,mR=14,mT=14,mB=24,Tw=12;
+  gc.clearRect(0,0,W,H);gc.fillStyle='#0c0a08';gc.fillRect(0,0,W,H);
+  const Tmin=0,Tmax=100,X=tt=>mL+tt/Tw*(W-mL-mR),Y=T=>H-mB-(T-Tmin)/(Tmax-Tmin)*(H-mT-mB);
+  gc.strokeStyle='#241c16';gc.lineWidth=1;gc.fillStyle='#6b5c50';gc.font='10px system-ui';
+  for(let T=0;T<=100;T+=20){gc.beginPath();gc.moveTo(mL,Y(T));gc.lineTo(W-mR,Y(T));gc.stroke();gc.fillText(T,6,Y(T)+3);}
+  // 終溫線
+  const tf=Tf();gc.strokeStyle='rgba(124,255,178,.6)';gc.setLineDash([5,4]);gc.beginPath();gc.moveTo(mL,Y(tf));gc.lineTo(W-mR,Y(tf));gc.stroke();gc.setLineDash([]);
+  gc.fillStyle='#7CFFB2';gc.fillText('終溫 '+tf.toFixed(1)+'°C',W-mR-78,Y(tf)-4);
+  // 曲線 A/B(以 e 指數鬆弛)
+  for(const o of [{f:tt=>tf+(state.T1-tf)*Math.exp(-tt/TAU),col:'#ff7b54',lab:'A'},{f:tt=>tf+(state.T2-tf)*Math.exp(-tt/TAU),col:'#4c9cff',lab:'B'}]){
+    gc.strokeStyle=o.col;gc.lineWidth=2.4;gc.beginPath();for(let i=0;i<=120;i++){const tt=i/120*Tw,x=X(tt),y=Y(o.f(tt));i?gc.lineTo(x,y):gc.moveTo(x,y);}gc.stroke();}
+  // 游標
+  const cx=X(Math.min(t,Tw));gc.strokeStyle='rgba(255,255,255,.4)';gc.lineWidth=1;gc.beginPath();gc.moveTo(cx,mT);gc.lineTo(cx,H-mB);gc.stroke();
+  gc.fillStyle='#ff7b54';gc.beginPath();gc.arc(cx,Y(TA()),3.5,0,7);gc.fill();gc.fillStyle='#4c9cff';gc.beginPath();gc.arc(cx,Y(TB()),3.5,0,7);gc.fill();
+  gc.fillStyle='#8a99ad';gc.font='10px system-ui';gc.fillText('溫度-時間圖　t →',mL+4,H-7);
+}
+function render(){drawScene();drawGraph();}
+let last=0;
+function loop(ts){const dt=last?Math.min((ts-last)/1000,0.05):0;last=ts;if(playing){t+=dt;if(t>14)t=0;}render();requestAnimationFrame(loop);}
+
+const pb=document.getElementById('play');
+pb.onclick=()=>{playing=!playing;pb.classList.toggle('on',playing);pb.textContent=playing?'⏸ 暫停':'▶ 播放';};
+document.getElementById('reset').onclick=()=>{t=0;playing=true;pb.classList.add('on');pb.textContent='⏸ 暫停';};
+function cycMat(which){if(which==='A')matA=(matA+1)%3;else matB=(matB+1)%3;
+  document.getElementById('matA').textContent=MATS[matA].n;document.getElementById('matB').textContent=MATS[matB].n;restart();}
+document.getElementById('matA').onclick=()=>cycMat('A');
+document.getElementById('matB').onclick=()=>cycMat('B');
+
+window.addEventListener('load',()=>{setupCanvases();restart();requestAnimationFrame(loop);});
+window.addEventListener('resize',()=>{setupCanvases();render();});
+</script>
+</body>
+</html>
