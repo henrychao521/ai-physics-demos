@@ -1,0 +1,190 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>空氣柱共鳴管 ｜ 開管/閉管駐波・諧波・f=nv/2L</title>
+<meta name="description" content="空氣柱共鳴互動模擬：管內空氣的位移駐波。兩端開口的開管含全部諧波 f=nv/2L；一端封閉的閉管只有奇數諧波 f=(2n−1)v/4L、基頻只有開管的一半。顯示節點、腹點與各諧波頻率，這就是長笛、簫、管風琴等樂器的發聲原理。">
+<link rel="icon" href="../assets/favicon.svg" type="image/svg+xml">
+<link rel="stylesheet" href="../assets/site.css">
+<script src="../assets/sim.js"></script>
+<script defer src="../assets/nav.js"></script>
+<style>
+  *{box-sizing:border-box}
+  html,body{margin:0;padding:0;background:var(--bg);color:var(--txt);font-family:"Noto Sans TC","PingFang TC","Microsoft JhengHei",system-ui,sans-serif}
+  a{color:var(--accent)}
+  .wrap{max-width:1120px;margin:0 auto;padding:18px 16px 60px}
+  header h1{font-size:1.5rem;margin:.2em 0}
+  header p{color:var(--muted);margin:.2em 0 1em;line-height:1.6}
+  .badge{display:inline-block;background:var(--panel2);border:1px solid var(--line);color:var(--muted);font-size:.72rem;padding:2px 8px;border-radius:99px;margin-right:6px}
+  .scene-wrap{position:relative;border-radius:16px;overflow:hidden;border:1px solid var(--line);box-shadow:0 18px 50px rgba(0,0,0,.45)}
+  #scene{display:block;width:100%}
+  .hud{position:absolute;top:12px;left:12px;display:flex;gap:8px;flex-wrap:wrap;pointer-events:none}
+  .chip{background:rgba(10,16,24,.62);backdrop-filter:blur(6px);border:1px solid rgba(120,180,255,.16);border-radius:10px;padding:6px 11px;color:#dceaff;font-size:.8rem;line-height:1.25}
+  .chip b{display:block;font-size:1.02rem;font-variant-numeric:tabular-nums;color:#fff}
+  .chip.amber b{color:#ffd27a}.chip.cyan b{color:#6cd0ff}.chip.green b{color:#7CFFB2}
+  .toolbar{position:absolute;bottom:12px;right:12px;display:flex;gap:7px;flex-wrap:wrap;justify-content:flex-end}
+  .toolbar button{background:rgba(10,16,24,.62);backdrop-filter:blur(6px);color:#dceaff;border:1px solid rgba(120,180,255,.2);border-radius:9px;padding:7px 11px;font-size:.82rem;cursor:pointer;font-family:inherit}
+  .toolbar button.on{background:var(--accent);color:#04121c;border-color:var(--accent);font-weight:700}
+  @media(max-width:560px){.toolbar{position:static;justify-content:center;padding:8px 10px;background:rgba(8,14,22,.5);border-top:1px solid var(--line)}}
+  .bar{display:flex;gap:14px;flex-wrap:wrap;align-items:flex-end;background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:14px 16px;margin-top:14px}
+  .sld{flex:1;min-width:180px}
+  .sld label{display:flex;justify-content:space-between;font-size:.82rem;color:var(--muted);margin-bottom:5px}
+  .sld label .v{color:var(--accent);font-variant-numeric:tabular-nums;font-weight:700}
+  .sld input{width:100%;accent-color:var(--accent)}
+  .presets{display:flex;gap:7px;flex-wrap:wrap;align-items:center;margin-top:12px}
+  .presets span{color:var(--muted);font-size:.8rem}
+  .pbtn{background:var(--panel2);color:var(--txt);border:1px solid var(--line);padding:7px 12px;border-radius:9px;cursor:pointer;font-size:.83rem;font-family:inherit}
+  .pbtn:hover{border-color:var(--accent)}
+  .note{background:var(--panel);border-left:3px solid var(--accent2);border-radius:8px;padding:12px 14px;color:var(--muted);font-size:.86rem;line-height:1.7;margin-top:14px}
+  .note b{color:var(--txt)}.note code{background:var(--bg2);padding:1px 6px;border-radius:5px;color:var(--green);font-size:.85em}
+  footer{color:var(--muted);font-size:.78rem;margin-top:24px;text-align:center;line-height:1.7}
+</style>
+</head>
+<body data-demo="空氣柱共鳴管">
+<div class="wrap">
+  <header>
+    <span class="badge">波動・聲音・駐波</span>
+    <h1>空氣柱共鳴管（開管／閉管駐波）</h1>
+    <p>吹奏樂器時，管內空氣形成<b>駐波</b>而發聲。<b>開口端是位移腹點</b>（空氣自由振動）、<b>封閉端是位移節點</b>（空氣被擋住不動）。
+       <b>開管</b>含<b>全部諧波</b> f=nv/2L；<b>閉管</b>只有<b>奇數諧波</b> f=(2n−1)v/4L，且基頻只有開管的一半（音較低）。</p>
+  </header>
+
+  <div class="scene-wrap">
+    <canvas id="scene"></canvas>
+    <div class="hud" id="hud"></div>
+    <div class="toolbar">
+      <button id="run" class="on">⏸ 暫停</button>
+      <button id="endt" class="on">管型：開管</button>
+    </div>
+  </div>
+
+  <div class="bar" id="sliders"></div>
+  <div class="presets">
+    <span>諧波：</span>
+    <button class="pbtn" data-n="1">基頻（n=1）</button>
+    <button class="pbtn" data-n="2">第二諧</button>
+    <button class="pbtn" data-n="3">第三諧</button>
+    <button class="pbtn" data-n="4">第四諧</button>
+  </div>
+
+  <div class="formula" id="formula"></div>
+
+  <div class="note">
+    <b>物理重點：</b>聲速 v≈343 m/s（20°C）。管的邊界決定駐波形狀：<b>開口端＝位移腹點(A)</b>、<b>封閉端＝位移節點(N)</b>。
+    <b>開管(兩端開)</b>：兩端皆腹點 → 波長 λ=2L/n → 頻率 <code>f = n·v/2L</code>（n=1,2,3… 全諧波）。
+    <b>閉管(一端閉)</b>：一端節點、一端腹點 → 波長 λ=4L/(2n−1) → 頻率 <code>f = (2n−1)·v/4L</code>（只有奇數諧波）。
+    所以同長度的<b>閉管基頻是開管的一半</b>、音色也不同（缺偶數諧波）。簫、單簧管近似閉管；長笛、管風琴開管近似開管。共鳴管實驗就是調水位改變 L 找共鳴。
+  </div>
+
+  <footer>純前端 HTML / Canvas（SIM 工具庫）。畫的是管內空氣<b>位移</b>駐波包絡（腹點處振幅最大）；頻率／波長依 v=343 m/s 與管長即時計算。</footer>
+</div>
+
+<script>
+const S=SIM;
+const V=343;  // 聲速 m/s
+const state={L:0.5, n:1};
+let closed=false;   // false=開管, true=閉管(左端閉)
+const sliders=[
+  {id:'L',name:'管長 L',min:0.2,max:1.0,step:0.02,val:0.5,unit:'m'},
+  {id:'n',name:'諧波序 n',min:1,max:5,step:1,val:1,unit:''},
+];
+const sBar=document.getElementById('sliders');
+sliders.forEach(s=>{ state[s.id]=s.val;
+  const d=document.createElement('div');d.className='sld';
+  d.innerHTML=`<label><span>${s.name}</span><span class="v" id="v_${s.id}">${s.id==='L'?s.val.toFixed(2):s.val} ${s.unit}</span></label>
+    <input type="range" id="r_${s.id}" min="${s.min}" max="${s.max}" step="${s.step}" value="${s.val}">`;
+  sBar.appendChild(d);
+  d.querySelector('input').addEventListener('input',e=>{state[s.id]=parseFloat(e.target.value);
+    document.getElementById('v_'+s.id).textContent=`${s.id==='L'?state.L.toFixed(2):state[s.id]} ${s.unit}`; recompute(); });
+});
+function setN(n){state.n=n;document.getElementById('r_n').value=n;document.getElementById('v_n').textContent=`${n} `;recompute();}
+
+// ---- 物理 ----
+function freq(){return closed ? (2*state.n-1)*V/(4*state.L) : state.n*V/(2*state.L);}
+function lambda(){return closed ? 4*state.L/(2*state.n-1) : 2*state.L/state.n;}
+function recompute(){updateFormula();}
+
+// 位移駐波形狀 f(ξ), ξ∈[0,1] 沿管(左→右)
+function shape(xi){ return closed ? Math.sin((2*state.n-1)*Math.PI*xi/2)   // 左閉:節點; 右開:腹點
+                                  : Math.cos(state.n*Math.PI*xi); }        // 兩端腹點
+// 節點/腹點位置(ξ)
+function nodes(){const arr=[];const N=200;let prev=shape(0);
+  for(let i=1;i<=N;i++){const xi=i/N,cur=shape(xi);if(prev===0||(prev<0)!=(cur<0))arr.push(xi);prev=cur;}return arr;}
+
+// ---- 公式面板 ----
+function frow(n,sym,sub,val){return `<div class="frow"><span class="fname">${n}</span><span class="fsym">${sym}</span><span class="fsub">= ${sub}</span><span class="fval">${val}</span></div>`;}
+function updateFormula(){const f=freq(),lam=lambda(),f1=closed?V/(4*state.L):V/(2*state.L);
+  const type=closed?'閉管(一端閉)':'開管(兩端開)';
+  document.getElementById('formula').innerHTML=
+    `<h4>📐 計算公式（即時代入　v=343 m/s、${type}、L=${state.L.toFixed(2)} m、n=${state.n}）</h4>`
+    + frow('共振頻率 f', closed?'(2n−1)·v/4L':'n·v/2L', closed?`${2*state.n-1}·343/(4·${state.L.toFixed(2)})`:`${state.n}·343/(2·${state.L.toFixed(2)})`, f.toFixed(1)+' Hz')
+    + frow('波長 λ', closed?'4L/(2n−1)':'2L/n', closed?`4·${state.L.toFixed(2)}/${2*state.n-1}`:`2·${state.L.toFixed(2)}/${state.n}`, lam.toFixed(3)+' m')
+    + frow('基頻 f₁', closed?'v/4L':'v/2L', `343/(${closed?4:2}·${state.L.toFixed(2)})`, f1.toFixed(1)+' Hz')
+    + `<div class="frel">📈 <b>開口端＝腹點、封閉端＝節點</b>　·　開管 f∝n（全諧波）、閉管 f∝(2n−1)（僅奇諧）　·　<b>L 加倍→頻率減半</b>（共鳴管調水位變 L 即此理）　·　同長閉管基頻＝開管的一半。</div>`;
+}
+
+// ---- 視圖 ----
+let sc;
+const SKY={skyTop:'#0c1322',skyBottom:'#070d16',vignette:'rgba(0,0,0,.42)'};
+function setupCanvases(){sc=S.fit(document.getElementById('scene'),2.0);}
+let phase=0, running=true;
+function draw(){const W=sc._w,H=sc._h;S.scene(sc,SKY,{});
+  const mx=70, tubeW=W-mx-70, x0=mx, cy=H*0.52, tubeH=Math.min(150,H*0.5), amp=tubeH*0.38;
+  // 管壁
+  sc.strokeStyle='rgba(150,170,210,.55)';sc.lineWidth=2.5;
+  sc.beginPath();sc.moveTo(x0,cy-tubeH/2);sc.lineTo(x0+tubeW,cy-tubeH/2);   // 上壁
+  sc.moveTo(x0,cy+tubeH/2);sc.lineTo(x0+tubeW,cy+tubeH/2);sc.stroke();      // 下壁
+  // 端封閉壁(左端) 或 開口標示
+  if(closed){sc.strokeStyle='#9fb4dc';sc.lineWidth=4;sc.beginPath();sc.moveTo(x0,cy-tubeH/2);sc.lineTo(x0,cy+tubeH/2);sc.stroke();
+    sc.fillStyle='rgba(160,180,215,.8)';sc.font='12px system-ui';sc.fillText('封閉(節點)',x0-2,cy+tubeH/2+18);}
+  else{sc.fillStyle='rgba(124,255,178,.8)';sc.font='12px system-ui';sc.fillText('開口(腹點)',x0-6,cy+tubeH/2+18);}
+  sc.fillStyle='rgba(124,255,178,.8)';sc.fillText('開口(腹點)',x0+tubeW-54,cy+tubeH/2+18);
+  // 駐波包絡(淡) + 瞬時波(實)
+  const env=Math.cos(phase);
+  sc.strokeStyle='rgba(108,208,255,.25)';sc.lineWidth=1.4;
+  for(const sgn of [1,-1]){sc.beginPath();for(let i=0;i<=tubeW;i+=3){const xi=i/tubeW;const y=cy-sgn*amp*shape(xi);i?sc.lineTo(x0+i,y):sc.moveTo(x0+i,y);}sc.stroke();}
+  // 瞬時
+  sc.strokeStyle='#6cd0ff';sc.lineWidth=2.6;sc.beginPath();
+  for(let i=0;i<=tubeW;i+=2){const xi=i/tubeW;const y=cy-amp*shape(xi)*env;i?sc.lineTo(x0+i,y):sc.moveTo(x0+i,y);}sc.stroke();
+  // 鏡像(下半,顯示空氣前後振動的另一相)
+  sc.strokeStyle='rgba(108,208,255,.4)';sc.lineWidth=1.6;sc.beginPath();
+  for(let i=0;i<=tubeW;i+=2){const xi=i/tubeW;const y=cy+amp*shape(xi)*env;i?sc.lineTo(x0+i,y):sc.moveTo(x0+i,y);}sc.stroke();
+  // 中線
+  sc.strokeStyle='rgba(150,170,210,.25)';sc.lineWidth=1;sc.setLineDash([4,4]);sc.beginPath();sc.moveTo(x0,cy);sc.lineTo(x0+tubeW,cy);sc.stroke();sc.setLineDash([]);
+  // 節點 N / 腹點 A 標示
+  const nds=nodes();
+  nds.forEach(xi=>{const x=x0+xi*tubeW;sc.strokeStyle='rgba(255,143,176,.7)';sc.lineWidth=1.2;sc.setLineDash([3,3]);
+    sc.beginPath();sc.moveTo(x,cy-tubeH/2);sc.lineTo(x,cy+tubeH/2);sc.stroke();sc.setLineDash([]);
+    sc.fillStyle='#ff8fb0';sc.font='bold 12px system-ui';sc.fillText('N',x-4,cy-tubeH/2-6);});
+  // 腹點:以取樣找 |shape| 局部極大(含端點)
+  {let best=[];const Np=400;for(let i=1;i<Np;i++){const xi=i/Np;const a=Math.abs(shape(xi));
+    if(a>Math.abs(shape((i-1)/Np))&&a>=Math.abs(shape((i+1)/Np))&&a>0.6)best.push(xi);}
+   // 端點腹點
+   if(Math.abs(shape(0))>0.9)best.unshift(0); if(Math.abs(shape(1))>0.9)best.push(1);
+   best.forEach(xi=>{const x=x0+xi*tubeW;sc.fillStyle='#7CFFB2';sc.font='bold 12px system-ui';sc.fillText('A',x-4,cy+tubeH/2+34);});}
+  updateHud();
+}
+function updateHud(){const f=freq(),lam=lambda();
+  document.getElementById('hud').innerHTML=
+   `<div class="chip amber">共振頻率 f<b>${f.toFixed(1)} Hz</b></div>`+
+   `<div class="chip cyan">波長 λ<b>${lam.toFixed(3)} m</b></div>`+
+   `<div class="chip green">${closed?'閉管・奇諧':'開管・全諧'}<b>n=${state.n}（${closed?'第'+(2*state.n-1)+'諧':'第'+state.n+'諧'}）</b></div>`;
+}
+
+let last=0;
+function loop(ts){const dt=last?Math.min((ts-last)/1000,0.05):0;last=ts;
+  if(running)phase+=dt*3.4;
+  draw();requestAnimationFrame(loop);}
+
+const rb=document.getElementById('run');
+rb.onclick=()=>{running=!running;rb.classList.toggle('on',running);rb.textContent=running?'⏸ 暫停':'▶ 播放';};
+const eb=document.getElementById('endt');
+eb.onclick=()=>{closed=!closed;eb.textContent='管型：'+(closed?'閉管':'開管');eb.classList.toggle('on',!closed);recompute();};
+document.querySelectorAll('[data-n]').forEach(b=>b.onclick=()=>setN(parseInt(b.dataset.n)));
+
+window.addEventListener('load',()=>{setupCanvases();recompute();requestAnimationFrame(loop);});
+window.addEventListener('resize',()=>{setupCanvases();draw();});
+</script>
+</body>
+</html>
