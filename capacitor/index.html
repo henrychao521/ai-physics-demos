@@ -1,0 +1,177 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>平行板電容器 ｜ C=ε₀A/d・Q=CV・U=½CV²</title>
+<meta name="description" content="平行板電容器互動模擬：調板面積 A、間距 d、電壓 V，看電容 C=ε₀A/d、電荷 Q=CV、板間電場 E=V/d 與儲存能量 U=½CV²。插入介電質讓電容變 εr 倍。">
+<link rel="icon" href="../assets/favicon.svg" type="image/svg+xml">
+<link rel="stylesheet" href="../assets/site.css">
+<script src="../assets/sim.js"></script>
+<script defer src="../assets/nav.js"></script>
+<style>
+  *{box-sizing:border-box}
+  html,body{margin:0;padding:0;background:var(--bg);color:var(--txt);font-family:"Noto Sans TC","PingFang TC","Microsoft JhengHei",system-ui,sans-serif}
+  a{color:var(--accent)}
+  .wrap{max-width:1120px;margin:0 auto;padding:18px 16px 60px}
+  header h1{font-size:1.5rem;margin:.2em 0}
+  header p{color:var(--muted);margin:.2em 0 1em;line-height:1.6}
+  .badge{display:inline-block;background:var(--panel2);border:1px solid var(--line);color:var(--muted);font-size:.72rem;padding:2px 8px;border-radius:99px;margin-right:6px}
+  .scene-wrap{position:relative;border-radius:16px;overflow:hidden;border:1px solid var(--line);box-shadow:0 18px 50px rgba(0,0,0,.45)}
+  #scene{display:block;width:100%}
+  .hud{position:absolute;top:12px;left:12px;display:flex;gap:8px;flex-wrap:wrap;pointer-events:none}
+  .chip{background:rgba(10,16,24,.62);backdrop-filter:blur(6px);border:1px solid rgba(120,180,255,.16);border-radius:10px;padding:6px 11px;color:#dceaff;font-size:.8rem;line-height:1.25}
+  .chip b{display:block;font-size:1.02rem;font-variant-numeric:tabular-nums;color:#fff}
+  .chip.cyan b{color:#6cd0ff}.chip.amber b{color:#ffce54}.chip.green b{color:#7CFFB2}.chip.rose b{color:#ff8fb0}
+  .toolbar{position:absolute;bottom:12px;right:12px;display:flex;gap:7px;flex-wrap:wrap;justify-content:flex-end}
+  .toolbar button{background:rgba(10,16,24,.62);backdrop-filter:blur(6px);color:#dceaff;border:1px solid rgba(120,180,255,.2);border-radius:9px;padding:7px 11px;font-size:.82rem;cursor:pointer;font-family:inherit}
+  .toolbar button.on{background:var(--accent);color:#04121c;border-color:var(--accent);font-weight:700}
+  @media(max-width:560px){.toolbar{position:static;justify-content:center;padding:8px 10px;background:rgba(8,14,22,.5);border-top:1px solid var(--line)}}
+  .bar{display:flex;gap:14px;flex-wrap:wrap;align-items:flex-end;background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:14px 16px;margin-top:14px}
+  .sld{flex:1;min-width:160px}
+  .sld label{display:flex;justify-content:space-between;font-size:.82rem;color:var(--muted);margin-bottom:5px}
+  .sld label .v{color:var(--accent);font-variant-numeric:tabular-nums;font-weight:700}
+  .sld input{width:100%;accent-color:var(--accent)}
+  .presets{display:flex;gap:7px;flex-wrap:wrap;align-items:center;margin-top:12px}
+  .presets span{color:var(--muted);font-size:.8rem}
+  .pbtn{background:var(--panel2);color:var(--txt);border:1px solid var(--line);padding:7px 12px;border-radius:9px;cursor:pointer;font-size:.83rem;font-family:inherit}
+  .pbtn:hover{border-color:var(--accent)}
+  .note{background:var(--panel);border-left:3px solid var(--accent2);border-radius:8px;padding:12px 14px;color:var(--muted);font-size:.86rem;line-height:1.7;margin-top:14px}
+  .note b{color:var(--txt)}.note code{background:var(--bg2);padding:1px 6px;border-radius:5px;color:var(--green);font-size:.85em}
+  footer{color:var(--muted);font-size:.78rem;margin-top:24px;text-align:center;line-height:1.7}
+</style>
+</head>
+<body data-demo="平行板電容器">
+<div class="wrap">
+  <header>
+    <span class="badge">電磁・靜電學</span>
+    <h1>平行板電容器</h1>
+    <p>兩片平行金屬板接上電壓 V，會在板上儲存等量異號電荷 Q，板間建立均勻電場 E。<b>電容 C = ε₀A/d</b>（板越大、越近電容越大），
+       <b>電荷 Q = CV</b>、<b>板間電場 E = V/d</b>、<b>儲存能量 U = ½CV²</b>。插入<b>介電質</b>可讓電容變大 εr 倍。</p>
+  </header>
+
+  <div class="scene-wrap">
+    <canvas id="scene"></canvas>
+    <div class="hud" id="hud"></div>
+    <div class="toolbar"><button id="diel">插入介電質（εr=4）</button></div>
+  </div>
+
+  <div class="bar" id="sliders"></div>
+  <div class="presets">
+    <span>情境：</span>
+    <button class="pbtn" data-preset="big">大電容（板大、間距小）</button>
+    <button class="pbtn" data-preset="small">小電容</button>
+    <button class="pbtn" data-preset="hv">高電壓</button>
+  </div>
+
+  <div class="formula" id="formula"></div>
+
+  <div class="note">
+    <b>物理重點：</b>平行板電容 <code>C = ε₀·εr·A/d</code>（ε₀=8.85×10⁻¹² F/m）：<b>板面積 A 越大、間距 d 越小，電容越大</b>。
+    接上電壓後 <code>Q = CV</code>（電容決定同電壓下能存多少電荷）；板間是<b>均勻電場</b> <code>E = V/d</code>；儲存的電能 <code>U = ½CV² = ½QV = Q²/2C</code>。
+    插入<b>介電質</b>（εr>1）會削弱板間電場、使電容變 εr 倍，能存更多電荷。電容器用於濾波、計時(配合電阻)、閃光燈儲能、觸控螢幕感測。
+  </div>
+
+  <footer>純前端 HTML / Canvas（SIM 工具庫）。理想平行板(忽略邊緣效應)；ε₀=8.85×10⁻¹² F/m。</footer>
+</div>
+
+<script>
+const S=SIM, E0=8.85e-12;
+let diel=false;
+const sliders=[
+  {id:'A',name:'板面積 A',min:20,max:400,step:10,val:100,unit:'cm²'},
+  {id:'d',name:'板間距 d',min:0.5,max:8,step:.5,val:2,unit:'mm'},
+  {id:'V',name:'電壓 V',min:2,max:50,step:1,val:12,unit:'V'},
+];
+const state={};
+const sBar=document.getElementById('sliders');
+sliders.forEach(s=>{ state[s.id]=s.val;
+  const d=document.createElement('div');d.className='sld';
+  d.innerHTML=`<label><span>${s.name}</span><span class="v" id="v_${s.id}">${fmt(s.val)} ${s.unit}</span></label>
+    <input type="range" id="r_${s.id}" min="${s.min}" max="${s.max}" step="${s.step}" value="${s.val}">`;
+  sBar.appendChild(d);
+  d.querySelector('input').addEventListener('input',e=>{state[s.id]=parseFloat(e.target.value);
+    document.getElementById('v_'+s.id).textContent=`${fmt(state[s.id])} ${s.unit}`; recompute(); });
+});
+function fmt(x){return (Math.round(x*100)/100).toString();}
+function setSlider(id,val){state[id]=val;const r=document.getElementById('r_'+id);if(r)r.value=val;
+  const s=sliders.find(z=>z.id===id);if(s)document.getElementById('v_'+id).textContent=`${fmt(val)} ${s.unit}`;}
+
+// ---- 物理（SI）----
+function er(){return diel?4:1;}
+function C(){return E0*er()*(state.A*1e-4)/(state.d*1e-3);}   // F
+function Q(){return C()*state.V;}                              // C
+function Efield(){return state.V/(state.d*1e-3);}             // V/m
+function U(){return 0.5*C()*state.V*state.V;}                  // J
+function eng(x,u){const a=Math.abs(x);if(a>=1)return x.toFixed(2)+' '+u;if(a>=1e-3)return (x*1e3).toFixed(2)+' m'+u;if(a>=1e-6)return (x*1e6).toFixed(2)+' μ'+u;if(a>=1e-9)return (x*1e9).toFixed(2)+' n'+u;return (x*1e12).toFixed(2)+' p'+u;}
+
+// ---- 公式面板 ----
+function frow(n,sym,sub,val){return `<div class="frow"><span class="fname">${n}</span><span class="fsym">${sym}</span><span class="fsub">= ${sub}</span><span class="fval">${val}</span></div>`;}
+function updateFormula(){
+  document.getElementById('formula').innerHTML=
+    `<h4>📐 計算公式（即時代入　ε₀=8.85×10⁻¹² F/m${diel?'，介電質 εr=4':''}）</h4>`
+    + frow('電容 C','ε₀·εr·A/d',`8.85e-12·${er()}·${state.A}cm²/${state.d}mm`, eng(C(),'F'))
+    + frow('電荷 Q','C·V',`${eng(C(),'F')}·${state.V}`, eng(Q(),'C'))
+    + frow('板間電場 E','V / d',`${state.V} / ${state.d}mm`, (Efield()).toFixed(0)+' V/m')
+    + frow('儲存能量 U','½·C·V²',`½·${eng(C(),'F')}·${state.V}²`, eng(U(),'J'))
+    + `<div class="frel">📈 <b>C ∝ A/d</b>：板越大、越近電容越大　·　<b>同電壓下 C 越大存的電荷 Q 越多</b>　·　<b>E=V/d 與板面積無關</b>(均勻場)　·　插介電質 εr↑ → C↑、能存更多電荷　·　能量 U=½CV²=Q²/2C。</div>`;
+}
+function recompute(){updateFormula();}
+
+// ---- 視圖 ----
+let sc;
+const CAP={skyTop:'#0e1626',skyBottom:'#070d18',vignette:'rgba(0,0,0,.4)'};
+function setupCanvases(){sc=S.fit(document.getElementById('scene'),2.0);}
+function draw(){const W=sc._w,H=sc._h,cx=W/2,cy=H/2;
+  S.scene(sc,CAP,{});
+  const ph=Math.min(H*0.6,Math.sqrt(state.A/100)*H*0.32+H*0.28);   // 板高∝√A
+  const gap=Math.max(20,Math.min(W*0.4,state.d/8*W*0.34+14));       // 板距∝d
+  const lx=cx-gap/2, rx=cx+gap/2, ty=cy-ph/2, by=cy+ph/2;
+  // 介電質
+  if(diel){sc.fillStyle='rgba(140,160,255,.14)';sc.fillRect(lx,ty,gap,ph);sc.strokeStyle='rgba(140,160,255,.4)';sc.strokeRect(lx,ty,gap,ph);
+    sc.fillStyle='#8b9cff';sc.font='11px system-ui';sc.fillText('介電質 εr=4',cx-30,by+16);}
+  // 電場線(均勻,左+→右−)
+  const nE=Math.max(3,Math.min(9,Math.round(ph/26)));
+  sc.strokeStyle='rgba(124,200,255,.55)';sc.lineWidth=1.6;sc.fillStyle='rgba(124,200,255,.55)';
+  for(let i=0;i<nE;i++){const y=ty+ (i+0.5)*ph/nE;sc.beginPath();sc.moveTo(lx+4,y);sc.lineTo(rx-8,y);sc.stroke();
+    sc.beginPath();sc.moveTo(rx-8,y);sc.lineTo(rx-14,y-4);sc.lineTo(rx-14,y+4);sc.closePath();sc.fill();}
+  // 左板(+)
+  sc.fillStyle='#c9d6ea';sc.fillRect(lx-8,ty,8,ph);
+  sc.fillStyle='#ff8fb0';sc.font='bold 13px system-ui';
+  const nQ=Math.max(2,Math.min(8,Math.round(Q()*1e9*2)+2));
+  for(let i=0;i<nQ;i++)sc.fillText('+',lx-6,ty+(i+0.7)*ph/nQ);
+  // 右板(−)
+  sc.fillStyle='#c9d6ea';sc.fillRect(rx,ty,8,ph);
+  sc.fillStyle='#6cd0ff';for(let i=0;i<nQ;i++)sc.fillText('−',rx+2,ty+(i+0.7)*ph/nQ);
+  // 電池
+  sc.strokeStyle='#9aa6c0';sc.lineWidth=2;
+  sc.beginPath();sc.moveTo(lx-8,by);sc.lineTo(lx-8,by+24);sc.lineTo(cx-14,by+24);sc.stroke();
+  sc.beginPath();sc.moveTo(rx+8,by);sc.lineTo(rx+8,by+24);sc.lineTo(cx+14,by+24);sc.stroke();
+  sc.strokeStyle='#ff8fb0';sc.beginPath();sc.moveTo(cx-14,by+18);sc.lineTo(cx-14,by+30);sc.stroke();
+  sc.strokeStyle='#6cd0ff';sc.beginPath();sc.moveTo(cx-6,by+21);sc.lineTo(cx-6,by+27);sc.stroke();
+  sc.fillStyle='#dceaff';sc.font='12px system-ui';sc.fillText(state.V+' V',cx+2,by+30);
+  // 板距標示
+  sc.strokeStyle='rgba(255,206,84,.6)';sc.lineWidth=1;sc.beginPath();sc.moveTo(lx,ty-8);sc.lineTo(rx,ty-8);sc.stroke();
+  sc.fillStyle='#ffce54';sc.font='11px system-ui';sc.fillText('d='+state.d+'mm',cx-18,ty-12);
+  updateHud();
+}
+function updateHud(){
+  document.getElementById('hud').innerHTML=
+   `<div class="chip cyan">電容 C<b>${eng(C(),'F')}</b></div>`+
+   `<div class="chip rose">電荷 Q<b>${eng(Q(),'C')}</b></div>`+
+   `<div class="chip amber">電場 E<b>${Efield().toFixed(0)} V/m</b></div>`+
+   `<div class="chip green">能量 U<b>${eng(U(),'J')}</b></div>`;
+}
+let last=0;function loop(ts){last=ts;draw();requestAnimationFrame(loop);}
+
+const db=document.getElementById('diel');
+db.onclick=()=>{diel=!diel;db.classList.toggle('on',diel);db.textContent=diel?'移除介電質':'插入介電質（εr=4）';recompute();};
+const PRE={big:{A:380,d:0.5,V:12},small:{A:30,d:7,V:12},hv:{A:150,d:2,V:48}};
+document.querySelectorAll('[data-preset]').forEach(b=>b.onclick=()=>{const pr=PRE[b.dataset.preset];if(!pr)return;
+  ['A','d','V'].forEach(k=>setSlider(k,pr[k]));recompute();});
+
+window.addEventListener('load',()=>{setupCanvases();recompute();requestAnimationFrame(loop);});
+window.addEventListener('resize',()=>{setupCanvases();draw();});
+</script>
+</body>
+</html>
