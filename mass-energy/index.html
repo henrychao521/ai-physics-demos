@@ -1,0 +1,168 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>質能等效與結合能 ｜ E=Δmc²・每核子結合能曲線・分裂與融合</title>
+<meta name="description" content="質能等效與核結合能互動模擬：每核子結合能曲線在鐵-56 最高。核分裂(重核→中核)與核融合(輕核→中核)都往曲線高峰移動而釋放能量，能量來自質量虧損 E=Δmc²。">
+<link rel="icon" href="../assets/favicon.svg" type="image/svg+xml">
+<link rel="stylesheet" href="../assets/site.css">
+<script src="../assets/sim.js"></script>
+<script defer src="../assets/nav.js"></script>
+<style>
+  *{box-sizing:border-box}
+  html,body{margin:0;padding:0;background:var(--bg);color:var(--txt);font-family:"Noto Sans TC","PingFang TC","Microsoft JhengHei",system-ui,sans-serif}
+  a{color:var(--accent)}
+  .wrap{max-width:1120px;margin:0 auto;padding:18px 16px 60px}
+  header h1{font-size:1.5rem;margin:.2em 0}
+  header p{color:var(--muted);margin:.2em 0 1em;line-height:1.6}
+  .badge{display:inline-block;background:var(--panel2);border:1px solid var(--line);color:var(--muted);font-size:.72rem;padding:2px 8px;border-radius:99px;margin-right:6px}
+  .scene-wrap{position:relative;border-radius:16px;overflow:hidden;border:1px solid var(--line);box-shadow:0 18px 50px rgba(0,0,0,.45)}
+  #curve{display:block;width:100%}
+  .hud{position:absolute;top:12px;left:12px;display:flex;gap:8px;flex-wrap:wrap;pointer-events:none}
+  .chip{background:rgba(18,12,8,.6);backdrop-filter:blur(6px);border:1px solid rgba(255,200,140,.18);border-radius:10px;padding:6px 11px;color:#ffe9d6;font-size:.8rem;line-height:1.25}
+  .chip b{display:block;font-size:1.02rem;font-variant-numeric:tabular-nums;color:#fff}
+  .chip.amber b{color:#ffce54}.chip.green b{color:#7CFFB2}.chip.rose b{color:#ff8fb0}
+  .mats{display:flex;gap:7px;flex-wrap:wrap;align-items:center;margin-top:14px}
+  .mats span{color:var(--muted);font-size:.8rem}
+  .pbtn{background:var(--panel2);color:var(--txt);border:1px solid var(--line);padding:7px 12px;border-radius:9px;cursor:pointer;font-size:.83rem;font-family:inherit}
+  .pbtn:hover{border-color:var(--accent)}
+  .bar{display:flex;gap:14px;flex-wrap:wrap;align-items:flex-end;background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:14px 16px;margin-top:14px}
+  .sld{flex:1;min-width:200px}
+  .sld label{display:flex;justify-content:space-between;font-size:.82rem;color:var(--muted);margin-bottom:5px}
+  .sld label .v{color:var(--accent);font-variant-numeric:tabular-nums;font-weight:700}
+  .sld input{width:100%;accent-color:var(--accent)}
+  .note{background:var(--panel);border-left:3px solid var(--accent2);border-radius:8px;padding:12px 14px;color:var(--muted);font-size:.86rem;line-height:1.7;margin-top:14px}
+  .note b{color:var(--txt)}.note code{background:var(--bg2);padding:1px 6px;border-radius:5px;color:var(--green);font-size:.85em}
+  footer{color:var(--muted);font-size:.78rem;margin-top:24px;text-align:center;line-height:1.7}
+</style>
+</head>
+<body data-demo="質能等效與結合能">
+<div class="wrap">
+  <header>
+    <span class="badge">近代物理・核物理</span>
+    <h1>質能等效與結合能（E=Δmc²）</h1>
+    <p>把核子綁在一起會釋放<b>結合能</b>，使原子核的質量比組成它的核子總質量<b>少一點</b>（質量虧損 Δm），<b>E = Δm·c²</b>。
+       <b>每核子結合能</b>越大代表越穩定——曲線在<b>鐵-56</b> 最高。<b>核分裂</b>（重核→中核）與<b>核融合</b>（輕核→中核）都往這個高峰移動，所以<b>放出能量</b>。</p>
+  </header>
+
+  <div class="scene-wrap">
+    <canvas id="curve"></canvas>
+    <div class="hud" id="hud"></div>
+  </div>
+
+  <div class="mats">
+    <span>反應示範：</span>
+    <button class="pbtn" id="dFis">核分裂 U-235 → 兩中核</button>
+    <button class="pbtn" id="dFus">核融合 ²H+³H → He</button>
+    <button class="pbtn" id="dClear">清除</button>
+  </div>
+
+  <div class="bar" id="sliders"></div>
+
+  <div class="formula" id="formula"></div>
+
+  <div class="note">
+    <b>物理重點：</b>原子核的質量 < 組成核子的總質量，差額 Δm 即<b>質量虧損</b>，對應的能量 <code>E_b = Δm·c²</code> 就是<b>結合能</b>（要拆散核子需投入的能量）。
+    <b>每核子結合能 E_b/A</b> 衡量穩定度：曲線從輕核急升、在 <b>Fe-56（約 8.8 MeV）</b> 達頂、再緩降。重核<b>分裂</b>成兩個中核、輕核<b>融合</b>成中核，都讓 E_b/A 上升 → 多出的結合能以動能/輻射<b>釋放</b>。
+    <code>c²</code> 巨大（9×10¹⁶），所以一點點 Δm 就是龐大能量——這就是核能、太陽發光（融合）與原子彈（分裂）的本質。
+  </div>
+
+  <footer>純前端 HTML / Canvas（SIM 工具庫）。每核子結合能曲線採實測代表點內插；E=Δmc²。</footer>
+</div>
+
+<script>
+const S=SIM;
+// 每核子結合能 E_b/A (MeV) 代表資料點(沿穩定線)
+const DATA=[[1,0],[2,1.11],[3,2.83],[4,7.07],[6,5.33],[7,5.61],[9,6.46],[12,7.68],[16,7.98],[20,8.03],[24,8.26],[28,8.45],[40,8.55],[56,8.79],[62,8.79],[80,8.71],[100,8.50],[120,8.50],[140,8.38],[160,8.21],[180,8.05],[200,7.87],[209,7.85],[238,7.57]];
+function beA(A){ // 線性內插
+  if(A<=1)return 0; if(A>=238)return 7.57;
+  for(let i=1;i<DATA.length;i++){if(A<=DATA[i][0]){const [a0,b0]=DATA[i-1],[a1,b1]=DATA[i];return b0+(b1-b0)*(A-a0)/(a1-a0);}}return 7.57;}
+const sliders=[{id:'A',name:'質量數 A（核子數）',min:1,max:238,step:1,val:56,unit:''}];
+const state={};
+const sBar=document.getElementById('sliders');
+sliders.forEach(s=>{ state[s.id]=s.val;
+  const d=document.createElement('div');d.className='sld';
+  d.innerHTML=`<label><span>${s.name}</span><span class="v" id="v_${s.id}">${fmt(s.val)}</span></label>
+    <input type="range" id="r_${s.id}" min="${s.min}" max="${s.max}" step="${s.step}" value="${s.val}">`;
+  sBar.appendChild(d);
+  d.querySelector('input').addEventListener('input',e=>{state[s.id]=parseFloat(e.target.value);
+    document.getElementById('v_'+s.id).textContent=fmt(state[s.id]); reaction=null; recompute(); });
+});
+function fmt(x){return (Math.round(x*100)/100).toString();}
+function setSlider(id,val){state[id]=val;const r=document.getElementById('r_'+id);if(r)r.value=val;document.getElementById('v_'+id).textContent=fmt(val);}
+
+// ---- 物理 ----
+let reaction=null;  // {type, parts:[{A,label}], products:[{A,label}], dE}
+function totalBE(A){return beA(A)*A;}
+function recompute(){updateFormula();}
+
+// ---- 公式面板 ----
+function frow(n,sym,sub,val){return `<div class="frow"><span class="fname">${n}</span><span class="fsym">${sym}</span><span class="fsub">= ${sub}</span><span class="fval">${val}</span></div>`;}
+function updateFormula(){const A=state.A,b=beA(A),tot=totalBE(A);
+  let html=`<h4>📐 計算公式（即時代入　E=Δmc²，1u≈931.5 MeV）</h4>`
+    + frow('每核子結合能','E_b/A（曲線高度）',`A=${A}`, b.toFixed(2)+' MeV')
+    + frow('總結合能 E_b','(E_b/A)·A',`${b.toFixed(2)}·${A}`, tot.toFixed(0)+' MeV')
+    + frow('質量虧損 Δm','E_b / c² = E_b/931.5 u',`${tot.toFixed(0)}/931.5`, (tot/931.5).toFixed(3)+' u');
+  if(reaction){html+=frow('反應釋放能 ΔE','Σ生成物 E_b − Σ反應物 E_b',reaction.detail, reaction.dE.toFixed(0)+' MeV ✦放出');}
+  html+=`<div class="frel">📈 <b>E_b/A 在 Fe-56 最高(最穩定)</b>　·　<b>重核分裂、輕核融合都往高峰移動 → E_b/A↑ → 放能</b>　·　能量來自質量虧損 <b>E=Δmc²</b>，c² 巨大故微小 Δm＝龐大能量　·　太陽靠融合、核電靠分裂。</div>`;
+  document.getElementById('formula').innerHTML=html;
+}
+
+// ---- 視圖：結合能曲線 ----
+let cc;
+const NUC={skyTop:'#1a120a',skyBottom:'#0b0805',vignette:'rgba(0,0,0,.4)'};
+function setupCanvases(){cc=S.fit(document.getElementById('curve'),2.0);}
+function draw(){const W=cc._w,H=cc._h,mL=42,mR=16,mT=18,mB=30;
+  S.scene(cc,NUC,{});
+  const Amax=240,Bmax=9.5,X=a=>mL+a/Amax*(W-mL-mR),Y=b=>H-mB-b/Bmax*(H-mT-mB);
+  // 軸
+  cc.strokeStyle='#2a2016';cc.lineWidth=1;cc.fillStyle='#7a6850';cc.font='10px system-ui';
+  for(let b=0;b<=9;b+=3){cc.beginPath();cc.moveTo(mL,Y(b));cc.lineTo(W-mR,Y(b));cc.stroke();cc.fillText(b,6,Y(b)+3);}
+  for(let a=0;a<=240;a+=40){cc.fillText(a,X(a)-6,H-mB+13);}
+  cc.fillStyle='#8a99ad';cc.fillText('質量數 A →',W-72,H-6);
+  cc.save();cc.translate(12,mT+60);cc.rotate(-Math.PI/2);cc.fillText('每核子結合能 (MeV) →',0,0);cc.restore();
+  // 曲線
+  cc.strokeStyle='#ffce54';cc.lineWidth=2.6;cc.beginPath();
+  for(let a=1;a<=238;a++){const x=X(a),y=Y(beA(a));a===1?cc.moveTo(x,y):cc.lineTo(x,y);}cc.stroke();
+  // Fe-56 峰
+  cc.strokeStyle='rgba(124,255,178,.5)';cc.setLineDash([4,4]);cc.beginPath();cc.moveTo(X(56),mT);cc.lineTo(X(56),H-mB);cc.stroke();cc.setLineDash([]);
+  cc.fillStyle='#7CFFB2';cc.font='11px system-ui';cc.fillText('Fe-56 最穩定',X(56)+4,mT+12);
+  // 反應箭頭(分裂/融合)
+  if(reaction){const a1=reaction.from,a2=reaction.to;
+    cc.strokeStyle='#ff8fb0';cc.lineWidth=2;cc.beginPath();cc.moveTo(X(a1),Y(beA(a1)));cc.lineTo(X(a2),Y(beA(a2)));cc.stroke();
+    [[a1,reaction.fromLab,'#ff8fb0'],[a2,reaction.toLab,'#7CFFB2']].forEach(([a,lab,col])=>{cc.fillStyle=col;cc.beginPath();cc.arc(X(a),Y(beA(a)),5,0,7);cc.fill();
+      cc.font='bold 11px system-ui';cc.fillText(lab,X(a)-8,Y(beA(a))-9);});
+    cc.fillStyle='#7CFFB2';cc.font='12px system-ui';cc.fillText('往高峰→放能 '+reaction.dE.toFixed(0)+' MeV',(X(a1)+X(a2))/2-50,Y((beA(a1)+beA(a2))/2)+(reaction.type==='fus'?-16:24));
+  }else{
+    // 當前 A 點
+    const a=state.A;cc.fillStyle='#fff';cc.beginPath();cc.arc(X(a),Y(beA(a)),5,0,7);cc.fill();
+    cc.strokeStyle='rgba(255,255,255,.35)';cc.beginPath();cc.moveTo(X(a),Y(beA(a)));cc.lineTo(X(a),H-mB);cc.stroke();
+    cc.fillStyle='#fff';cc.font='bold 11px system-ui';cc.fillText('A='+a+'  '+beA(a).toFixed(2)+'MeV',X(a)+8,Y(beA(a))-6);
+  }
+  updateHud();
+}
+function updateHud(){
+  document.getElementById('hud').innerHTML=
+   `<div class="chip amber">質量數 A<b>${state.A}</b></div>`+
+   `<div class="chip green">每核子結合能<b>${beA(state.A).toFixed(2)} MeV</b></div>`+
+   `<div class="chip rose">總結合能<b>${totalBE(state.A).toFixed(0)} MeV</b></div>`;
+}
+function render(){draw();}
+
+// 反應示範
+function fission(){const a1=236,a2=118; // U-236*→2×~118
+  const dE=2*totalBE(a2)-totalBE(a1);
+  reaction={type:'fis',from:a1,to:a2,fromLab:'U(236)',toLab:'×2',dE};setSlider('A',a1);recompute();}
+function fusion(){const dE=totalBE(4)-(totalBE(2)+totalBE(3)); // ²H+³H→⁴He(+n)
+  reaction={type:'fus',from:2.5,to:4,fromLab:'²H+³H',toLab:'⁴He',dE};setSlider('A',4);recompute();}
+document.getElementById('dFis').onclick=fission;
+document.getElementById('dFus').onclick=fusion;
+document.getElementById('dClear').onclick=()=>{reaction=null;recompute();};
+
+let last=0;function loop(ts){last=ts;render();requestAnimationFrame(loop);}
+window.addEventListener('load',()=>{setupCanvases();recompute();requestAnimationFrame(loop);});
+window.addEventListener('resize',()=>{setupCanvases();render();});
+</script>
+</body>
+</html>
