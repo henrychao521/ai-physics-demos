@@ -1,0 +1,222 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>電磁波 ｜ E⊥B 同相傳播・c=λf・E=hf・電磁波譜</title>
+<meta name="description" content="電磁波互動模擬：振盪的電場 E 與磁場 B 互相垂直、且都垂直於傳播方向，同相前進，速度恆為光速 c=λf。拖動頻率掃過整個電磁波譜（無線電→微波→紅外→可見光→紫外→X 射線→γ 射線），看波長、光子能量 E=hf 如何變化。">
+<link rel="icon" href="../assets/favicon.svg" type="image/svg+xml">
+<link rel="stylesheet" href="../assets/site.css">
+<script src="../assets/sim.js"></script>
+<script defer src="../assets/nav.js"></script>
+<style>
+  *{box-sizing:border-box}
+  html,body{margin:0;padding:0;background:var(--bg);color:var(--txt);font-family:"Noto Sans TC","PingFang TC","Microsoft JhengHei",system-ui,sans-serif}
+  a{color:var(--accent)}
+  .wrap{max-width:1120px;margin:0 auto;padding:18px 16px 60px}
+  header h1{font-size:1.5rem;margin:.2em 0}
+  header p{color:var(--muted);margin:.2em 0 1em;line-height:1.6}
+  .badge{display:inline-block;background:var(--panel2);border:1px solid var(--line);color:var(--muted);font-size:.72rem;padding:2px 8px;border-radius:99px;margin-right:6px}
+  .scene-wrap{position:relative;border-radius:16px;overflow:hidden;border:1px solid var(--line);box-shadow:0 18px 50px rgba(0,0,0,.45)}
+  #scene{display:block;width:100%}
+  .hud{position:absolute;top:12px;left:12px;display:flex;gap:8px;flex-wrap:wrap;pointer-events:none}
+  .chip{background:rgba(10,16,24,.62);backdrop-filter:blur(6px);border:1px solid rgba(120,180,255,.16);border-radius:10px;padding:6px 11px;color:#dceaff;font-size:.8rem;line-height:1.25}
+  .chip b{display:block;font-size:1.02rem;font-variant-numeric:tabular-nums;color:#fff}
+  .chip.red b{color:#ff8f8f}.chip.blue b{color:#6ca8ff}.chip.green b{color:#7CFFB2}
+  .toolbar{position:absolute;bottom:12px;right:12px;display:flex;gap:7px;flex-wrap:wrap;justify-content:flex-end}
+  .toolbar button{background:rgba(10,16,24,.62);backdrop-filter:blur(6px);color:#dceaff;border:1px solid rgba(120,180,255,.2);border-radius:9px;padding:7px 11px;font-size:.82rem;cursor:pointer;font-family:inherit}
+  .toolbar button.on{background:var(--accent);color:#04121c;border-color:var(--accent);font-weight:700}
+  @media(max-width:560px){.toolbar{position:static;justify-content:center;padding:8px 10px;background:rgba(8,14,22,.5);border-top:1px solid var(--line)}}
+  .bar{display:flex;gap:14px;flex-wrap:wrap;align-items:flex-end;background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:14px 16px;margin-top:14px}
+  .sld{flex:1;min-width:240px}
+  .sld label{display:flex;justify-content:space-between;font-size:.82rem;color:var(--muted);margin-bottom:5px}
+  .sld label .v{color:var(--accent);font-variant-numeric:tabular-nums;font-weight:700}
+  .sld input{width:100%;accent-color:var(--accent)}
+  .presets{display:flex;gap:7px;flex-wrap:wrap;align-items:center;margin-top:12px}
+  .presets span{color:var(--muted);font-size:.8rem}
+  .pbtn{background:var(--panel2);color:var(--txt);border:1px solid var(--line);padding:7px 12px;border-radius:9px;cursor:pointer;font-size:.83rem;font-family:inherit}
+  .pbtn:hover{border-color:var(--accent)}
+  .note{background:var(--panel);border-left:3px solid var(--accent2);border-radius:8px;padding:12px 14px;color:var(--muted);font-size:.86rem;line-height:1.7;margin-top:14px}
+  .note b{color:var(--txt)}.note code{background:var(--bg2);padding:1px 6px;border-radius:5px;color:var(--green);font-size:.85em}
+  footer{color:var(--muted);font-size:.78rem;margin-top:24px;text-align:center;line-height:1.7}
+</style>
+</head>
+<body data-demo="電磁波">
+<div class="wrap">
+  <header>
+    <span class="badge">電磁・波動・光</span>
+    <h1>電磁波（E⊥B 同相傳播）</h1>
+    <p>變化的電場產生磁場、變化的磁場又產生電場——彼此「接力」向前，就是<b>電磁波</b>。電場 E（紅）與磁場 B（藍）<b>互相垂直</b>、
+       也都<b>垂直於傳播方向</b>，且<b>同相</b>振盪。不論頻率高低，真空中速度恆為<b>光速 c = λf</b>。光，就是一段可見的電磁波。</p>
+  </header>
+
+  <div class="scene-wrap">
+    <canvas id="scene"></canvas>
+    <div class="hud" id="hud"></div>
+    <div class="toolbar">
+      <button id="run" class="on">⏸ 暫停</button>
+      <button id="showB" class="on">磁場 B：顯示</button>
+    </div>
+  </div>
+
+  <div class="bar" id="sliders"></div>
+  <div class="presets">
+    <span>波段：</span>
+    <button class="pbtn" data-f="8">無線電 FM</button>
+    <button class="pbtn" data-f="10.4">微波爐</button>
+    <button class="pbtn" data-f="13">紅外線</button>
+    <button class="pbtn" data-f="14.74">可見光</button>
+    <button class="pbtn" data-f="16">紫外線</button>
+    <button class="pbtn" data-f="18">X 射線</button>
+  </div>
+
+  <div class="formula" id="formula"></div>
+
+  <div class="note">
+    <b>物理重點：</b>馬克士威方程組預測電磁波，並算出其速度恰為光速 <code>c = 1/√(ε₀μ₀) ≈ 3×10⁸ m/s</code>，證明光是電磁波。
+    真空中所有電磁波都以 c 行進：<code>c = λf</code>，所以<b>頻率越高、波長越短</b>。電場與磁場振幅比固定：<code>E₀ = c·B₀</code>。
+    把電磁波看成光子時，能量 <code>E = h·f</code>（頻率越高、光子能量越大，這就是 X 射線、γ 射線具穿透/游離能力的原因）。
+    電磁波譜：無線電 → 微波 → 紅外 → <b>可見光（380–750 nm）</b> → 紫外 → X 射線 → γ 射線，本質相同、只差頻率。
+  </div>
+
+  <footer>純前端 HTML / Canvas（SIM 工具庫）。E⊥B 立體示意；螢幕波長為示意（隨頻率變密），實際 λ、光子能量 E=hf 與波段以數值標示。</footer>
+</div>
+
+<script>
+const S=SIM;
+const cLight=3e8, hP=6.626e-34, eV=1.602e-19;
+const state={logf:14.74};   // log10(f[Hz])
+const sliders=[{id:'logf',name:'頻率 f（log₁₀ 尺度，掃過整個電磁波譜）',min:6,max:20,step:0.01,val:14.74,unit:''}];
+const sBar=document.getElementById('sliders');
+sliders.forEach(s=>{ state[s.id]=s.val;
+  const d=document.createElement('div');d.className='sld';
+  d.innerHTML=`<label><span>${s.name}</span><span class="v" id="v_${s.id}">10^${s.val.toFixed(2)} Hz</span></label>
+    <input type="range" id="r_${s.id}" min="${s.min}" max="${s.max}" step="${s.step}" value="${s.val}">`;
+  sBar.appendChild(d);
+  d.querySelector('input').addEventListener('input',e=>{state[s.id]=parseFloat(e.target.value);
+    document.getElementById('v_'+s.id).textContent=`10^${state[s.id].toFixed(2)} Hz`; recompute(); });
+});
+function setF(lf){state.logf=lf;const r=document.getElementById('r_logf');if(r)r.value=lf;
+  document.getElementById('v_logf').textContent=`10^${lf.toFixed(2)} Hz`;recompute();}
+
+// ---- 物理 ----
+function freq(){return Math.pow(10,state.logf);}
+function lambda(){return cLight/freq();}      // m
+function photonE(){return hP*freq()/eV;}      // eV
+function band(){const f=freq();
+  if(f<1e9)return ['無線電波','#8a6cff'];
+  if(f<3e11)return ['微波','#6ca8ff'];
+  if(f<4e14)return ['紅外線','#ff7a5a'];
+  if(f<7.9e14)return ['可見光',null];
+  if(f<3e16)return ['紫外線','#b06cff'];
+  if(f<3e19)return ['X 射線','#6cffd0'];
+  return ['γ 射線','#7CFFB2'];}
+// 可見光頻率→近似 RGB
+function visColor(){const f=freq(); if(f<4e14||f>7.9e14)return null;
+  const nm=cLight/f*1e9; let r=0,g=0,b=0;
+  if(nm<440){r=-(nm-440)/60;b=1;}else if(nm<490){g=(nm-440)/50;b=1;}
+  else if(nm<510){g=1;b=-(nm-510)/20;}else if(nm<580){r=(nm-510)/70;g=1;}
+  else if(nm<645){r=1;g=-(nm-645)/65;}else{r=1;}
+  return [Math.round(r*255),Math.round(g*255),Math.round(b*255)];}
+function waveColor(){const v=visColor(); if(v)return v; const b=band()[1];
+  const m={'#8a6cff':[138,108,255],'#6ca8ff':[108,168,255],'#ff7a5a':[255,122,90],'#b06cff':[176,108,255],'#6cffd0':[108,255,208],'#7CFFB2':[124,255,178]};
+  return m[b]||[255,143,143];}
+function recompute(){updateFormula();}
+
+// ---- 公式面板 ----
+function frow(n,sym,sub,val){return `<div class="frow"><span class="fname">${n}</span><span class="fsym">${sym}</span><span class="fsub">= ${sub}</span><span class="fval">${val}</span></div>`;}
+function fmtLam(m){if(m>=1)return m.toFixed(2)+' m'; if(m>=1e-3)return (m*1e3).toFixed(2)+' mm'; if(m>=1e-6)return (m*1e6).toFixed(2)+' µm'; if(m>=1e-9)return (m*1e9).toFixed(2)+' nm'; return (m*1e12).toFixed(2)+' pm';}
+function updateFormula(){const f=freq(),lam=lambda(),E=photonE(),bd=band()[0];
+  document.getElementById('formula').innerHTML=
+    `<h4>📐 計算公式（即時代入　c=3×10⁸ m/s、h=6.63×10⁻³⁴ J·s）</h4>`
+    + frow('頻率 f','10^'+state.logf.toFixed(2),`掃描值`, f.toExponential(2)+' Hz')
+    + frow('波長 λ','c / f',`3e8 / ${f.toExponential(2)}`, fmtLam(lam))
+    + frow('光子能量 E','h·f',`6.63e-34·${f.toExponential(2)}`, E.toExponential(2)+' eV')
+    + frow('所屬波段','—','電磁波譜', bd)
+    + `<div class="frel">📈 <b>c=λf 恆定</b>：頻率 ×10 → 波長 ÷10（更短）　·　<b>E=hf</b>：頻率越高光子能量越大（X/γ 可游離）　·　可見光只占 380–750 nm 極窄一段。</div>`;
+}
+
+// ---- 視圖：E⊥B 立體波 ----
+let sc;
+const SKY={skyTop:'#0a1322',skyBottom:'#070d16',vignette:'rgba(0,0,0,.42)'};
+function setupCanvases(){sc=S.fit(document.getElementById('scene'),1.95);}
+let phase=0, running=true, showB=true;
+// 深度方向(z 軸)投影到螢幕：往右上
+const DZ={x:0.52,y:-0.40};
+function draw(){const W=sc._w,H=sc._h;S.scene(sc,SKY,{});
+  const x0=58, y0=H*0.52, L=W-150, A=Math.min(58,H*0.20);
+  const col=waveColor();
+  // 螢幕波數(示意)：隨 logf 由疏到密(1.3~5.5 個週期)，clamp 保持可讀
+  const cycles=Math.max(1.3,Math.min(5.5,1.3+(state.logf-6)*0.30));
+  const k=cycles*2*Math.PI/L;
+  // 傳播軸
+  sc.strokeStyle='rgba(150,170,210,.55)';sc.lineWidth=1.4;
+  sc.beginPath();sc.moveTo(x0,y0);sc.lineTo(x0+L,y0);sc.stroke();
+  S.arrow(sc,x0+L-30,y0,x0+L+6,y0,{color:'rgba(180,200,235,.8)',width:2});
+  sc.fillStyle='rgba(190,205,235,.8)';sc.font='12px system-ui';sc.fillText('傳播方向（光速 c）',x0+L-122,y0+22);
+  // B 場(藍,深度平面) 先畫(在後)
+  if(showB){
+    sc.strokeStyle='rgba(108,168,255,.9)';sc.lineWidth=2;sc.beginPath();
+    for(let i=0;i<=L;i+=4){const s=A*Math.sin(k*i-phase);const px=x0+i+s*DZ.x, py=y0+s*DZ.y;i?sc.lineTo(px,py):sc.moveTo(px,py);}
+    sc.stroke();
+    sc.strokeStyle='rgba(108,168,255,.45)';sc.lineWidth=1.4;
+    for(let i=0;i<=L;i+=Math.max(18,L/26)){const s=A*Math.sin(k*i-phase);const px=x0+i+s*DZ.x, py=y0+s*DZ.y;
+      sc.beginPath();sc.moveTo(x0+i,y0);sc.lineTo(px,py);sc.stroke();}
+    sc.fillStyle='#6ca8ff';sc.font='bold 13px system-ui';sc.fillText('B（磁場）',x0+86,y0-6);
+  }
+  // E 場(紅,垂直平面) 後畫(在前)
+  sc.strokeStyle=`rgb(${col[0]},${col[1]},${col[2]})`;sc.lineWidth=2.6;sc.beginPath();
+  for(let i=0;i<=L;i+=3){const e=A*Math.sin(k*i-phase);const px=x0+i, py=y0-e;i?sc.lineTo(px,py):sc.moveTo(px,py);}
+  sc.stroke();
+  sc.strokeStyle=`rgba(${col[0]},${col[1]},${col[2]},.5)`;sc.lineWidth=1.6;
+  for(let i=0;i<=L;i+=Math.max(16,L/30)){const e=A*Math.sin(k*i-phase);
+    sc.beginPath();sc.moveTo(x0+i,y0);sc.lineTo(x0+i,y0-e);sc.stroke();}
+  sc.fillStyle=`rgb(${col[0]},${col[1]},${col[2]})`;sc.font='bold 13px system-ui';sc.fillText('E（電場）',x0+8,y0-A-6);
+  // 一個波長標註(示意)
+  const lamPx=2*Math.PI/k;
+  sc.strokeStyle='rgba(255,210,122,.7)';sc.setLineDash([4,3]);sc.lineWidth=1.2;
+  sc.beginPath();sc.moveTo(x0,y0+A+18);sc.lineTo(x0+lamPx,y0+A+18);sc.stroke();sc.setLineDash([]);
+  sc.fillStyle='#ffd27a';sc.font='11px system-ui';sc.fillText('λ',x0+lamPx/2-3,y0+A+33);
+  // 電磁波譜帶
+  drawSpectrum(W,H);
+  updateHud();
+}
+function drawSpectrum(W,H){const sx=58,sw=W-150,sy=H-30,sh=12;
+  // log f 6..20 → 漸層(代表性顏色)
+  const grad=sc.createLinearGradient(sx,0,sx+sw,0);
+  grad.addColorStop(0,'#5a4bd0');grad.addColorStop(0.21,'#6c8aff');grad.addColorStop(0.45,'#ff7a5a');
+  grad.addColorStop(0.62,'#ffe14d');grad.addColorStop(0.64,'#5cff7a');grad.addColorStop(0.71,'#b06cff');
+  grad.addColorStop(0.86,'#6cffd0');grad.addColorStop(1,'#7CFFB2');
+  sc.fillStyle=grad;sc.fillRect(sx,sy,sw,sh);
+  // 目前位置指標
+  const t=(state.logf-6)/14, ix=sx+t*sw;
+  sc.fillStyle='#fff';sc.beginPath();sc.moveTo(ix,sy-4);sc.lineTo(ix-5,sy-12);sc.lineTo(ix+5,sy-12);sc.closePath();sc.fill();
+  sc.strokeStyle='rgba(255,255,255,.85)';sc.lineWidth=1.4;sc.beginPath();sc.moveTo(ix,sy);sc.lineTo(ix,sy+sh);sc.stroke();
+  sc.fillStyle='rgba(190,205,235,.75)';sc.font='10px system-ui';
+  const labs=[['無線電',0.04],['微波',0.24],['紅外',0.42],['可見',0.57],['紫外',0.68],['X',0.80],['γ',0.95]];
+  labs.forEach(l=>sc.fillText(l[0],sx+l[1]*sw-8,sy-3));
+}
+function updateHud(){const f=freq(),lam=lambda(),E=photonE(),bd=band();
+  document.getElementById('hud').innerHTML=
+   `<div class="chip green">波段<b>${bd[0]}</b></div>`+
+   `<div class="chip red">頻率 f<b>${f.toExponential(2)} Hz</b></div>`+
+   `<div class="chip blue">波長 λ<b>${fmtLam(lam)}</b></div>`+
+   `<div class="chip">光子能量 E=hf<b>${E.toExponential(2)} eV</b></div>`;
+}
+
+let last=0;
+function loop(ts){const dt=last?Math.min((ts-last)/1000,0.05):0;last=ts;
+  if(running)phase+=dt*3.2;
+  draw();requestAnimationFrame(loop);}
+
+const rb=document.getElementById('run');
+rb.onclick=()=>{running=!running;rb.classList.toggle('on',running);rb.textContent=running?'⏸ 暫停':'▶ 播放';};
+const bb=document.getElementById('showB');
+bb.onclick=()=>{showB=!showB;bb.classList.toggle('on',showB);bb.textContent='磁場 B：'+(showB?'顯示':'隱藏');};
+document.querySelectorAll('[data-f]').forEach(b=>b.onclick=()=>setF(parseFloat(b.dataset.f)));
+
+window.addEventListener('load',()=>{setupCanvases();recompute();requestAnimationFrame(loop);});
+window.addEventListener('resize',()=>{setupCanvases();draw();});
+</script>
+</body>
+</html>
