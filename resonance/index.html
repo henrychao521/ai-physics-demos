@@ -1,0 +1,179 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>受迫振盪與共振 ｜ 驅動頻率・共振峰・阻尼</title>
+<meta name="description" content="受迫振盪與共振互動模擬：用不同頻率驅動彈簧振子，當驅動頻率接近自然頻率 f₀ 時振幅暴增（共振）。阻尼越小、共振峰越尖越高。盪鞦韆、共振橋、收音機選台的原理。">
+<link rel="icon" href="../assets/favicon.svg" type="image/svg+xml">
+<link rel="stylesheet" href="../assets/site.css">
+<script src="../assets/sim.js"></script>
+<script defer src="../assets/nav.js"></script>
+<style>
+  *{box-sizing:border-box}
+  html,body{margin:0;padding:0;background:var(--bg);color:var(--txt);font-family:"Noto Sans TC","PingFang TC","Microsoft JhengHei",system-ui,sans-serif}
+  a{color:var(--accent)}
+  .wrap{max-width:1120px;margin:0 auto;padding:18px 16px 60px}
+  header h1{font-size:1.5rem;margin:.2em 0}
+  header p{color:var(--muted);margin:.2em 0 1em;line-height:1.6}
+  .badge{display:inline-block;background:var(--panel2);border:1px solid var(--line);color:var(--muted);font-size:.72rem;padding:2px 8px;border-radius:99px;margin-right:6px}
+  .grid2{display:grid;grid-template-columns:.7fr 1fr;gap:14px}
+  @media(max-width:740px){.grid2{grid-template-columns:1fr}}
+  .scene-wrap{position:relative;border-radius:16px;overflow:hidden;border:1px solid var(--line);box-shadow:0 18px 50px rgba(0,0,0,.45)}
+  #scene,#curve{display:block;width:100%}
+  .hud{position:absolute;top:12px;left:12px;display:flex;gap:8px;flex-wrap:wrap;pointer-events:none}
+  .chip{background:rgba(16,12,22,.6);backdrop-filter:blur(6px);border:1px solid rgba(180,150,255,.18);border-radius:10px;padding:6px 11px;color:#e9e0ff;font-size:.8rem;line-height:1.25}
+  .chip b{display:block;font-size:1.02rem;font-variant-numeric:tabular-nums;color:#fff}
+  .chip.indigo b{color:#8b9cff}.chip.rose b{color:#ff8fb0}.chip.green b{color:#7CFFB2}
+  .bar{display:flex;gap:14px;flex-wrap:wrap;align-items:flex-end;background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:14px 16px;margin-top:14px}
+  .sld{flex:1;min-width:160px}
+  .sld label{display:flex;justify-content:space-between;font-size:.82rem;color:var(--muted);margin-bottom:5px}
+  .sld label .v{color:var(--accent);font-variant-numeric:tabular-nums;font-weight:700}
+  .sld input{width:100%;accent-color:var(--accent)}
+  .presets{display:flex;gap:7px;flex-wrap:wrap;align-items:center;margin-top:12px}
+  .presets span{color:var(--muted);font-size:.8rem}
+  .pbtn{background:var(--panel2);color:var(--txt);border:1px solid var(--line);padding:7px 12px;border-radius:9px;cursor:pointer;font-size:.83rem;font-family:inherit}
+  .pbtn:hover{border-color:var(--accent)}
+  .note{background:var(--panel);border-left:3px solid var(--accent2);border-radius:8px;padding:12px 14px;color:var(--muted);font-size:.86rem;line-height:1.7;margin-top:14px}
+  .note b{color:var(--txt)}.note code{background:var(--bg2);padding:1px 6px;border-radius:5px;color:var(--green);font-size:.85em}
+  footer{color:var(--muted);font-size:.78rem;margin-top:24px;text-align:center;line-height:1.7}
+</style>
+</head>
+<body data-demo="受迫振盪與共振">
+<div class="wrap">
+  <header>
+    <span class="badge">波動・振動與共振</span>
+    <h1>受迫振盪與共振</h1>
+    <p>用週期性外力（<b>驅動頻率 f</b>）持續推動彈簧振子。當 <b>f 接近系統自然頻率 f₀</b> 時，能量持續累積、<b>振幅暴增</b>——這就是<b>共振</b>。
+       <b>阻尼</b>越小，共振峰越<b>尖、越高</b>。盪鞦韆要抓對節奏、共振橋會被風吹垮、收音機靠共振選台。</p>
+  </header>
+
+  <div class="grid2">
+    <div class="scene-wrap"><canvas id="scene"></canvas>
+      <div class="hud" id="hud"></div>
+    </div>
+    <div class="scene-wrap"><canvas id="curve"></canvas></div>
+  </div>
+
+  <div class="bar" id="sliders"></div>
+  <div class="presets">
+    <span>情境：</span>
+    <button class="pbtn" data-preset="res">正中共振 f=f₀</button>
+    <button class="pbtn" data-preset="off">遠離共振</button>
+    <button class="pbtn" data-preset="low">低阻尼(尖峰)</button>
+    <button class="pbtn" data-preset="high">高阻尼(平緩)</button>
+  </div>
+
+  <div class="formula" id="formula"></div>
+
+  <div class="note">
+    <b>物理重點：</b>受迫振盪達穩態時，振幅 <code>A(f) = (F₀/m) / √((ω₀²−ω²)² + (γω)²)</code>（ω=2πf、γ＝阻尼/質量）。
+    當驅動角頻率 <b>ω ≈ ω₀</b>（自然頻率）時分母最小、<b>振幅最大</b>＝共振。<b>阻尼 γ 越小</b>，共振峰越高越尖（品質因數 Q 越大、選擇性越好）。
+    共振是雙面刃：樂器、微波爐、MRI、收音機靠它運作；但塔科馬橋、行軍踏步過橋、地震與建築自然頻率相合則是災難。
+  </div>
+
+  <footer>純前端 HTML / Canvas（SIM 工具庫）。穩態受迫振盪解析解；自然頻率 f₀=1 Hz。</footer>
+</div>
+
+<script>
+const S=SIM, f0=1, w0=2*Math.PI*f0, C=42;   // C=F₀/m 比例
+const sliders=[
+  {id:'f',name:'驅動頻率 f',min:.2,max:2.2,step:.02,val:0.7,unit:'Hz'},
+  {id:'b',name:'阻尼 γ',min:.06,max:1.6,step:.02,val:0.4,unit:''},
+];
+const state={};
+const sBar=document.getElementById('sliders');
+sliders.forEach(s=>{ state[s.id]=s.val;
+  const d=document.createElement('div');d.className='sld';
+  d.innerHTML=`<label><span>${s.name}</span><span class="v" id="v_${s.id}">${fmt(s.val)} ${s.unit}</span></label>
+    <input type="range" id="r_${s.id}" min="${s.min}" max="${s.max}" step="${s.step}" value="${s.val}">`;
+  sBar.appendChild(d);
+  d.querySelector('input').addEventListener('input',e=>{state[s.id]=parseFloat(e.target.value);
+    document.getElementById('v_'+s.id).textContent=`${fmt(state[s.id])} ${s.unit}`; recompute(); });
+});
+function fmt(x){return (Math.round(x*100)/100).toString();}
+function setSlider(id,val){state[id]=val;const r=document.getElementById('r_'+id);if(r)r.value=val;
+  const s=sliders.find(z=>z.id===id);if(s)document.getElementById('v_'+id).textContent=`${fmt(val)} ${s.unit}`;}
+
+// ---- 物理：穩態振幅 ----
+function amp(f,b){const w=2*Math.PI*f;return C/Math.sqrt(Math.pow(w0*w0-w*w,2)+Math.pow(b*w,2));}
+function ampPeak(b){let m=0;for(let f=0.2;f<=2.2;f+=0.01)m=Math.max(m,amp(f,b));return m;}
+function recompute(){updateFormula();}
+
+// ---- 公式面板 ----
+function frow(n,sym,sub,val){return `<div class="frow"><span class="fname">${n}</span><span class="fsym">${sym}</span><span class="fsub">= ${sub}</span><span class="fval">${val}</span></div>`;}
+function updateFormula(){const f=state.f,b=state.b,A=amp(f,b),Apk=ampPeak(b),near=Math.abs(f-f0)<0.08;
+  const ratio=A/Apk;
+  document.getElementById('formula').innerHTML=
+    `<h4>📐 計算公式（即時代入　自然頻率 f₀=1 Hz）</h4>`
+    + frow('自然角頻率 ω₀','2π·f₀',`2π·1`, w0.toFixed(2)+' rad/s')
+    + frow('驅動角頻率 ω','2π·f',`2π·${f}`, (2*Math.PI*f).toFixed(2)+' rad/s')
+    + frow('穩態振幅 A','(F₀/m)/√((ω₀²−ω²)²+(γω)²)',`分母 √(…)`, A.toFixed(1)+' （相對）')
+    + frow('共振程度','A / A_峰值',`${A.toFixed(1)} / ${Apk.toFixed(1)}`, (ratio*100).toFixed(0)+'%'+(near?'　★接近共振':''))
+    + `<div class="frel">📈 <b>f → f₀ 時振幅最大（共振）</b>：分母 (ω₀²−ω²) 趨近 0　·　<b>阻尼 γ 越小 → 共振峰越高越尖</b>(此設定峰值 ${Apk.toFixed(0)})　·　振幅暴增不是外力變大，而是每週期都「順著」系統推、能量持續累積。</div>`;
+}
+
+// ---- 視圖 ----
+let sc,cc,t=0;
+const VIB={skyTop:'#16102a',skyBottom:'#0a0716',vignette:'rgba(0,0,0,.45)'};
+function setupCanvases(){sc=S.fit(document.getElementById('scene'),0.95);cc=S.fit(document.getElementById('curve'),1.7);}
+function drawScene(){const W=sc._w,H=sc._h,cx=W/2,topY=H*0.12;
+  S.scene(sc,VIB,{});
+  const A=amp(state.f,state.b), Adisp=Math.min(A,40)/40*(H*0.3);
+  const drive=Math.sin(2*Math.PI*state.f*t);
+  const phase=2*Math.PI*state.f*t;
+  // 驅動端(上方,小幅擺動表示外力節奏)
+  const dy=topY+Math.sin(phase)*8;
+  sc.fillStyle='#8b9cff';sc.fillRect(cx-30,dy-6,60,8);
+  sc.fillStyle='#b4a0ff';sc.font='11px system-ui';sc.fillText('驅動 f='+state.f+'Hz',cx-34,dy-12);
+  // 彈簧
+  const my=H*0.55+Math.sin(phase-1.2)*Adisp;     // 質點位置(穩態,落後相位)
+  sc.strokeStyle='#9aa6c0';sc.lineWidth=2;sc.beginPath();
+  const segs=14;for(let i=0;i<=segs;i++){const yy=dy+ (my-dy)*i/segs, xx=cx+(i%2?12:-12)*(i>0&&i<segs?1:0);i?sc.lineTo(xx,yy):sc.moveTo(cx,yy);}sc.stroke();
+  // 質點(球)
+  S.sphere(sc,cx,my,16,[139,108,255]);
+  // 平衡線
+  sc.strokeStyle='rgba(255,255,255,.15)';sc.setLineDash([4,4]);sc.beginPath();sc.moveTo(cx-60,H*0.55);sc.lineTo(cx+60,H*0.55);sc.stroke();sc.setLineDash([]);
+  // 振幅標示
+  sc.strokeStyle='#ff8fb0';sc.lineWidth=1.5;sc.beginPath();sc.moveTo(cx+44,H*0.55);sc.lineTo(cx+44,H*0.55-Adisp);sc.stroke();
+  sc.fillStyle='#ff8fb0';sc.font='11px system-ui';sc.fillText('A',cx+48,H*0.55-Adisp/2);
+  updateHud(A);
+}
+function updateHud(A){const Apk=ampPeak(state.b),near=Math.abs(state.f-f0)<0.08;
+  document.getElementById('hud').innerHTML=
+   `<div class="chip indigo">驅動 f<b>${state.f} Hz</b></div>`+
+   `<div class="chip green">自然 f₀<b>1.0 Hz</b></div>`+
+   `<div class="chip rose">振幅 A<b>${A.toFixed(1)}${near?' ★共振':''}</b></div>`;
+}
+function drawCurve(){const W=cc._w,H=cc._h,mL=36,mR=14,mT=16,mB=26;
+  cc.clearRect(0,0,W,H);cc.fillStyle='#0a0814';cc.fillRect(0,0,W,H);
+  const fMin=0.2,fMax=2.2,Apk=ampPeak(state.b),Amax=Math.max(Apk*1.08,1);
+  const X=f=>mL+(f-fMin)/(fMax-fMin)*(W-mL-mR),Y=a=>H-mB-a/Amax*(H-mT-mB);
+  // 軸
+  cc.strokeStyle='#241c33';cc.lineWidth=1;cc.fillStyle='#6b5c80';cc.font='10px system-ui';
+  for(let f=0.4;f<=2.2;f+=0.4){cc.beginPath();cc.moveTo(X(f),mT);cc.lineTo(X(f),H-mB);cc.stroke();cc.fillText(f.toFixed(1),X(f)-6,H-mB+13);}
+  // f₀ 線
+  cc.strokeStyle='rgba(124,255,178,.5)';cc.setLineDash([4,4]);cc.beginPath();cc.moveTo(X(f0),mT);cc.lineTo(X(f0),H-mB);cc.stroke();cc.setLineDash([]);
+  cc.fillStyle='#7CFFB2';cc.fillText('f₀',X(f0)-5,mT+10);
+  // 共振曲線
+  cc.strokeStyle='#8b9cff';cc.lineWidth=2.4;cc.beginPath();
+  for(let i=0;i<=160;i++){const f=fMin+(fMax-fMin)*i/160,a=amp(f,state.b),x=X(f),y=Y(a);i?cc.lineTo(x,y):cc.moveTo(x,y);}cc.stroke();
+  // 當前點
+  const cf=state.f,ca=amp(cf,state.b);cc.fillStyle='#ff8fb0';cc.beginPath();cc.arc(X(cf),Y(ca),5,0,7);cc.fill();
+  cc.strokeStyle='rgba(255,143,176,.4)';cc.beginPath();cc.moveTo(X(cf),Y(ca));cc.lineTo(X(cf),H-mB);cc.stroke();
+  cc.fillStyle='#8b9cff';cc.font='11px system-ui';cc.fillText('共振曲線 振幅 A vs 驅動頻率 f',mL+4,mT+10);
+  cc.fillStyle='#8a99ad';cc.fillText('f (Hz) →',W-54,H-7);
+}
+function render(){drawScene();drawCurve();}
+let last=0;
+function loop(ts){const dt=last?Math.min((ts-last)/1000,0.05):0;last=ts;t+=dt;render();requestAnimationFrame(loop);}
+
+const PRE={res:{f:1,b:0.3},off:{f:0.4,b:0.3},low:{f:1,b:0.12},high:{f:1,b:1.2}};
+document.querySelectorAll('[data-preset]').forEach(b=>b.onclick=()=>{const pr=PRE[b.dataset.preset];if(!pr)return;
+  setSlider('f',pr.f);setSlider('b',pr.b);recompute();});
+
+window.addEventListener('load',()=>{setupCanvases();recompute();requestAnimationFrame(loop);});
+window.addEventListener('resize',()=>{setupCanvases();render();});
+</script>
+</body>
+</html>
