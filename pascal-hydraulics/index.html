@@ -1,0 +1,181 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>帕斯卡原理與液壓機 ｜ F₂=F₁·A₂/A₁・力放大・功守恆</title>
+<meta name="description" content="帕斯卡原理與液壓機互動模擬：密閉流體中壓力均勻傳遞 P=F₁/A₁，大活塞得到放大的力 F₂=F₁·A₂/A₁。但體積守恆 A₁d₁=A₂d₂、功守恆 F₁d₁=F₂d₂——省力不省功。">
+<link rel="icon" href="../assets/favicon.svg" type="image/svg+xml">
+<link rel="stylesheet" href="../assets/site.css">
+<script src="../assets/sim.js"></script>
+<script defer src="../assets/nav.js"></script>
+<style>
+  *{box-sizing:border-box}
+  html,body{margin:0;padding:0;background:var(--bg);color:var(--txt);font-family:"Noto Sans TC","PingFang TC","Microsoft JhengHei",system-ui,sans-serif}
+  a{color:var(--accent)}
+  .wrap{max-width:1120px;margin:0 auto;padding:18px 16px 60px}
+  header h1{font-size:1.5rem;margin:.2em 0}
+  header p{color:var(--muted);margin:.2em 0 1em;line-height:1.6}
+  .badge{display:inline-block;background:var(--panel2);border:1px solid var(--line);color:var(--muted);font-size:.72rem;padding:2px 8px;border-radius:99px;margin-right:6px}
+  .scene-wrap{position:relative;border-radius:16px;overflow:hidden;border:1px solid var(--line);box-shadow:0 18px 50px rgba(0,0,0,.45)}
+  #scene{display:block;width:100%}
+  .hud{position:absolute;top:12px;left:12px;display:flex;gap:8px;flex-wrap:wrap;pointer-events:none}
+  .chip{background:rgba(8,16,24,.62);backdrop-filter:blur(6px);border:1px solid rgba(120,180,255,.18);border-radius:10px;padding:6px 11px;color:#dceaff;font-size:.8rem;line-height:1.25}
+  .chip b{display:block;font-size:1.02rem;font-variant-numeric:tabular-nums;color:#fff}
+  .chip.cyan b{color:#6cd0ff}.chip.amber b{color:#ffce54}.chip.green b{color:#7CFFB2}
+  .toolbar{position:absolute;bottom:12px;right:12px;display:flex;gap:7px;flex-wrap:wrap;justify-content:flex-end}
+  .toolbar button{background:rgba(8,16,24,.62);backdrop-filter:blur(6px);color:#dceaff;border:1px solid rgba(120,180,255,.2);border-radius:9px;padding:7px 11px;font-size:.82rem;cursor:pointer;font-family:inherit}
+  .toolbar button.on{background:var(--accent);color:#04121c;border-color:var(--accent);font-weight:700}
+  @media(max-width:560px){.toolbar{position:static;justify-content:center;padding:8px 10px;background:rgba(8,14,22,.5);border-top:1px solid var(--line)}}
+  .bar{display:flex;gap:14px;flex-wrap:wrap;align-items:flex-end;background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:14px 16px;margin-top:14px}
+  .sld{flex:1;min-width:160px}
+  .sld label{display:flex;justify-content:space-between;font-size:.82rem;color:var(--muted);margin-bottom:5px}
+  .sld label .v{color:var(--accent);font-variant-numeric:tabular-nums;font-weight:700}
+  .sld input{width:100%;accent-color:var(--accent)}
+  .presets{display:flex;gap:7px;flex-wrap:wrap;align-items:center;margin-top:12px}
+  .presets span{color:var(--muted);font-size:.8rem}
+  .pbtn{background:var(--panel2);color:var(--txt);border:1px solid var(--line);padding:7px 12px;border-radius:9px;cursor:pointer;font-size:.83rem;font-family:inherit}
+  .pbtn:hover{border-color:var(--accent)}
+  .note{background:var(--panel);border-left:3px solid var(--accent2);border-radius:8px;padding:12px 14px;color:var(--muted);font-size:.86rem;line-height:1.7;margin-top:14px}
+  .note b{color:var(--txt)}.note code{background:var(--bg2);padding:1px 6px;border-radius:5px;color:var(--green);font-size:.85em}
+  footer{color:var(--muted);font-size:.78rem;margin-top:24px;text-align:center;line-height:1.7}
+</style>
+</head>
+<body data-demo="帕斯卡原理與液壓機">
+<div class="wrap">
+  <header>
+    <span class="badge">力學・流體靜力學</span>
+    <h1>帕斯卡原理與液壓機</h1>
+    <p>密閉流體中任一處的<b>壓力會均勻傳到各處</b>（帕斯卡原理）。在小活塞施力 F₁ 產生壓力 <b>P = F₁/A₁</b>，
+       這壓力作用到大活塞 A₂ 上，得到放大的力 <b>F₂ = P·A₂ = F₁·(A₂/A₁)</b>——小力舉起大重量。但<b>體積守恆</b>使大活塞只升一點，<b>功不變</b>（省力不省功）。</p>
+  </header>
+
+  <div class="scene-wrap">
+    <canvas id="scene"></canvas>
+    <div class="hud" id="hud"></div>
+    <div class="toolbar"><button id="push" class="on">⏸ 暫停推送</button></div>
+  </div>
+
+  <div class="bar" id="sliders"></div>
+  <div class="presets">
+    <span>情境：</span>
+    <button class="pbtn" data-preset="car">舉汽車（小力大面積比）</button>
+    <button class="pbtn" data-preset="equal">1:1（無放大）</button>
+    <button class="pbtn" data-preset="big">大放大 ×20</button>
+  </div>
+
+  <div class="formula" id="formula"></div>
+
+  <div class="note">
+    <b>物理重點：</b>帕斯卡原理：密閉不可壓縮流體中，壓力變化會<b>不衰減地傳到每一點</b>。所以小活塞造的壓力 <code>P=F₁/A₁</code> 也作用在大活塞上，
+    <code>F₂ = P·A₂ = F₁·A₂/A₁</code>，面積比就是<b>力的放大倍率</b>。但液體體積不變：<code>A₁·d₁ = A₂·d₂</code>，大活塞位移 <code>d₂ = d₁·A₁/A₂</code> 變小，
+    所以 <code>F₁·d₁ = F₂·d₂</code>——<b>省力但不省功</b>（甚至因摩擦更費功）。千斤頂、煞車、挖土機都用這個原理。
+  </div>
+
+  <footer>純前端 HTML / Canvas（SIM 工具庫）。理想不可壓縮流體、忽略液柱高度差與摩擦。</footer>
+</div>
+
+<script>
+const S=SIM;
+const sliders=[
+  {id:'F1',name:'施力 F₁',min:10,max:200,step:5,val:80,unit:'N'},
+  {id:'A1',name:'小活塞面積 A₁',min:2,max:12,step:1,val:5,unit:'cm²'},
+  {id:'A2',name:'大活塞面積 A₂',min:10,max:120,step:5,val:50,unit:'cm²'},
+];
+const state={};
+const sBar=document.getElementById('sliders');
+sliders.forEach(s=>{ state[s.id]=s.val;
+  const d=document.createElement('div');d.className='sld';
+  d.innerHTML=`<label><span>${s.name}</span><span class="v" id="v_${s.id}">${fmt(s.val)} ${s.unit}</span></label>
+    <input type="range" id="r_${s.id}" min="${s.min}" max="${s.max}" step="${s.step}" value="${s.val}">`;
+  sBar.appendChild(d);
+  d.querySelector('input').addEventListener('input',e=>{state[s.id]=parseFloat(e.target.value);
+    document.getElementById('v_'+s.id).textContent=`${fmt(state[s.id])} ${s.unit}`; recompute(); });
+});
+function fmt(x){return (Math.round(x*100)/100).toString();}
+function setSlider(id,val){state[id]=val;const r=document.getElementById('r_'+id);if(r)r.value=val;
+  const s=sliders.find(z=>z.id===id);if(s)document.getElementById('v_'+id).textContent=`${fmt(val)} ${s.unit}`;}
+
+// ---- 物理 ----
+function P(){return state.F1/state.A1;}        // N/cm²
+function F2(){return P()*state.A2;}            // N
+function recompute(){updateFormula();updateHud();}
+
+// ---- 公式面板 ----
+function frow(n,sym,sub,val){return `<div class="frow"><span class="fname">${n}</span><span class="fsym">${sym}</span><span class="fsub">= ${sub}</span><span class="fval">${val}</span></div>`;}
+function updateFormula(){const p=P(),f2=F2(),ratio=state.A2/state.A1,d1=8,d2=d1*state.A1/state.A2;
+  document.getElementById('formula').innerHTML=
+    `<h4>📐 計算公式（即時代入　帕斯卡原理）</h4>`
+    + frow('壓力 P','F₁ / A₁',`${state.F1} / ${state.A1}`, p.toFixed(1)+' N/cm²')
+    + frow('輸出力 F₂','P·A₂ = F₁·A₂/A₁',`${state.F1}·${state.A2}/${state.A1}`, f2.toFixed(0)+' N')
+    + frow('力放大倍率','A₂ / A₁',`${state.A2} / ${state.A1}`, ratio.toFixed(1)+' 倍')
+    + frow('位移比（體積守恆）','d₂/d₁ = A₁/A₂',`${state.A1}/${state.A2}`, (state.A1/state.A2).toFixed(3)+'（大活塞升得少）')
+    + frow('功（守恆）','F₁d₁ = F₂d₂',`${state.F1}·${d1} = ${f2.toFixed(0)}·${d2.toFixed(2)}`, (state.F1*d1).toFixed(0)+' N·cm')
+    + `<div class="frel">📈 <b>F₂ = F₁·(A₂/A₁)</b>：面積比＝力放大倍率　·　<b>省力不省功</b>：力放大幾倍、位移就縮小幾倍(A₁d₁=A₂d₂)，功 F·d 不變　·　壓力在密閉流體中均勻傳遞、不因距離衰減。</div>`;
+}
+function updateHud(){
+  document.getElementById('hud').innerHTML=
+   `<div class="chip cyan">壓力 P<b>${P().toFixed(1)} N/cm²</b></div>`+
+   `<div class="chip amber">輸出力 F₂<b>${F2().toFixed(0)} N</b></div>`+
+   `<div class="chip green">放大倍率<b>×${(state.A2/state.A1).toFixed(1)}</b></div>`;
+}
+
+// ---- 視圖 ----
+let sc, t=0, pushing=true;
+const HYD={skyTop:'#0e1626',skyBottom:'#070d18',vignette:'rgba(0,0,0,.4)'};
+function setupCanvases(){sc=S.fit(document.getElementById('scene'),1.9);}
+function draw(){const W=sc._w,H=sc._h;
+  S.scene(sc,HYD,{});
+  const baseY=H*0.86, fluidTop0=H*0.5;
+  const w1=Math.max(26,Math.sqrt(state.A1)*16), w2=Math.max(40,Math.sqrt(state.A2)*16);
+  const x1=W*0.26, x2=W*0.72;
+  const stroke=Math.sin(t)*0.5+0.5;                 // 0~1 推送行程
+  const d1px=stroke*46;                              // 小活塞下壓像素
+  const d2px=d1px*state.A1/state.A2;                 // 大活塞上升(體積守恆)
+  // 連通容器(U形)
+  sc.fillStyle='#101826';sc.strokeStyle='#3a4660';sc.lineWidth=2;
+  // 左管
+  sc.fillRect(x1-w1/2,fluidTop0-60,w1,baseY-(fluidTop0-60));sc.strokeRect(x1-w1/2,fluidTop0-60,w1,baseY-(fluidTop0-60));
+  // 右管
+  sc.fillRect(x2-w2/2,fluidTop0-90,w2,baseY-(fluidTop0-90));sc.strokeRect(x2-w2/2,fluidTop0-90,w2,baseY-(fluidTop0-90));
+  // 底部連通管
+  sc.fillRect(x1-w1/2,baseY-22,x2-x1+w2/2-(-w1/2),22);
+  // 流體
+  sc.fillStyle='rgba(70,150,230,.5)';
+  sc.fillRect(x1-w1/2+2,fluidTop0-60+d1px+10,w1-4,baseY-(fluidTop0-60+d1px+10)-2);
+  sc.fillRect(x2-w2/2+2,fluidTop0-90-d2px+10,w2-4,baseY-(fluidTop0-90-d2px+10)-2);
+  sc.fillRect(x1-w1/2+2,baseY-20,x2-x1+w2/2+w1/2-4,18);
+  // 小活塞
+  const py1=fluidTop0-60+d1px;
+  sc.fillStyle='#aab6c8';sc.fillRect(x1-w1/2-3,py1,w1+6,12);
+  // F1 箭頭(下)
+  S.arrow(sc,x1,py1-8,x1,py1-8-Math.min(56,state.F1*0.32),{color:'#ff8fb0',width:3,label:'F₁'});
+  // 大活塞
+  const py2=fluidTop0-90-d2px;
+  sc.fillStyle='#c9d6ea';sc.fillRect(x2-w2/2-4,py2,w2+8,14);
+  // 負載(方塊/車)壓在大活塞上 + F2 箭頭(上)
+  sc.fillStyle='#5a6f93';roundRect(sc,x2-w2*0.38,py2-30,w2*0.76,26,5);sc.fill();
+  sc.fillStyle='#dfe8f5';sc.font='12px system-ui';sc.textAlign='center';sc.fillText('負載',x2,py2-13);sc.textAlign='left';
+  S.arrow(sc,x2,py2-2,x2,py2-2-Math.min(70,F2()*0.05),{color:'#6cd0ff',width:3,label:'F₂'});
+  // 標示面積
+  sc.fillStyle='#ff8fb0';sc.font='12px system-ui';sc.fillText('A₁='+state.A1+'cm²',x1-26,baseY+16);
+  sc.fillStyle='#6cd0ff';sc.fillText('A₂='+state.A2+'cm²',x2-26,baseY+16);
+  // 壓力標示(流體中)
+  sc.fillStyle='rgba(124,255,178,.85)';sc.font='bold 12px system-ui';sc.fillText('P='+P().toFixed(0)+' N/cm² 均勻傳遞',W/2-70,baseY-2);
+  updateHud();
+}
+function roundRect(c,x,y,w,h,r){c.beginPath();c.moveTo(x+r,y);c.arcTo(x+w,y,x+w,y+h,r);c.arcTo(x+w,y+h,x,y+h,r);c.arcTo(x,y+h,x,y,r);c.arcTo(x,y,x+w,y,r);c.closePath();}
+let last=0;
+function loop(ts){const dt=last?Math.min((ts-last)/1000,0.05):0;last=ts;if(pushing)t+=dt*1.6;draw();requestAnimationFrame(loop);}
+
+const pbtn=document.getElementById('push');
+pbtn.onclick=()=>{pushing=!pushing;pbtn.classList.toggle('on',pushing);pbtn.textContent=pushing?'⏸ 暫停推送':'▶ 開始推送';};
+const PRE={car:{F1:60,A1:3,A2:90},equal:{F1:80,A1:20,A2:20},big:{F1:50,A1:5,A2:100}};
+document.querySelectorAll('[data-preset]').forEach(b=>b.onclick=()=>{const pr=PRE[b.dataset.preset];if(!pr)return;
+  ['F1','A1','A2'].forEach(k=>setSlider(k,pr[k]));recompute();});
+
+window.addEventListener('load',()=>{setupCanvases();recompute();requestAnimationFrame(loop);});
+window.addEventListener('resize',()=>{setupCanvases();draw();});
+</script>
+</body>
+</html>
