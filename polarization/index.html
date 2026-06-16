@@ -1,0 +1,205 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>偏振與馬呂士定律 ｜ I=I₀cos²θ・起偏器/檢偏器</title>
+<meta name="description" content="光的偏振互動模擬：自然光通過起偏器變成線偏振光（強度減半），再通過檢偏器時，穿透強度遵守馬呂士定律 I=I₀cos²θ。兩偏振片夾角 90°（正交）時完全變暗；在正交兩片之間插入第三片卻又能透光。">
+<link rel="icon" href="../assets/favicon.svg" type="image/svg+xml">
+<link rel="stylesheet" href="../assets/site.css">
+<script src="../assets/sim.js"></script>
+<script defer src="../assets/nav.js"></script>
+<style>
+  *{box-sizing:border-box}
+  html,body{margin:0;padding:0;background:var(--bg);color:var(--txt);font-family:"Noto Sans TC","PingFang TC","Microsoft JhengHei",system-ui,sans-serif}
+  a{color:var(--accent)}
+  .wrap{max-width:1120px;margin:0 auto;padding:18px 16px 60px}
+  header h1{font-size:1.5rem;margin:.2em 0}
+  header p{color:var(--muted);margin:.2em 0 1em;line-height:1.6}
+  .badge{display:inline-block;background:var(--panel2);border:1px solid var(--line);color:var(--muted);font-size:.72rem;padding:2px 8px;border-radius:99px;margin-right:6px}
+  .scene-wrap{position:relative;border-radius:16px;overflow:hidden;border:1px solid var(--line);box-shadow:0 18px 50px rgba(0,0,0,.45)}
+  #scene{display:block;width:100%}
+  .hud{position:absolute;top:12px;left:12px;display:flex;gap:8px;flex-wrap:wrap;pointer-events:none}
+  .chip{background:rgba(10,16,24,.62);backdrop-filter:blur(6px);border:1px solid rgba(120,180,255,.16);border-radius:10px;padding:6px 11px;color:#dceaff;font-size:.8rem;line-height:1.25}
+  .chip b{display:block;font-size:1.02rem;font-variant-numeric:tabular-nums;color:#fff}
+  .chip.amber b{color:#ffd27a}.chip.cyan b{color:#6cd0ff}.chip.green b{color:#7CFFB2}
+  .toolbar{position:absolute;bottom:12px;right:12px;display:flex;gap:7px;flex-wrap:wrap;justify-content:flex-end}
+  .toolbar button{background:rgba(10,16,24,.62);backdrop-filter:blur(6px);color:#dceaff;border:1px solid rgba(120,180,255,.2);border-radius:9px;padding:7px 11px;font-size:.82rem;cursor:pointer;font-family:inherit}
+  .toolbar button.on{background:var(--accent);color:#04121c;border-color:var(--accent);font-weight:700}
+  @media(max-width:560px){.toolbar{position:static;justify-content:center;padding:8px 10px;background:rgba(8,14,22,.5);border-top:1px solid var(--line)}}
+  .bar{display:flex;gap:14px;flex-wrap:wrap;align-items:flex-end;background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:14px 16px;margin-top:14px}
+  .sld{flex:1;min-width:220px}
+  .sld label{display:flex;justify-content:space-between;font-size:.82rem;color:var(--muted);margin-bottom:5px}
+  .sld label .v{color:var(--accent);font-variant-numeric:tabular-nums;font-weight:700}
+  .sld input{width:100%;accent-color:var(--accent)}
+  .presets{display:flex;gap:7px;flex-wrap:wrap;align-items:center;margin-top:12px}
+  .presets span{color:var(--muted);font-size:.8rem}
+  .pbtn{background:var(--panel2);color:var(--txt);border:1px solid var(--line);padding:7px 12px;border-radius:9px;cursor:pointer;font-size:.83rem;font-family:inherit}
+  .pbtn:hover{border-color:var(--accent)}
+  .note{background:var(--panel);border-left:3px solid var(--accent2);border-radius:8px;padding:12px 14px;color:var(--muted);font-size:.86rem;line-height:1.7;margin-top:14px}
+  .note b{color:var(--txt)}.note code{background:var(--bg2);padding:1px 6px;border-radius:5px;color:var(--green);font-size:.85em}
+  footer{color:var(--muted);font-size:.78rem;margin-top:24px;text-align:center;line-height:1.7}
+</style>
+</head>
+<body data-demo="偏振與馬呂士定律">
+<div class="wrap">
+  <header>
+    <span class="badge">光學・偏振</span>
+    <h1>偏振與馬呂士定律</h1>
+    <p>光是橫波，電場可朝各方向振動。<b>自然光</b>通過<b>起偏器</b>後只剩單一方向（線偏振，強度剩一半）。
+       再通過<b>檢偏器</b>時，只有沿其穿透軸的分量能過，強度遵守<b>馬呂士定律 I = I₀cos²θ</b>：θ=0°最亮、<b>θ=90°（正交）全暗</b>。</p>
+  </header>
+
+  <div class="scene-wrap">
+    <canvas id="scene"></canvas>
+    <div class="hud" id="hud"></div>
+    <div class="toolbar">
+      <button id="third">插入第三片（45°）</button>
+    </div>
+  </div>
+
+  <div class="bar" id="sliders"></div>
+  <div class="presets">
+    <span>檢偏角：</span>
+    <button class="pbtn" data-a="0">0°（最亮）</button>
+    <button class="pbtn" data-a="45">45°（半亮）</button>
+    <button class="pbtn" data-a="60">60°</button>
+    <button class="pbtn" data-a="90">90°（全暗）</button>
+  </div>
+
+  <div class="formula" id="formula"></div>
+
+  <div class="note">
+    <b>物理重點：</b>自然光各方向振動均勻，通過<b>起偏器</b>後只留下沿其軸的分量，強度變一半（I₀＝入射的 ½）。
+    線偏振光再遇<b>檢偏器</b>（軸與前者夾角 θ）時，電場沿軸的分量為 E₀cosθ，強度正比於振幅平方 → <code>I = I₀cos²θ</code>（馬呂士定律）。
+    θ=0° 全透、θ=90° 全擋（兩片正交＝消光）。<b>三片悖論</b>：把兩片調成正交（暗），在中間插入一片 45° 的偏振片，光<b>又透出來</b>了——因為每經一片光的偏振方向被「轉一點」，
+    45°+45° 比直接 90° 損失少（I=I₀·cos²45°·cos²45°=I₀/4）。偏光太陽眼鏡、液晶顯示器、攝影偏光鏡都用到偏振。
+  </div>
+
+  <footer>純前端 HTML / Canvas（SIM 工具庫）。起偏器固定垂直；檢偏器角度可調；亮度條與 E 場分量即時依 I=I₀cos²θ 計算。</footer>
+</div>
+
+<script>
+const S=SIM;
+const state={theta:45};
+let third=false;   // 三片悖論:在 P1(0°) 與 P2(θ) 間插入 45°
+const sliders=[{id:'theta',name:'檢偏器角度 θ（與起偏器夾角）',min:0,max:180,step:1,val:45,unit:'°'}];
+const sBar=document.getElementById('sliders');
+sliders.forEach(s=>{ state[s.id]=s.val;
+  const d=document.createElement('div');d.className='sld';
+  d.innerHTML=`<label><span>${s.name}</span><span class="v" id="v_${s.id}">${s.val}${s.unit}</span></label>
+    <input type="range" id="r_${s.id}" min="${s.min}" max="${s.max}" step="${s.step}" value="${s.val}">`;
+  sBar.appendChild(d);
+  d.querySelector('input').addEventListener('input',e=>{state[s.id]=parseFloat(e.target.value);
+    document.getElementById('v_'+s.id).textContent=`${state[s.id]}${s.unit}`; recompute(); });
+});
+function setTheta(a){state.theta=a;document.getElementById('r_theta').value=a;document.getElementById('v_theta').textContent=`${a}°`;recompute();}
+
+// ---- 物理 ----
+const rad=d=>d*Math.PI/180;
+// 相對於 I₀(起偏後)的穿透比
+function transFrac(){const th=state.theta;
+  if(!third){return Math.cos(rad(th))**2;}        // 馬呂士:單檢偏器
+  // 三片:0°→45°→θ。 I=I₀·cos²45·cos²(θ−45)
+  return Math.cos(rad(45))**2 * Math.cos(rad(th-45))**2;
+}
+function recompute(){updateFormula();}
+
+// ---- 公式面板 ----
+function frow(n,sym,sub,val){return `<div class="frow"><span class="fname">${n}</span><span class="fsym">${sym}</span><span class="fsub">= ${sub}</span><span class="fval">${val}</span></div>`;}
+function updateFormula(){const th=state.theta,c2=Math.cos(rad(th))**2,frac=transFrac();
+  document.getElementById('formula').innerHTML=
+    `<h4>📐 計算公式（即時代入　I₀ = 起偏後強度 = 自然光的 ½、θ=${th}°）</h4>`
+    + frow('cos θ','cos '+th+'°','投影分量', Math.cos(rad(th)).toFixed(3))
+    + frow('馬呂士 I/I₀','cos²θ',`cos²${th}°`, c2.toFixed(3))
+    + (third
+        ? frow('三片穿透 I/I₀','cos²45°·cos²(θ−45°)',`0.5·cos²(${th}−45)`, frac.toFixed(3))
+        : frow('相對自然光','½·cos²θ',`0.5·${c2.toFixed(3)}`, (0.5*frac).toFixed(3)))
+    + `<div class="frel">📈 <b>θ=0°→全透(1)、θ=90°→全暗(0)、θ=45°→半亮(0.5)</b>　·　${third?'<b>三片悖論</b>:正交兩片中插 45° 反而透光 I=I₀/4(每步只轉 45° 損失較小)':'兩片正交即消光；偏光眼鏡/LCD 皆用此理'}。</div>`;
+}
+
+// ---- 視圖 ----
+let sc;
+const SKY={skyTop:'#0b1220',skyBottom:'#070d16',vignette:'rgba(0,0,0,.45)'};
+function setupCanvases(){sc=S.fit(document.getElementById('scene'),2.0);}
+let phase=0;
+function polDisc(x,cy,r,angDeg,label,col){  // 偏振片:斜紋圓盤+軸
+  sc.save();
+  sc.strokeStyle='rgba(150,170,210,.5)';sc.lineWidth=2;sc.beginPath();sc.arc(x,cy,r,0,7);sc.stroke();
+  sc.fillStyle='rgba(40,52,74,.35)';sc.beginPath();sc.arc(x,cy,r,0,7);sc.fill();
+  // 穿透軸(亮線)
+  const a=rad(angDeg);const ux=Math.sin(a),uy=-Math.cos(a); // 角度由垂直量起
+  sc.strokeStyle=col;sc.lineWidth=3;sc.beginPath();sc.moveTo(x-ux*r,cy-uy*r);sc.lineTo(x+ux*r,cy+uy*r);sc.stroke();
+  // 細紋(沿軸)
+  sc.strokeStyle=col.replace('1)','0.3)');sc.lineWidth=1;
+  for(let k=-2;k<=2;k++){if(k===0)continue;const ox=-uy*k*7,oy=ux*k*7;const half=Math.sqrt(Math.max(0,r*r-(k*7)**2));
+    sc.globalAlpha=.3;sc.beginPath();sc.moveTo(x+ox-ux*half,cy+oy-uy*half);sc.lineTo(x+ox+ux*half,cy+oy+uy*half);sc.stroke();sc.globalAlpha=1;}
+  sc.fillStyle='#cfe0ff';sc.font='12px system-ui';sc.textAlign='center';sc.fillText(label,x,cy+r+18);sc.textAlign='left';
+  sc.restore();
+}
+function eArrow(x,cy,angDeg,amp,col){const a=rad(angDeg),ux=Math.sin(a),uy=-Math.cos(a);
+  S.arrow(sc,x-ux*amp,cy-uy*amp,x+ux*amp,cy+uy*amp,{color:col,width:2.5});}
+function draw(){const W=sc._w,H=sc._h;S.scene(sc,SKY,{});
+  const cy=H*0.46, r=Math.min(46,H*0.16), amp=r*0.7;
+  const pulse=0.7+0.3*Math.abs(Math.sin(phase));
+  // 站點 x 位置
+  const xs = third ? [W*0.13,W*0.34,W*0.55,W*0.78] : [W*0.16,W*0.42,W*0.70];
+  const srcX=xs[0];
+  // 自然光(多方向)
+  for(let d=0;d<8;d++){eArrow(srcX,cy,d*22.5,amp*0.7*pulse,'rgba(255,238,150,.5)');}
+  sc.fillStyle='#ffee96';sc.font='12px system-ui';sc.textAlign='center';sc.fillText('自然光',srcX,cy+r+18);sc.textAlign='left';
+  // 光軸
+  sc.strokeStyle='rgba(150,170,210,.3)';sc.lineWidth=1.4;sc.beginPath();sc.moveTo(srcX,cy);sc.lineTo(W-30,cy);sc.stroke();
+  if(!third){
+    const [sx,p1x,p2x]=xs;
+    polDisc(p1x,cy,r,0,'起偏器 0°','rgba(108,208,255,1)');
+    eArrow((p1x+p2x)/2,cy,0,amp*pulse,'#6cd0ff');     // 垂直線偏振
+    polDisc(p2x,cy,r,state.theta,'檢偏器 '+state.theta+'°','rgba(124,255,178,1)');
+    // 投影建構:把垂直E投影到檢偏軸
+    const f=transFrac();
+    eArrow(p2x+ (W-30-p2x)*0.42,cy,state.theta,amp*Math.sqrt(f)*pulse,'#7CFFB2');
+    drawScreen(W-26,cy,r,f);
+  } else {
+    const [sx,p1x,pmx,p2x]=xs;
+    polDisc(p1x,cy,r,0,'P1 0°','rgba(108,208,255,1)');
+    eArrow((p1x+pmx)/2,cy,0,amp*pulse,'#6cd0ff');
+    polDisc(pmx,cy,r,45,'P2 45°','rgba(255,210,122,1)');
+    const f1=Math.cos(rad(45))**2;
+    eArrow((pmx+p2x)/2,cy,45,amp*Math.sqrt(f1)*pulse,'#ffd27a');
+    polDisc(p2x,cy,r,state.theta,'P3 '+state.theta+'°','rgba(124,255,178,1)');
+    const f=transFrac();
+    eArrow(p2x+(W-30-p2x)*0.4,cy,state.theta,amp*Math.sqrt(f)*pulse,'#7CFFB2');
+    drawScreen(W-26,cy,r,f);
+  }
+  updateHud();
+}
+function drawScreen(x,cy,r,frac){ // 亮度屏
+  const g=sc.createRadialGradient(x,cy,2,x,cy,r*1.6);
+  const b=Math.round(40+frac*215);
+  g.addColorStop(0,`rgba(${b},${b},${Math.min(255,b+10)},${0.4+frac*0.6})`);g.addColorStop(1,'rgba(0,0,0,0)');
+  sc.fillStyle=g;sc.beginPath();sc.arc(x,cy,r*1.6,0,7);sc.fill();
+  sc.strokeStyle='rgba(150,170,210,.4)';sc.lineWidth=1.5;sc.beginPath();sc.arc(x,cy,r*0.7,0,7);sc.stroke();
+  sc.fillStyle='rgba(200,215,240,.8)';sc.font='12px system-ui';sc.textAlign='center';sc.fillText('亮度 '+(frac*100).toFixed(0)+'%',x,cy+r+18);sc.textAlign='left';
+  // 亮度條
+  const bx=x-14,by=cy-r-30,bw=28,bh=8;sc.strokeStyle='rgba(150,170,210,.4)';sc.strokeRect(bx,by,bw,bh);
+  sc.fillStyle='#7CFFB2';sc.fillRect(bx,by,bw*frac,bh);
+}
+function updateHud(){const f=transFrac(),c2=Math.cos(rad(state.theta))**2;
+  document.getElementById('hud').innerHTML=
+   `<div class="chip amber">夾角 θ<b>${state.theta}°</b></div>`+
+   `<div class="chip cyan">cos²θ<b>${c2.toFixed(3)}</b></div>`+
+   `<div class="chip green">穿透 I/I₀<b>${(f*100).toFixed(1)}%</b></div>`;
+}
+
+let last=0;
+function loop(ts){const dt=last?Math.min((ts-last)/1000,0.05):0;last=ts;phase+=dt*3;draw();requestAnimationFrame(loop);}
+
+document.getElementById('third').onclick=function(){third=!third;this.classList.toggle('on',third);
+  this.textContent=third?'移除第三片':'插入第三片（45°）';recompute();};
+document.querySelectorAll('[data-a]').forEach(b=>b.onclick=()=>setTheta(parseInt(b.dataset.a)));
+
+window.addEventListener('load',()=>{setupCanvases();recompute();requestAnimationFrame(loop);});
+window.addEventListener('resize',()=>{setupCanvases();draw();});
+</script>
+</body>
+</html>
