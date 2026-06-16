@@ -1,0 +1,182 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>變壓器 ｜ 升壓/降壓・匝數比・Vs/Vp=Ns/Np・功率守恆</title>
+<meta name="description" content="變壓器互動模擬：主線圈與次線圈匝數比決定電壓比 Vs/Vp=Ns/Np，升壓則降流、功率守恆 VpIp=VsIs。可調輸入電壓、匝數與電流，看 AC 波形與升壓/降壓。">
+<link rel="icon" href="../assets/favicon.svg" type="image/svg+xml">
+<link rel="stylesheet" href="../assets/site.css">
+<script src="../assets/sim.js"></script>
+<script defer src="../assets/nav.js"></script>
+<style>
+  *{box-sizing:border-box}
+  html,body{margin:0;padding:0;background:var(--bg);color:var(--txt);font-family:"Noto Sans TC","PingFang TC","Microsoft JhengHei",system-ui,sans-serif}
+  a{color:var(--accent)}
+  .wrap{max-width:1120px;margin:0 auto;padding:18px 16px 60px}
+  header h1{font-size:1.5rem;margin:.2em 0}
+  header p{color:var(--muted);margin:.2em 0 1em;line-height:1.6}
+  .badge{display:inline-block;background:var(--panel2);border:1px solid var(--line);color:var(--muted);font-size:.72rem;padding:2px 8px;border-radius:99px;margin-right:6px}
+  .scene-wrap{position:relative;border-radius:16px;overflow:hidden;border:1px solid var(--line);box-shadow:0 18px 50px rgba(0,0,0,.45)}
+  #scene,#wave{display:block;width:100%}
+  .hud{position:absolute;top:12px;left:12px;display:flex;gap:8px;flex-wrap:wrap;pointer-events:none}
+  .chip{background:rgba(8,14,24,.62);backdrop-filter:blur(6px);border:1px solid rgba(255,255,255,.12);border-radius:10px;padding:6px 11px;color:#eaf2ff;font-size:.8rem;line-height:1.25}
+  .chip b{display:block;font-size:1.02rem;font-variant-numeric:tabular-nums;color:#fff}
+  .chip.rose b{color:#ff8fb0}.chip.cyan b{color:#6cd0ff}.chip.green b{color:#7CFFB2}
+  .gwrap{margin-top:14px}
+  .bar{display:flex;gap:14px;flex-wrap:wrap;align-items:flex-end;background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:14px 16px;margin-top:14px}
+  .sld{flex:1;min-width:150px}
+  .sld label{display:flex;justify-content:space-between;font-size:.82rem;color:var(--muted);margin-bottom:5px}
+  .sld label .v{font-variant-numeric:tabular-nums;font-weight:700}
+  .sld.p label .v{color:#ff8fb0}.sld.s label .v{color:#6cd0ff}
+  .sld input{width:100%;accent-color:var(--accent)}
+  .presets{display:flex;gap:7px;flex-wrap:wrap;align-items:center;margin-top:12px}
+  .presets span{color:var(--muted);font-size:.8rem}
+  .pbtn{background:var(--panel2);color:var(--txt);border:1px solid var(--line);padding:7px 12px;border-radius:9px;cursor:pointer;font-size:.83rem;font-family:inherit}
+  .pbtn:hover{border-color:var(--accent)}
+  .note{background:var(--panel);border-left:3px solid var(--accent2);border-radius:8px;padding:12px 14px;color:var(--muted);font-size:.86rem;line-height:1.7;margin-top:14px}
+  .note b{color:var(--txt)}.note code{background:var(--bg2);padding:1px 6px;border-radius:5px;color:var(--green);font-size:.85em}
+  footer{color:var(--muted);font-size:.78rem;margin-top:24px;text-align:center;line-height:1.7}
+</style>
+</head>
+<body data-demo="變壓器">
+<div class="wrap">
+  <header>
+    <span class="badge">電磁・電磁感應應用</span>
+    <h1>變壓器（升壓／降壓）</h1>
+    <p>交流電在<b>主線圈</b>產生變化磁通，經<b>鐵芯</b>傳到<b>次線圈</b>感應出電壓。電壓比等於<b>匝數比</b> <b>Vs/Vp = Ns/Np</b>：
+       次線圈匝數多就<b>升壓</b>、少就<b>降壓</b>。理想變壓器<b>功率守恆</b> <b>VpIp = VsIs</b>，所以升壓必<b>降流</b>（電流比相反）。</p>
+  </header>
+
+  <div class="scene-wrap">
+    <canvas id="scene"></canvas>
+    <div class="hud" id="hud"></div>
+  </div>
+  <div class="gwrap scene-wrap"><canvas id="wave"></canvas></div>
+
+  <div class="bar" id="sliders"></div>
+  <div class="presets">
+    <span>情境：</span>
+    <button class="pbtn" data-preset="up">升壓 ×2</button>
+    <button class="pbtn" data-preset="down">降壓 ÷10（變壓器供電）</button>
+    <button class="pbtn" data-preset="iso">1:1 隔離</button>
+    <button class="pbtn" data-preset="hv">高壓輸電升壓</button>
+  </div>
+
+  <div class="formula" id="formula"></div>
+
+  <div class="note">
+    <b>物理重點：</b>變壓器只能用於<b>交流電</b>（需變化磁通才有感應）。電壓比＝匝數比 <code>Vs/Vp = Ns/Np</code>。
+    理想（無損耗）時功率守恆 <code>VpIp = VsIs</code>，故電流比 <code>Is/Ip = Np/Ns</code>——<b>升壓必降流、降壓必升流</b>。
+    高壓輸電就是先升壓使電流變小，<b>減少電線 I²R 的發熱損耗</b>，到用戶端再降壓。真實變壓器有鐵損與銅損，效率約 95–99%。
+  </div>
+
+  <footer>純前端 HTML / Canvas（SIM 工具庫）。理想變壓器模型（功率守恆）；電壓為 rms 值。</footer>
+</div>
+
+<script>
+const S=SIM;
+const sliders=[
+  {id:'Vp',name:'輸入電壓 Vp',min:10,max:220,step:5,val:110,unit:'V',cls:'p'},
+  {id:'Np',name:'主線圈匝數 Np',min:50,max:500,step:10,val:200,unit:'匝',cls:'p'},
+  {id:'Ns',name:'次線圈匝數 Ns',min:50,max:500,step:10,val:400,unit:'匝',cls:'s'},
+  {id:'Ip',name:'輸入電流 Ip',min:.5,max:5,step:.1,val:2,unit:'A',cls:'p'},
+];
+const state={};
+const sBar=document.getElementById('sliders');
+sliders.forEach(s=>{ state[s.id]=s.val;
+  const d=document.createElement('div');d.className='sld '+(s.cls||'');
+  d.innerHTML=`<label><span>${s.name}</span><span class="v" id="v_${s.id}">${fmt(s.val)} ${s.unit}</span></label>
+    <input type="range" id="r_${s.id}" min="${s.min}" max="${s.max}" step="${s.step}" value="${s.val}">`;
+  sBar.appendChild(d);
+  d.querySelector('input').addEventListener('input',e=>{state[s.id]=parseFloat(e.target.value);
+    document.getElementById('v_'+s.id).textContent=`${fmt(state[s.id])} ${s.unit}`; recompute(); });
+});
+function fmt(x){return (Math.round(x*100)/100).toString();}
+function setSlider(id,val){state[id]=val;const r=document.getElementById('r_'+id);if(r)r.value=val;
+  const s=sliders.find(z=>z.id===id);if(s)document.getElementById('v_'+id).textContent=`${fmt(val)} ${s.unit}`;}
+
+// ---- 物理 ----
+function Vs(){return state.Vp*state.Ns/state.Np;}
+function Is(){return state.Ip*state.Np/state.Ns;}
+function recompute(){updateFormula();updateHud();}
+
+// ---- 公式面板 ----
+function frow(n,sym,sub,val){return `<div class="frow"><span class="fname">${n}</span><span class="fsym">${sym}</span><span class="fsub">= ${sub}</span><span class="fval">${val}</span></div>`;}
+function updateFormula(){const vs=Vs(),is=Is(),ratio=state.Ns/state.Np,kind=ratio>1.001?'升壓':(ratio<0.999?'降壓':'1:1');
+  document.getElementById('formula').innerHTML=
+    `<h4>📐 計算公式（即時代入　理想變壓器）</h4>`
+    + frow('匝數比','Ns / Np',`${state.Ns} / ${state.Np}`, ratio.toFixed(2)+'（'+kind+'）')
+    + frow('輸出電壓 Vs','Vp · Ns/Np',`${state.Vp}·${state.Ns}/${state.Np}`, vs.toFixed(1)+' V')
+    + frow('輸出電流 Is','Ip · Np/Ns',`${state.Ip}·${state.Np}/${state.Ns}`, is.toFixed(2)+' A')
+    + frow('功率（守恆）','VpIp = VsIs',`${state.Vp}·${state.Ip} = ${vs.toFixed(0)}·${is.toFixed(2)}`, (state.Vp*state.Ip).toFixed(0)+' W')
+    + `<div class="frel">📈 <b>Vs/Vp = Ns/Np</b>：匝數比決定電壓比　·　<b>升壓必降流、降壓必升流</b>（VpIp=VsIs 功率守恆）　·　高壓輸電升壓使電流變小 → 減少電線 I²R 損耗　·　只對交流有效（需變化磁通）。</div>`;
+}
+function updateHud(){const vs=Vs(),is=Is();
+  document.getElementById('hud').innerHTML=
+   `<div class="chip rose">主 Vp / Ip<b>${state.Vp}V / ${state.Ip}A</b></div>`+
+   `<div class="chip cyan">次 Vs / Is<b>${vs.toFixed(0)}V / ${is.toFixed(2)}A</b></div>`+
+   `<div class="chip green">功率 P<b>${(state.Vp*state.Ip).toFixed(0)} W</b></div>`;
+}
+
+// ---- 視圖 ----
+let sc,wc,ph=0;
+const ELEC={skyTop:'#0e1626',skyBottom:'#070b14',vignette:'rgba(0,0,0,.45)'};
+function setupCanvases(){sc=S.fit(document.getElementById('scene'),2.0);wc=S.fit(document.getElementById('wave'),3.0);}
+function coil(x,topY,botY,turns,col,amp){const n=Math.max(3,Math.min(11,Math.round(turns/45)));
+  const step=(botY-topY)/n;sc.strokeStyle=col;sc.lineWidth=3;
+  for(let i=0;i<n;i++){const y=topY+i*step+step/2;sc.beginPath();sc.ellipse(x,y,16,step*0.46,0,-Math.PI*0.5,Math.PI*0.5,amp<0);sc.stroke();}
+}
+function drawScene(){const W=sc._w,H=sc._h,cy=H/2;
+  S.scene(sc,ELEC,{});
+  const coreL=W*0.34,coreR=W*0.66,coreT=H*0.22,coreB=H*0.78,th=18;
+  // 鐵芯(口字)
+  sc.fillStyle='#3a4252';sc.strokeStyle='#586580';sc.lineWidth=1.5;
+  sc.fillRect(coreL-th/2,coreT-th/2,coreR-coreL+th,coreB-coreT+th);
+  sc.fillStyle='#11151f';sc.fillRect(coreL+th/2,coreT+th/2,coreR-coreL-th,coreB-coreT-th);
+  // 磁通(沿鐵芯流動，依相位脈動)
+  const flux=Math.sin(ph), fa=Math.abs(flux);
+  sc.strokeStyle=`rgba(124,200,255,${0.25+fa*0.5})`;sc.lineWidth=2+fa*2;
+  sc.strokeRect(coreL,coreT,coreR-coreL,coreB-coreT);
+  // 主線圈(左腿)
+  coil(coreL,coreT+10,coreB-10,state.Np,'#ff6b9d',flux);
+  // 次線圈(右腿)
+  coil(coreR,coreT+10,coreB-10,state.Ns,'#6cd0ff',flux);
+  // 交流電源(左)
+  sc.strokeStyle='#ff8fb0';sc.lineWidth=2;sc.beginPath();sc.arc(W*0.12,cy,20,0,7);sc.stroke();
+  sc.beginPath();for(let i=-14;i<=14;i++){const xx=W*0.12+i,yy=cy-Math.sin(i/14*Math.PI*2)*8;i===-14?sc.moveTo(xx,yy):sc.lineTo(xx,yy);}sc.stroke();
+  sc.strokeStyle='#ff6b9d';sc.beginPath();sc.moveTo(W*0.12+20,cy-6);sc.lineTo(coreL-16,cy-6);sc.moveTo(W*0.12+20,cy+6);sc.lineTo(coreL-16,cy+6);sc.stroke();
+  sc.fillStyle='#ff8fb0';sc.font='12px system-ui';sc.fillText('AC 輸入',W*0.06,cy+38);
+  // 燈泡負載(右，亮度∝Vs)
+  const vs=Vs(),bri=Math.min(1,vs/200*Math.abs(flux)+0.05);
+  sc.strokeStyle='#6cd0ff';sc.beginPath();sc.moveTo(coreR+16,cy-6);sc.lineTo(W*0.86,cy-6);sc.moveTo(coreR+16,cy+6);sc.lineTo(W*0.86,cy+6);sc.stroke();
+  {const g=sc.createRadialGradient(W*0.9,cy,2,W*0.9,cy,24);g.addColorStop(0,`rgba(255,240,180,${bri.toFixed(2)})`);g.addColorStop(1,'rgba(255,240,180,0)');sc.fillStyle=g;sc.beginPath();sc.arc(W*0.9,cy,24,0,7);sc.fill();sc.strokeStyle='#aab6c8';sc.lineWidth=2;sc.beginPath();sc.arc(W*0.9,cy,11,0,7);sc.stroke();sc.fillStyle=`rgba(255,236,160,${bri.toFixed(2)})`;sc.beginPath();sc.arc(W*0.9,cy,8,0,7);sc.fill();}
+  sc.fillStyle='#6cd0ff';sc.fillText('負載',W*0.86,cy+38);
+  // 標示
+  sc.fillStyle='#ff8fb0';sc.font='bold 12px system-ui';sc.fillText('主 Np='+state.Np,coreL-30,coreT-12);
+  sc.fillStyle='#6cd0ff';sc.fillText('次 Ns='+state.Ns,coreR-30,coreT-12);
+}
+function drawWave(){const W=wc._w,H=wc._h,mid=H/2;
+  wc.clearRect(0,0,W,H);wc.fillStyle='#080c14';wc.fillRect(0,0,W,H);
+  wc.strokeStyle='#1b2433';wc.lineWidth=1;wc.beginPath();wc.moveTo(0,mid);wc.lineTo(W,mid);wc.stroke();
+  const Vmax=Math.max(state.Vp,Vs(),1),A=H*0.42;
+  for(const o of [{V:state.Vp,col:'#ff8fb0',lab:'Vp'},{V:Vs(),col:'#6cd0ff',lab:'Vs'}]){
+    wc.strokeStyle=o.col;wc.lineWidth=2.2;wc.beginPath();
+    for(let x=0;x<=W;x++){const t=x/W*4*Math.PI, y=mid-Math.sin(t-ph)*o.V/Vmax*A;x?wc.lineTo(x,y):wc.moveTo(x,y);}wc.stroke();
+    wc.fillStyle=o.col;wc.font='11px system-ui';wc.fillText(o.lab+'='+o.V.toFixed(0)+'V',8,o.lab==='Vp'?14:H-8);
+  }
+  wc.fillStyle='#8a99ad';wc.font='10px system-ui';wc.fillText('交流電壓波形（振幅比＝匝數比）',W-180,14);
+}
+function render(){drawScene();drawWave();}
+let last=0;
+function loop(ts){const dt=last?Math.min((ts-last)/1000,0.05):0;last=ts;ph+=dt*3;render();requestAnimationFrame(loop);}
+
+const PRE={up:{Vp:110,Np:200,Ns:400,Ip:2},down:{Vp:1000,Np:500,Ns:50,Ip:1},iso:{Vp:110,Np:300,Ns:300,Ip:2},hv:{Vp:110,Np:50,Ns:500,Ip:4}};
+document.querySelectorAll('[data-preset]').forEach(b=>b.onclick=()=>{const pr=PRE[b.dataset.preset];if(!pr)return;
+  ['Vp','Np','Ns','Ip'].forEach(k=>setSlider(k,pr[k]));recompute();});
+
+window.addEventListener('load',()=>{setupCanvases();recompute();requestAnimationFrame(loop);});
+window.addEventListener('resize',()=>{setupCanvases();render();});
+</script>
+</body>
+</html>
