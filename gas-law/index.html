@@ -1,0 +1,222 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>理想氣體 PV 圖 ｜ 波以耳・查理・給呂薩克・PV=nRT</title>
+<meta name="description" content="理想氣體互動模擬：活塞氣缸內分子運動，調溫度 T、體積 V、莫耳數 n，即時看壓力 P=nRT/V 與 PV 圖。等溫(波以耳)、等壓、等容(查理)過程與曲線形狀。">
+<link rel="icon" href="../assets/favicon.svg" type="image/svg+xml">
+<link rel="stylesheet" href="../assets/site.css">
+<script src="../assets/sim.js"></script>
+<script defer src="../assets/nav.js"></script>
+<style>
+  *{box-sizing:border-box}
+  html,body{margin:0;padding:0;background:var(--bg);color:var(--txt);font-family:"Noto Sans TC","PingFang TC","Microsoft JhengHei",system-ui,sans-serif}
+  a{color:var(--accent)}
+  .wrap{max-width:1120px;margin:0 auto;padding:18px 16px 60px}
+  header h1{font-size:1.5rem;margin:.2em 0}
+  header p{color:var(--muted);margin:.2em 0 1em;line-height:1.6}
+  .badge{display:inline-block;background:var(--panel2);border:1px solid var(--line);color:var(--muted);font-size:.72rem;padding:2px 8px;border-radius:99px;margin-right:6px}
+  .grid2{display:grid;grid-template-columns:.78fr 1fr;gap:14px}
+  @media(max-width:740px){.grid2{grid-template-columns:1fr}}
+  .scene-wrap{position:relative;border-radius:16px;overflow:hidden;border:1px solid var(--line);box-shadow:0 18px 50px rgba(0,0,0,.45)}
+  #cyl,#pv{display:block;width:100%}
+  .hud{position:absolute;top:10px;left:10px;display:flex;gap:7px;flex-wrap:wrap;pointer-events:none}
+  .chip{background:rgba(20,14,8,.6);backdrop-filter:blur(6px);border:1px solid rgba(255,210,150,.18);border-radius:10px;padding:5px 10px;color:#ffe9d6;font-size:.78rem;line-height:1.2}
+  .chip b{display:block;font-size:1rem;font-variant-numeric:tabular-nums;color:#fff}
+  .chip.cyan b{color:#6cd0ff}.chip.amber b{color:#ffce54}.chip.green b{color:#7CFFB2}
+  .statgrid{display:grid;grid-template-columns:repeat(auto-fit,minmax(120px,1fr));gap:10px;margin-top:14px}
+  .box{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:10px 12px}
+  .box .k{font-size:.72rem;color:var(--muted)}.box .v{font-size:1.05rem;font-variant-numeric:tabular-nums;font-weight:700}
+  .bar{display:flex;gap:14px;flex-wrap:wrap;align-items:flex-end;background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:14px 16px;margin-top:14px}
+  .sld{flex:1;min-width:150px}
+  .sld label{display:flex;justify-content:space-between;font-size:.82rem;color:var(--muted);margin-bottom:5px}
+  .sld label .v{color:var(--accent);font-variant-numeric:tabular-nums;font-weight:700}
+  .sld input{width:100%;accent-color:var(--accent)}
+  .presets{display:flex;gap:7px;flex-wrap:wrap;align-items:center;margin-top:12px}
+  .presets span{color:var(--muted);font-size:.8rem}
+  .pbtn{background:var(--panel2);color:var(--txt);border:1px solid var(--line);padding:7px 12px;border-radius:9px;cursor:pointer;font-size:.83rem;font-family:inherit}
+  .pbtn:hover{border-color:var(--accent)}
+  .note{background:var(--panel);border-left:3px solid var(--accent2);border-radius:8px;padding:12px 14px;color:var(--muted);font-size:.86rem;line-height:1.7;margin-top:14px}
+  .note b{color:var(--txt)}.note code{background:var(--bg2);padding:1px 6px;border-radius:5px;color:var(--green);font-size:.85em}
+  footer{color:var(--muted);font-size:.78rem;margin-top:24px;text-align:center;line-height:1.7}
+</style>
+</head>
+<body data-demo="理想氣體 PV 圖">
+<div class="wrap">
+  <header>
+    <span class="badge">熱學・氣體</span>
+    <h1>理想氣體 PV 圖</h1>
+    <p>活塞氣缸內的分子<b>不停碰撞器壁</b>產生<b>壓力</b>。調<b>溫度 T</b>（分子跑越快）、<b>體積 V</b>（推活塞）、<b>莫耳數 n</b>，
+       即時看壓力 <b>P = nRT/V</b> 與右側 <b>PV 圖</b>上的狀態點。拖滑桿時觀察軌跡：等溫＝雙曲線、等壓＝水平、等容＝鉛直。</p>
+  </header>
+
+  <div class="grid2">
+    <div class="scene-wrap">
+      <canvas id="cyl"></canvas>
+      <div class="hud" id="hud"></div>
+    </div>
+    <div class="scene-wrap"><canvas id="pv"></canvas></div>
+  </div>
+
+  <div class="statgrid" id="stats"></div>
+
+  <div class="bar" id="sliders"></div>
+  <div class="presets">
+    <span>過程示範：</span>
+    <button class="pbtn" data-proc="iso">等溫壓縮（波以耳）</button>
+    <button class="pbtn" data-proc="isobar">等壓加熱</button>
+    <button class="pbtn" data-proc="isochor">等容加熱（查理）</button>
+    <button class="pbtn" id="reset" style="margin-left:auto">↺ 清軌跡</button>
+  </div>
+
+  <div class="formula" id="formula"></div>
+
+  <div class="note">
+    <b>物理重點：</b>理想氣體狀態方程式 <code>PV = nRT</code>（R=8.314 J/mol·K）。三條經典定律都是它的特例：
+    <b>波以耳</b>（等溫 T 定）<code>P ∝ 1/V</code>，PV 圖上是<b>雙曲線</b>；<b>查理</b>（等容 V 定）<code>P ∝ T</code>，鉛直移動；
+    <b>給呂薩克／查理</b>（等壓 P 定）<code>V ∝ T</code>，水平移動。微觀上 <code>P = (1/3)·(N/V)·m·v̄²</code>，溫度越高分子均方速率越大、撞牆越猛 → 壓力越大。
+  </div>
+
+  <footer>純前端 HTML / Canvas（SIM 工具庫）。分子速率 ∝ √T（v_rms），壓力由狀態方程式 P=nRT/V 計算。</footer>
+</div>
+
+<script>
+const S=SIM, R=8.314;
+const sliders=[
+  {id:'T',name:'溫度 T',min:150,max:600,step:10,val:300,unit:'K'},
+  {id:'V',name:'體積 V',min:2,max:12,step:.5,val:8,unit:'L'},
+  {id:'n',name:'莫耳數 n',min:.5,max:2,step:.1,val:1,unit:'mol'},
+];
+const state={};
+const sBar=document.getElementById('sliders');
+sliders.forEach(s=>{ state[s.id]=s.val;
+  const d=document.createElement('div');d.className='sld';
+  d.innerHTML=`<label><span>${s.name}</span><span class="v" id="v_${s.id}">${fmt(s.val)} ${s.unit}</span></label>
+    <input type="range" id="r_${s.id}" min="${s.min}" max="${s.max}" step="${s.step}" value="${s.val}">`;
+  sBar.appendChild(d);
+  d.querySelector('input').addEventListener('input',e=>{state[s.id]=parseFloat(e.target.value);
+    document.getElementById('v_'+s.id).textContent=`${fmt(state[s.id])} ${s.unit}`; onChange(); });
+});
+function fmt(x){return (Math.round(x*100)/100).toString();}
+function setSlider(id,val){state[id]=val;const r=document.getElementById('r_'+id);if(r)r.value=val;
+  const s=sliders.find(z=>z.id===id);if(s)document.getElementById('v_'+id).textContent=`${fmt(val)} ${s.unit}`;}
+function P(){return state.n*R*state.T/state.V;}   // kPa（kPa·L = J）
+
+// ---- PV 圖座標 ----
+const VMAX=13, PMAX=4600;
+// ---- 軌跡 ----
+let trail=[];
+function pushTrail(){const v=state.V,p=P();const last=trail[trail.length-1];
+  if(!last||Math.abs(last.v-v)>0.01||Math.abs(last.p-p)>1){trail.push({v,p});if(trail.length>240)trail.shift();}}
+function onChange(){pushTrail();updateFormula();updateStats();}
+
+// ---- 公式面板 ----
+function frow(n,sym,sub,val){return `<div class="frow"><span class="fname">${n}</span><span class="fsym">${sym}</span><span class="fsub">= ${sub}</span><span class="fval">${val}</span></div>`;}
+function updateFormula(){
+  const T=state.T,V=state.V,n=state.n,p=P();
+  document.getElementById('formula').innerHTML=
+    `<h4>📐 計算公式（即時代入　PV = nRT，R=8.314）</h4>`
+    + frow('壓力 P','P = nRT / V',`${n}·8.314·${T} / ${V}`, p.toFixed(0)+' kPa')
+    + frow('PV 乘積','PV = nRT',`${n}·8.314·${T}`, (n*R*T).toFixed(0)+' J（等溫時 PV 為定值）')
+    + frow('分子均方根速率','v_rms = √(3RT/M)',`√(3·8.314·${T}/M)`, '∝ √T')
+    + `<div class="frel">📈 <b>等溫 P ∝ 1/V</b>（波以耳）：體積減半 → 壓力加倍，PV 圖走雙曲線　·　<b>等容 P ∝ T</b>（查理）：溫度加倍 → 壓力加倍　·　<b>等壓 V ∝ T</b>：溫度加倍 → 體積加倍　·　莫耳數 n 越多、分子越多 → 同 T、V 下壓力越大。</div>`;
+}
+function updateStats(){
+  const rows=[['壓力 P=nRT/V',P().toFixed(0)+' kPa','#6cd0ff'],['溫度 T',state.T+' K','#ffce54'],['體積 V',state.V+' L','#7CFFB2'],['PV 乘積',(P()*state.V).toFixed(0)+' J','#e8eef6']];
+  document.getElementById('stats').innerHTML=rows.map(r=>`<div class="box"><div class="k">${r[0]}</div><div class="v" style="color:${r[1]?r[2]:''}">${r[1]}</div></div>`).join('');
+  document.getElementById('hud').innerHTML=
+    `<div class="chip cyan">壓力 P<b>${P().toFixed(0)} kPa</b></div><div class="chip amber">溫度 T<b>${state.T} K</b></div><div class="chip green">體積 V<b>${state.V} L</b></div>`;
+}
+
+// ---- 氣缸（分子）----
+let cc,pc,parts=[],tt=0;
+const THERM={skyTop:'#1c1410',skyBottom:'#0c0806',vignette:'rgba(0,0,0,.5)'};
+function count(){return Math.round(8+state.n*14);}
+function initParts(){parts=[];for(let i=0;i<40;i++)parts.push({x:Math.random(),y:Math.random(),a:Math.random()*7});}
+function setupCanvases(){cc=S.fit(document.getElementById('cyl'),1.15);pc=S.fit(document.getElementById('pv'),1.5);}
+function drawCyl(){const W=cc._w,H=cc._h;
+  S.scene(cc,THERM,{});
+  const mL=18,mT=16,mB=16,boxW=W-mL-26,boxH=H-mT-mB, x0=mL,y0=mT;
+  const frac=(state.V-2)/(VMAX-2);           // 活塞位置(體積)
+  const pistonX=x0+ (0.28+0.72*frac)*boxW;   // 0.28~1.0
+  // 氣缸壁
+  cc.fillStyle='#0a0f17';cc.fillRect(x0,y0,boxW,boxH);
+  cc.strokeStyle='#3a4660';cc.lineWidth=2;cc.strokeRect(x0,y0,boxW,boxH);
+  // 氣體區(活塞左側)
+  cc.save();cc.beginPath();cc.rect(x0,y0,pistonX-x0,boxH);cc.clip();
+  // 分子
+  const sp=Math.sqrt(state.T)/Math.sqrt(300)*1.0;
+  const N=count();
+  const heat=Math.min(1,(state.T-150)/450);
+  const col=`rgb(${120+heat*135|0},${170-heat*90|0},${255-heat*200|0})`;
+  for(let i=0;i<N;i++){const p=parts[i%parts.length];
+    const px=x0+p.x*((pistonX-x0)-8)+4, py=y0+p.y*(boxH-8)+4;
+    cc.fillStyle=col;cc.beginPath();cc.arc(px,py,2.6,0,7);cc.fill();}
+  cc.restore();
+  // 活塞
+  cc.fillStyle='#7a8aa0';cc.fillRect(pistonX,y0-3,10,boxH+6);
+  cc.fillStyle='#aab6c8';cc.fillRect(pistonX+10,y0+boxH/2-16,22,32);
+  // 壓力箭頭(分子撞活塞)
+  const pf=Math.min(1,P()/2500);
+  cc.strokeStyle='#ffce54';cc.lineWidth=2;
+  for(let k=0;k<3;k++){const yy=y0+boxH*(0.3+0.2*k);cc.beginPath();cc.moveTo(pistonX-6-12*pf,yy);cc.lineTo(pistonX-6,yy);
+    cc.lineTo(pistonX-11,yy-3);cc.moveTo(pistonX-6,yy);cc.lineTo(pistonX-11,yy+3);cc.stroke();}
+  cc.fillStyle='rgba(255,255,255,.6)';cc.font='11px system-ui';cc.fillText('活塞',pistonX+2,y0+boxH+12);
+}
+function stepParts(dt){const sp=Math.sqrt(state.T/300)*0.6*Math.min(dt,0.05);
+  for(const p of parts){p.x+=Math.cos(p.a)*sp;p.y+=Math.sin(p.a)*sp;
+    if(p.x<0.01){p.x=0.01;p.a=Math.PI-p.a;}if(p.x>0.99){p.x=0.99;p.a=Math.PI-p.a;}
+    if(p.y<0.01){p.y=0.01;p.a=-p.a;}if(p.y>0.99){p.y=0.99;p.a=-p.a;}}}
+// ---- PV 圖 ----
+function drawPV(){const W=pc._w,H=pc._h,mL=46,mR=16,mT=14,mB=30;
+  pc.clearRect(0,0,W,H);pc.fillStyle='#080c14';pc.fillRect(0,0,W,H);
+  const PX=v=>mL+v/VMAX*(W-mL-mR), PY=p=>H-mB-p/PMAX*(H-mT-mB);
+  // 格線/軸
+  pc.strokeStyle='#1b2433';pc.lineWidth=1;pc.fillStyle='#5b6880';pc.font='10px system-ui';
+  for(let v=0;v<=VMAX;v+=2){pc.beginPath();pc.moveTo(PX(v),mT);pc.lineTo(PX(v),H-mB);pc.stroke();pc.fillText(v,PX(v)-4,H-mB+13);}
+  for(let p=0;p<=PMAX;p+=1000){pc.beginPath();pc.moveTo(mL,PY(p));pc.lineTo(W-mR,PY(p));pc.stroke();pc.fillText(p,4,PY(p)+3);}
+  pc.fillStyle='#8a99ad';pc.fillText('V (L) →',W-70,H-6);
+  pc.save();pc.translate(12,mT+40);pc.rotate(-Math.PI/2);pc.fillText('P (kPa) →',0,0);pc.restore();
+  // 參考等溫線(目前 n，幾個 T)
+  [150,300,450,600].forEach(T=>{pc.strokeStyle=T===state.T?'rgba(255,180,90,.5)':'rgba(120,140,170,.22)';pc.lineWidth=T===state.T?1.5:1;
+    pc.beginPath();let first=true;for(let v=1;v<=VMAX;v+=0.2){const p=state.n*R*T/v;if(p>PMAX*1.05)continue;const X=PX(v),Y=PY(p);first?pc.moveTo(X,Y):pc.lineTo(X,Y);first=false;}pc.stroke();
+    pc.fillStyle='rgba(150,170,200,.5)';pc.fillText(T+'K',PX(VMAX-1.6),PY(state.n*R*T/(VMAX-1.4))-2);});
+  // 軌跡
+  if(trail.length>1){pc.strokeStyle='rgba(255,255,255,.5)';pc.lineWidth=2;pc.setLineDash([4,3]);pc.beginPath();
+    trail.forEach((s,i)=>{const X=PX(s.v),Y=PY(Math.min(s.p,PMAX));i?pc.lineTo(X,Y):pc.moveTo(X,Y);});pc.stroke();pc.setLineDash([]);}
+  // 過當前點的 等壓(水平,cyan) / 等容(鉛直,green) 導引線
+  const cv=state.V,cp=P(),cX=PX(cv),cY=PY(Math.min(cp,PMAX));
+  pc.strokeStyle='rgba(108,208,255,.45)';pc.lineWidth=1.5;pc.beginPath();pc.moveTo(mL,cY);pc.lineTo(W-mR,cY);pc.stroke();
+  pc.strokeStyle='rgba(124,255,178,.45)';pc.beginPath();pc.moveTo(cX,mT);pc.lineTo(cX,H-mB);pc.stroke();
+  pc.fillStyle='#6cd0ff';pc.fillText('等壓',W-mR-30,cY-4);pc.fillStyle='#7CFFB2';pc.fillText('等容',cX+3,mT+10);
+  pc.fillStyle='#ffb05a';pc.fillText('等溫',PX(2.2),PY(Math.min(state.n*R*state.T/2.2,PMAX))+2);
+  // 當前狀態點
+  if(cp<=PMAX*1.02){pc.fillStyle='#fff';pc.beginPath();pc.arc(cX,cY,5,0,7);pc.fill();
+    pc.fillStyle='#fff';pc.strokeStyle='#1b2433';pc.lineWidth=3;pc.font='bold 11px system-ui';
+    const lab=`(${cv}L, ${cp.toFixed(0)}kPa)`;pc.strokeText(lab,cX+8,cY-6);pc.fillText(lab,cX+8,cY-6);}
+  else{pc.fillStyle='#ff8fb0';pc.fillText('壓力超出圖範圍（V 太小或 T 太高）',mL+8,mT+16);}
+}
+function render(){drawCyl();drawPV();}
+let last=0;
+function loop(ts){const dt=last?(ts-last)/1000:0;last=ts;tt+=dt;stepAnim(dt);stepParts(dt);render();requestAnimationFrame(loop);}
+
+// ---- 過程示範（動畫到目標）----
+let anim=null;
+function animateTo(target,dur){anim={from:{T:state.T,V:state.V},to:target,t:0,dur};}
+document.querySelectorAll('[data-proc]').forEach(b=>b.onclick=()=>{const k=b.dataset.proc;
+  if(k==='iso')animateTo({T:state.T,V:Math.max(2,state.V>6?3:11)},1.2);          // 等溫：改 V
+  else if(k==='isobar'){const Pc=P();const Tn=state.T>375?200:520;animateTo({T:Tn,V:state.n*R*Tn/Pc},1.2);} // 等壓：T、V 同變保持 P
+  else if(k==='isochor')animateTo({T:state.T>375?200:560,V:state.V},1.2);        // 等容：改 T
+});
+function stepAnim(dt){if(!anim)return;anim.t+=dt;const f=Math.min(1,anim.t/anim.dur),e=f<.5?2*f*f:1-Math.pow(-2*f+2,2)/2;
+  setSlider('T',Math.round((anim.from.T+(anim.to.T-anim.from.T)*e)/10)*10);
+  setSlider('V',Math.round((anim.from.V+(anim.to.V-anim.from.V)*e)*2)/2);
+  onChange();if(f>=1)anim=null;}
+document.getElementById('reset').onclick=()=>{trail=[];};
+
+window.addEventListener('load',()=>{setupCanvases();initParts();onChange();requestAnimationFrame(loop);});
+window.addEventListener('resize',()=>{setupCanvases();render();});
+</script>
+</body>
+</html>
