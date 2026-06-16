@@ -1,0 +1,170 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>物質波（德布羅意）｜ λ=h/p・波粒二象性</title>
+<meta name="description" content="德布羅意物質波互動模擬：任何運動粒子都有波長 λ=h/p=h/mv。比較電子、質子、塵埃、棒球——只有極輕極慢的粒子(如電子)波長才接近原子尺度、波動性才觀測得到，這就是波粒二象性與電子顯微鏡的原理。">
+<link rel="icon" href="../assets/favicon.svg" type="image/svg+xml">
+<link rel="stylesheet" href="../assets/site.css">
+<script src="../assets/sim.js"></script>
+<script defer src="../assets/nav.js"></script>
+<style>
+  *{box-sizing:border-box}
+  html,body{margin:0;padding:0;background:var(--bg);color:var(--txt);font-family:"Noto Sans TC","PingFang TC","Microsoft JhengHei",system-ui,sans-serif}
+  a{color:var(--accent)}
+  .wrap{max-width:1120px;margin:0 auto;padding:18px 16px 60px}
+  header h1{font-size:1.5rem;margin:.2em 0}
+  header p{color:var(--muted);margin:.2em 0 1em;line-height:1.6}
+  .badge{display:inline-block;background:var(--panel2);border:1px solid var(--line);color:var(--muted);font-size:.72rem;padding:2px 8px;border-radius:99px;margin-right:6px}
+  .scene-wrap{position:relative;border-radius:16px;overflow:hidden;border:1px solid var(--line);box-shadow:0 18px 50px rgba(0,0,0,.45)}
+  #scene{display:block;width:100%}
+  .hud{position:absolute;top:12px;left:12px;display:flex;gap:8px;flex-wrap:wrap;pointer-events:none}
+  .chip{background:rgba(14,10,24,.6);backdrop-filter:blur(6px);border:1px solid rgba(150,170,255,.18);border-radius:10px;padding:6px 11px;color:#e3e6ff;font-size:.8rem;line-height:1.25}
+  .chip b{display:block;font-size:1.02rem;font-variant-numeric:tabular-nums;color:#fff}
+  .chip.indigo b{color:#8b9cff}.chip.green b{color:#7CFFB2}.chip.amber b{color:#ffce54}
+  .mats{display:flex;gap:7px;flex-wrap:wrap;align-items:center;margin-top:14px}
+  .mats span{color:var(--muted);font-size:.8rem}
+  .pbtn{background:var(--panel2);color:var(--txt);border:1px solid var(--line);padding:7px 12px;border-radius:9px;cursor:pointer;font-size:.83rem;font-family:inherit}
+  .pbtn:hover{border-color:var(--accent)}
+  .pbtn.on{background:var(--accent);color:#04121c;border-color:var(--accent);font-weight:700}
+  .bar{display:flex;gap:14px;flex-wrap:wrap;align-items:flex-end;background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:14px 16px;margin-top:14px}
+  .sld{flex:1;min-width:200px}
+  .sld label{display:flex;justify-content:space-between;font-size:.82rem;color:var(--muted);margin-bottom:5px}
+  .sld label .v{color:var(--accent);font-variant-numeric:tabular-nums;font-weight:700}
+  .sld input{width:100%;accent-color:var(--accent)}
+  .note{background:var(--panel);border-left:3px solid var(--accent2);border-radius:8px;padding:12px 14px;color:var(--muted);font-size:.86rem;line-height:1.7;margin-top:14px}
+  .note b{color:var(--txt)}.note code{background:var(--bg2);padding:1px 6px;border-radius:5px;color:var(--green);font-size:.85em}
+  footer{color:var(--muted);font-size:.78rem;margin-top:24px;text-align:center;line-height:1.7}
+</style>
+</head>
+<body data-demo="物質波（德布羅意）">
+<div class="wrap">
+  <header>
+    <span class="badge">近代物理・量子</span>
+    <h1>物質波（德布羅意）</h1>
+    <p>德布羅意：<b>任何運動的粒子都伴隨一個波</b>，波長 <b>λ = h/p = h/(mv)</b>。質量越大、速度越快 → 波長越短。
+       只有<b>極輕、極慢</b>的粒子（如<b>電子</b>）波長才接近<b>原子尺度</b>，波動性（干涉、繞射）才觀測得到——這就是<b>波粒二象性</b>與電子顯微鏡的原理。</p>
+  </header>
+
+  <div class="scene-wrap">
+    <canvas id="scene"></canvas>
+    <div class="hud" id="hud"></div>
+  </div>
+
+  <div class="mats">
+    <span>粒子：</span>
+    <button class="pbtn on" data-p="0">電子</button>
+    <button class="pbtn" data-p="1">質子</button>
+    <button class="pbtn" data-p="2">大分子(C₆₀)</button>
+    <button class="pbtn" data-p="3">病毒</button>
+    <button class="pbtn" data-p="4">塵埃</button>
+    <button class="pbtn" data-p="5">棒球</button>
+  </div>
+
+  <div class="bar" id="sliders"></div>
+
+  <div class="formula" id="formula"></div>
+
+  <div class="note">
+    <b>物理重點：</b>德布羅意波長 <code>λ = h/p = h/(mv)</code>（h=6.63×10⁻³⁴ J·s 為普朗克常數）。<b>波動性要觀測得到，λ 必須與「障礙物尺度」相當</b>——
+    對晶體繞射就要 λ ≳ 原子間距（約 0.1~0.3 nm）。電子很輕，慢速電子的 λ 剛好在這範圍，所以會被晶體繞射（戴維森-革末實驗證實），也讓<b>電子顯微鏡</b>能看到比光學顯微鏡更小的東西（λ 更短 → 解析度更高）。
+    棒球的 λ≈10⁻³⁴ m，遠小於任何障礙物，所以我們從不覺得棒球像波——巨觀物體的波動性被「藏」起來了。
+  </div>
+
+  <footer>純前端 HTML / Canvas（SIM 工具庫）。λ=h/p；對數尺標比較波長與原子/原子核尺度。</footer>
+</div>
+
+<script>
+const S=SIM, h=6.626e-34;
+const PARTS=[
+  {n:'電子',m:9.11e-31,v0:6},{n:'質子',m:1.67e-27,v0:6},{n:'大分子(C₆₀)',m:1.2e-24,v0:3},
+  {n:'病毒',m:1e-21,v0:2},{n:'塵埃',m:1e-9,v0:0},{n:'棒球',m:0.145,v0:1.6}
+];
+let pi=0;
+const sliders=[{id:'ve',name:'速度 v（10ᵛ m/s，拖動看 λ 變化）',min:0,max:7,step:.1,val:6,unit:''}];
+const state={};
+const sBar=document.getElementById('sliders');
+sliders.forEach(s=>{ state[s.id]=s.val;
+  const d=document.createElement('div');d.className='sld';
+  d.innerHTML=`<label><span>${s.name}</span><span class="v" id="v_${s.id}">${vstr()}</span></label>
+    <input type="range" id="r_${s.id}" min="${s.min}" max="${s.max}" step="${s.step}" value="${s.val}">`;
+  sBar.appendChild(d);
+  d.querySelector('input').addEventListener('input',e=>{state[s.id]=parseFloat(e.target.value);
+    document.getElementById('v_'+s.id).textContent=vstr(); recompute(); });
+});
+function v(){return Math.pow(10,state.ve);}
+function vstr(){return v().toExponential(1)+' m/s';}
+function m(){return PARTS[pi].m;}
+function lam(){return h/(m()*v());}
+function sci(x){const e=Math.floor(Math.log10(x)),a=x/Math.pow(10,e);return a.toFixed(2)+'×10'+sup(e);}
+function sup(e){const map={'-':'⁻','0':'⁰','1':'¹','2':'²','3':'³','4':'⁴','5':'⁵','6':'⁶','7':'⁷','8':'⁸','9':'⁹'};return (''+e).split('').map(c=>map[c]||c).join('');}
+function recompute(){updateFormula();}
+
+// ---- 公式面板 ----
+function frow(n,sym,sub,val){return `<div class="frow"><span class="fname">${n}</span><span class="fsym">${sym}</span><span class="fsub">= ${sub}</span><span class="fval">${val}</span></div>`;}
+function updateFormula(){const L=lam(),p=m()*v(),atom=2e-10,obs=L>=3e-11;
+  document.getElementById('formula').innerHTML=
+    `<h4>📐 計算公式（即時代入　h=6.63×10⁻³⁴ J·s）</h4>`
+    + frow('動量 p','m·v',`${sci(m())}·${v().toExponential(1)}`, sci(p)+' kg·m/s')
+    + frow('德布羅意波長 λ','h / p = h/(mv)',`6.63×10⁻³⁴ / ${sci(p)}`, sci(L)+' m')
+    + frow('與原子間距比','λ / (0.2 nm)',`${sci(L)} / 2×10⁻¹⁰`, (L/atom).toExponential(1)+' 倍')
+    + frow('波動性','λ vs 障礙物尺度', obs?'λ≳原子間距':'λ≪原子', obs?'★ 可觀測(會繞射)':'可忽略(像粒子)')
+    + `<div class="frel">📈 <b>λ ∝ 1/(mv)</b>：質量或速度加倍 → 波長減半　·　<b>只有電子等極輕粒子的 λ 才接近原子尺度</b>(慢電子≈0.1~1nm)、波動性才顯現　·　巨觀物體 λ≈10⁻³⁴ m 遠小於一切障礙物，故不顯波動性。</div>`;
+}
+
+// ---- 視圖 ----
+let sc, ph=0;
+const QSPACE={skyTop:'#120a24',skyBottom:'#080514',vignette:'rgba(0,0,0,.45)'};
+function setupCanvases(){sc=S.fit(document.getElementById('scene'),2.0);}
+function draw(){const W=sc._w,H=sc._h;
+  S.scene(sc,QSPACE,{});
+  const L=lam();
+  // 上半：粒子+物質波(視覺波長依 log(λ) 映射)
+  const midY=H*0.34;
+  const logL=Math.log10(L);                       // -35 ~ -9
+  const visLam=Math.max(10,Math.min(120,(logL+35)/26*110+8)); // 短λ→密、長λ→疏
+  const amp=18;
+  sc.strokeStyle='#8b9cff';sc.lineWidth=2.5;sc.beginPath();
+  for(let x=0;x<=W;x+=2){const y=midY-amp*Math.sin((x/visLam)*2*Math.PI - ph);x?sc.lineTo(x,y):sc.moveTo(x,y);}sc.stroke();
+  // 粒子(沿波移動)
+  const px=(ph*visLam/(2*Math.PI))%W;
+  S.sphere(sc,px,midY,11,[124,140,255]);
+  sc.fillStyle='#bcd0ff';sc.font='12px system-ui';sc.fillText(PARTS[pi].n,px-12,midY-26);
+  sc.fillStyle='#8b9cff';sc.fillText('物質波 λ='+sci(L)+' m',12,midY+44);
+  // 下半：對數尺標(10⁻³⁵ ~ 10⁻⁶ m)
+  const baseY=H*0.82,mL=20,mR=20,axW=W-mL-mR;
+  const lo=-35,hi=-6,X=lg=>mL+(lg-lo)/(hi-lo)*axW;
+  sc.strokeStyle='#3a3060';sc.lineWidth=2;sc.beginPath();sc.moveTo(mL,baseY);sc.lineTo(W-mR,baseY);sc.stroke();
+  sc.fillStyle='#6b5c80';sc.font='10px system-ui';
+  for(let e=-34;e<=-6;e+=4){const x=X(e);sc.strokeStyle='#241c33';sc.beginPath();sc.moveTo(x,baseY-4);sc.lineTo(x,baseY+4);sc.stroke();sc.fillText('10'+sup(e),x-10,baseY+16);}
+  // 參考尺度
+  const refs=[[-15,'原子核','#ff6b9d'],[-10,'原子','#7CFFB2'],[-6.3,'可見光','#ffce54']];
+  refs.forEach(([lg,lab,col])=>{const x=X(lg);sc.strokeStyle=col;sc.setLineDash([3,3]);sc.beginPath();sc.moveTo(x,baseY-30);sc.lineTo(x,baseY);sc.stroke();sc.setLineDash([]);
+    sc.fillStyle=col;sc.fillText(lab,x-12,baseY-34);});
+  // 當前 λ 標記
+  const lx=X(Math.max(lo,Math.min(hi,logL)));
+  sc.fillStyle='#8b9cff';sc.beginPath();sc.moveTo(lx,baseY-10);sc.lineTo(lx-6,baseY-22);sc.lineTo(lx+6,baseY-22);sc.closePath();sc.fill();
+  sc.fillStyle='#bcd0ff';sc.font='bold 11px system-ui';sc.fillText('λ',lx-3,baseY-26);
+  sc.fillStyle='#8a99ad';sc.font='10px system-ui';sc.fillText('波長 λ（公尺，對數尺標）',mL,baseY+30);
+  updateHud(L);
+}
+function updateHud(L){const obs=L>=3e-11;
+  document.getElementById('hud').innerHTML=
+   `<div class="chip indigo">粒子<b>${PARTS[pi].n}</b></div>`+
+   `<div class="chip amber">速度 v<b>${v().toExponential(1)} m/s</b></div>`+
+   `<div class="chip ${obs?'green':''}">λ<b>${sci(L)} m</b></div>`;
+}
+let last=0;
+function loop(ts){const dt=last?Math.min((ts-last)/1000,0.05):0;last=ts;ph+=dt*2.4;draw();requestAnimationFrame(loop);}
+
+document.querySelectorAll('[data-p]').forEach(b=>b.onclick=()=>{pi=+b.dataset.p;
+  document.querySelectorAll('[data-p]').forEach(x=>x.classList.remove('on'));b.classList.add('on');
+  setSlider('ve',PARTS[pi].v0);recompute();});
+function setSlider(id,val){state[id]=val;const r=document.getElementById('r_'+id);if(r)r.value=val;document.getElementById('v_'+id).textContent=vstr();}
+
+window.addEventListener('load',()=>{setupCanvases();recompute();requestAnimationFrame(loop);});
+window.addEventListener('resize',()=>{setupCanvases();draw();});
+</script>
+</body>
+</html>
