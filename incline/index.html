@@ -1,0 +1,204 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>斜面與力的分解 ｜ 重力分量・正向力・摩擦・a=g(sinθ−μcosθ)</title>
+<meta name="description" content="斜面上的物體互動模擬：把重力分解成沿斜面 mg·sinθ 與垂直 mg·cosθ，看正向力 N=mg·cosθ、最大靜摩擦 μN、靜止與滑動的門檻 tanθ vs μ，以及加速度 a=g(sinθ−μcosθ)。">
+<link rel="icon" href="../assets/favicon.svg" type="image/svg+xml">
+<link rel="stylesheet" href="../assets/site.css">
+<script src="../assets/sim.js"></script>
+<script defer src="../assets/nav.js"></script>
+<style>
+  *{box-sizing:border-box}
+  html,body{margin:0;padding:0;background:var(--bg);color:var(--txt);font-family:"Noto Sans TC","PingFang TC","Microsoft JhengHei",system-ui,sans-serif}
+  a{color:var(--accent)}
+  .wrap{max-width:1120px;margin:0 auto;padding:18px 16px 60px}
+  header h1{font-size:1.5rem;margin:.2em 0}
+  header p{color:var(--muted);margin:.2em 0 1em;line-height:1.6}
+  .badge{display:inline-block;background:var(--panel2);border:1px solid var(--line);color:var(--muted);font-size:.72rem;padding:2px 8px;border-radius:99px;margin-right:6px}
+  .scene-wrap{position:relative;border-radius:16px;overflow:hidden;border:1px solid var(--line);box-shadow:0 18px 50px rgba(0,0,0,.45)}
+  #scene{display:block;width:100%}
+  .hud{position:absolute;top:12px;left:12px;display:flex;gap:8px;flex-wrap:wrap;pointer-events:none}
+  .chip{background:rgba(8,14,24,.62);backdrop-filter:blur(6px);border:1px solid rgba(255,255,255,.12);border-radius:10px;padding:6px 11px;color:#eaf2ff;font-size:.8rem;line-height:1.25}
+  .chip b{display:block;font-size:1.02rem;font-variant-numeric:tabular-nums;color:#fff}
+  .chip.amber b{color:#ffce54}.chip.green b{color:#7CFFB2}.chip.cyan b{color:#6cd0ff}.chip.rose b{color:#ff8fb0}
+  .toolbar{position:absolute;bottom:12px;right:12px;display:flex;gap:7px;flex-wrap:wrap;justify-content:flex-end}
+  .toolbar button{background:rgba(8,14,24,.62);backdrop-filter:blur(6px);color:#eaf2ff;border:1px solid rgba(255,255,255,.14);border-radius:9px;padding:7px 11px;font-size:.82rem;cursor:pointer;font-family:inherit}
+  .toolbar button.on{background:var(--accent);color:#04121c;border-color:var(--accent);font-weight:700}
+  @media(max-width:560px){.toolbar{position:static;justify-content:center;padding:8px 10px;background:rgba(8,12,22,.5);border-top:1px solid var(--line)}}
+  .bar{display:flex;gap:14px;flex-wrap:wrap;align-items:flex-end;background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:14px 16px;margin-top:14px}
+  .sld{flex:1;min-width:150px}
+  .sld label{display:flex;justify-content:space-between;font-size:.82rem;color:var(--muted);margin-bottom:5px}
+  .sld label .v{color:var(--accent);font-variant-numeric:tabular-nums;font-weight:700}
+  .sld input{width:100%;accent-color:var(--accent)}
+  .presets{display:flex;gap:7px;flex-wrap:wrap;align-items:center;margin-top:12px}
+  .presets span{color:var(--muted);font-size:.8rem}
+  .pbtn{background:var(--panel2);color:var(--txt);border:1px solid var(--line);padding:7px 12px;border-radius:9px;cursor:pointer;font-size:.83rem;font-family:inherit}
+  .pbtn:hover{border-color:var(--accent)}
+  .note{background:var(--panel);border-left:3px solid var(--accent2);border-radius:8px;padding:12px 14px;color:var(--muted);font-size:.86rem;line-height:1.7;margin-top:14px}
+  .note b{color:var(--txt)}.note code{background:var(--bg2);padding:1px 6px;border-radius:5px;color:var(--green);font-size:.85em}
+  footer{color:var(--muted);font-size:.78rem;margin-top:24px;text-align:center;line-height:1.7}
+</style>
+</head>
+<body data-demo="斜面與力的分解">
+<div class="wrap">
+  <header>
+    <span class="badge">力學・牛頓運動定律</span>
+    <h1>斜面與力的分解</h1>
+    <p>斜面上的物體，把<b>重力 mg</b> 分解成<b>沿斜面 mg·sinθ</b>（使其下滑）與<b>垂直斜面 mg·cosθ</b>（壓向表面）。
+       正向力 <b>N = mg·cosθ</b>，最大靜摩擦 <b>μN</b>。當 <b>mg·sinθ ≤ μN（tanθ ≤ μ）</b>靜止；超過則下滑，加速度 <b>a = g(sinθ − μcosθ)</b>。</p>
+  </header>
+
+  <div class="scene-wrap">
+    <canvas id="scene"></canvas>
+    <div class="hud" id="hud"></div>
+    <div class="toolbar">
+      <button id="play" class="on">⏸ 暫停</button>
+      <button id="compBtn" class="on">重力分量：開</button>
+    </div>
+  </div>
+
+  <div class="bar" id="sliders"></div>
+  <div class="presets">
+    <span>情境：</span>
+    <button class="pbtn" data-preset="rest">緩坡靜止</button>
+    <button class="pbtn" data-preset="slide">陡坡下滑</button>
+    <button class="pbtn" data-preset="ice">無摩擦(冰)</button>
+    <button class="pbtn" data-preset="steep">陡坡大摩擦</button>
+    <button class="pbtn" id="reset" style="margin-left:auto">↺ 重置位置</button>
+  </div>
+
+  <div class="formula" id="formula"></div>
+
+  <div class="note">
+    <b>物理重點：</b>選沿斜面與垂直斜面為座標軸，重力 <code>mg</code> 分解為 <code>mg·sinθ</code>（沿面）與 <code>mg·cosθ</code>（垂直）。
+    垂直方向平衡：<code>N = mg·cosθ</code>。沿面方向：下滑力 <code>mg·sinθ</code> vs 最大靜摩擦 <code>μ_s·N = μ_s·mg·cosθ</code>。
+    兩邊同除 <code>mg·cosθ</code> 得門檻 <b>tanθ vs μ_s</b>——與質量無關！滑動後 <code>a = g(sinθ − μ_k·cosθ)</code>。角度越陡、摩擦越小，加速度越大。
+  </div>
+
+  <footer>純前端 HTML / Canvas（SIM 工具庫）。靜摩擦/動摩擦以同一 μ 近似；g=9.8 m/s²。</footer>
+</div>
+
+<script>
+const S=SIM, g=9.8;
+const sliders=[
+  {id:'th',name:'傾角 θ',min:5,max:45,step:1,val:25,unit:'°'},
+  {id:'m', name:'質量 m',min:1,max:5,step:.5,val:2,unit:'kg'},
+  {id:'mu',name:'摩擦係數 μ',min:0,max:.8,step:.02,val:.3,unit:''},
+];
+const state={}; let showComp=true;
+const sBar=document.getElementById('sliders');
+sliders.forEach(s=>{ state[s.id]=s.val;
+  const d=document.createElement('div');d.className='sld';
+  d.innerHTML=`<label><span>${s.name}</span><span class="v" id="v_${s.id}">${fmt(s.val)} ${s.unit}</span></label>
+    <input type="range" id="r_${s.id}" min="${s.min}" max="${s.max}" step="${s.step}" value="${s.val}">`;
+  sBar.appendChild(d);
+  d.querySelector('input').addEventListener('input',e=>{state[s.id]=parseFloat(e.target.value);
+    document.getElementById('v_'+s.id).textContent=`${fmt(state[s.id])} ${s.unit}`; recompute(); });
+});
+function fmt(x){return (Math.round(x*100)/100).toString();}
+function setSlider(id,val){state[id]=val;const r=document.getElementById('r_'+id);if(r)r.value=val;
+  const s=sliders.find(z=>z.id===id);if(s)document.getElementById('v_'+id).textContent=`${fmt(val)} ${s.unit}`;}
+
+// ---- 物理 ----
+let phys={};
+function recompute(){const th=state.th*Math.PI/180,m=state.m,mu=state.mu;
+  const Wpar=m*g*Math.sin(th), N=m*g*Math.cos(th), fMax=mu*N;
+  const sliding=Wpar>fMax+1e-9;
+  const a=sliding?g*(Math.sin(th)-mu*Math.cos(th)):0;
+  const f=sliding?mu*N:Wpar;
+  phys={th,m,mu,Wpar,N,fMax,sliding,a:Math.max(0,a),f,Wperp:N};
+  updateFormula();updateHud();
+}
+
+// ---- 公式面板 ----
+function frow(n,sym,sub,val){return `<div class="frow"><span class="fname">${n}</span><span class="fsym">${sym}</span><span class="fsub">= ${sub}</span><span class="fval">${val}</span></div>`;}
+function updateFormula(){const {th,m,mu,Wpar,N,fMax,sliding,a}=phys, deg=state.th;
+  const s=Math.sin(th),c=Math.cos(th);
+  document.getElementById('formula').innerHTML=
+    `<h4>📐 計算公式（即時代入　g=9.8 m/s²）</h4>`
+    + frow('正向力 N','N = mg·cosθ',`${m}·9.8·cos${deg}°`, N.toFixed(1)+' N')
+    + frow('沿面下滑力','mg·sinθ',`${m}·9.8·sin${deg}°`, Wpar.toFixed(1)+' N')
+    + frow('最大靜摩擦','μ·N',`${mu}·${N.toFixed(1)}`, fMax.toFixed(1)+' N')
+    + frow('門檻判定','mg·sinθ vs μ·mg·cosθ → tanθ vs μ',`tan${deg}°=${Math.tan(th).toFixed(2)} ${sliding?'>':'≤'} μ=${mu}`, sliding?'下滑':'靜止')
+    + frow('加速度 a', sliding?'a = g(sinθ − μ·cosθ)':'靜止 a = 0', sliding?`9.8(sin${deg}° − ${mu}·cos${deg}°)`:'下滑力 ≤ 最大靜摩擦', a.toFixed(2)+' m/s²')
+    + `<div class="frel">📈 <b>門檻 tanθ vs μ 與質量 m 無關</b>（兩邊同除 mg·cosθ）　·　<b>角度越陡 → N 越小、下滑力越大</b> → 越容易滑且 a 越大　·　<b>a = g(sinθ−μcosθ)</b>：θ=90° 自由落體 a=g、μ=0 時 a=g·sinθ。</div>`;
+}
+function updateHud(){const p=phys;
+  document.getElementById('hud').innerHTML=
+   `<div class="chip ${p.sliding?'rose':'green'}">狀態<b>${p.sliding?'下滑 ▼':'靜止 ●'}</b></div>`+
+   `<div class="chip cyan">正向力 N<b>${p.N.toFixed(1)} N</b></div>`+
+   `<div class="chip amber">摩擦力 f<b>${p.f.toFixed(1)} N</b></div>`+
+   `<div class="chip green">加速度 a<b>${p.a.toFixed(2)} m/s²</b></div>`;
+}
+
+// ---- 視圖 ----
+let sc, dpos=0, vel=0, playing=true;   // dpos: 物體沿斜面距底端的比例(0~1)
+const SCN={skyTop:'#101826',skyBottom:'#070b14',vignette:'rgba(0,0,0,.5)'};
+function setupCanvases(){sc=S.fit(document.getElementById('scene'),2.0);}
+function geom(){const W=sc._w,H=sc._h,mB=30,th=state.th*Math.PI/180;
+  const ox=W*0.80, gY=H-mB;                       // 斜面底端(右下)
+  const Lpx=Math.min(W*0.62,(gY-34)/Math.max(Math.sin(th),0.08))*0.96; // 斜面長(像素)
+  const ux=-Math.cos(th), uy=-Math.sin(th);       // 上坡單位向量(往左上)
+  const nx=Math.sin(th),  ny=-Math.cos(th);       // 外法線(往右上)
+  return {W,H,gY,ox,Lpx,ux,uy,nx,ny,th};
+}
+function draw(){const G=geom(),W=G.W,H=G.H;
+  S.scene(sc,SCN,{ground:G.gY});
+  const peakX=G.ox+G.ux*G.Lpx, peakY=G.gY+G.uy*G.Lpx;
+  // 斜面三角形
+  sc.fillStyle='#1a2740';sc.strokeStyle='#3a4a6a';sc.lineWidth=2;
+  sc.beginPath();sc.moveTo(G.ox,G.gY);sc.lineTo(peakX,peakY);sc.lineTo(G.ox,peakY);sc.closePath();sc.fill();sc.stroke();
+  // 斜面表面高光
+  sc.strokeStyle='#5a78aa';sc.lineWidth=3;sc.beginPath();sc.moveTo(G.ox,G.gY);sc.lineTo(peakX,peakY);sc.stroke();
+  // 角度弧 + 標示
+  sc.strokeStyle='rgba(255,206,84,.8)';sc.lineWidth=1.5;sc.beginPath();sc.arc(G.ox,G.gY,34,Math.PI,Math.PI-G.th);sc.stroke();
+  sc.fillStyle='#ffce54';sc.font='12px system-ui';sc.fillText('θ='+state.th+'°',G.ox-66,G.gY-12);
+  // 物體位置(沿斜面)
+  const d=G.Lpx*(0.18+0.74*dpos);
+  const bh=Math.max(20,Math.min(34,G.Lpx*0.12)), bw=bh*1.3;
+  const cx=G.ox+G.ux*d+G.nx*(bh/2), cy=G.gY+G.uy*d+G.ny*(bh/2);
+  // 物體(沿斜面旋轉的方塊)
+  sc.save();sc.translate(cx,cy);sc.rotate(-G.th);
+  const grd=sc.createLinearGradient(0,-bh/2,0,bh/2);grd.addColorStop(0,'#dfe8f5');grd.addColorStop(.5,'#9fb2d0');grd.addColorStop(1,'#5d6f93');
+  sc.fillStyle=grd;roundRect(sc,-bw/2,-bh/2,bw,bh,5);sc.fill();sc.strokeStyle='#33405c';sc.lineWidth=1.5;sc.stroke();
+  sc.fillStyle='#1a2233';sc.font='bold 12px system-ui';sc.textAlign='center';sc.fillText(state.m+'kg',0,4);sc.textAlign='left';
+  sc.restore();
+  // 力箭頭(從物體質心)
+  const p=phys, sX=0.10;  // N/像素縮放
+  // 重力 mg(向下)
+  const Wg=p.m*g;
+  S.arrow(sc,cx,cy,cx,cy+Wg*sX,{color:'#ff9e2e',width:3,label:'mg'});
+  // 正向力 N(外法線)
+  S.arrow(sc,cx,cy,cx+G.nx*p.N*sX,cy+G.ny*p.N*sX,{color:'#6cd0ff',width:3,label:'N'});
+  // 摩擦力 f(上坡，阻止下滑)
+  if(p.f>0.2)S.arrow(sc,cx,cy,cx+G.ux*p.f*sX,cy+G.uy*p.f*sX,{color:'#ff5470',width:2.6,label:'f'});
+  // 重力分量(虛線)
+  if(showComp){
+    S.arrow(sc,cx,cy,cx-G.ux*p.Wpar*sX,cy-G.uy*p.Wpar*sX,{color:'#ffd36a',width:2,dash:true,label:'mg·sinθ'}); // 沿面下坡(=−上坡)
+    S.arrow(sc,cx,cy,cx-G.nx*p.N*sX,cy-G.ny*p.N*sX,{color:'#ffd36a',width:2,dash:true,label:'mg·cosθ'});       // 壓向面(=−外法線)
+  }
+}
+function roundRect(c,x,y,w,h,r){c.beginPath();c.moveTo(x+r,y);c.arcTo(x+w,y,x+w,y+h,r);c.arcTo(x+w,y+h,x,y+h,r);c.arcTo(x,y+h,x,y,r);c.arcTo(x,y,x+w,y,r);c.closePath();}
+
+// ---- 動畫 ----
+let last=0;
+function loop(ts){const dt=last?Math.min((ts-last)/1000,0.05):0;last=ts;
+  if(playing&&phys.sliding){ vel+=phys.a*dt*0.12; dpos-=vel*dt; if(dpos<=0){dpos=0;vel=0;} }
+  else if(!phys.sliding){vel=0;}
+  draw();requestAnimationFrame(loop);}
+
+const pb=document.getElementById('play');
+pb.onclick=()=>{playing=!playing;pb.classList.toggle('on',playing);pb.textContent=playing?'⏸ 暫停':'▶ 播放';};
+document.getElementById('compBtn').onclick=function(){showComp=!showComp;this.classList.toggle('on',showComp);this.textContent='重力分量：'+(showComp?'開':'關');};
+document.getElementById('reset').onclick=()=>{dpos=1;vel=0;};
+const PRE={rest:{th:15,m:2,mu:.35},slide:{th:32,m:2,mu:.25},ice:{th:25,m:2,mu:0},steep:{th:40,m:3,mu:.5}};
+document.querySelectorAll('[data-preset]').forEach(b=>b.onclick=()=>{const pr=PRE[b.dataset.preset];if(!pr)return;
+  ['th','m','mu'].forEach(k=>setSlider(k,pr[k]));dpos=1;vel=0;recompute();});
+
+window.addEventListener('load',()=>{setupCanvases();dpos=1;recompute();requestAnimationFrame(loop);});
+window.addEventListener('resize',()=>{setupCanvases();draw();});
+</script>
+</body>
+</html>
