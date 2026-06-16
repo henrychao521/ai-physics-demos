@@ -1,0 +1,183 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>核分裂連鎖反應 ｜ U-235・增殖係數 k・臨界・E=Δmc²</title>
+<meta name="description" content="核分裂連鎖反應互動模擬：中子撞擊鈾-235 使其分裂並釋放更多中子，引發連鎖反應。調增殖係數 k 看次臨界(熄滅)、臨界(穩定)、超臨界(指數增長)；每次分裂約 200 MeV 來自質量虧損 E=Δmc²。">
+<link rel="icon" href="../assets/favicon.svg" type="image/svg+xml">
+<link rel="stylesheet" href="../assets/site.css">
+<script src="../assets/sim.js"></script>
+<script defer src="../assets/nav.js"></script>
+<style>
+  *{box-sizing:border-box}
+  html,body{margin:0;padding:0;background:var(--bg);color:var(--txt);font-family:"Noto Sans TC","PingFang TC","Microsoft JhengHei",system-ui,sans-serif}
+  a{color:var(--accent)}
+  .wrap{max-width:1120px;margin:0 auto;padding:18px 16px 60px}
+  header h1{font-size:1.5rem;margin:.2em 0}
+  header p{color:var(--muted);margin:.2em 0 1em;line-height:1.6}
+  .badge{display:inline-block;background:var(--panel2);border:1px solid var(--line);color:var(--muted);font-size:.72rem;padding:2px 8px;border-radius:99px;margin-right:6px}
+  .scene-wrap{position:relative;border-radius:16px;overflow:hidden;border:1px solid var(--line);box-shadow:0 18px 50px rgba(0,0,0,.45)}
+  #scene{display:block;width:100%;cursor:crosshair}
+  .hud{position:absolute;top:12px;left:12px;display:flex;gap:8px;flex-wrap:wrap;pointer-events:none}
+  .chip{background:rgba(20,10,6,.6);backdrop-filter:blur(6px);border:1px solid rgba(255,180,120,.18);border-radius:10px;padding:6px 11px;color:#ffe9d6;font-size:.8rem;line-height:1.25}
+  .chip b{display:block;font-size:1.02rem;font-variant-numeric:tabular-nums;color:#fff}
+  .chip.amber b{color:#ffce54}.chip.green b{color:#7CFFB2}.chip.rose b{color:#ff8fb0}
+  .toolbar{position:absolute;bottom:12px;right:12px;display:flex;gap:7px;flex-wrap:wrap;justify-content:flex-end}
+  .toolbar button{background:rgba(20,10,6,.6);backdrop-filter:blur(6px);color:#ffe9d6;border:1px solid rgba(255,180,120,.2);border-radius:9px;padding:7px 11px;font-size:.82rem;cursor:pointer;font-family:inherit}
+  @media(max-width:560px){.toolbar{position:static;justify-content:center;padding:8px 10px;background:rgba(20,12,8,.5);border-top:1px solid var(--line)}}
+  .bar{display:flex;gap:14px;flex-wrap:wrap;align-items:flex-end;background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:14px 16px;margin-top:14px}
+  .sld{flex:1;min-width:200px}
+  .sld label{display:flex;justify-content:space-between;font-size:.82rem;color:var(--muted);margin-bottom:5px}
+  .sld label .v{color:var(--accent);font-variant-numeric:tabular-nums;font-weight:700}
+  .sld input{width:100%;accent-color:var(--accent)}
+  .presets{display:flex;gap:7px;flex-wrap:wrap;align-items:center;margin-top:12px}
+  .presets span{color:var(--muted);font-size:.8rem}
+  .pbtn{background:var(--panel2);color:var(--txt);border:1px solid var(--line);padding:7px 12px;border-radius:9px;cursor:pointer;font-size:.83rem;font-family:inherit}
+  .pbtn:hover{border-color:var(--accent)}
+  .note{background:var(--panel);border-left:3px solid var(--accent2);border-radius:8px;padding:12px 14px;color:var(--muted);font-size:.86rem;line-height:1.7;margin-top:14px}
+  .note b{color:var(--txt)}.note code{background:var(--bg2);padding:1px 6px;border-radius:5px;color:var(--green);font-size:.85em}
+  footer{color:var(--muted);font-size:.78rem;margin-top:24px;text-align:center;line-height:1.7}
+</style>
+</head>
+<body data-demo="核分裂連鎖反應">
+<div class="wrap">
+  <header>
+    <span class="badge">近代物理・核物理</span>
+    <h1>核分裂連鎖反應</h1>
+    <p>一顆<b>中子</b>撞擊<b>鈾-235</b> 使它分裂成兩塊碎片，同時放出 <b>2~3 顆中子</b>與大量能量。這些中子再去撞別的鈾核——
+       若平均每次分裂能再引發 <b>k</b> 次分裂（<b>增殖係數</b>），<b>k≥1</b> 就形成持續的<b>連鎖反應</b>。點畫面射入中子。</p>
+  </header>
+
+  <div class="scene-wrap">
+    <canvas id="scene"></canvas>
+    <div class="hud" id="hud"></div>
+    <div class="toolbar">
+      <button id="inject">＋ 射入中子</button>
+      <button id="reset">↺ 重設鈾塊</button>
+    </div>
+  </div>
+
+  <div class="bar" id="sliders"></div>
+  <div class="presets">
+    <span>情境：</span>
+    <button class="pbtn" data-preset="sub">次臨界 k=0.8（熄滅）</button>
+    <button class="pbtn" data-preset="crit">臨界 k=1（穩定·反應爐）</button>
+    <button class="pbtn" data-preset="super">超臨界 k=2（失控）</button>
+  </div>
+
+  <div class="formula" id="formula"></div>
+
+  <div class="note">
+    <b>物理重點：</b>每次分裂放出的中子若平均有 <b>k 顆</b>能再引發分裂，則第 n 代分裂數 <code>= k<sup>n</sup></code>。
+    <b>k&lt;1 次臨界</b>：反應越來越弱而熄滅；<b>k=1 臨界</b>：穩定維持（核反應爐用控制棒吸中子把 k 維持在 1）；<b>k&gt;1 超臨界</b>：指數爆增（原子彈）。
+    每次分裂約釋放 <b>200 MeV</b>，來自分裂前後的<b>質量虧損</b> <code>E = Δm·c²</code>——這就是核能遠大於化學能的原因。控制 k 要靠中子吸收體、減速劑與燃料幾何。
+  </div>
+
+  <footer>純前端 HTML / Canvas（SIM 工具庫）。連鎖反應為示意性蒙地卡羅模擬；每次分裂平均放出 k 顆有效中子。</footer>
+</div>
+
+<script>
+const S=SIM;
+const sliders=[{id:'k',name:'增殖係數 k（每次分裂引發的下一代分裂數）',min:0.4,max:2.6,step:.1,val:1.5,unit:''}];
+const state={};
+const sBar=document.getElementById('sliders');
+sliders.forEach(s=>{ state[s.id]=s.val;
+  const d=document.createElement('div');d.className='sld';
+  d.innerHTML=`<label><span>${s.name}</span><span class="v" id="v_${s.id}">${fmt(s.val)}</span></label>
+    <input type="range" id="r_${s.id}" min="${s.min}" max="${s.max}" step="${s.step}" value="${s.val}">`;
+  sBar.appendChild(d);
+  d.querySelector('input').addEventListener('input',e=>{state[s.id]=parseFloat(e.target.value);
+    document.getElementById('v_'+s.id).textContent=fmt(state[s.id]); updateFormula(); });
+});
+function fmt(x){return (Math.round(x*100)/100).toString();}
+function setSlider(id,val){state[id]=val;const r=document.getElementById('r_'+id);if(r)r.value=val;
+  const s=sliders.find(z=>z.id===id);if(s)document.getElementById('v_'+id).textContent=fmt(val);}
+
+// ---- 公式面板 ----
+function frow(n,sym,sub,val){return `<div class="frow"><span class="fname">${n}</span><span class="fsym">${sym}</span><span class="fsub">= ${sub}</span><span class="fval">${val}</span></div>`;}
+function updateFormula(){const k=state.k,stt=k<0.97?'次臨界（熄滅）':(k>1.03?'超臨界（爆增）':'臨界（穩定）');
+  document.getElementById('formula').innerHTML=
+    `<h4>📐 計算公式（即時代入　核分裂連鎖反應）</h4>`
+    + frow('臨界狀態','k vs 1',`k = ${k}`, stt)
+    + frow('第 5 代分裂數','kⁿ（n=代數）',`${k}⁵`, Math.pow(k,5).toFixed(1)+' 倍')
+    + frow('單次分裂能','E ≈ 200 MeV','質量虧損 Δm·c²', '≈ 3.2×10⁻¹¹ J')
+    + frow('1 克 U-235 全分裂','≈ 2.56×10²¹ 顆 ×200MeV','', '≈ 8.2×10¹⁰ J（≈2.5噸煤）')
+    + `<div class="frel">📈 <b>k<1 熄滅、k=1 穩定、k>1 指數爆增</b>（第 n 代 ∝ kⁿ）　·　反應爐用<b>控制棒吸中子</b>把 k 精確維持在 1　·　核能來自<b>質量虧損 E=Δmc²</b>，每核子約 0.9 MeV，故遠大於化學能。</div>`;
+}
+
+// ---- 模擬 ----
+let sc, nuclei=[], neutrons=[], flashes=[], fissions=0, gen=0, peak=0;
+const ATOM={skyTop:'#1a0f0a',skyBottom:'#0a0604',vignette:'rgba(0,0,0,.5)'};
+function setupCanvases(){sc=S.fit(document.getElementById('scene'),1.9);}
+function reset(){nuclei=[];neutrons=[];flashes=[];fissions=0;gen=0;peak=0;
+  const W=sc._w,H=sc._h,cols=8,rows=5,mx=W*0.1,my=H*0.16;
+  for(let r=0;r<rows;r++)for(let c=0;c<cols;c++){
+    nuclei.push({x:mx+(c+0.5)*(W-2*mx)/cols+(Math.random()-0.5)*14,y:my+(r+0.5)*(H-2*my)/rows+(Math.random()-0.5)*14,fis:false,fl:0});}
+}
+function inject(x,y){ // 射一顆中子去撞最近的未分裂鈾核
+  const t=nearest(x,y); if(!t)return;
+  neutrons.push({x:x,y:y,tx:t.x,ty:t.y,tg:t,trail:[]});
+}
+function nearest(x,y){let best=null,bd=1e9;for(const n of nuclei){if(n.fis)continue;const d=Math.hypot(n.x-x,n.y-y);if(d<bd){bd=d;best=n;}}return best;}
+function fission(n){if(n.fis)return;n.fis=true;n.fl=1;fissions++;
+  flashes.push({x:n.x,y:n.y,r:8,a:1});
+  // 放出有效中子數 ≈ k（隨機取整使平均=k）
+  const k=state.k, cnt=Math.random()<(k-Math.floor(k))?Math.ceil(k):Math.floor(k);
+  for(let i=0;i<cnt;i++){const t=nearest(n.x,n.y);if(!t)break;
+    neutrons.push({x:n.x,y:n.y,tx:t.x,ty:t.y,tg:t,trail:[]});}
+}
+function step(dt){
+  for(let i=neutrons.length-1;i>=0;i--){const ne=neutrons[i];
+    const dx=ne.tx-ne.x,dy=ne.ty-ne.y,d=Math.hypot(dx,dy),spd=260*dt;
+    ne.trail.push({x:ne.x,y:ne.y});if(ne.trail.length>8)ne.trail.shift();
+    if(d<spd+6){ if(ne.tg&&!ne.tg.fis){fission(ne.tg);} neutrons.splice(i,1); }
+    else{ne.x+=dx/d*spd;ne.y+=dy/d*spd;}
+  }
+  flashes.forEach(f=>{f.r+=dt*120;f.a-=dt*1.8;});flashes=flashes.filter(f=>f.a>0);
+  nuclei.forEach(n=>{if(n.fl>0)n.fl-=dt*2;});
+  peak=Math.max(peak,neutrons.length);
+}
+function draw(){const W=sc._w,H=sc._h;
+  S.scene(sc,ATOM,{});
+  // 鈾核
+  for(const n of nuclei){
+    if(!n.fis){const g=sc.createRadialGradient(n.x-3,n.y-3,1,n.x,n.y,12);g.addColorStop(0,'#aef0c0');g.addColorStop(1,'#2f8f55');
+      sc.fillStyle=g;sc.beginPath();sc.arc(n.x,n.y,11,0,7);sc.fill();sc.strokeStyle='#7CFFB2';sc.lineWidth=1;sc.stroke();}
+    else{ // 分裂碎片(兩半飛開示意)
+      sc.fillStyle='rgba(255,150,90,'+(0.3+n.fl*0.5)+')';sc.beginPath();sc.arc(n.x-4,n.y,6,0,7);sc.arc(n.x+4,n.y,6,0,7);sc.fill();}
+  }
+  // 中子+拖尾
+  for(const ne of neutrons){sc.strokeStyle='rgba(108,208,255,.4)';sc.lineWidth=1.5;sc.beginPath();
+    ne.trail.forEach((p,i)=>i?sc.lineTo(p.x,p.y):sc.moveTo(p.x,p.y));sc.lineTo(ne.x,ne.y);sc.stroke();
+    sc.fillStyle='#bfe6ff';sc.beginPath();sc.arc(ne.x,ne.y,3,0,7);sc.fill();}
+  // 閃光
+  for(const f of flashes){const g=sc.createRadialGradient(f.x,f.y,1,f.x,f.y,f.r);g.addColorStop(0,`rgba(255,230,140,${f.a})`);g.addColorStop(1,'rgba(255,160,60,0)');
+    sc.fillStyle=g;sc.beginPath();sc.arc(f.x,f.y,f.r,0,7);sc.fill();}
+  updateHud();
+}
+function updateHud(){const left=nuclei.filter(n=>!n.fis).length;
+  const E=fissions*200; // MeV
+  const Estr=E>=1e6?(E/1e6).toFixed(2)+' TeV':(E>=1000?(E/1000).toFixed(1)+' GeV':E+' MeV');
+  document.getElementById('hud').innerHTML=
+   `<div class="chip amber">總分裂數<b>${fissions}</b></div>`+
+   `<div class="chip rose">飛行中子<b>${neutrons.length}</b></div>`+
+   `<div class="chip green">剩餘鈾核<b>${left}</b></div>`+
+   `<div class="chip">釋放能量<b>${Estr}</b></div>`;
+}
+let last=0;
+function loop(ts){const dt=last?Math.min((ts-last)/1000,0.05):0;last=ts;step(dt);draw();requestAnimationFrame(loop);}
+
+const cvEl=document.getElementById('scene');
+cvEl.addEventListener('pointerdown',e=>{const r=cvEl.getBoundingClientRect();
+  inject((e.clientX-r.left)*cvEl.width/r.width/sc._dpr,(e.clientY-r.top)*cvEl.height/r.height/sc._dpr);});
+document.getElementById('inject').onclick=()=>inject(sc._w*0.06,sc._h*0.5);
+document.getElementById('reset').onclick=()=>reset();
+document.querySelectorAll('[data-preset]').forEach(b=>b.onclick=()=>{const k={sub:0.8,crit:1,super:2}[b.dataset.preset];
+  setSlider('k',k);updateFormula();reset();setTimeout(()=>inject(sc._w*0.06,sc._h*0.5),60);});
+
+window.addEventListener('load',()=>{setupCanvases();reset();updateFormula();setTimeout(()=>inject(sc._w*0.06,sc._h*0.5),300);requestAnimationFrame(loop);});
+window.addEventListener('resize',()=>{setupCanvases();reset();});
+</script>
+</body>
+</html>
