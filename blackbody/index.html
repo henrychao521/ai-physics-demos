@@ -1,0 +1,216 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>黑體輻射 ｜ 普朗克譜・維因位移・史特凡-波茲曼・星星顏色</title>
+<meta name="description" content="黑體輻射互動模擬：溫度越高，輻射譜的峰值往短波長移動（維因位移 λ_max=b/T），總輻射功率以 T⁴ 暴增（史特凡-波茲曼）。看燈泡、太陽、天狼星為何呈現不同顏色。">
+<link rel="icon" href="../assets/favicon.svg" type="image/svg+xml">
+<link rel="stylesheet" href="../assets/site.css">
+<script src="../assets/sim.js"></script>
+<script defer src="../assets/nav.js"></script>
+<style>
+  *{box-sizing:border-box}
+  html,body{margin:0;padding:0;background:var(--bg);color:var(--txt);font-family:"Noto Sans TC","PingFang TC","Microsoft JhengHei",system-ui,sans-serif}
+  a{color:var(--accent)}
+  .wrap{max-width:1120px;margin:0 auto;padding:18px 16px 60px}
+  header h1{font-size:1.5rem;margin:.2em 0}
+  header p{color:var(--muted);margin:.2em 0 1em;line-height:1.6}
+  .badge{display:inline-block;background:var(--panel2);border:1px solid var(--line);color:var(--muted);font-size:.72rem;padding:2px 8px;border-radius:99px;margin-right:6px}
+  .scene-wrap{position:relative;border-radius:16px;overflow:hidden;border:1px solid var(--line);box-shadow:0 18px 50px rgba(0,0,0,.45)}
+  #scene{display:block;width:100%}
+  .hud{position:absolute;top:12px;left:12px;display:flex;gap:8px;flex-wrap:wrap;pointer-events:none}
+  .chip{background:rgba(10,16,24,.62);backdrop-filter:blur(6px);border:1px solid rgba(120,180,255,.16);border-radius:10px;padding:6px 11px;color:#dceaff;font-size:.8rem;line-height:1.25}
+  .chip b{display:block;font-size:1.02rem;font-variant-numeric:tabular-nums;color:#fff}
+  .chip.amber b{color:#ffd27a}.chip.cyan b{color:#6cd0ff}.chip.green b{color:#7CFFB2}
+  .toolbar{position:absolute;bottom:12px;right:12px;display:flex;gap:7px;flex-wrap:wrap;justify-content:flex-end}
+  .toolbar button{background:rgba(10,16,24,.62);backdrop-filter:blur(6px);color:#dceaff;border:1px solid rgba(120,180,255,.2);border-radius:9px;padding:7px 11px;font-size:.82rem;cursor:pointer;font-family:inherit}
+  .toolbar button.on{background:var(--accent);color:#04121c;border-color:var(--accent);font-weight:700}
+  @media(max-width:560px){.toolbar{position:static;justify-content:center;padding:8px 10px;background:rgba(8,14,22,.5);border-top:1px solid var(--line)}}
+  .bar{display:flex;gap:14px;flex-wrap:wrap;align-items:flex-end;background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:14px 16px;margin-top:14px}
+  .sld{flex:1;min-width:200px}
+  .sld label{display:flex;justify-content:space-between;font-size:.82rem;color:var(--muted);margin-bottom:5px}
+  .sld label .v{color:var(--accent);font-variant-numeric:tabular-nums;font-weight:700}
+  .sld input{width:100%;accent-color:var(--accent)}
+  .presets{display:flex;gap:7px;flex-wrap:wrap;align-items:center;margin-top:12px}
+  .presets span{color:var(--muted);font-size:.8rem}
+  .pbtn{background:var(--panel2);color:var(--txt);border:1px solid var(--line);padding:7px 12px;border-radius:9px;cursor:pointer;font-size:.83rem;font-family:inherit}
+  .pbtn:hover{border-color:var(--accent)}
+  .note{background:var(--panel);border-left:3px solid var(--accent2);border-radius:8px;padding:12px 14px;color:var(--muted);font-size:.86rem;line-height:1.7;margin-top:14px}
+  .note b{color:var(--txt)}.note code{background:var(--bg2);padding:1px 6px;border-radius:5px;color:var(--green);font-size:.85em}
+  footer{color:var(--muted);font-size:.78rem;margin-top:24px;text-align:center;line-height:1.7}
+</style>
+</head>
+<body data-demo="黑體輻射">
+<div class="wrap">
+  <header>
+    <span class="badge">近代物理・熱輻射</span>
+    <h1>黑體輻射（普朗克譜・星星顏色）</h1>
+    <p>任何有溫度的物體都會放出<b>連續光譜</b>。溫度越高：①輻射峰值往<b>短波長（藍）移動</b>——維因位移 <b>λ_max = b/T</b>；
+       ②<b>總輻射功率以 T⁴ 暴增</b>——史特凡-波茲曼 <b>P = σT⁴</b>。這就是為什麼燈絲偏紅、太陽偏白、天狼星偏藍。</p>
+  </header>
+
+  <div class="scene-wrap">
+    <canvas id="scene"></canvas>
+    <div class="hud" id="hud"></div>
+    <div class="toolbar">
+      <button id="tint" class="on">譜線著色：開</button>
+    </div>
+  </div>
+
+  <div class="bar" id="sliders"></div>
+  <div class="presets">
+    <span>天體／光源：</span>
+    <button class="pbtn" data-t="3000">白熾燈泡 3000K</button>
+    <button class="pbtn" data-t="3500">紅巨星 3500K</button>
+    <button class="pbtn" data-t="5800">太陽 5800K</button>
+    <button class="pbtn" data-t="10000">天狼星 10000K</button>
+  </div>
+
+  <div class="formula" id="formula"></div>
+
+  <div class="note">
+    <b>物理重點：</b>普朗克輻射定律 <code>B(λ,T)=2hc²/λ⁵ · 1/(e^(hc/λkT)−1)</code> 描述黑體在各波長的輻射強度。
+    峰值波長 <code>λ_max = b/T</code>（維因位移定律，b=2.898×10⁻³ m·K）：T 加倍 → λ_max 減半（更藍）。
+    曲線下總面積（總輻射功率）<code>P = σT⁴</code>（史特凡-波茲曼，σ=5.67×10⁻⁸）：T 加倍 → 功率變 <b>16 倍</b>。
+    可見光只占 380–750 nm 一小段；低溫物體峰值在<b>紅外</b>（看不見、只覺得熱），高溫才進入可見甚至<b>紫外</b>。
+    古典理論在短波長發散（「紫外災變」），普朗克引入<b>能量量子化</b> E=hf 才解決——量子力學的開端。
+  </div>
+
+  <footer>純前端 HTML / Canvas（SIM 工具庫）。普朗克譜即時計算；曲線自動縮放以顯示峰移，總功率 σT⁴ 另列於數值。</footer>
+</div>
+
+<script>
+const S=SIM;
+const hP=6.626e-34, cL=3e8, kB=1.381e-23, bW=2.898e-3, sigma=5.67e-8;
+const state={T:5800};
+const sliders=[{id:'T',name:'溫度 T',min:1000,max:12000,step:100,val:5800,unit:'K'}];
+const sBar=document.getElementById('sliders');
+sliders.forEach(s=>{ state[s.id]=s.val;
+  const d=document.createElement('div');d.className='sld';
+  d.innerHTML=`<label><span>${s.name}</span><span class="v" id="v_${s.id}">${s.val} ${s.unit}</span></label>
+    <input type="range" id="r_${s.id}" min="${s.min}" max="${s.max}" step="${s.step}" value="${s.val}">`;
+  sBar.appendChild(d);
+  d.querySelector('input').addEventListener('input',e=>{state[s.id]=parseFloat(e.target.value);
+    document.getElementById('v_'+s.id).textContent=`${state[s.id]} ${s.unit}`; recompute(); });
+});
+function setT(T){state.T=T;const r=document.getElementById('r_T');if(r)r.value=T;document.getElementById('v_T').textContent=`${T} K`;recompute();}
+
+// ---- 物理 ----
+function planck(lam,T){return (2*hP*cL*cL/Math.pow(lam,5))/(Math.exp(hP*cL/(lam*kB*T))-1);}  // λ in m
+function lamMax(){return bW/state.T*1e9;}            // nm
+function power(){return sigma*Math.pow(state.T,4);}  // W/m²
+let tintOn=true;
+function recompute(){draw();updateFormula();}
+
+// 黑體色近似 (Tanner Helland)
+function bbColor(T){let t=T/100,r,g,b;
+  if(t<=66){r=255;}else{r=329.7*Math.pow(t-60,-0.1332);}
+  if(t<=66){g=99.47*Math.log(t)-161.1;}else{g=288.1*Math.pow(t-60,-0.0755);}
+  if(t>=66){b=255;}else if(t<=19){b=0;}else{b=138.5*Math.log(t-10)-305;}
+  const cl=x=>Math.max(0,Math.min(255,x));return [cl(r),cl(g),cl(b)];}
+// 可見光波長→RGB (近似)
+function wlColor(nm){let r=0,g=0,b=0;
+  if(nm<380||nm>750)return null;
+  if(nm<440){r=-(nm-440)/60;b=1;}
+  else if(nm<490){g=(nm-440)/50;b=1;}
+  else if(nm<510){g=1;b=-(nm-510)/20;}
+  else if(nm<580){r=(nm-510)/70;g=1;}
+  else if(nm<645){r=1;g=-(nm-645)/65;}
+  else{r=1;}
+  return [Math.round(r*255),Math.round(g*255),Math.round(b*255)];}
+
+// ---- 公式面板 ----
+function frow(n,sym,sub,val){return `<div class="frow"><span class="fname">${n}</span><span class="fsym">${sym}</span><span class="fsub">= ${sub}</span><span class="fval">${val}</span></div>`;}
+function updateFormula(){const lm=lamMax(),P=power(),Psun=sigma*Math.pow(5800,4);
+  let region = lm>750?'紅外 IR':(lm<380?'紫外 UV':'可見光');
+  document.getElementById('formula').innerHTML=
+    `<h4>📐 計算公式（即時代入　b=2.898×10⁻³、σ=5.67×10⁻⁸）</h4>`
+    + frow('維因峰值 λ_max','b / T',`2.898e-3 / ${state.T}`, lm.toFixed(0)+' nm（'+region+'）')
+    + frow('總輻射功率 P','σ·T⁴',`5.67e-8·${state.T}⁴`, (P/1e6).toFixed(2)+' MW/m²')
+    + frow('相對太陽','P / P☉',`${(P/1e6).toFixed(1)} / ${(Psun/1e6).toFixed(1)}`, (P/Psun).toFixed(2)+' 倍')
+    + `<div class="frel">📈 <b>λ_max = b/T</b>：T 加倍 → 峰值波長減半(更藍)　·　<b>P = σT⁴</b>：T 加倍 → 總功率變 16 倍　·　可見光僅 380–750 nm，低溫峰值落在看不見的紅外。</div>`;
+}
+
+// ---- 視圖 ----
+let sc;
+const SKY={skyTop:'#0b1220',skyBottom:'#070d15',vignette:'rgba(0,0,0,.4)'};
+function setupCanvases(){sc=S.fit(document.getElementById('scene'),1.85);}
+const LAM0=100, LAM1=2000;  // 顯示波長範圍 nm
+function draw(){const W=sc._w,H=sc._h;
+  S.scene(sc,SKY,{});
+  const ml=54,mr=14,mt=18,mb=34, gw=W-ml-mr-150, gh=H-mt-mb;  // 右側留 150px 給發光球
+  const x0=ml, y0=mt+gh;
+  const xOf=nm=>x0+(nm-LAM0)/(LAM1-LAM0)*gw;
+  // 自動縮放:取目前曲線峰值
+  let peak=0; for(let nm=LAM0;nm<=LAM1;nm+=10){peak=Math.max(peak,planck(nm*1e-9,state.T));}
+  const yOf=B=>y0-(B/peak)*gh*0.9;
+  // 可見光底帶
+  for(let nm=380;nm<=750;nm+=4){const c=wlColor(nm);if(!c)continue;sc.fillStyle=`rgba(${c[0]},${c[1]},${c[2]},.5)`;sc.fillRect(xOf(nm),y0+4,Math.max(1,gw/((LAM1-LAM0)/4)+1),8);}
+  sc.fillStyle='rgba(200,210,230,.5)';sc.font='11px system-ui';sc.fillText('可見光',xOf(540)-16,y0+26);
+  // 座標軸
+  sc.strokeStyle='rgba(150,170,210,.5)';sc.lineWidth=1.2;
+  sc.beginPath();sc.moveTo(x0,mt);sc.lineTo(x0,y0);sc.lineTo(x0+gw,y0);sc.stroke();
+  sc.fillStyle='rgba(170,185,215,.7)';sc.font='10px system-ui';
+  for(const nm of [500,1000,1500,2000]){const x=xOf(nm);sc.beginPath();sc.moveTo(x,y0);sc.lineTo(x,y0+3);sc.stroke();sc.fillText(nm,x-10,y0+16);}
+  sc.fillText('波長 (nm)',x0+gw-58,mt+10);
+  sc.save();sc.translate(14,mt+gh/2);sc.rotate(-Math.PI/2);sc.fillText('輻射強度',-22,0);sc.restore();
+  // 普朗克曲線 + 填色
+  const col=bbColor(state.T);
+  sc.beginPath();
+  let first=true;
+  for(let nm=LAM0;nm<=LAM1;nm+=6){const x=xOf(nm),y=yOf(planck(nm*1e-9,state.T));if(first){sc.moveTo(x,y);first=false;}else sc.lineTo(x,y);}
+  // 填到底
+  sc.lineTo(xOf(LAM1),y0);sc.lineTo(x0,y0);sc.closePath();
+  if(tintOn){
+    // 用可見光顏色為可見段著色,其餘用黑體色
+    const grad=sc.createLinearGradient(x0,0,x0+gw,0);
+    grad.addColorStop(0,`rgba(${col[0]},${col[1]},${col[2]},.10)`);
+    grad.addColorStop(Math.max(0,(380-LAM0)/(LAM1-LAM0)),`rgba(${col[0]},${col[1]},${col[2]},.10)`);
+    grad.addColorStop((565-LAM0)/(LAM1-LAM0),`rgba(${col[0]},${col[1]},${col[2]},.34)`);
+    grad.addColorStop((750-LAM0)/(LAM1-LAM0),`rgba(${col[0]},${col[1]},${col[2]},.14)`);
+    grad.addColorStop(1,`rgba(${col[0]},${col[1]},${col[2]},.08)`);
+    sc.fillStyle=grad;
+  } else sc.fillStyle=`rgba(${col[0]},${col[1]},${col[2]},.18)`;
+  sc.fill();
+  // 描邊
+  sc.beginPath();first=true;
+  for(let nm=LAM0;nm<=LAM1;nm+=6){const x=xOf(nm),y=yOf(planck(nm*1e-9,state.T));if(first){sc.moveTo(x,y);first=false;}else sc.lineTo(x,y);}
+  sc.strokeStyle=`rgb(${col[0]},${col[1]},${col[2]})`;sc.lineWidth=2.4;sc.stroke();
+  // λ_max 標線
+  const lm=lamMax();
+  if(lm<=LAM1){const xm=xOf(lm),ym=yOf(planck(lm*1e-9,state.T));
+    sc.strokeStyle='rgba(255,210,122,.8)';sc.setLineDash([5,4]);sc.lineWidth=1.4;
+    sc.beginPath();sc.moveTo(xm,ym);sc.lineTo(xm,y0);sc.stroke();sc.setLineDash([]);
+    sc.fillStyle='#ffd27a';sc.font='bold 12px system-ui';sc.fillText('λmax '+lm.toFixed(0)+'nm',xm+4,ym+12);
+    S.sphere(sc,xm,ym,4,[255,210,122]);
+  } else {
+    sc.fillStyle='#ffd27a';sc.font='12px system-ui';sc.fillText('λmax='+lm.toFixed(0)+'nm（紅外，超出範圍→）',x0+gw-200,mt+30);
+  }
+  // 右側發光球(黑體色)
+  const bx=W-78,by=H/2,br=Math.min(46,30+ (state.T/12000)*22);
+  const g2=sc.createRadialGradient(bx,by,2,bx,by,br*2.4);
+  g2.addColorStop(0,`rgba(${col[0]},${col[1]},${col[2]},.95)`);
+  g2.addColorStop(.5,`rgba(${col[0]},${col[1]},${col[2]},.32)`);
+  g2.addColorStop(1,'rgba(0,0,0,0)');
+  sc.fillStyle=g2;sc.beginPath();sc.arc(bx,by,br*2.4,0,7);sc.fill();
+  sc.fillStyle=`rgb(${col[0]},${col[1]},${col[2]})`;sc.beginPath();sc.arc(bx,by,br,0,7);sc.fill();
+  sc.fillStyle='rgba(210,220,240,.7)';sc.font='11px system-ui';sc.textAlign='center';sc.fillText('物體顏色',bx,by+br+18);sc.textAlign='left';
+  updateHud(col);
+}
+function updateHud(col){const lm=lamMax(),P=power();
+  let region = lm>750?'紅外 IR':(lm<380?'紫外 UV':'可見光');
+  document.getElementById('hud').innerHTML=
+   `<div class="chip amber">溫度 T<b>${state.T} K</b></div>`+
+   `<div class="chip cyan">峰值 λmax<b>${lm.toFixed(0)} nm · ${region}</b></div>`+
+   `<div class="chip green">總功率 σT⁴<b>${(P/1e6).toFixed(1)} MW/m²</b></div>`;
+}
+
+document.getElementById('tint').onclick=function(){tintOn=!tintOn;this.classList.toggle('on',tintOn);this.textContent='譜線著色：'+(tintOn?'開':'關');draw();};
+document.querySelectorAll('[data-t]').forEach(b=>b.onclick=()=>setT(parseInt(b.dataset.t)));
+
+window.addEventListener('load',()=>{setupCanvases();recompute();});
+window.addEventListener('resize',()=>{setupCanvases();draw();});
+</script>
+</body>
+</html>
