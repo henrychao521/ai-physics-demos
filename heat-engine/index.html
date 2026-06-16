@@ -1,0 +1,222 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>熱機・卡諾循環 ｜ PV 圖・效率 η=1−Tc/Th・熱力學第二定律</title>
+<meta name="description" content="卡諾熱機互動模擬：等溫膨脹從高溫庫吸熱 Qh、絕熱膨脹、等溫壓縮向低溫庫放熱 Qc、絕熱壓縮，循環對外做淨功 W。PV 圖圍出的面積就是 W；效率 η=W/Qh=1−Tc/Th，永遠小於 1——這就是熱力學第二定律。">
+<link rel="icon" href="../assets/favicon.svg" type="image/svg+xml">
+<link rel="stylesheet" href="../assets/site.css">
+<script src="../assets/sim.js"></script>
+<script defer src="../assets/nav.js"></script>
+<style>
+  *{box-sizing:border-box}
+  html,body{margin:0;padding:0;background:var(--bg);color:var(--txt);font-family:"Noto Sans TC","PingFang TC","Microsoft JhengHei",system-ui,sans-serif}
+  a{color:var(--accent)}
+  .wrap{max-width:1120px;margin:0 auto;padding:18px 16px 60px}
+  header h1{font-size:1.5rem;margin:.2em 0}
+  header p{color:var(--muted);margin:.2em 0 1em;line-height:1.6}
+  .badge{display:inline-block;background:var(--panel2);border:1px solid var(--line);color:var(--muted);font-size:.72rem;padding:2px 8px;border-radius:99px;margin-right:6px}
+  .scene-wrap{position:relative;border-radius:16px;overflow:hidden;border:1px solid var(--line);box-shadow:0 18px 50px rgba(0,0,0,.45)}
+  #scene{display:block;width:100%}
+  .hud{position:absolute;top:12px;left:12px;display:flex;gap:8px;flex-wrap:wrap;pointer-events:none}
+  .chip{background:rgba(10,16,24,.62);backdrop-filter:blur(6px);border:1px solid rgba(120,180,255,.16);border-radius:10px;padding:6px 11px;color:#dceaff;font-size:.8rem;line-height:1.25}
+  .chip b{display:block;font-size:1.02rem;font-variant-numeric:tabular-nums;color:#fff}
+  .chip.red b{color:#ff8f8f}.chip.blue b{color:#6ca8ff}.chip.green b{color:#7CFFB2}
+  .toolbar{position:absolute;bottom:12px;right:12px;display:flex;gap:7px;flex-wrap:wrap;justify-content:flex-end}
+  .toolbar button{background:rgba(10,16,24,.62);backdrop-filter:blur(6px);color:#dceaff;border:1px solid rgba(120,180,255,.2);border-radius:9px;padding:7px 11px;font-size:.82rem;cursor:pointer;font-family:inherit}
+  .toolbar button.on{background:var(--accent);color:#04121c;border-color:var(--accent);font-weight:700}
+  @media(max-width:560px){.toolbar{position:static;justify-content:center;padding:8px 10px;background:rgba(8,14,22,.5);border-top:1px solid var(--line)}}
+  .bar{display:flex;gap:14px;flex-wrap:wrap;align-items:flex-end;background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:14px 16px;margin-top:14px}
+  .sld{flex:1;min-width:180px}
+  .sld label{display:flex;justify-content:space-between;font-size:.82rem;color:var(--muted);margin-bottom:5px}
+  .sld label .v{color:var(--accent);font-variant-numeric:tabular-nums;font-weight:700}
+  .sld input{width:100%;accent-color:var(--accent)}
+  .presets{display:flex;gap:7px;flex-wrap:wrap;align-items:center;margin-top:12px}
+  .presets span{color:var(--muted);font-size:.8rem}
+  .pbtn{background:var(--panel2);color:var(--txt);border:1px solid var(--line);padding:7px 12px;border-radius:9px;cursor:pointer;font-size:.83rem;font-family:inherit}
+  .pbtn:hover{border-color:var(--accent)}
+  .note{background:var(--panel);border-left:3px solid var(--accent2);border-radius:8px;padding:12px 14px;color:var(--muted);font-size:.86rem;line-height:1.7;margin-top:14px}
+  .note b{color:var(--txt)}.note code{background:var(--bg2);padding:1px 6px;border-radius:5px;color:var(--green);font-size:.85em}
+  footer{color:var(--muted);font-size:.78rem;margin-top:24px;text-align:center;line-height:1.7}
+</style>
+</head>
+<body data-demo="熱機卡諾循環">
+<div class="wrap">
+  <header>
+    <span class="badge">熱學・熱力學第二定律</span>
+    <h1>熱機・卡諾循環（PV 圖 × 效率）</h1>
+    <p>熱機從<b>高溫庫吸熱 Qh</b>、對外做<b>功 W</b>、把剩下的<b>熱 Qc 倒進低溫庫</b>，如此循環。能量守恆 <b>Qh = W + Qc</b>，
+       但<b>不可能把熱全部變成功</b>——效率 <b>η = W/Qh = 1 − Qc/Qh</b>，理想上限為卡諾效率 <b>η = 1 − Tc/Th</b>。這就是熱力學第二定律。</p>
+  </header>
+
+  <div class="scene-wrap">
+    <canvas id="scene"></canvas>
+    <div class="hud" id="hud"></div>
+    <div class="toolbar">
+      <button id="run" class="on">⏸ 暫停</button>
+    </div>
+  </div>
+
+  <div class="bar" id="sliders"></div>
+  <div class="presets">
+    <span>情境：</span>
+    <button class="pbtn" data-p="600,300">高效率（600K/300K）</button>
+    <button class="pbtn" data-p="500,440">低溫差・低效率</button>
+    <button class="pbtn" data-p="900,300">大溫差・蒸汽機</button>
+  </div>
+
+  <div class="formula" id="formula"></div>
+
+  <div class="note">
+    <b>物理重點：</b>卡諾循環由四步組成：①<b>等溫膨脹</b>(接觸高溫庫 Th，吸熱 Qh 推活塞做功)②<b>絕熱膨脹</b>(隔熱，氣體降溫到 Tc)
+    ③<b>等溫壓縮</b>(接觸低溫庫 Tc，放熱 Qc)④<b>絕熱壓縮</b>(回到起點)。PV 圖<b>圍住的面積 = 淨功 W</b>。
+    效率 <code>η = W/Qh = 1 − Qc/Qh = 1 − Tc/Th</code>：只看冷熱庫溫度，溫差越大越有效率；想 η=100% 必須 Tc=0 K（不可能）。
+    卡諾效率是所有熱機的<b>理論上限</b>，真實引擎(蒸汽機、內燃機)因摩擦與不可逆過程效率更低。
+  </div>
+
+  <footer>純前端 HTML / Canvas（SIM 工具庫）。PV 圖、活塞、冷熱庫與能流同步動畫；γ=5/3、等溫膨脹比 r=2.2，能量守恆 Qh=W+Qc。</footer>
+</div>
+
+<script>
+const S=SIM;
+const GAM=5/3, R=2.2;   // γ(單原子), 等溫膨脹體積比 V2/V1
+const state={Th:600,Tc:300};
+const sliders=[
+  {id:'Th',name:'高溫庫 Th',min:350,max:1000,step:10,val:600,unit:'K'},
+  {id:'Tc',name:'低溫庫 Tc',min:200,max:500,step:10,val:300,unit:'K'},
+];
+const sBar=document.getElementById('sliders');
+sliders.forEach(s=>{ state[s.id]=s.val;
+  const d=document.createElement('div');d.className='sld';
+  d.innerHTML=`<label><span>${s.name}</span><span class="v" id="v_${s.id}">${s.val} ${s.unit}</span></label>
+    <input type="range" id="r_${s.id}" min="${s.min}" max="${s.max}" step="${s.step}" value="${s.val}">`;
+  sBar.appendChild(d);
+  d.querySelector('input').addEventListener('input',e=>{state[s.id]=parseFloat(e.target.value);clampT(s.id);
+    document.getElementById('v_'+s.id).textContent=`${state[s.id]} ${s.unit}`; recompute(); });
+});
+function clampT(changed){ if(state.Tc>state.Th-30){ if(changed==='Tc')state.Tc=state.Th-30; else state.Th=state.Tc+30;
+  document.getElementById('v_Tc').textContent=`${state.Tc} K`;document.getElementById('r_Tc').value=state.Tc;
+  document.getElementById('v_Th').textContent=`${state.Th} K`;document.getElementById('r_Th').value=state.Th; } }
+function setPreset(Th,Tc){state.Th=Th;state.Tc=Tc;
+  ['Th','Tc'].forEach(k=>{document.getElementById('r_'+k).value=state[k];document.getElementById('v_'+k).textContent=`${state[k]} K`;});recompute();}
+
+// ---- 物理（卡諾，nR=1）----
+function model(){const Th=state.Th,Tc=state.Tc;
+  const V1=1,V2=R, ratio=Math.pow(Th/Tc,1/(GAM-1)), V3=V2*ratio, V4=V1*ratio;
+  const P=(T,V)=>T/V;
+  const st=[{V:V1,P:P(Th,V1)},{V:V2,P:P(Th,V2)},{V:V3,P:P(Tc,V3)},{V:V4,P:P(Tc,V4)}];
+  const Qh=Th*Math.log(R), Qc=Tc*Math.log(R), W=Qh-Qc, eta=1-Tc/Th;
+  return {Th,Tc,V1,V2,V3,V4,st,Qh,Qc,W,eta};}
+// u∈[0,4) → {V,P,seg,T,heat}
+function point(u,m){const seg=Math.floor(u)%4, t=u-Math.floor(u);
+  const lerp=(a,b)=>a+(b-a)*t;
+  if(seg===0){const V=lerp(m.V1,m.V2);return {V,P:m.Th/V,seg,T:m.Th,heat:'in'};}
+  if(seg===1){const V=lerp(m.V2,m.V3);return {V,P:m.st[1].P*Math.pow(m.V2/V,GAM),seg,T:lerp(m.Th,m.Tc),heat:'none'};}
+  if(seg===2){const V=lerp(m.V3,m.V4);return {V,P:m.Tc/V,seg,T:m.Tc,heat:'out'};}
+  const V=lerp(m.V4,m.V1);return {V,P:m.st[3].P*Math.pow(m.V4/V,GAM),seg,T:lerp(m.Tc,m.Th),heat:'none'};}
+function recompute(){updateFormula();}
+
+// ---- 公式面板 ----
+function frow(n,sym,sub,val){return `<div class="frow"><span class="fname">${n}</span><span class="fsym">${sym}</span><span class="fsub">= ${sub}</span><span class="fval">${val}</span></div>`;}
+function updateFormula(){const m=model();
+  document.getElementById('formula').innerHTML=
+    `<h4>📐 計算公式（即時代入　nR=1、膨脹比 r=2.2）</h4>`
+    + frow('吸熱 Qh','Th·ln r',`${m.Th}·ln2.2`, m.Qh.toFixed(1)+' J')
+    + frow('放熱 Qc','Tc·ln r',`${m.Tc}·ln2.2`, m.Qc.toFixed(1)+' J')
+    + frow('淨功 W','Qh − Qc',`${m.Qh.toFixed(0)}−${m.Qc.toFixed(0)}`, m.W.toFixed(1)+' J')
+    + frow('卡諾效率 η','1 − Tc/Th',`1 − ${m.Tc}/${m.Th}`, (m.eta*100).toFixed(1)+'%')
+    + `<div class="frel">📈 <b>η = 1 − Tc/Th</b>：溫差越大效率越高　·　<b>Qh = W + Qc</b>（能量守恆）　·　η 永遠 < 100%（需 Tc=0 才達 100%，不可能）——熱力學第二定律。</div>`;
+}
+
+// ---- 視圖 ----
+let sc;
+const SKY={skyTop:'#0d1322',skyBottom:'#070d16',vignette:'rgba(0,0,0,.42)'};
+function setupCanvases(){sc=S.fit(document.getElementById('scene'),1.85);}
+let u=0, running=true;
+const SEGNAME=['① 等溫膨脹（吸熱 Qh）','② 絕熱膨脹（降溫）','③ 等溫壓縮（放熱 Qc）','④ 絕熱壓縮（升溫）'];
+function draw(){const W=sc._w,H=sc._h;S.scene(sc,SKY,{});
+  const m=model(), p=point(u,m);
+  // ===== 左：活塞 + 冷熱庫 =====
+  const CP=W<560;   // 窄螢幕緊湊版
+  const cylX=CP?38:64, cylW=CP?58:92, cylTop=70, cylBot=H-86, cylH=cylBot-cylTop;
+  // 體積→活塞高度
+  const vmin=m.V1, vmax=m.V3, gasFrac=(p.V-vmin)/(vmax-vmin);
+  const gasH=24+gasFrac*(cylH-30), pistonY=cylBot-gasH;
+  // 氣體(顏色隨溫度紅↔藍)
+  const tt=(p.T-state.Tc)/Math.max(1,state.Th-state.Tc);
+  const gr=Math.round(120+tt*135), gb=Math.round(220-tt*150);
+  sc.fillStyle=`rgba(${gr},${Math.round(120+tt*40)},${gb},.5)`;
+  sc.fillRect(cylX,pistonY,cylW,gasH);
+  // 氣體分子點
+  sc.fillStyle='rgba(255,255,255,.6)';
+  for(let i=0;i<14;i++){const hx=((i*53+u*60)%(cylW-14))+cylX+7, hy=cylBot-((i*37+u*90)%(gasH-12))-6;sc.beginPath();sc.arc(hx,hy,1.7,0,7);sc.fill();}
+  // 缸壁 + 活塞
+  sc.strokeStyle='#7f8ba6';sc.lineWidth=3;sc.strokeRect(cylX,cylTop,cylW,cylH);
+  sc.fillStyle='#b6c2d8';sc.fillRect(cylX-4,pistonY-10,cylW+8,12);
+  sc.fillStyle='#8390aa';sc.fillRect(cylX+cylW/2-4,pistonY-30,8,22);
+  // 冷熱庫(依目前接觸高亮)
+  const hot=p.heat==='in', cold=p.heat==='out';
+  sc.fillStyle=hot?'rgba(255,90,90,.85)':'rgba(255,90,90,.28)';sc.fillRect(cylX-4,cylBot+4,cylW+8,14);
+  sc.fillStyle='#fff';sc.font='11px system-ui';sc.fillText('高溫庫 '+state.Th+'K',cylX-2,cylBot+15);
+  // 能流箭頭 Qh→引擎→W,Qc
+  if(hot){S.arrow(sc,cylX-22,cylBot+11,cylX-6,cylBot+11,{color:'#ff7a7a',width:3,label:'Qh'});}
+  // 階段標籤
+  sc.fillStyle=hot?'#ff9a9a':(cold?'#8fc0ff':'#cfe0ff');sc.font='bold 13px system-ui';
+  sc.fillText(SEGNAME[p.seg],cylX-8,cylTop-14);
+  // ===== 中：能量條 Qh=W+Qc =====
+  const ebx=cylX+cylW+(CP?22:44), ebw=CP?18:30, ebTop=cylTop+6, ebH=cylH-12;
+  const total=m.Qh; const wH=ebH*(m.W/total), cH=ebH*(m.Qc/total);
+  sc.fillStyle='#7CFFB2';sc.fillRect(ebx,ebTop,ebw,wH);
+  sc.fillStyle='#6ca8ff';sc.fillRect(ebx,ebTop+wH,ebw,cH);
+  sc.strokeStyle='rgba(150,170,210,.5)';sc.lineWidth=1;sc.strokeRect(ebx,ebTop,ebw,ebH);
+  sc.fillStyle='#cfe0ff';sc.font='10px system-ui';sc.fillText('Qh',ebx+1,ebTop-4);
+  sc.fillStyle='#7CFFB2';sc.fillText(CP?'W':'W 功',ebx+ebw+5,ebTop+wH/2+3);
+  sc.fillStyle='#6ca8ff';sc.fillText(CP?'Qc':'Qc 廢熱',ebx+ebw+5,ebTop+wH+cH/2+3);
+  // ===== 右：PV 圖 =====
+  const gx=ebx+ebw+(CP?34:88), gy0=cylBot, gw=W-gx-(CP?14:26), gh=cylBot-cylTop;
+  // 範圍
+  let Pmax=Math.max(m.st[0].P,m.st[1].P,m.st[2].P,m.st[3].P)*1.06, Pmin=0;
+  let Vmin=m.V1*0.9, Vmax=m.V3*1.05;
+  const X=V=>gx+(V-Vmin)/(Vmax-Vmin)*gw, Y=P=>gy0-(P-Pmin)/(Pmax-Pmin)*gh;
+  // 軸
+  sc.strokeStyle='rgba(150,170,210,.5)';sc.lineWidth=1.2;
+  sc.beginPath();sc.moveTo(gx,cylTop);sc.lineTo(gx,gy0);sc.lineTo(gx+gw,gy0);sc.stroke();
+  sc.fillStyle='rgba(180,195,225,.8)';sc.font='11px system-ui';sc.fillText('P',gx-12,cylTop+8);sc.fillText('V',gx+gw-6,gy0+16);
+  // 循環曲線(取樣) + 填色(=W 面積)
+  const N=160; sc.beginPath();
+  for(let i=0;i<=N;i++){const pp=point(i/N*4,m);const x=X(pp.V),y=Y(pp.P);i?sc.lineTo(x,y):sc.moveTo(x,y);}
+  sc.closePath();sc.fillStyle='rgba(124,255,178,.13)';sc.fill();
+  // 分段著色描邊
+  for(let s=0;s<4;s++){sc.beginPath();const col=(s===0)?'#ff7a7a':(s===2)?'#6ca8ff':'#cdd7ec';
+    for(let i=0;i<=40;i++){const pp=point(s+i/40,m);const x=X(pp.V),y=Y(pp.P);i?sc.lineTo(x,y):sc.moveTo(x,y);}
+    sc.strokeStyle=col;sc.lineWidth=(s===p.seg)?3:1.8;sc.stroke();}
+  // 角點
+  m.st.forEach((q,i)=>{S.sphere(sc,X(q.V),Y(q.P),3.5,[200,210,230]);sc.fillStyle='rgba(200,210,230,.8)';sc.font='10px system-ui';sc.fillText((i+1),X(q.V)+5,Y(q.P)-5);});
+  // 目前狀態點
+  S.sphere(sc,X(p.V),Y(p.P),6,[255,225,120]);
+  sc.fillStyle='rgba(124,255,178,.85)';sc.font='11px system-ui';sc.fillText('面積 = 淨功 W',gx+gw*0.34,cylTop+18);
+  updateHud(m);
+}
+function updateHud(m){
+  document.getElementById('hud').innerHTML=
+   `<div class="chip green">卡諾效率 η<b>${(m.eta*100).toFixed(1)}%</b></div>`+
+   `<div class="chip red">吸熱 Qh<b>${m.Qh.toFixed(0)} J</b></div>`+
+   `<div class="chip green">淨功 W<b>${m.W.toFixed(0)} J</b></div>`+
+   `<div class="chip blue">放熱 Qc<b>${m.Qc.toFixed(0)} J</b></div>`;
+}
+
+let last=0;
+function loop(ts){const dt=last?Math.min((ts-last)/1000,0.05):0;last=ts;
+  if(running){u+=dt*0.55; if(u>=4)u-=4;}
+  draw();requestAnimationFrame(loop);}
+
+const rb=document.getElementById('run');
+rb.onclick=()=>{running=!running;rb.classList.toggle('on',running);rb.textContent=running?'⏸ 暫停':'▶ 播放';};
+document.querySelectorAll('[data-p]').forEach(b=>b.onclick=()=>{const a=b.dataset.p.split(',');setPreset(+a[0],+a[1]);});
+
+window.addEventListener('load',()=>{setupCanvases();recompute();requestAnimationFrame(loop);});
+window.addEventListener('resize',()=>{setupCanvases();draw();});
+</script>
+</body>
+</html>
