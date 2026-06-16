@@ -1,0 +1,242 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>稜鏡色散 ｜ 白光分光・折射率 n(λ)・牛頓的彩虹</title>
+<meta name="description" content="稜鏡色散互動模擬：玻璃的折射率隨波長改變（n 隨波長變短而變大），所以白光通過三角稜鏡時，不同顏色偏折角度不同，被分成一道彩虹。紫光折射率最大、偏折最多；紅光最少。向量光線追蹤兩次折射。">
+<link rel="icon" href="../assets/favicon.svg" type="image/svg+xml">
+<link rel="stylesheet" href="../assets/site.css">
+<script src="../assets/sim.js"></script>
+<script defer src="../assets/nav.js"></script>
+<style>
+  *{box-sizing:border-box}
+  html,body{margin:0;padding:0;background:var(--bg);color:var(--txt);font-family:"Noto Sans TC","PingFang TC","Microsoft JhengHei",system-ui,sans-serif}
+  a{color:var(--accent)}
+  .wrap{max-width:1120px;margin:0 auto;padding:18px 16px 60px}
+  header h1{font-size:1.5rem;margin:.2em 0}
+  header p{color:var(--muted);margin:.2em 0 1em;line-height:1.6}
+  .badge{display:inline-block;background:var(--panel2);border:1px solid var(--line);color:var(--muted);font-size:.72rem;padding:2px 8px;border-radius:99px;margin-right:6px}
+  .scene-wrap{position:relative;border-radius:16px;overflow:hidden;border:1px solid var(--line);box-shadow:0 18px 50px rgba(0,0,0,.45)}
+  #scene{display:block;width:100%}
+  .hud{position:absolute;top:12px;left:12px;display:flex;gap:8px;flex-wrap:wrap;pointer-events:none}
+  .chip{background:rgba(10,16,24,.62);backdrop-filter:blur(6px);border:1px solid rgba(120,180,255,.16);border-radius:10px;padding:6px 11px;color:#dceaff;font-size:.8rem;line-height:1.25}
+  .chip b{display:block;font-size:1.02rem;font-variant-numeric:tabular-nums;color:#fff}
+  .chip.red b{color:#ff8f8f}.chip.violet b{color:#c39bff}.chip.green b{color:#7CFFB2}
+  .toolbar{position:absolute;bottom:12px;right:12px;display:flex;gap:7px;flex-wrap:wrap;justify-content:flex-end}
+  .toolbar button{background:rgba(10,16,24,.62);backdrop-filter:blur(6px);color:#dceaff;border:1px solid rgba(120,180,255,.2);border-radius:9px;padding:7px 11px;font-size:.82rem;cursor:pointer;font-family:inherit}
+  .toolbar button.on{background:var(--accent);color:#04121c;border-color:var(--accent);font-weight:700}
+  @media(max-width:560px){.toolbar{position:static;justify-content:center;padding:8px 10px;background:rgba(8,14,22,.5);border-top:1px solid var(--line)}}
+  .bar{display:flex;gap:14px;flex-wrap:wrap;align-items:flex-end;background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:14px 16px;margin-top:14px}
+  .sld{flex:1;min-width:180px}
+  .sld label{display:flex;justify-content:space-between;font-size:.82rem;color:var(--muted);margin-bottom:5px}
+  .sld label .v{color:var(--accent);font-variant-numeric:tabular-nums;font-weight:700}
+  .sld input{width:100%;accent-color:var(--accent)}
+  .presets{display:flex;gap:7px;flex-wrap:wrap;align-items:center;margin-top:12px}
+  .presets span{color:var(--muted);font-size:.8rem}
+  .pbtn{background:var(--panel2);color:var(--txt);border:1px solid var(--line);padding:7px 12px;border-radius:9px;cursor:pointer;font-size:.83rem;font-family:inherit}
+  .pbtn:hover{border-color:var(--accent)}
+  .note{background:var(--panel);border-left:3px solid var(--accent2);border-radius:8px;padding:12px 14px;color:var(--muted);font-size:.86rem;line-height:1.7;margin-top:14px}
+  .note b{color:var(--txt)}.note code{background:var(--bg2);padding:1px 6px;border-radius:5px;color:var(--green);font-size:.85em}
+  footer{color:var(--muted);font-size:.78rem;margin-top:24px;text-align:center;line-height:1.7}
+</style>
+</head>
+<body data-demo="稜鏡色散">
+<div class="wrap">
+  <header>
+    <span class="badge">光學・色散</span>
+    <h1>稜鏡色散（白光分成彩虹）</h1>
+    <p>白光其實是各色光的混合。玻璃的<b>折射率會隨波長改變</b>——波長越短（越偏紫）折射率越大、偏折越多。
+       所以白光通過三角稜鏡兩次折射後，各色被拉開成一道<b>光譜</b>：紅光偏折最少、紫光最多。這就是牛頓的稜鏡實驗，也是彩虹的成因。</p>
+  </header>
+
+  <div class="scene-wrap">
+    <canvas id="scene"></canvas>
+    <div class="hud" id="hud"></div>
+    <div class="toolbar">
+      <button id="glass" class="on">玻璃：冕牌</button>
+    </div>
+  </div>
+
+  <div class="bar" id="sliders"></div>
+  <div class="presets">
+    <span>情境：</span>
+    <button class="pbtn" data-p="60,50">標準分光（頂角60°）</button>
+    <button class="pbtn" data-p="45,48">小頂角・色散小</button>
+    <button class="pbtn" data-p="60,42">接近最小偏向角</button>
+  </div>
+
+  <div class="formula" id="formula"></div>
+
+  <div class="note">
+    <b>物理重點：</b>同一介質對不同波長的光有<b>不同折射率</b>，稱為<b>色散</b>。常用柯西公式 <code>n(λ) = A + B/λ²</code>：
+    λ 越短 n 越大。每個面都遵守司乃耳定律 <code>n₁ sinθ₁ = n₂ sinθ₂</code>，稜鏡讓光<b>折射兩次</b>，總偏向角
+    <code>δ = θ₁ + θ₂′ − A</code>（A 為頂角）。因為紫光 n 最大，δ 也最大，故偏折最多、排在彩虹內側。
+    白光 → 紅橙黃綠藍靛紫，本質是「同一束光、不同波長走了不同角度」。雨後彩虹則是陽光在水滴中折射＋反射的色散。
+  </div>
+
+  <footer>純前端 HTML / Canvas（SIM 工具庫）。向量光線追蹤兩次折射；單稜鏡實際色散角僅約 1–2°，畫面出射扇形已<b>放大顯示</b>以利觀察，HUD 數值為真實角度。</footer>
+</div>
+
+<script>
+const S=SIM;
+const state={apex:60, inc:50};
+const GLASS={crown:{A:1.50,B:4200,name:'冕牌'}, flint:{A:1.62,B:8500,name:'火石（色散大）'}};
+let gk='crown';
+const sliders=[
+  {id:'apex',name:'稜鏡頂角 A',min:30,max:70,step:1,val:60,unit:'°'},
+  {id:'inc',name:'入射角 θ₁',min:30,max:70,step:1,val:50,unit:'°'},
+];
+const sBar=document.getElementById('sliders');
+sliders.forEach(s=>{ state[s.id]=s.val;
+  const d=document.createElement('div');d.className='sld';
+  d.innerHTML=`<label><span>${s.name}</span><span class="v" id="v_${s.id}">${s.val}${s.unit}</span></label>
+    <input type="range" id="r_${s.id}" min="${s.min}" max="${s.max}" step="${s.step}" value="${s.val}">`;
+  sBar.appendChild(d);
+  d.querySelector('input').addEventListener('input',e=>{state[s.id]=parseFloat(e.target.value);
+    document.getElementById('v_'+s.id).textContent=`${state[s.id]}${s.unit}`; recompute(); });
+});
+function setP(apex,inc){state.apex=apex;state.inc=inc;
+  ['apex','inc'].forEach(k=>{document.getElementById('r_'+k).value=state[k];
+    document.getElementById('v_'+k).textContent=`${state[k]}${k==='apex'||k==='inc'?'°':''}`;});recompute();}
+
+// ---- 物理 ----
+function nOf(lam){const g=GLASS[gk];return g.A+g.B/(lam*lam);}   // 柯西 λ in nm
+const rad=d=>d*Math.PI/180, deg=r=>r*180/Math.PI;
+function deviation(lam){const n=nOf(lam),A=rad(state.apex),i1=rad(state.inc);
+  const r1=Math.asin(Math.min(1,Math.sin(i1)/n)); const r2=A-r1;
+  const s=n*Math.sin(r2); if(Math.abs(s)>1)return null; const i2=Math.asin(s);
+  return deg(i1+i2-A);}
+function recompute(){updateFormula();}
+
+// 波長→RGB
+function wlColor(nm){let r=0,g=0,b=0;
+  if(nm<440){r=-(nm-440)/(440-380);b=1;}else if(nm<490){g=(nm-440)/50;b=1;}
+  else if(nm<510){g=1;b=-(nm-510)/20;}else if(nm<580){r=(nm-510)/70;g=1;}
+  else if(nm<645){r=1;g=-(nm-645)/65;}else{r=1;}
+  let f=1; if(nm>700)f=0.3+0.7*(780-nm)/80; if(nm<420)f=0.3+0.7*(nm-380)/40;
+  return [Math.round(r*255*f),Math.round(g*255*f),Math.round(b*255*f)];}
+const LAMS=[660,620,585,550,510,470,430];   // 取樣波長(紅→紫)
+
+// ---- 公式面板 ----
+function frow(n,sym,sub,val){return `<div class="frow"><span class="fname">${n}</span><span class="fsym">${sym}</span><span class="fsub">= ${sub}</span><span class="fval">${val}</span></div>`;}
+function updateFormula(){const nr=nOf(660),nv=nOf(430),dr=deviation(660),dv=deviation(430);
+  const spread=(dr!=null&&dv!=null)?(dv-dr).toFixed(2):'—';
+  document.getElementById('formula').innerHTML=
+    `<h4>📐 計算公式（即時代入　${GLASS[gk].name}玻璃　n=A+B/λ²、頂角 A=${state.apex}°、入射 θ₁=${state.inc}°）</h4>`
+    + frow('紅光折射率','n(660nm)',`柯西`, nr.toFixed(4))
+    + frow('紫光折射率','n(430nm)',`柯西`, nv.toFixed(4))
+    + frow('紅光偏向角 δ','θ₁+θ₂′−A',`司乃耳×2`, (dr!=null?dr.toFixed(2)+'°':'全反射'))
+    + frow('紫光偏向角 δ','θ₁+θ₂′−A',`司乃耳×2`, (dv!=null?dv.toFixed(2)+'°':'全反射'))
+    + frow('色散（紅↔紫）','δ紫 − δ紅',`分光角度`, spread+'°')
+    + `<div class="frel">📈 <b>n 隨 λ 變短而變大</b> → 紫光折射率最大、偏向角最大、彎得最多　·　每面 <b>n₁sinθ₁=n₂sinθ₂</b>，兩次折射拉開光譜　·　火石玻璃色散更大。</div>`;
+}
+
+// ---- 向量光線追蹤 ----
+function V(x,y){return {x,y};}
+function sub(a,b){return V(a.x-b.x,a.y-b.y);} function add(a,b){return V(a.x+b.x,a.y+b.y);}
+function mul(a,s){return V(a.x*s,a.y*s);} function dot(a,b){return a.x*b.x+a.y*b.y;}
+function len(a){return Math.hypot(a.x,a.y);} function norm(a){const l=len(a)||1;return V(a.x/l,a.y/l);}
+function refract(d,nrm,eta){const ci=-dot(d,nrm);const k=1-eta*eta*(1-ci*ci);
+  if(k<0)return null; return norm(add(mul(d,eta),mul(nrm,eta*ci-Math.sqrt(k))));}
+// 射線 P+t*d 與線段 Pa-Pb 交點(t>eps)
+function segHit(P,d,Pa,Pb){const e=sub(Pb,Pa);const den=d.x*(-e.y)+d.y*(e.x);
+  if(Math.abs(den)<1e-9)return null; const diff=sub(Pa,P);
+  const t=(diff.x*(-e.y)+diff.y*(e.x))/den; const s=(d.x*diff.y-d.y*diff.x)/den;
+  if(t>0.01 && s>=-0.001 && s<=1.001)return {pt:add(P,mul(d,t)),t}; return null;}
+
+// ---- 視圖 ----
+let sc;
+const SKY={skyTop:'#0a1020',skyBottom:'#070d16',vignette:'rgba(0,0,0,.45)'};
+function setupCanvases(){sc=S.fit(document.getElementById('scene'),1.85);}
+function tracePrism(lam,geo){  // 回傳折線點陣列(到螢幕)
+  const n=nOf(lam);
+  // 入射:由左方瞄準左面中點 M，入射角 θ1 相對左面法線
+  const {T,L,Rr,nLeft,nRight,M,screenX}=geo;
+  // 由 inc 角構造入射方向:左面外法線 nLeft 指向空氣側,入射線與 nLeft 夾角=inc
+  const faceL=norm(sub(L,T));  // 左面方向(沿面,T→L 朝左下)
+  const th=rad(state.inc);
+  // 入射方向 = 內法線(−nLeft)繞面切線旋轉 inc 角 → 與法線夾角=入射角
+  const base=mul(nLeft,-1);    // 指向稜鏡內部
+  const din=norm(V(base.x*Math.cos(th)+(-faceL.x)*Math.sin(th),
+                   base.y*Math.cos(th)+(-faceL.y)*Math.sin(th)));
+  const Psrc=add(M,mul(din,-260));   // 由入射方向回推光源位置
+  const pts=[Psrc];
+  // 第一面折射(空氣→玻璃)
+  const h1=segHit(Psrc,din,T,L); if(!h1)return null; pts.push(h1.pt);
+  const d1=refract(din,nLeft,1/n); if(!d1)return null;
+  // 第二面(玻璃→空氣)
+  const h2=segHit(h1.pt,d1,T,Rr); if(!h2){ // 可能打到底面→當作未出射
+    return null;} pts.push(h2.pt);
+  const d2=refract(d1,mul(nRight,-1),n); if(!d2)return null;  // 出射,法線指向玻璃內,故取反由 refract 處理
+  // 延伸到螢幕
+  const tS=(screenX-h2.pt.x)/(d2.x||1e-6); const end=add(h2.pt,mul(d2,Math.max(20,tS)));
+  pts.push(end);
+  return pts;
+}
+function draw(){const W=sc._w,H=sc._h;S.scene(sc,SKY,{});
+  // 稜鏡幾何
+  const cx=W*0.40, cy=H*0.54, sz=Math.min(150,H*0.46);
+  const a2=rad(state.apex/2);
+  const T=V(cx, cy-sz*0.62);
+  const L=V(cx-Math.sin(a2)*sz, cy+sz*0.42);
+  const Rr=V(cx+Math.sin(a2)*sz, cy+sz*0.42);
+  const G=V((T.x+L.x+Rr.x)/3,(T.y+L.y+Rr.y)/3);
+  function outN(Pa,Pb){const f=norm(sub(Pb,Pa));let nn=V(-f.y,f.x);const mid=mul(add(Pa,Pb),0.5);
+    if(dot(sub(mid,G),nn)<0)nn=mul(nn,-1);return nn;}
+  const nLeft=outN(T,L), nRight=outN(T,Rr);
+  const M=mul(add(T,L),0.5);
+  const screenX=W-30;
+  const geo={T,L,Rr,nLeft,nRight,M,screenX};
+  // 螢幕
+  sc.fillStyle='rgba(20,26,40,.7)';sc.fillRect(screenX,40,8,H-80);
+  // 白光入射(畫一次,用中間波長路徑的入射段)
+  const wref=tracePrism(550,geo);
+  if(wref){sc.strokeStyle='rgba(255,255,255,.92)';sc.lineWidth=3;sc.beginPath();sc.moveTo(wref[0].x,wref[0].y);sc.lineTo(wref[1].x,wref[1].y);sc.stroke();
+    sc.fillStyle='rgba(255,255,255,.85)';sc.font='12px system-ui';sc.fillText('白光',wref[0].x+6,wref[0].y-8);}
+  // 各色光線（出射段相對中央光線放大色散角顯示，順序與相對間距仍正確）
+  const AMP=6;
+  const refp=tracePrism(550,geo);
+  const refAng=refp?Math.atan2(refp[3].y-refp[2].y, refp[3].x-refp[2].x):0;
+  let landMin=1e9,landMax=-1e9;
+  LAMS.forEach(lam=>{const pts=tracePrism(lam,geo); if(!pts)return; const c=wlColor(lam);
+    // 入射→第一面→第二面(實體段)
+    sc.strokeStyle=`rgb(${c[0]},${c[1]},${c[2]})`;sc.lineWidth=2.2;sc.beginPath();
+    sc.moveTo(pts[1].x,pts[1].y);sc.lineTo(pts[2].x,pts[2].y);
+    // 出射段:放大角度
+    const rawAng=Math.atan2(pts[3].y-pts[2].y, pts[3].x-pts[2].x);
+    const ampAng=refAng+(rawAng-refAng)*AMP;
+    const dx=Math.cos(ampAng)||1e-6, t=(screenX-pts[2].x)/dx;
+    const ly=pts[2].y+Math.sin(ampAng)*Math.max(20,t);
+    sc.lineTo(screenX,ly);sc.stroke();
+    landMin=Math.min(landMin,ly);landMax=Math.max(landMax,ly);
+    sc.fillStyle=`rgb(${c[0]},${c[1]},${c[2]})`;sc.fillRect(screenX,ly-4,8,8);
+  });
+  // 稜鏡(半透明)
+  sc.beginPath();sc.moveTo(T.x,T.y);sc.lineTo(L.x,L.y);sc.lineTo(Rr.x,Rr.y);sc.closePath();
+  const pg=sc.createLinearGradient(L.x,T.y,Rr.x,Rr.y);pg.addColorStop(0,'rgba(150,180,220,.18)');pg.addColorStop(1,'rgba(120,150,200,.10)');
+  sc.fillStyle=pg;sc.fill();sc.strokeStyle='rgba(180,205,235,.6)';sc.lineWidth=1.6;sc.stroke();
+  sc.fillStyle='rgba(190,205,235,.75)';sc.font='12px system-ui';sc.fillText('A='+state.apex+'°',cx-14,T.y-6);
+  // 螢幕光譜標註
+  if(landMax>landMin){sc.fillStyle='rgba(210,220,240,.8)';sc.font='11px system-ui';
+    sc.fillText('紅',screenX-18,landMax+4);sc.fillText('紫',screenX-18,landMin+4);
+    sc.fillText('光譜',screenX-26,(landMin+landMax)/2);}
+  updateHud();
+}
+function updateHud(){const nr=nOf(660),nv=nOf(430),dr=deviation(660),dv=deviation(430);
+  const spread=(dr!=null&&dv!=null)?(dv-dr).toFixed(2)+'°':'—';
+  document.getElementById('hud').innerHTML=
+   `<div class="chip red">紅光 n / δ<b>${nr.toFixed(3)} / ${dr!=null?dr.toFixed(1)+'°':'TIR'}</b></div>`+
+   `<div class="chip violet">紫光 n / δ<b>${nv.toFixed(3)} / ${dv!=null?dv.toFixed(1)+'°':'TIR'}</b></div>`+
+   `<div class="chip green">色散角<b>${spread}</b></div>`;
+}
+
+document.getElementById('glass').onclick=function(){gk=(gk==='crown')?'flint':'crown';
+  this.textContent='玻璃：'+(gk==='crown'?'冕牌':'火石');this.classList.toggle('on',gk==='crown');recompute();draw();};
+document.querySelectorAll('[data-p]').forEach(b=>b.onclick=()=>{const a=b.dataset.p.split(',');setP(+a[0],+a[1]);});
+
+window.addEventListener('load',()=>{setupCanvases();recompute();draw();});
+window.addEventListener('resize',()=>{setupCanvases();draw();});
+</script>
+</body>
+</html>
