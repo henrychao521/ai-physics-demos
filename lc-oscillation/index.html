@@ -1,0 +1,200 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>LC 振盪電路 ｜ 電能↔磁能・f=1/2π√(LC)・電磁振盪</title>
+<meta name="description" content="LC 振盪電路互動模擬：電容器與電感串成迴路，能量在電容的電場能與電感的磁場能之間來回轉換，電荷與電流持續振盪。振盪頻率 f=1/2π√(LC)。和彈簧簡諧運動完全類比（Q↔x、I↔v、1/C↔k、L↔m）。">
+<link rel="icon" href="../assets/favicon.svg" type="image/svg+xml">
+<link rel="stylesheet" href="../assets/site.css">
+<script src="../assets/sim.js"></script>
+<script defer src="../assets/nav.js"></script>
+<style>
+  *{box-sizing:border-box}
+  html,body{margin:0;padding:0;background:var(--bg);color:var(--txt);font-family:"Noto Sans TC","PingFang TC","Microsoft JhengHei",system-ui,sans-serif}
+  a{color:var(--accent)}
+  .wrap{max-width:1120px;margin:0 auto;padding:18px 16px 60px}
+  header h1{font-size:1.5rem;margin:.2em 0}
+  header p{color:var(--muted);margin:.2em 0 1em;line-height:1.6}
+  .badge{display:inline-block;background:var(--panel2);border:1px solid var(--line);color:var(--muted);font-size:.72rem;padding:2px 8px;border-radius:99px;margin-right:6px}
+  .scene-wrap{position:relative;border-radius:16px;overflow:hidden;border:1px solid var(--line);box-shadow:0 18px 50px rgba(0,0,0,.45)}
+  #scene{display:block;width:100%}
+  .hud{position:absolute;top:12px;left:12px;display:flex;gap:8px;flex-wrap:wrap;pointer-events:none}
+  .chip{background:rgba(10,16,24,.62);backdrop-filter:blur(6px);border:1px solid rgba(120,180,255,.16);border-radius:10px;padding:6px 11px;color:#dceaff;font-size:.8rem;line-height:1.25}
+  .chip b{display:block;font-size:1.02rem;font-variant-numeric:tabular-nums;color:#fff}
+  .chip.amber b{color:#ffd27a}.chip.cyan b{color:#6cd0ff}.chip.rose b{color:#ff8fb0}
+  .toolbar{position:absolute;bottom:12px;right:12px;display:flex;gap:7px;flex-wrap:wrap;justify-content:flex-end}
+  .toolbar button{background:rgba(10,16,24,.62);backdrop-filter:blur(6px);color:#dceaff;border:1px solid rgba(120,180,255,.2);border-radius:9px;padding:7px 11px;font-size:.82rem;cursor:pointer;font-family:inherit}
+  .toolbar button.on{background:var(--accent);color:#04121c;border-color:var(--accent);font-weight:700}
+  @media(max-width:560px){.toolbar{position:static;justify-content:center;padding:8px 10px;background:rgba(8,14,22,.5);border-top:1px solid var(--line)}}
+  .bar{display:flex;gap:14px;flex-wrap:wrap;align-items:flex-end;background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:14px 16px;margin-top:14px}
+  .sld{flex:1;min-width:180px}
+  .sld label{display:flex;justify-content:space-between;font-size:.82rem;color:var(--muted);margin-bottom:5px}
+  .sld label .v{color:var(--accent);font-variant-numeric:tabular-nums;font-weight:700}
+  .sld input{width:100%;accent-color:var(--accent)}
+  .presets{display:flex;gap:7px;flex-wrap:wrap;align-items:center;margin-top:12px}
+  .presets span{color:var(--muted);font-size:.8rem}
+  .pbtn{background:var(--panel2);color:var(--txt);border:1px solid var(--line);padding:7px 12px;border-radius:9px;cursor:pointer;font-size:.83rem;font-family:inherit}
+  .pbtn:hover{border-color:var(--accent)}
+  .note{background:var(--panel);border-left:3px solid var(--accent2);border-radius:8px;padding:12px 14px;color:var(--muted);font-size:.86rem;line-height:1.7;margin-top:14px}
+  .note b{color:var(--txt)}.note code{background:var(--bg2);padding:1px 6px;border-radius:5px;color:var(--green);font-size:.85em}
+  footer{color:var(--muted);font-size:.78rem;margin-top:24px;text-align:center;line-height:1.7}
+</style>
+</head>
+<body data-demo="LC振盪電路">
+<div class="wrap">
+  <header>
+    <span class="badge">電磁・電磁振盪</span>
+    <h1>LC 振盪電路（電能 ↔ 磁能）</h1>
+    <p>把充好電的<b>電容器</b>接上<b>電感</b>成迴路：電容放電產生電流，電流通過電感建立磁場；電容放完時電流最大，
+       磁場又驅動電流把電容反向充電……能量在<b>電場能（電容）與磁場能（電感）之間來回擺盪</b>，電荷與電流持續振盪。頻率 <b>f = 1/2π√(LC)</b>。</p>
+  </header>
+
+  <div class="scene-wrap">
+    <canvas id="scene"></canvas>
+    <div class="hud" id="hud"></div>
+    <div class="toolbar">
+      <button id="run" class="on">⏸ 暫停</button>
+    </div>
+  </div>
+
+  <div class="bar" id="sliders"></div>
+  <div class="presets">
+    <span>情境：</span>
+    <button class="pbtn" data-p="1,1">L=1mH C=1µF（高頻）</button>
+    <button class="pbtn" data-p="10,1">大電感（低頻）</button>
+    <button class="pbtn" data-p="1,10">大電容（低頻）</button>
+  </div>
+
+  <div class="formula" id="formula"></div>
+
+  <div class="note">
+    <b>物理重點：</b>無電阻的 LC 迴路，電荷 <code>Q = Q₀cos(ωt)</code>、電流 <code>I = −Q₀ω·sin(ωt)</code>，兩者相位差 90°（電荷最大時電流為零，反之亦然）。
+    角頻率 <code>ω = 1/√(LC)</code> → 頻率 <code>f = 1/2π√(LC)</code>、週期 <code>T = 2π√(LC)</code>。
+    能量在兩種形式間轉換且<b>總和守恆</b>：電場能 <code>U_C = Q²/2C</code>、磁場能 <code>U_L = ½LI²</code>，<code>U_C + U_L = Q₀²/2C</code> 定值。
+    這與<b>彈簧簡諧運動完全類比</b>：Q↔位移 x、I↔速度 v、1/C↔彈性係數 k、L↔質量 m。真實電路有電阻會逐漸衰減（阻尼振盪）；收音機選台就是調 LC 共振頻率。
+  </div>
+
+  <footer>純前端 HTML / Canvas（SIM 工具庫）。理想無阻尼 LC；電荷／電流以 cos／sin 同步振盪、能量條總和守恆，頻率依 ω=1/√(LC) 計算。</footer>
+</div>
+
+<script>
+const S=SIM;
+const state={L:1, C:1};   // mH, µF
+const sliders=[
+  {id:'L',name:'電感 L',min:0.5,max:20,step:0.5,val:1,unit:'mH'},
+  {id:'C',name:'電容 C',min:0.5,max:20,step:0.5,val:1,unit:'µF'},
+];
+const sBar=document.getElementById('sliders');
+sliders.forEach(s=>{ state[s.id]=s.val;
+  const d=document.createElement('div');d.className='sld';
+  d.innerHTML=`<label><span>${s.name}</span><span class="v" id="v_${s.id}">${s.val} ${s.unit}</span></label>
+    <input type="range" id="r_${s.id}" min="${s.min}" max="${s.max}" step="${s.step}" value="${s.val}">`;
+  sBar.appendChild(d);
+  d.querySelector('input').addEventListener('input',e=>{state[s.id]=parseFloat(e.target.value);
+    document.getElementById('v_'+s.id).textContent=`${state[s.id]} ${s.unit}`; recompute(); });
+});
+function setP(L,C){state.L=L;state.C=C;
+  ['L','C'].forEach(k=>{document.getElementById('r_'+k).value=state[k];document.getElementById('v_'+k).textContent=`${state[k]} ${k==='L'?'mH':'µF'}`;});recompute();}
+
+// ---- 物理 ----
+function omega(){return 1/Math.sqrt(state.L*1e-3*state.C*1e-6);}
+function freq(){return omega()/(2*Math.PI);}
+function period(){return 2*Math.PI/omega();}
+function recompute(){updateFormula();}
+
+// ---- 公式面板 ----
+function frow(n,sym,sub,val){return `<div class="frow"><span class="fname">${n}</span><span class="fsym">${sym}</span><span class="fsub">= ${sub}</span><span class="fval">${val}</span></div>`;}
+function fmtF(f){return f>=1e6?(f/1e6).toFixed(2)+' MHz':f>=1e3?(f/1e3).toFixed(2)+' kHz':f.toFixed(1)+' Hz';}
+function fmtT(T){return T>=1e-3?(T*1e3).toFixed(2)+' ms':(T*1e6).toFixed(1)+' µs';}
+function updateFormula(){const w=omega(),f=freq(),T=period();
+  document.getElementById('formula').innerHTML=
+    `<h4>📐 計算公式（即時代入　L=${state.L} mH、C=${state.C} µF）</h4>`
+    + frow('角頻率 ω','1/√(LC)',`1/√(${state.L}e-3·${state.C}e-6)`, w.toExponential(2)+' rad/s')
+    + frow('頻率 f','1/2π√(LC)',`ω/2π`, fmtF(f))
+    + frow('週期 T','2π√(LC)',`2π/ω`, fmtT(T))
+    + `<div class="frel">📈 <b>L 或 C 變 4 倍 → 頻率減半</b>（f∝1/√(LC)）　·　能量守恆 <b>U_C+U_L=Q₀²/2C</b> 定值　·　與彈簧 SHM 類比：Q↔x、I↔v、1/C↔k、L↔m。</div>`;
+}
+
+// ---- 視圖 ----
+let sc;
+const SKY={skyTop:'#0c1322',skyBottom:'#070d16',vignette:'rgba(0,0,0,.42)'};
+function setupCanvases(){sc=S.fit(document.getElementById('scene'),2.0);}
+let phase=0, running=true;
+const trail=[];  // {q,i}
+function draw(){const W=sc._w,H=sc._h;S.scene(sc,SKY,{});
+  const q=Math.cos(phase), cur=-Math.sin(phase);   // Q/Q0, I/(Q0ω)
+  // 迴路矩形
+  const lx=W*0.07, rx=W*0.52, ty=H*0.22, by=H*0.74;
+  sc.strokeStyle='rgba(150,170,210,.6)';sc.lineWidth=3;
+  // 上、下、右邊線(左邊放電容,右邊放電感→改:電容在左邊中段、電感在右邊中段)
+  sc.beginPath();
+  sc.moveTo(lx,ty);sc.lineTo(rx,ty);    // 上
+  sc.moveTo(lx,by);sc.lineTo(rx,by);    // 下
+  sc.stroke();
+  // 電容(左邊,兩水平板)
+  const capY1=(ty+by)/2-16, capY2=(ty+by)/2+16;
+  sc.beginPath();sc.moveTo(lx,ty);sc.lineTo(lx,capY1);sc.moveTo(lx,capY2);sc.lineTo(lx,by);sc.stroke();
+  sc.strokeStyle='#6cd0ff';sc.lineWidth=4;
+  sc.beginPath();sc.moveTo(lx-16,capY1);sc.lineTo(lx+16,capY1);sc.moveTo(lx-16,capY2);sc.lineTo(lx+16,capY2);sc.stroke();
+  // 電容電荷(±,量∝|q|,符號隨 q)
+  const nq=Math.round(Math.abs(q)*6);
+  for(let k=0;k<nq;k++){const xx=lx-12+k*5;
+    sc.fillStyle=q>=0?'#ff8fb0':'#6cd0ff';sc.font='bold 12px system-ui';sc.fillText(q>=0?'+':'−',xx,capY1-5);
+    sc.fillStyle=q>=0?'#6cd0ff':'#ff8fb0';sc.fillText(q>=0?'−':'+',xx,capY2+14);}
+  sc.fillStyle='#9fd0ff';sc.font='12px system-ui';sc.fillText('電容 C',lx-18,by+18);
+  // 電感(右邊,線圈)
+  sc.strokeStyle='#ffd27a';sc.lineWidth=3;
+  const coilN=5, coilY0=ty+20, coilY1=by-20, dyc=(coilY1-coilY0)/coilN;
+  sc.beginPath();sc.moveTo(rx,ty);sc.lineTo(rx,coilY0);
+  for(let k=0;k<coilN;k++){const y=coilY0+k*dyc;sc.moveTo(rx,y);sc.arc(rx+9,y+dyc/2,dyc/2,Math.PI,0,false);}
+  sc.moveTo(rx,coilY1);sc.lineTo(rx,by);sc.stroke();
+  sc.fillStyle='#ffd27a';sc.font='12px system-ui';sc.fillText('電感 L',rx-4,by+18);
+  // 電流方向(沿迴路移動點,密度∝|I|,方向∝sign(I))
+  const dir=Math.sign(cur)||1, speed=Math.abs(cur);
+  sc.fillStyle=`rgba(124,255,178,${0.4+0.6*speed})`;
+  const peri=2*((rx-lx)+(by-ty)); const nd=14;
+  for(let k=0;k<nd;k++){let s=((k/nd)+phase*dir*0.06)%1; s=(s+1)%1;
+    const p=loopPoint(s,lx,rx,ty,by); sc.beginPath();sc.arc(p.x,p.y,2.2+2*speed,0,7);sc.fill();}
+  // 電流箭頭(上邊中央)
+  if(speed>0.05){const ax=(lx+rx)/2;S.arrow(sc,ax-dir*16,ty,ax+dir*16,ty,{color:'#7CFFB2',width:2.5});}
+  // ===== 能量條(電場能 vs 磁場能) =====
+  const ebx=W*0.62, ebw=26, ebTop=ty, ebH=by-ty;
+  const uc=q*q, ul=cur*cur;  // 正規化(和=1)
+  sc.fillStyle='#6cd0ff';sc.fillRect(ebx,ebTop+ebH*(1-uc),ebw,ebH*uc);
+  sc.fillStyle='#ffd27a';sc.fillRect(ebx+ebw+18,ebTop+ebH*(1-ul),ebw,ebH*ul);
+  sc.strokeStyle='rgba(150,170,210,.4)';sc.lineWidth=1;sc.strokeRect(ebx,ebTop,ebw,ebH);sc.strokeRect(ebx+ebw+18,ebTop,ebw,ebH);
+  sc.fillStyle='#9fd0ff';sc.font='11px system-ui';sc.fillText('電場能',ebx-4,by+16);sc.fillText('U_C',ebx+2,ebTop-4);
+  sc.fillStyle='#ffd27a';sc.fillText('磁場能',ebx+ebw+12,by+16);sc.fillText('U_L',ebx+ebw+20,ebTop-4);
+  // ===== 示波(Q 與 I) =====
+  const gx=W*0.78, gw=W-gx-22, gy=(ty+by)/2, gh=(by-ty)*0.46;
+  sc.strokeStyle='rgba(150,170,210,.35)';sc.lineWidth=1;sc.beginPath();sc.moveTo(gx,ty);sc.lineTo(gx,by);sc.moveTo(gx,gy);sc.lineTo(gx+gw,gy);sc.stroke();
+  trail.push({q,i:cur}); if(trail.length>gw)trail.shift();
+  sc.strokeStyle='#6cd0ff';sc.lineWidth=2;sc.beginPath();trail.forEach((p,k)=>{const x=gx+k,y=gy-p.q*gh;k?sc.lineTo(x,y):sc.moveTo(x,y);});sc.stroke();
+  sc.strokeStyle='#7CFFB2';sc.lineWidth=2;sc.beginPath();trail.forEach((p,k)=>{const x=gx+k,y=gy-p.i*gh;k?sc.lineTo(x,y):sc.moveTo(x,y);});sc.stroke();
+  sc.fillStyle='#6cd0ff';sc.font='11px system-ui';sc.fillText('Q',gx+gw-30,ty+10);sc.fillStyle='#7CFFB2';sc.fillText('I',gx+gw-14,ty+10);
+  updateHud();
+}
+function loopPoint(s,lx,rx,ty,by){const w=rx-lx,h=by-ty,P=2*(w+h);let d=s*P;
+  if(d<w)return {x:lx+d,y:ty}; d-=w; if(d<h)return {x:rx,y:ty+d}; d-=h; if(d<w)return {x:rx-d,y:by}; d-=w; return {x:lx,y:by-d};}
+function updateHud(){const f=freq(),T=period();
+  document.getElementById('hud').innerHTML=
+   `<div class="chip amber">頻率 f<b>${fmtF(f)}</b></div>`+
+   `<div class="chip cyan">週期 T<b>${fmtT(T)}</b></div>`+
+   `<div class="chip rose">ω<b>${omega().toExponential(2)} rad/s</b></div>`;
+}
+
+let last=0;
+function loop(ts){const dt=last?Math.min((ts-last)/1000,0.05):0;last=ts;
+  if(running)phase+=dt*2.6;
+  draw();requestAnimationFrame(loop);}
+
+const rb=document.getElementById('run');
+rb.onclick=()=>{running=!running;rb.classList.toggle('on',running);rb.textContent=running?'⏸ 暫停':'▶ 播放';};
+document.querySelectorAll('[data-p]').forEach(b=>b.onclick=()=>{const a=b.dataset.p.split(',');setP(+a[0],+a[1]);});
+
+window.addEventListener('load',()=>{setupCanvases();recompute();requestAnimationFrame(loop);});
+window.addEventListener('resize',()=>{setupCanvases();draw();});
+</script>
+</body>
+</html>
