@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>理想氣體 PV 圖 ｜ 波以耳・查理・給呂薩克・PV=nRT</title>
-<meta name="description" content="理想氣體互動模擬：活塞氣缸內分子運動，調溫度 T、體積 V、莫耳數 n，即時看壓力 P=nRT/V 與 PV 圖。等溫(波以耳)、等壓、等容(查理)過程與曲線形狀。">
+<meta name="description" content="理想氣體互動模擬：活塞氣缸內分子運動，調溫度 T、體積 V、莫耳數 n，即時看壓力 P=nRT/V 與 PV 圖。等溫(波以耳)、等壓(查理)、等容(給呂薩克)過程與曲線形狀。">
 <link rel="icon" href="../assets/favicon.svg" type="image/svg+xml">
 <link rel="stylesheet" href="../assets/site.css">
 <script src="../assets/sim.js"></script>
@@ -66,7 +66,7 @@
     <span>過程示範：</span>
     <button class="pbtn" data-proc="iso">等溫壓縮（波以耳）</button>
     <button class="pbtn" data-proc="isobar">等壓加熱</button>
-    <button class="pbtn" data-proc="isochor">等容加熱（查理）</button>
+    <button class="pbtn" data-proc="isochor">等容加熱（給呂薩克）</button>
     <button class="pbtn" id="reset" style="margin-left:auto">↺ 清軌跡</button>
   </div>
 
@@ -74,8 +74,8 @@
 
   <div class="note">
     <b>物理重點：</b>理想氣體狀態方程式 <code>PV = nRT</code>（R=8.314 J/mol·K）。三條經典定律都是它的特例：
-    <b>波以耳</b>（等溫 T 定）<code>P ∝ 1/V</code>，PV 圖上是<b>雙曲線</b>；<b>查理</b>（等容 V 定）<code>P ∝ T</code>，鉛直移動；
-    <b>給呂薩克／查理</b>（等壓 P 定）<code>V ∝ T</code>，水平移動。微觀上 <code>P = (1/3)·(N/V)·m·v̄²</code>，溫度越高分子均方速率越大、撞牆越猛 → 壓力越大。
+    <b>波以耳</b>（等溫 T 定）<code>P ∝ 1/V</code>，PV 圖上是<b>雙曲線</b>；<b>給呂薩克</b>（等容 V 定）<code>P ∝ T</code>，鉛直移動；
+    <b>查理</b>（等壓 P 定）<code>V ∝ T</code>，水平移動。微觀上 <code>P = (1/3)·(N/V)·m·v̄²</code>，溫度越高分子均方速率越大、撞牆越猛 → 壓力越大。
   </div>
 
   <footer>純前端 HTML / Canvas（SIM 工具庫）。分子速率 ∝ √T（v_rms），壓力由狀態方程式 P=nRT/V 計算。</footer>
@@ -120,7 +120,7 @@ function updateFormula(){
     + frow('壓力 P','P = nRT / V',`${n}·8.314·${T} / ${V}`, p.toFixed(0)+' kPa')
     + frow('PV 乘積','PV = nRT',`${n}·8.314·${T}`, (n*R*T).toFixed(0)+' J（等溫時 PV 為定值）')
     + frow('分子均方根速率','v_rms = √(3RT/M)',`√(3·8.314·${T}/M)`, '∝ √T')
-    + `<div class="frel">📈 <b>等溫 P ∝ 1/V</b>（波以耳）：體積減半 → 壓力加倍，PV 圖走雙曲線　·　<b>等容 P ∝ T</b>（查理）：溫度加倍 → 壓力加倍　·　<b>等壓 V ∝ T</b>：溫度加倍 → 體積加倍　·　莫耳數 n 越多、分子越多 → 同 T、V 下壓力越大。</div>`;
+    + `<div class="frel">📈 <b>等溫 P ∝ 1/V</b>（波以耳）：體積減半 → 壓力加倍，PV 圖走雙曲線　·　<b>等容 P ∝ T</b>（給呂薩克）：溫度加倍 → 壓力加倍　·　<b>等壓 V ∝ T</b>（查理）：溫度加倍 → 體積加倍　·　莫耳數 n 越多、分子越多 → 同 T、V 下壓力越大。</div>`;
 }
 function updateStats(){
   const rows=[['壓力 P=nRT/V',P().toFixed(0)+' kPa','#6cd0ff'],['溫度 T',state.T+' K','#ffce54'],['體積 V',state.V+' L','#7CFFB2'],['PV 乘積',(P()*state.V).toFixed(0)+' J','#e8eef6']];
