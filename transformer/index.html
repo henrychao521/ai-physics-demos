@@ -99,6 +99,7 @@ function setSlider(id,val){state[id]=val;const r=document.getElementById('r_'+id
 // ---- 物理 ----
 function Vs(){return state.Vp*state.Ns/state.Np;}
 function Is(){return state.Ip*state.Np/state.Ns;}
+function fI(x){return x<1?x.toFixed(3):x.toFixed(2);}   // 小電流多留一位，功率代入式兩邊才相等
 function recompute(){updateFormula();updateHud();}
 
 // ---- 公式面板 ----
@@ -108,14 +109,14 @@ function updateFormula(){const vs=Vs(),is=Is(),ratio=state.Ns/state.Np,kind=rati
     `<h4>📐 計算公式（即時代入　理想變壓器）</h4>`
     + frow('匝數比','Ns / Np',`${state.Ns} / ${state.Np}`, ratio.toFixed(2)+'（'+kind+'）')
     + frow('輸出電壓 Vs','Vp · Ns/Np',`${state.Vp}·${state.Ns}/${state.Np}`, vs.toFixed(1)+' V')
-    + frow('輸出電流 Is','Ip · Np/Ns',`${state.Ip}·${state.Np}/${state.Ns}`, is.toFixed(2)+' A')
-    + frow('功率（守恆）','VpIp = VsIs',`${state.Vp}·${state.Ip} = ${vs.toFixed(0)}·${is.toFixed(2)}`, (state.Vp*state.Ip).toFixed(0)+' W')
+    + frow('輸出電流 Is','Ip · Np/Ns',`${state.Ip}·${state.Np}/${state.Ns}`, fI(is)+' A')
+    + frow('功率（守恆）','VpIp = VsIs',`${state.Vp}·${state.Ip} = ${vs.toFixed(1)}·${fI(is)}`, (state.Vp*state.Ip).toFixed(0)+' W')
     + `<div class="frel">📈 <b>Vs/Vp = Ns/Np</b>：匝數比決定電壓比　·　<b>升壓必降流、降壓必升流</b>（VpIp=VsIs 功率守恆）　·　高壓輸電升壓使電流變小 → 減少電線 I²R 損耗　·　只對交流有效（需變化磁通）。</div>`;
 }
 function updateHud(){const vs=Vs(),is=Is();
   document.getElementById('hud').innerHTML=
    `<div class="chip rose">主 Vp / Ip<b>${state.Vp}V / ${state.Ip}A</b></div>`+
-   `<div class="chip cyan">次 Vs / Is<b>${vs.toFixed(0)}V / ${is.toFixed(2)}A</b></div>`+
+   `<div class="chip cyan">次 Vs / Is<b>${vs.toFixed(1)}V / ${fI(is)}A</b></div>`+
    `<div class="chip green">功率 P<b>${(state.Vp*state.Ip).toFixed(0)} W</b></div>`;
 }
 
@@ -159,7 +160,7 @@ function drawScene(){const W=sc._w,H=sc._h,cy=H/2;
 function drawWave(){const W=wc._w,H=wc._h,mid=H/2;
   wc.clearRect(0,0,W,H);wc.fillStyle='#080c14';wc.fillRect(0,0,W,H);
   wc.strokeStyle='#1b2433';wc.lineWidth=1;wc.beginPath();wc.moveTo(0,mid);wc.lineTo(W,mid);wc.stroke();
-  const Vmax=Math.max(state.Vp,Vs(),1),A=H*0.42;
+  const Vmax=Math.max(state.Vp,Vs(),1),A=H*0.36;   // 0.42H 時波峰壓到上下角落的 Vp、Vs 標籤
   for(const o of [{V:state.Vp,col:'#ff8fb0',lab:'Vp'},{V:Vs(),col:'#6cd0ff',lab:'Vs'}]){
     wc.strokeStyle=o.col;wc.lineWidth=2.2;wc.beginPath();
     for(let x=0;x<=W;x++){const t=x/W*4*Math.PI, y=mid-Math.sin(t-ph)*o.V/Vmax*A;x?wc.lineTo(x,y):wc.moveTo(x,y);}wc.stroke();
@@ -171,7 +172,7 @@ function render(){drawScene();drawWave();}
 let last=0;
 function loop(ts){const dt=last?Math.min((ts-last)/1000,0.05):0;last=ts;ph+=dt*3;render();requestAnimationFrame(loop);}
 
-const PRE={up:{Vp:110,Np:200,Ns:400,Ip:2},down:{Vp:1000,Np:500,Ns:50,Ip:1},iso:{Vp:110,Np:300,Ns:300,Ip:2},hv:{Vp:110,Np:50,Ns:500,Ip:4}};
+const PRE={up:{Vp:110,Np:200,Ns:400,Ip:2},down:{Vp:220,Np:500,Ns:50,Ip:1},iso:{Vp:110,Np:300,Ns:300,Ip:2},hv:{Vp:110,Np:50,Ns:500,Ip:4}};
 document.querySelectorAll('[data-preset]').forEach(b=>b.onclick=()=>{const pr=PRE[b.dataset.preset];if(!pr)return;
   ['Vp','Np','Ns','Ip'].forEach(k=>setSlider(k,pr[k]));recompute();});
 
