@@ -106,13 +106,15 @@ function U(){return 0.5*C()*state.V*state.V;}                  // J
 function eng(x,u){const a=Math.abs(x);if(a>=1)return x.toFixed(2)+' '+u;if(a>=1e-3)return (x*1e3).toFixed(2)+' m'+u;if(a>=1e-6)return (x*1e6).toFixed(2)+' μ'+u;if(a>=1e-9)return (x*1e9).toFixed(2)+' n'+u;return (x*1e12).toFixed(2)+' p'+u;}
 
 // ---- 公式面板 ----
+// 代入式一律換成 SI（cm²→m²、mm→m），避免學生照代入式直接按計算機差 10 倍
+function si(x){return String(+x.toPrecision(4));}
 function frow(n,sym,sub,val){return `<div class="frow"><span class="fname">${n}</span><span class="fsym">${sym}</span><span class="fsub">= ${sub}</span><span class="fval">${val}</span></div>`;}
 function updateFormula(){
   document.getElementById('formula').innerHTML=
     `<h4>📐 計算公式（即時代入　ε₀=8.85×10⁻¹² F/m${diel?'，介電質 εr=4':''}）</h4>`
-    + frow('電容 C','ε₀·εr·A/d',`8.85e-12·${er()}·${state.A}cm²/${state.d}mm`, eng(C(),'F'))
+    + frow('電容 C','ε₀·εr·A/d',`8.85e-12·${er()}·${si(state.A*1e-4)} m² / ${si(state.d*1e-3)} m`, eng(C(),'F'))
     + frow('電荷 Q','C·V',`${eng(C(),'F')}·${state.V}`, eng(Q(),'C'))
-    + frow('板間電場 E','V / d',`${state.V} / ${state.d}mm`, (Efield()).toFixed(0)+' V/m')
+    + frow('板間電場 E','V / d',`${state.V} V / ${si(state.d*1e-3)} m`, (Efield()).toFixed(0)+' V/m')
     + frow('儲存能量 U','½·C·V²',`½·${eng(C(),'F')}·${state.V}²`, eng(U(),'J'))
     + `<div class="frel">📈 <b>C ∝ A/d</b>：板越大、越近電容越大　·　<b>同電壓下 C 越大存的電荷 Q 越多</b>　·　<b>E=V/d 與板面積無關</b>(均勻場)　·　插介電質 εr↑ → C↑、能存更多電荷　·　能量 U=½CV²=Q²/2C。</div>`;
 }
