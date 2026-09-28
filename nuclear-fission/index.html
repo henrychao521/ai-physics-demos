@@ -116,15 +116,17 @@ function reset(){nuclei=[];neutrons=[];flashes=[];fissions=0;gen=0;peak=0;
     nuclei.push({x:mx+(c+0.5)*(W-2*mx)/cols+(Math.random()-0.5)*14,y:my+(r+0.5)*(H-2*my)/rows+(Math.random()-0.5)*14,fis:false,fl:0});}
 }
 function inject(x,y){ // 射一顆中子去撞最近的未分裂鈾核
-  const t=nearest(x,y); if(!t)return;
+  const t=nearest(x,y); if(!t)return; t.tk=true;
   neutrons.push({x:x,y:y,tx:t.x,ty:t.y,tg:t,trail:[]});
 }
-function nearest(x,y){let best=null,bd=1e9;for(const n of nuclei){if(n.fis)continue;const d=Math.hypot(n.x-x,n.y-y);if(d<bd){bd=d;best=n;}}return best;}
+// 只找「還沒分裂、也還沒有中子飛過去」的鈾核：原本同一次分裂放出的 k 顆中子全部飛向同一顆最近的鈾核，
+// 第一顆引發分裂後其餘落空，k=2、2.6 的畫面和 k=1 完全一樣（沒有指數成長）
+function nearest(x,y){let best=null,bd=1e9;for(const n of nuclei){if(n.fis||n.tk)continue;const d=Math.hypot(n.x-x,n.y-y);if(d<bd){bd=d;best=n;}}return best;}
 function fission(n){if(n.fis)return;n.fis=true;n.fl=1;fissions++;
   flashes.push({x:n.x,y:n.y,r:8,a:1});
   // 放出有效中子數 ≈ k（隨機取整使平均=k）
   const k=state.k, cnt=Math.random()<(k-Math.floor(k))?Math.ceil(k):Math.floor(k);
-  for(let i=0;i<cnt;i++){const t=nearest(n.x,n.y);if(!t)break;
+  for(let i=0;i<cnt;i++){const t=nearest(n.x,n.y);if(!t)break;t.tk=true;
     neutrons.push({x:n.x,y:n.y,tx:t.x,ty:t.y,tg:t,trail:[]});}
 }
 function step(dt){
