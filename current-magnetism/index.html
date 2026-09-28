@@ -105,10 +105,10 @@ function Bsol(){return MU0*state.n*state.I;}
 function frow(n,sym,sub,val){return `<div class="frow"><span class="fname">${n}</span><span class="fsym">${sym}</span><span class="fsub">= ${sub}</span><span class="fval">${val}</span></div>`;}
 function updateFormula(){const I=state.I;let html=`<h4>📐 計算公式（即時代入　μ₀=4π×10⁻⁷ T·m/A）</h4>`;
   if(mode==='wire'){const r=state.d/100;
-    html+=frow('直導線磁場 B','μ₀I / (2πr)',`(4π×10⁻⁷·${I}) / (2π·${state.d}cm)`, Bfmt(Bwire(r)))
+    html+=frow('直導線磁場 B','μ₀I / (2πr)',`(4π×10⁻⁷·${I}) / (2π·${+(state.d/100).toFixed(4)} m)`, Bfmt(Bwire(r)))
       + `<div class="frel">📈 <b>B ∝ I</b>：電流加倍 → 磁場加倍　·　<b>B ∝ 1/r</b>：距離加倍 → 磁場減半（同心圓越外圈越疏）　·　方向用右手定則：拇指順電流、四指繞向即磁場。</div>`;
   }else if(mode==='loop'){const R=state.d/100;
-    html+=frow('圓線圈中心 B','μ₀I / (2R)',`(4π×10⁻⁷·${I}) / (2·${state.d}cm)`, Bfmt(Bloop()))
+    html+=frow('圓線圈中心 B','μ₀I / (2R)',`(4π×10⁻⁷·${I}) / (2·${+(state.d/100).toFixed(4)} m)`, Bfmt(Bloop()))
       + frow('比直導線強','×π（同 I、同 r=R）','μ₀I/2R ÷ μ₀I/2πR = π', '約 3.14 倍')
       + `<div class="frel">📈 <b>B ∝ I</b>、<b>B ∝ 1/R</b>：線圈越小中心磁場越強　·　彎成圈使各段電流的磁場在中心同向疊加，比同距離的直導線強 π 倍　·　四指順電流 → 拇指指線圈軸的 N 極。</div>`;
   }else{
@@ -142,10 +142,11 @@ function drawWire(cx,cy){const ppc=PXPCM();
   for(let rcm=2;rcm<=12;rcm+=2){const rp=rcm*ppc;if(rp>Math.min(sc._w,sc._h)*0.46)break;
     const al=0.16+0.5*(2/rcm);
     sc.strokeStyle=`rgba(108,176,255,${al})`;sc.lineWidth=1.4;sc.beginPath();sc.arc(cx,cy,rp,0,7);sc.stroke();
-    // 方向箭頭(右手定則：出頁⊙→逆時針)
+    // 方向箭頭(右手定則：出頁⊙→畫面上逆時針)。畫布 y 軸向下，角度增加是「順時針」，
+    // 所以逆時針的切線方向是 a − π/2（原本寫 a + π/2，方向畫反）
     const dirSign=dir>0?1:-1;
     for(let k=0;k<4;k++){const a=k*Math.PI/2+0.4;const px=cx+Math.cos(a)*rp,py=cy+Math.sin(a)*rp;
-      const tang=a+dirSign*Math.PI/2; arrowAt(px,py,tang,9,`rgba(140,195,255,${al+0.2})`,1.6);}
+      const tang=a-dirSign*Math.PI/2; arrowAt(px,py,tang,9,`rgba(140,195,255,${al+0.2})`,1.6);}
   }
   // 導線(中心，垂直紙面)
   if(dir>0)dot(cx,cy,11,'#ffce54'); else cross(cx,cy,11,'#ffce54');
@@ -153,7 +154,7 @@ function drawWire(cx,cy){const ppc=PXPCM();
   // 探針
   const rp=state.d*ppc, ang=-0.6, px=cx+Math.cos(ang)*rp, py=cy+Math.sin(ang)*rp;
   sc.strokeStyle='rgba(255,255,255,.3)';sc.setLineDash([3,3]);sc.lineWidth=1;sc.beginPath();sc.moveTo(cx,cy);sc.lineTo(px,py);sc.stroke();sc.setLineDash([]);
-  const dirSign=dir>0?1:-1, tang=ang+dirSign*Math.PI/2;
+  const dirSign=dir>0?1:-1, tang=ang-dirSign*Math.PI/2;
   const B=Bwire(state.d/100), blen=10+Math.min(34,B*1e6*1.4);
   arrowAt(px,py,tang,blen,'#7CFFB2',3);
   sc.fillStyle='#fff';sc.beginPath();sc.arc(px,py,4,0,7);sc.fill();
@@ -182,7 +183,7 @@ function drawLoop(cx,cy){const ppc=PXPCM(),Rp=Math.min(state.d*ppc,Math.min(sc._
   if(top){dot(cx,ty,12,'#ffce54');cross(cx,by,12,'#ffce54');}else{cross(cx,ty,12,'#ffce54');dot(cx,by,12,'#ffce54');}
   sc.strokeStyle='#c9d6ea';sc.lineWidth=3;sc.beginPath();sc.ellipse(cx,cy,Rp*0.36,Rp,0,0,7);sc.stroke();
   // 中心 B
-  sc.fillStyle='#7CFFB2';sc.font='bold 12px system-ui';sc.fillText('中心 B='+Bfmt(Bloop()),cx-30,cy-Rp-12);
+  sc.fillStyle='#7CFFB2';sc.font='bold 12px system-ui';sc.fillText('中心 B='+Bfmt(Bloop()),cx-30,cy-Rp-20);
   sc.fillStyle=dir>0?'#ff6b9d':'#6cd0ff';sc.font='12px system-ui';
   sc.fillText(dir>0?'N→':'←N',cx+Rp*0.5,cy-4);
   document.getElementById('sub').textContent='圓線圈：中心磁場 B=μ₀I/2R，兩端如磁鐵 N/S 極';
@@ -208,7 +209,7 @@ function drawSol(cx,cy){const W=sc._w,H=sc._h, len=Math.min(W*0.66,360), rr=Math
   // 極性
   sc.fillStyle='#ff6b9d';sc.font='bold 16px system-ui';sc.fillText('N',(into?x1+6:x0-22),cy+5);
   sc.fillStyle='#6cd0ff';sc.fillText('S',(into?x0-22:x1+6),cy+5);
-  sc.fillStyle='#7CFFB2';sc.font='bold 12px system-ui';sc.fillText('內部 B='+Bfmt(Bsol())+'（均勻）',cx-50,ty-12);
+  sc.fillStyle='#7CFFB2';sc.font='bold 12px system-ui';sc.fillText('內部 B='+Bfmt(Bsol())+'（均勻）',cx-50,ty-18);
   document.getElementById('sub').textContent='螺線管：內部均勻 B=μ₀nI，外形如條形磁鐵';
 }
 

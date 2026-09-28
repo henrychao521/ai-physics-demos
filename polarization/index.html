@@ -121,7 +121,7 @@ function updateFormula(){const th=state.theta,c2=Math.cos(rad(th))**2,frac=trans
 // ---- 視圖 ----
 let sc;
 const SKY={skyTop:'#0b1220',skyBottom:'#070d16',vignette:'rgba(0,0,0,.45)'};
-function setupCanvases(){sc=S.fit(document.getElementById('scene'),2.0);}
+function setupCanvases(){const cv=document.getElementById('scene');sc=S.fit(cv,cv.parentElement.clientWidth<560?1.2:2.0);}   /* 手機加高，避免偏振片與數值卡片、亮度屏互相重疊 */
 let phase=0;
 function polDisc(x,cy,r,angDeg,label,col){  // 偏振片:斜紋圓盤+軸
   sc.save();
@@ -140,10 +140,10 @@ function polDisc(x,cy,r,angDeg,label,col){  // 偏振片:斜紋圓盤+軸
 function eArrow(x,cy,angDeg,amp,col){const a=rad(angDeg),ux=Math.sin(a),uy=-Math.cos(a);
   S.arrow(sc,x-ux*amp,cy-uy*amp,x+ux*amp,cy+uy*amp,{color:col,width:2.5});}
 function draw(){const W=sc._w,H=sc._h;S.scene(sc,SKY,{});
-  const cy=H*0.46, r=Math.min(46,H*0.16), amp=r*0.7;
+  const cy=H*0.5, r=Math.min(46,H*0.16,W*0.085), amp=r*0.7;
   const pulse=0.7+0.3*Math.abs(Math.sin(phase));
   // 站點 x 位置
-  const xs = third ? [W*0.13,W*0.34,W*0.55,W*0.78] : [W*0.16,W*0.42,W*0.70];
+  const xs = third ? [W*0.11,W*0.31,W*0.51,W*0.71] : [W*0.14,W*0.38,W*0.64];
   const srcX=xs[0];
   // 自然光(多方向)
   for(let d=0;d<8;d++){eArrow(srcX,cy,d*22.5,amp*0.7*pulse,'rgba(255,238,150,.5)');}
@@ -158,7 +158,7 @@ function draw(){const W=sc._w,H=sc._h;S.scene(sc,SKY,{});
     // 投影建構:把垂直E投影到檢偏軸
     const f=transFrac();
     eArrow(p2x+ (W-30-p2x)*0.42,cy,state.theta,amp*Math.sqrt(f)*pulse,'#7CFFB2');
-    drawScreen(W-26,cy,r,f);
+    drawScreen(W-r-18,cy,r,f);
   } else {
     const [sx,p1x,pmx,p2x]=xs;
     polDisc(p1x,cy,r,0,'P1 0°','rgba(108,208,255,1)');
@@ -169,7 +169,7 @@ function draw(){const W=sc._w,H=sc._h;S.scene(sc,SKY,{});
     polDisc(p2x,cy,r,state.theta,'P3 '+state.theta+'°','rgba(124,255,178,1)');
     const f=transFrac();
     eArrow(p2x+(W-30-p2x)*0.4,cy,state.theta,amp*Math.sqrt(f)*pulse,'#7CFFB2');
-    drawScreen(W-26,cy,r,f);
+    drawScreen(W-r-18,cy,r,f);
   }
   updateHud();
 }

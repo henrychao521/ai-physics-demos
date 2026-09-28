@@ -117,7 +117,7 @@ function updateFormula(){const f=state.f,b=state.b,A=amp(f,b),Apk=ampPeak(b),nea
 let sc,cc,t=0;
 const VIB={skyTop:'#16102a',skyBottom:'#0a0716',vignette:'rgba(0,0,0,.45)'};
 function setupCanvases(){sc=S.fit(document.getElementById('scene'),0.95);cc=S.fit(document.getElementById('curve'),1.7);}
-function drawScene(){const W=sc._w,H=sc._h,cx=W/2,topY=H*0.12;
+function drawScene(){const W=sc._w,H=sc._h,cx=W/2,topY=Math.max(H*0.12,92);   /* 驅動端放在數值卡片下方（原 0.12H 被卡片蓋住） */
   S.scene(sc,VIB,{});
   const A=amp(state.f,state.b), Adisp=Math.min(A,40)/40*(H*0.3);
   const drive=Math.sin(2*Math.PI*state.f*t);
@@ -127,16 +127,20 @@ function drawScene(){const W=sc._w,H=sc._h,cx=W/2,topY=H*0.12;
   sc.fillStyle='#8b9cff';sc.fillRect(cx-30,dy-6,60,8);
   sc.fillStyle='#b4a0ff';sc.font='11px system-ui';sc.fillText('驅動 f='+state.f+'Hz',cx-34,dy-12);
   // 彈簧
-  const my=H*0.55+Math.sin(phase-1.2)*Adisp;     // 質點位置(穩態,落後相位)
+  // 穩態相位落後 δ = atan2(γω, ω₀²−ω²)：低頻≈0（跟著推）、共振時 90°、高頻→180°（反相）。原本固定落後 1.2 rad。
+  const w=2*Math.PI*state.f, lag=Math.atan2(state.b*w, w0*w0-w*w);
+  const my=H*0.55+Math.sin(phase-lag)*Adisp;     // 振子位置（穩態）
   sc.strokeStyle='#9aa6c0';sc.lineWidth=2;sc.beginPath();
   const segs=14;for(let i=0;i<=segs;i++){const yy=dy+ (my-dy)*i/segs, xx=cx+(i%2?12:-12)*(i>0&&i<segs?1:0);i?sc.lineTo(xx,yy):sc.moveTo(cx,yy);}sc.stroke();
-  // 質點(球)
-  S.sphere(sc,cx,my,16,[139,108,255]);
+  // 振子(球)
+  S.sphere(sc,cx,my,16,[252,88,72]);
   // 平衡線
   sc.strokeStyle='rgba(255,255,255,.15)';sc.setLineDash([4,4]);sc.beginPath();sc.moveTo(cx-60,H*0.55);sc.lineTo(cx+60,H*0.55);sc.stroke();sc.setLineDash([]);
   // 振幅標示
   sc.strokeStyle='#ff8fb0';sc.lineWidth=1.5;sc.beginPath();sc.moveTo(cx+44,H*0.55);sc.lineTo(cx+44,H*0.55-Adisp);sc.stroke();
   sc.fillStyle='#ff8fb0';sc.font='11px system-ui';sc.fillText('A',cx+48,H*0.55-Adisp/2);
+  if(A>40){sc.fillText('（振幅超過畫面比例上限，實際 '+A.toFixed(0)+'）',cx-90,H*0.93);}
+  sc.fillStyle='rgba(200,190,240,.75)';sc.fillText('相位落後 δ = '+(lag*180/Math.PI).toFixed(0)+'°',14,H-14);
   updateHud(A);
 }
 function updateHud(A){const Apk=ampPeak(state.b),near=Math.abs(state.f-f0)<0.08;
@@ -163,6 +167,8 @@ function drawCurve(){const W=cc._w,H=cc._h,mL=36,mR=14,mT=16,mB=26;
   cc.strokeStyle='rgba(255,143,176,.4)';cc.beginPath();cc.moveTo(X(cf),Y(ca));cc.lineTo(X(cf),H-mB);cc.stroke();
   cc.fillStyle='#8b9cff';cc.font='11px system-ui';cc.fillText('共振曲線 振幅 A vs 驅動頻率 f',mL+4,mT+10);
   cc.fillStyle='#8a99ad';cc.fillText('f (Hz) →',W-54,H-7);
+  cc.font='10px system-ui';cc.textAlign='right';cc.fillText('0',mL-4,H-mB+3);cc.fillText(Apk.toFixed(0),mL-4,Y(Apk)+4);cc.textAlign='left';
+  cc.strokeStyle='rgba(139,156,255,.25)';cc.setLineDash([2,4]);cc.beginPath();cc.moveTo(mL,Y(Apk));cc.lineTo(W-mR,Y(Apk));cc.stroke();cc.setLineDash([]);
 }
 function render(){drawScene();drawCurve();}
 let last=0;

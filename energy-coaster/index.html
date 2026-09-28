@@ -140,7 +140,8 @@ function simulate(){const m=state.m,g=state.g,mu=state.mu,x0=state.x0/100;
   for(let t=0;t<=TTOT+1e-9;t+=DT){const p=atS(s);const PE=m*g*(p.y-YMIN);let avail=E0-heat-PE;if(avail<0)avail=0;
     const KE=avail,v=Math.sqrt(2*avail/m);SIMD.push({t,x:p.x,y:p.y,u:dir*v,KE,PE,HT:heat});
     const inv=1/Math.sqrt(1+p.dydx*p.dydx),cosT=inv,sinT=p.dydx*inv;if(dir===0)dir=(sinT>0?-1:1);
-    const minStep=STOT*1e-4;let step=dir*v*DT;if(Math.abs(step)<minStep)step=dir*minStep;let ns=s+step;
+    // 起步／折返時的最小步長：原 STOT*1e-4＝每步 7.9 mm，相當於速率至少 2 m/s，折返點附近跑太快，時間累積誤差達 1.5–3 m
+    const minStep=STOT*1e-6;let step=dir*v*DT;if(Math.abs(step)<minStep)step=dir*minStep;let ns=s+step;
     if(ns<0){ns=0;dir=-dir;}else if(ns>STOT){ns=STOT;dir=-dir;}else{const np=atS(ns);if(E0-heat-m*g*(np.y-YMIN)<0){dir=-dir;ns=s;}}
     heat+=mu*m*g*cosT*Math.abs(ns-s);s=ns;}}
 function simAt(tt){if(tt<=0)return SIMD[0];if(tt>=SIMD[SIMD.length-1].t)return SIMD[SIMD.length-1];return SIMD[Math.min(SIMD.length-1,Math.round(tt/DT))];}
@@ -168,6 +169,9 @@ function drawScene(cur){const {W,H,mL,mB,X,Y}=map();
   sc.strokeStyle='rgba(0,0,0,.5)';sc.lineWidth=8;trackPath();sc.stroke();
   sc.strokeStyle='#8ea2c4';sc.lineWidth=5;trackPath();sc.stroke();
   sc.strokeStyle='#e8f0ff';sc.lineWidth=1.6;trackPath();sc.stroke();
+  // 垂直比例：高度方向比水平方向放大，斜坡看起來比實際陡
+  {const ex=((H-mB-18)/(YMAX-YMIN))/((W-mL-16)/WIDTH);sc.fillStyle='rgba(255,255,255,.55)';sc.font='11px system-ui';sc.textAlign='right';
+   sc.fillText(`水平全長 ${WIDTH} m；高度方向放大 ×${ex.toFixed(1)}`,W-16,H-mB+18);sc.textAlign='left';}
   // 釋放點旗
   const r0=atX(state.x0/100);sc.fillStyle='#ff6b9d';sc.beginPath();sc.arc(X(r0.x),Y(r0.y),5,0,7);sc.fill();
   // 小車（沿切向傾斜）+ 接觸陰影
@@ -199,14 +203,15 @@ function drawBars(cur){const W=bc._w,H=bc._h,mT=14,mB=22,bw=W/3*0.62,gap=W/3;bc.
     const g=bc.createLinearGradient(0,y,0,H-mB);g.addColorStop(0,it[2]);g.addColorStop(1,`rgba(${it[3]},.5)`);
     bc.fillStyle=g;roundRect(bc,cx0-bw/2,y,bw,bh,3);bc.fill();
     bc.fillStyle='#cdd6e4';bc.font='11px system-ui';bc.textAlign='center';bc.fillText(it[0],cx0,H-8);
-    bc.fillStyle='#fff';bc.font='600 10px system-ui';bc.fillText(it[1].toFixed(0),cx0,y-3);bc.textAlign='left';});
+    bc.fillStyle='#fff';bc.font='600 10px system-ui';bc.fillText(it[1].toFixed(0)+' J',cx0,y-3);bc.textAlign='left';});
 }
 function drawPlot(cur){const W=pc._w,H=pc._h,mL=40,mR=14,mT=12,mB=20;pc.clearRect(0,0,W,H);
-  const tot=Math.max(E0,1e-6),X=t=>mL+t/TTOT*(W-mL-mR),Y=e=>H-mB-(e/tot)*(H-mT-mB);
+  const tot=Math.max(E0,1e-6)*1.08,X=t=>mL+t/TTOT*(W-mL-mR),Y=e=>H-mB-(e/tot)*(H-mT-mB);
   function area(top,bot,col){pc.fillStyle=col;pc.beginPath();for(let i=0;i<SIMD.length;i++){const x=X(SIMD[i].t),y=Y(bot(SIMD[i]));i?pc.lineTo(x,y):pc.moveTo(x,y);}for(let i=SIMD.length-1;i>=0;i--){pc.lineTo(X(SIMD[i].t),Y(top(SIMD[i])));}pc.closePath();pc.fill();}
   area(s=>s.KE,()=>0,'rgba(76,194,255,.55)');area(s=>s.KE+s.PE,s=>s.KE,'rgba(124,255,178,.5)');area(s=>s.KE+s.PE+s.HT,s=>s.KE+s.PE,'rgba(255,107,157,.5)');
   pc.strokeStyle='rgba(255,255,255,.5)';pc.setLineDash([5,4]);pc.beginPath();pc.moveTo(mL,Y(E0));pc.lineTo(W-mR,Y(E0));pc.stroke();pc.setLineDash([]);
   pc.fillStyle='#8a99ad';pc.font='11px system-ui';pc.fillText('E₀',W-mR-20,Y(E0)-4);
+  pc.textAlign='right';pc.fillText(E0.toFixed(0)+' J',mL-4,Y(E0)+4);pc.fillText('0 J',mL-4,Y(0));pc.textAlign='left';
   for(let i=0;i<=6;i++){const tx=X(TTOT*i/6);pc.fillStyle='#46566b';pc.fillText((TTOT*i/6).toFixed(0)+'s',tx-7,H-7);}
   const cx=X(cur.t);pc.strokeStyle='#fff';pc.lineWidth=1;pc.beginPath();pc.moveTo(cx,mT);pc.lineTo(cx,H-mB);pc.stroke();
 }

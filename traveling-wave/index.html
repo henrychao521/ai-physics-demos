@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>行進波 ｜ 橫波・波速 v=fλ・y=A sin(kx−ωt)</title>
-<meta name="description" content="行進波(橫波)互動模擬：調振幅 A、頻率 f、波速 v，看波形 y=A·sin(kx−ωt) 沿繩前進。波速 v=fλ、波長 λ=v/f、週期 T=1/f、k=2π/λ、ω=2πf。高亮質點只上下振動，波形向前傳遞。">
+<meta name="description" content="行進波(橫波)互動模擬：調振幅 A、頻率 f、波速 v，看波形 y=A·sin(kx−ωt) 沿繩前進。波速 v=fλ、波長 λ=v/f、週期 T=1/f、k=2π/λ、ω=2πf。高亮繩上各點只上下振動，波形向前傳遞。">
 <link rel="icon" href="../assets/favicon.svg" type="image/svg+xml">
 <link rel="stylesheet" href="../assets/site.css">
 <script src="../assets/sim.js"></script>
@@ -47,7 +47,7 @@
     <span class="badge">波動・行進波</span>
     <h1>行進波（橫波）</h1>
     <p>波形 <b>y = A·sin(kx − ωt)</b> 沿繩向前傳遞。調<b>振幅 A</b>、<b>頻率 f</b>、<b>波速 v</b>，波長 <b>λ = v/f</b> 隨之改變。
-       注意<b>高亮質點只上下振動</b>（簡諧運動）、並不隨波前進——傳遞的是<b>能量與波形</b>，不是物質。波速 <b>v = fλ</b>。</p>
+       注意<b>繩上高亮的那一點只上下振動</b>（簡諧運動）、並不隨波前進——傳遞的是<b>能量與波形</b>，不是物質。波速 <b>v = fλ</b>。</p>
   </header>
 
   <div class="scene-wrap">
@@ -70,7 +70,7 @@
   <div class="formula" id="formula"></div>
 
   <div class="note">
-    <b>物理重點：</b>行進波傳遞能量與波形，介質質點只在原處<b>上下振動</b>（橫波）。一個<b>週期 T</b> 波前進一個<b>波長 λ</b>，
+    <b>物理重點：</b>行進波傳遞能量與波形，介質（繩上各點）只在原處<b>上下振動</b>（橫波）。一個<b>週期 T</b> 波前進一個<b>波長 λ</b>，
     所以波速 <code>v = λ/T = fλ</code>。其他關係：<code>T = 1/f</code>、<code>角波數 k = 2π/λ</code>、<code>角頻率 ω = 2πf</code>，故 <code>v = ω/k</code>。
     波速由<b>介質決定</b>（繩的張力與線密度 v=√(T/μ)）：改頻率時波長跟著變、但波速不變。振幅 A 只影響能量（∝A²），不影響波速。
   </div>
@@ -138,16 +138,18 @@ function drawScene(){const W=sc._w,H=sc._h,mid=H/2,A=state.A* (H*0.34/50), L=lam
   // 波形
   sc.strokeStyle='#7CFFB2';sc.lineWidth=3;sc.beginPath();
   for(let i=0;i<=W;i+=2){const x=i/W*Xspan,y=yOf(x);i?sc.lineTo(i,y):sc.moveTo(i,y);}sc.stroke();
-  // 介質質點
+  // 繩上各點
   for(let xm=0;xm<=Xspan;xm+=L/10){const i=px(xm);sc.fillStyle='rgba(160,220,200,.5)';sc.beginPath();sc.arc(i,yOf(xm),2,0,7);sc.fill();}
-  // 高亮質點(在 1/4 螢幕處)，只上下振動
+  // 高亮的一點(在 1/4 螢幕處)，只上下振動
   const xh=Xspan*0.25, ih=px(xh), yh=yOf(xh);
   sc.strokeStyle='rgba(255,255,255,.25)';sc.setLineDash([3,3]);sc.beginPath();sc.moveTo(ih,mid-A);sc.lineTo(ih,mid+A);sc.stroke();sc.setLineDash([]);
   S.arrow(sc,ih,mid,ih,yh,{color:'#ffce54',width:2.5});
-  S.sphere(sc,ih,yh,7,[48,255,178]);
-  sc.fillStyle='#ffce54';sc.font='11px system-ui';sc.fillText('質點只上下動',ih+10,mid-A+4);
+  S.sphere(sc,ih,yh,7,[45,100,60]);
+  sc.fillStyle='#ffce54';sc.font='11px system-ui';sc.fillText('繩上的點只上下動',ih+10,mid-A+4);
   // 波長標記(找相鄰兩波峰)
-  let c1=null;for(let xm=0;xm<Xspan;xm+=0.02){if(Math.abs((k*xm-dir*ph)%(2*Math.PI) - Math.PI/2)<0.02){c1=xm;break;}}
+  // 最左邊的波峰：k·x − dir·ph = π/2 + 2πn → 取 [0, λ) 內的解。原本逐點搜尋且對負數取餘數，
+  // 播放約 2.6 個週期後 (k·x − ph) 全為負、再也找不到波峰，λ 標記永久消失；λ 小時也常漏掉。
+  let c1=((Math.PI/2+dir*ph)/k)%L; if(c1<0)c1+=L;
   if(c1!==null && px(c1+L)<W-10){const y=mid+A+22;sc.strokeStyle='#6cd0ff';sc.lineWidth=2;
     sc.beginPath();sc.moveTo(px(c1),y);sc.lineTo(px(c1+L),y);sc.stroke();
     [[c1,1],[c1+L,-1]].forEach(([cx,d])=>{sc.beginPath();sc.moveTo(px(cx),y);sc.lineTo(px(cx)+d*7,y-4);sc.lineTo(px(cx)+d*7,y+4);sc.closePath();sc.fillStyle='#6cd0ff';sc.fill();});

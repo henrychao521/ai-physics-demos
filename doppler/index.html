@@ -25,7 +25,7 @@
   .toolbar{position:absolute;bottom:12px;left:12px;display:flex;gap:7px;flex-wrap:wrap}
   .toolbar button{background:rgba(8,12,24,.6);backdrop-filter:blur(6px);color:#dce6ff;border:1px solid rgba(160,180,255,.2);border-radius:9px;padding:7px 11px;font-size:.82rem;cursor:pointer;font-family:inherit}
   .toolbar button.on{background:var(--accent);color:#04121c;border-color:var(--accent);font-weight:700}
-  .state{margin-top:14px;padding:10px 12px;border-radius:12px;text-align:center;font-weight:700}
+  .state{margin-top:14px;padding:10px 12px;border-radius:12px;text-align:center;font-weight:700;min-height:3.4em;display:flex;align-items:center;justify-content:center}
   .statgrid{display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:10px;margin-top:12px}
   .box{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:10px 12px}
   .box .k{font-size:.72rem;color:var(--muted)}.box .v{font-size:1.05rem;font-variant-numeric:tabular-nums;font-weight:700}
@@ -113,8 +113,16 @@ function reset(){fronts=[];sx=sc?sc._w*0.06:80;simT=0;lastEmit=-EMIT;}
 function step(dt){const vsrc=state.M*VSND;sx+=vsrc*dt;simT+=dt;
   if(simT-lastEmit>=EMIT){fronts.push({x:sx,y:SY,t:simT});lastEmit=simT;}
   fronts=fronts.filter(f=>VSND*(simT-f.t)<2000);if(sx>sc._w+60)reset();}
-function fHeard(){const vsrc=state.M*VSND,dx=OBSX-sx,dy=OBSY-SY,d=Math.hypot(dx,dy)||1,vrad=vsrc*(dx/d);
-  if(state.M>=1)return null;return state.f0*VSND/(VSND-vrad);}
+// 觀察者「此刻聽到」的是較早發出、剛好傳到的那個波前：用發出當時（推遲時間）的音源位置算 cosθ。
+// 原本用「音源現在的位置」，音源經過觀察者正上方時 HUD 立刻變低音，但畫面上傳到耳朵的波前還是密的。
+// (V·τ)² = (dx + v_源·τ)² + dy² 解 τ（M<1 時唯一正根）；τ 超過本輪起跑後的時間 → 聲音還沒傳到。
+function heard(){const vs=state.M*VSND,V=VSND,dx=OBSX-sx,dy=OBSY-SY;
+  if(state.M>=1)return {f:null,cos:1,arrived:true};
+  const A=V*V-vs*vs,B=-2*dx*vs,C=-(dx*dx+dy*dy),tau=(-B+Math.sqrt(B*B-4*A*C))/(2*A);
+  if(tau>simT)return {f:null,cos:0,arrived:false};
+  const xe=sx-vs*tau,de=Math.hypot(OBSX-xe,dy)||1,cos=(OBSX-xe)/de;
+  return {f:state.f0/(1-state.M*cos),cos,arrived:true};}
+function fHeard(){return heard().f;}
 function draw(){const W=sc._w,H=sc._h;
   S.scene(sc,NIGHT,{});
   for(let i=0;i<60;i++){sc.fillStyle='rgba(255,255,255,.3)';sc.fillRect((i*137)%W,(i*89)%H,1,1);}
@@ -137,13 +145,14 @@ function draw(){const W=sc._w,H=sc._h;
   S.sphere(sc,OBSX,OBSY,9,[210,40,70]);sc.fillStyle='rgba(200,210,240,.7)';sc.fillText('觀察者',OBSX-18,OBSY+24);
   updateHud();
 }
-function updateHud(){const f=fHeard(),approaching=(OBSX-sx)>0&&state.M>0;
+function updateHud(){const h=heard(),f=h.f,approaching=h.cos>0&&state.M>0,none=state.M<1?'（尚未傳到）':'(音爆)';
   document.getElementById('hud').innerHTML=chip('馬赫數 M',state.M.toFixed(2),'')+chip('音源 f₀',state.f0+' Hz','')+
-    chip('聽到 f′',f?f.toFixed(0)+' Hz':'(音爆)',f?(f>state.f0?'up':'down'):'up');
-  const rows=[['馬赫數 M',state.M.toFixed(2),'#ffce54'],['聽到頻率 f′',f?f.toFixed(0)+' Hz':'(音爆)',f?(f>state.f0?'#ff6b9d':'#4cc2ff'):'#ff6b9d'],['f′/f₀',f?(f/state.f0).toFixed(2):'—','#e8eef6']];
+    chip('聽到 f′',f?f.toFixed(0)+' Hz':none,f?(f>state.f0?'up':'down'):'up');
+  const rows=[['馬赫數 M',state.M.toFixed(2),'#ffce54'],['聽到頻率 f′',f?f.toFixed(0)+' Hz':none,f?(f>state.f0?'#ff6b9d':'#4cc2ff'):'#ff6b9d'],['f′/f₀',f?(f/state.f0).toFixed(2):'—','#e8eef6']];
   document.getElementById('stats').innerHTML=rows.map(r=>`<div class="box"><div class="k">${r[0]}</div><div class="v" style="color:${r[2]}">${r[1]}</div></div>`).join('');
   const sb=document.getElementById('stateBar');
   if(state.M>=1){sb.textContent='💥 超音速！波前疊成馬赫錐 → 錐面掃過耳朵即「音爆」';sb.style.background='rgba(255,107,157,.16)';sb.style.color='#ff6b9d';}
+  else if(!h.arrived){sb.textContent='⏳ 聲波還在路上：第一個波前尚未傳到觀察者';sb.style.background='rgba(255,206,84,.12)';sb.style.color='#ffce54';}
   else if(approaching){sb.textContent='🔴 音源接近中：波前壓縮 → 聽到頻率升高（音調變高）';sb.style.background='rgba(255,107,157,.13)';sb.style.color='#ff6b9d';}
   else{sb.textContent='🔵 音源遠離中：波前拉長 → 聽到頻率降低（音調變低）';sb.style.background='rgba(76,194,255,.12)';sb.style.color='#4cc2ff';}}
 function chip(k,v,cls){return `<div class="chip ${cls}">${k}<b>${v}</b></div>`;}
@@ -154,7 +163,7 @@ function updateFormula(){
   const fApp = M<1 ? f0*v/(v-vsrc) : null;          // 接近：波前壓縮 → f′ 升高
   const fRec = f0*v/(v+vsrc);                         // 遠離：波前拉長 → f′ 降低
   document.getElementById('formula').innerHTML=
-    `<h4>📐 計算公式（即時代入　聲速 v=${v} m/s（20°C 空氣）　v_源=M·v=${vsrc.toFixed(0)} m/s）</h4>`+
+    `<h4>📐 計算公式（即時代入　聲速 v=${v} m/s（20°C 空氣）　v_源=M·v=${vsrc.toFixed(0)} m/s；觀察者在正前方／正後方）</h4>`+
     frow('接近時 f′','f₀·v / (v − v_源)',
       M<1?`${f0}·${v} / (${v} − ${vsrc.toFixed(0)})`:`v_源 ≥ v，前方波前疊合`,
       M<1?fApp.toFixed(0)+' Hz':'（音爆）')+
@@ -163,7 +172,7 @@ function updateFormula(){
     frow('馬赫角 θ_m','sinθ_m = 1/M',
       M>1?`sinθ_m = 1/${M.toFixed(2)}`:`M ≤ 1，尚無馬赫錐`,
       M>1?(Math.asin(1/M)*180/Math.PI).toFixed(1)+'°':'—')+
-    `<div class="frel">📈 <b>接近 f′>f₀、遠離 f′<f₀</b>：經過瞬間音調由高驟降　·　<b>v_源→v 時 f′→∞</b>（波前在正前方疊合）　·　<b>M>1 形成馬赫錐</b>，速度越快錐角 θ_m 越小（音爆越尖）。</div>`;
+    `<div class="frel">📈 畫面上的觀察者不在音源路徑上（有夾角 θ），上方「聽到 f′」用 f₀/(1 − M·cosθ)，θ 取該波前<b>發出當時</b>的方向，數值介於下列兩者之間　·　<b>接近 f′>f₀、遠離 f′<f₀</b>：經過瞬間音調由高驟降　·　<b>v_源→v 時 f′→∞</b>（波前在正前方疊合）　·　<b>M>1 形成馬赫錐</b>，速度越快錐角 θ_m 越小（音爆越尖）。</div>`;
 }
 
 let lastTs=0;
