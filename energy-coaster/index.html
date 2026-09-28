@@ -99,7 +99,7 @@
     </div>
   </div>
 
-  <footer>純前端 HTML / Canvas（SIM 工具庫）。沿軌道切向能量法數值積分，總能量逐構造守恆。</footer>
+  <footer>純前端 HTML / Canvas（SIM 工具庫）。沿軌道切向能量法數值積分，總能量（含摩擦生熱）在每一步計算中皆守恆。</footer>
 </div>
 
 <script>
@@ -243,7 +243,7 @@ function loop(ts){const dt=lastTs?Math.min((ts-lastTs)/1000,0.05):0;lastTs=ts;
 const pb=document.getElementById('play');
 pb.onclick=()=>{if(playT>=TTOT)playT=0;playing=!playing;pb.classList.toggle('on',playing);pb.textContent=playing?'⏸ 暫停':'▶ 播放';};
 document.getElementById('reset').onclick=()=>{playT=0;playing=true;pb.classList.add('on');pb.textContent='⏸ 暫停';};
-const PRE={ideal:{x0:4,m:2,mu:0,g:9.8},fric:{x0:4,m:2,mu:.024,g:9.8},low:{x0:30,m:2,mu:0,g:9.8}};
+const PRE={ideal:{x0:4,m:2,mu:0,g:9.8},fric:{x0:4,m:2,mu:.024,g:9.8},low:{x0:20,m:2,mu:0,g:9.8}};
 document.querySelectorAll('[data-preset]').forEach(b=>b.onclick=()=>{const p=PRE[b.dataset.preset];if(!p)return;
   ['x0','m','mu','g'].forEach(k=>setSlider(k,p[k]));playT=0;playing=true;pb.classList.add('on');pb.textContent='⏸ 暫停';simulate();updateFormula();});
 window.addEventListener('load',()=>{setupCanvases();simulate();render(simAt(0));updateFormula();requestAnimationFrame(loop);});
