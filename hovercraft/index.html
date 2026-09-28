@@ -283,9 +283,10 @@ function drawFront(){
     c.strokeStyle = 'rgba(255,206,84,.85)'; c.lineWidth = 2.5; c.beginPath(); c.moveTo(0, -fh / 2 + 3); c.lineTo(0, fh / 2 - 3); c.stroke(); // 導風板
     c.restore(); };
   if (sel.thrustCount === 1) drawDuct(cx, -D.vane * Math.PI / 180);
-  else { drawDuct(cx - (fw / 2 + 16 * k), 0); drawDuct(cx + (fw / 2 + 16 * k), 0); }
+  // 雙馬達時兩個導風板也跟著 CH3 偏轉（原本固定 0°，但側向力仍按導風板角度計算，前視圖與數值不一致）
+  else { drawDuct(cx - (fw / 2 + 16 * k), -D.vane * Math.PI / 180); drawDuct(cx + (fw / 2 + 16 * k), -D.vane * Math.PI / 180); }
   c.fillStyle = 'rgba(255,255,255,.55)'; c.font = '11px system-ui';
-  c.fillText(sel.thrustCount === 1 ? `導風板 ${sel.vaneAngle}°` : '雙推力馬達', 10, H - 10);
+  c.fillText(sel.thrustCount === 1 ? `導風板 ${sel.vaneAngle}°` : `雙推力馬達・導風板 ${sel.vaneAngle}°`, 10, H - 10);
 }
 function drawTop(){
   const c = ct, W = c._w, H = c._h; c.clearRect(0, 0, W, H); c.fillStyle = '#0b1220'; c.fillRect(0, 0, W, H);
