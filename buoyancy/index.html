@@ -71,7 +71,7 @@
   <div class="note">
     <b>物理重點：</b>浮力 <code>F_浮 = ρ_液·V_沒入·g</code>（排開液體的重量）。物體重 <code>W = ρ_物·V·g</code>。
     漂浮平衡時 F_浮 = W，可推得<b>沒入比例 = ρ_物 / ρ_液</b>——所以冰（917）在海水（1025）約露出 1/10（冰山一角）。
-    當 ρ_物 &gt; ρ_液，即使完全沒入浮力仍小於重量 → 下沉；此時水中的<b>視重 = W − F_浮</b>（變輕了）。
+    當 ρ_物 &gt; ρ_液，即使完全沒入浮力仍小於重量 → 下沉；此時水中的<b>視重 = W − F_浮</b>（變輕了）。沉到槽底後，槽底向上的<b>正向力 N = W − F_浮</b> 補足差額，方塊才靜止。
   </div>
 
   <footer>純前端 HTML / Canvas（SIM 工具庫）。阻尼動力學模擬沉降至平衡。</footer>
@@ -95,6 +95,8 @@ sliders.forEach(s=>{ state[s.id]=s.val;
     document.getElementById('v_'+s.id).textContent=`${fmt(state[s.id])} ${s.unit}`;updateFormula();});
 });
 function fmt(x){return (Math.round(x*100)/100).toString();}
+// 代入式用 4 位有效數字（原本 toFixed(3) 會把 0.0048 m³ 顯示成 0.005，代入式算出來和答案差 4%）
+function sig(x){return String(+x.toPrecision(4));}
 function frow(n,sym,sub,val){return `<div class="frow"><span class="fname">${n}</span><span class="fsym">${sym}</span><span class="fsub">= ${sub}</span><span class="fval">${val}</span></div>`;}
 function updateFormula(){
   const rO=state.rhoO, rL=state.rhoL, VL=state.V, Vm=VL/1000;   // V：L → m³
@@ -104,9 +106,9 @@ function updateFormula(){
   const apparent=Math.max(0,W-buoy);                            // 水中視重 = W − F_浮
   document.getElementById('formula').innerHTML=
     `<h4>📐 計算公式（即時代入　平衡狀態）</h4>`
-    + frow('重量 W','ρ_物·V·g',`${rO}·${Vm.toFixed(3)}·${g}`, W.toFixed(1)+' N')
+    + frow('重量 W','ρ_物·V·g',`${rO}·${sig(Vm)}·${g}`, W.toFixed(1)+' N')
     + frow('沒入比例 f','ρ_物 / ρ_液', rO<=rL?`${rO} / ${rL}`:`${rO} > ${rL} → 下沉，完全沒入 f = 1`, (fracEq*100).toFixed(0)+' %')
-    + frow('浮力 F_浮','ρ_液·(f·V)·g',`${rL}·${(fracEq*Vm).toFixed(3)}·${g}`, buoy.toFixed(1)+' N')
+    + frow('浮力 F_浮','ρ_液·(f·V)·g',`${rL}·${sig(fracEq*Vm)}·${g}`, buoy.toFixed(1)+' N')
     + frow('水中視重','W − F_浮',`${W.toFixed(1)} − ${buoy.toFixed(1)}`, apparent.toFixed(1)+' N')
     + `<div class="frel">📈 <b>沒入比例 = ρ_物/ρ_液</b>：冰917÷海水1025≈0.9 → 露出約 1/10（冰山一角）　·　<b>ρ_物 &lt; ρ_液 才漂浮</b>，相等則懸浮、較大則下沉　·　<b>體積 V 不改沉浮</b>：放大 V 時 W 與 F_浮同倍放大，比例不變。</div>`;
 }
@@ -127,12 +129,13 @@ const AQUA={skyTop:'#16314a',skyBottom:'#0a1622',vignette:'rgba(0,0,0,.4)'};
 function setupCanvases(){sc=S.fit(document.getElementById('scene'),1.0);}
 function draw(info){const W=sc._w,H=sc._h;
   S.scene(sc,AQUA,{});
-  const PXR=(H-90)/Hbasin*0.92,yWaterPx=64,Y=ym=>yWaterPx+ym*PXR;
+  // 水面上方留 0.25 m（方塊最高可露出約 0.23 m）；原本只留 64 px，木塊漂浮時上緣被切到畫面外
+  const PXR=(H-40)/(Hbasin+0.25),yWaterPx=20+0.25*PXR,Y=ym=>yWaterPx+ym*PXR;
   const bL=54,bR=W-54,bBot=Y(Hbasin);
   // 玻璃槽水
   S.water(sc,bL,yWaterPx,bR-bL,bBot-yWaterPx,tt);
   // 槽壁(玻璃)
-  sc.strokeStyle='rgba(180,210,240,.5)';sc.lineWidth=3;sc.beginPath();sc.moveTo(bL,34);sc.lineTo(bL,bBot);sc.lineTo(bR,bBot);sc.lineTo(bR,34);sc.stroke();
+  sc.strokeStyle='rgba(180,210,240,.5)';sc.lineWidth=3;sc.beginPath();sc.moveTo(bL,yWaterPx-30);sc.lineTo(bL,bBot);sc.lineTo(bR,bBot);sc.lineTo(bR,yWaterPx-30);sc.stroke();
   sc.fillStyle='rgba(190,225,255,.7)';sc.font='11px system-ui';sc.fillText('水面',bR-40,yWaterPx-5);
   // 物體
   const L=info.L*PXR,cxm=(bL+bR)/2,ctop=Y(yTop),cb=ctop+L;
@@ -144,11 +147,15 @@ function draw(info){const W=sc._w,H=sc._h;
   if(subBot>subTop){sc.fillStyle='rgba(20,60,90,.4)';sc.fillRect(cxm-L/2,subTop,L,subBot-subTop);}
   sc.strokeStyle='rgba(0,0,0,.4)';sc.lineWidth=2;sc.strokeRect(cxm-L/2,ctop,L,L);
   sc.fillStyle='rgba(255,255,255,.25)';sc.fillRect(cxm-L/2+3,ctop+3,L-6,5);
-  sc.fillStyle='#fff';sc.font='600 11px system-ui';sc.textAlign='center';sc.fillText(state.rhoO,cxm,(ctop+cb)/2-2);sc.fillText('kg/m³',cxm,(ctop+cb)/2+12);sc.textAlign='left';
+  sc.fillStyle='#fff';sc.font='600 11px system-ui';sc.textAlign='center';sc.fillText(state.rhoO+' kg/m³',cxm,ctop+22);sc.textAlign='left';
   // 力箭頭：浮力在沒入部分中心(向上)、重力在質心(向下)
-  const cy=(ctop+cb)/2,sF=0.1,subCy=subBot>subTop?(subTop+subBot)/2:cy;
-  if(info.buoy>1)S.arrow(sc,cxm,subCy,cxm,subCy-info.buoy*sF,{color:S.C.normal,width:3.5,label:'F浮'});
+  // 箭頭長度與力成正比；比例尺依本畫面最大的力調整（原固定 0.1 px/N，木塊 47 N 只有 5 px 看不見）
+  const onBottom=yTop+info.L>=Hbasin-1e-4, nForce=onBottom?Math.max(0,info.weight-info.buoy):0;
+  const cy=(ctop+cb)/2,sF=Math.max(50,L*0.55)/Math.max(info.weight,info.buoy,1),subCy=subBot>subTop?(subTop+subBot)/2:cy;
+  if(info.buoy*sF>2)S.arrow(sc,cxm,subCy,cxm,subCy-info.buoy*sF,{color:S.C.normal,width:3.5,label:'F浮'});
   S.arrow(sc,cxm+0,cy,cxm,cy+info.weight*sF,{color:S.C.gravity,width:3,label:'W'});
+  // 沉到槽底時，槽底的正向力 N = W − F_浮 讓合力為零（原本沒畫，靜止的方塊看起來合力向下）
+  if(nForce*sF>2)S.arrow(sc,cxm+L*0.3,cb,cxm+L*0.3,cb-nForce*sF,{color:S.C.tension,width:3,label:'N'});
   drawStats(info);
 }
 function drawStats(info){const apparent=Math.max(0,info.weight-info.buoy);
