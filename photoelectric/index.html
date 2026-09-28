@@ -127,7 +127,8 @@ let photons=[],electrons=[];
 function spawn(){if(Math.random()<state.I/100*0.8)photons.push({x:0,y:110+Math.random()*180});}
 function step(dt){spawn();photons.forEach(p=>p.x+=320*dt);
   for(let i=photons.length-1;i>=0;i--){if(photons[i].x>=MX){if(emits()&&Math.random()<0.9)electrons.push({x:MX,y:photons[i].y,vx:60+Math.random()*40,vy:(Math.random()-0.5)*40,ke:KEmax()});photons.splice(i,1);}}
-  electrons.forEach(e=>{e.x+=(60+e.ke*50)*dt;e.y+=e.vy*dt;});electrons=electrons.filter(e=>e.x<640+20);if(photons.length>200)photons.splice(0,photons.length-200);}
+  // 速度 ∝ √KE（½mv²=KE）；原本 ∝ KE 會誇大高頻時的速度差
+  electrons.forEach(e=>{e.x+=(40+100*Math.sqrt(e.ke))*dt;e.y+=e.vy*dt;});electrons=electrons.filter(e=>e.x<640+20);if(photons.length>200)photons.splice(0,photons.length-200);}
 function draw(){const W=640,H=380;
   const bg=cc.createLinearGradient(0,0,0,H);bg.addColorStop(0,'#0e1426');bg.addColorStop(1,'#060a14');cc.fillStyle=bg;cc.fillRect(0,0,W,H);
   // 金屬板(立體)
@@ -154,13 +155,17 @@ function drawStats(){
   const sb=document.getElementById('stateBar');
   if(emits()){sb.textContent='✓ hf > W：發射光電子，KE='+KEmax().toFixed(2)+'eV（加強度只增數量、不增能量）';sb.style.background='rgba(124,255,178,.15)';sb.style.color='#7CFFB2';}
   else{sb.textContent='✗ hf < W：頻率不足，光再強也打不出電子（古典物理無法解釋！）';sb.style.background='rgba(255,107,157,.13)';sb.style.color='#ff6b9d';}}
+// 縱軸固定 0–6 eV（資料最大 5.1 eV，不貼頂），加刻度與單位
 function drawPlot(){const W=470,H=200,mL=34,mR=12,mT=12,mB=22;pc.fillStyle='#0a1018';pc.fillRect(0,0,W,H);
-  const fMax=16,keMax=HEV*fMax-1.5,X=f=>mL+f/fMax*(W-mL-mR),Y=ke=>H-mB-ke/Math.max(keMax,1)*(H-mT-mB);
+  const fMax=16,keMax=6,X=f=>mL+f/fMax*(W-mL-mR),Y=ke=>H-mB-ke/Math.max(keMax,1)*(H-mT-mB);
   pc.strokeStyle='#1b2738';pc.beginPath();pc.moveTo(mL,Y(0));pc.lineTo(W-mR,Y(0));pc.stroke();
-  pc.fillStyle='#46566b';pc.font='10px system-ui';pc.fillText('f',W-mR-8,Y(0)+14);pc.fillText('KE',mL-2,mT+6);
+  pc.fillStyle='#46566b';pc.font='10px system-ui';
+  pc.textAlign='right';for(let k=0;k<=6;k+=2){pc.fillText(k,mL-5,Y(k)+3);if(k){pc.strokeStyle='#131d2b';pc.beginPath();pc.moveTo(mL,Y(k));pc.lineTo(W-mR,Y(k));pc.stroke();}}
+  pc.textAlign='center';for(let f=4;f<=fMax;f+=4)pc.fillText(f,X(f),H-9);
+  pc.textAlign='right';pc.fillText('f (×10¹⁴ Hz)',W-mR,Y(0)-4);pc.textAlign='left';pc.fillText('KEₘₐₓ (eV)',mL+4,mT+6);
   pc.strokeStyle='#7CFFB2';pc.lineWidth=2.5;pc.beginPath();let st=false;for(let f=0;f<=fMax;f+=0.2){const ke=Math.max(0,HEV*f-state.W);st?pc.lineTo(X(f),Y(ke)):pc.moveTo(X(f),Y(ke));st=true;}pc.stroke();
   pc.strokeStyle='#ff6b9d';pc.setLineDash([3,3]);pc.beginPath();pc.moveTo(X(f0()),mT);pc.lineTo(X(f0()),H-mB);pc.stroke();pc.setLineDash([]);
-  pc.fillStyle='#ff6b9d';pc.fillText('f₀',X(f0())-6,H-9);
+  pc.fillStyle='#ff6b9d';pc.fillText('f₀',X(f0())+4,mT+22);   // 標在虛線頂端右側，不和 f 軸刻度數字重疊
   pc.fillStyle='#fff';pc.beginPath();pc.arc(X(state.f),Y(KEmax()),4,0,7);pc.fill();}
 
 let lastTs=0;
