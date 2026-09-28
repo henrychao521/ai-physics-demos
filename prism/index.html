@@ -23,7 +23,7 @@
   .chip{background:rgba(10,16,24,.62);backdrop-filter:blur(6px);border:1px solid rgba(120,180,255,.16);border-radius:10px;padding:6px 11px;color:#dceaff;font-size:.8rem;line-height:1.25}
   .chip b{display:block;font-size:1.02rem;font-variant-numeric:tabular-nums;color:#fff}
   .chip.red b{color:#ff8f8f}.chip.violet b{color:#c39bff}.chip.green b{color:#7CFFB2}
-  .toolbar{position:absolute;bottom:12px;right:12px;display:flex;gap:7px;flex-wrap:wrap;justify-content:flex-end}
+  .toolbar{position:absolute;top:12px;right:12px;   /* 移到右上：原本在右下會蓋住落在螢幕底端的紫光 */display:flex;gap:7px;flex-wrap:wrap;justify-content:flex-end}
   .toolbar button{background:rgba(10,16,24,.62);backdrop-filter:blur(6px);color:#dceaff;border:1px solid rgba(120,180,255,.2);border-radius:9px;padding:7px 11px;font-size:.82rem;cursor:pointer;font-family:inherit}
   .toolbar button.on{background:var(--accent);color:#04121c;border-color:var(--accent);font-weight:700}
   @media(max-width:560px){.toolbar{position:static;justify-content:center;padding:8px 10px;background:rgba(8,14,22,.5);border-top:1px solid var(--line)}}
@@ -63,7 +63,7 @@
     <span>情境：</span>
     <button class="pbtn" data-p="60,50">標準分光（頂角60°）</button>
     <button class="pbtn" data-p="45,48">小頂角・色散小</button>
-    <button class="pbtn" data-p="60,42">接近最小偏向角</button>
+    <button class="pbtn" data-p="60,min">接近最小偏向角</button>
   </div>
 
   <div class="formula" id="formula"></div>
@@ -107,7 +107,7 @@ function deviation(lam){const n=nOf(lam),A=rad(state.apex),i1=rad(state.inc);
   const r1=Math.asin(Math.min(1,Math.sin(i1)/n)); const r2=A-r1;
   const s=n*Math.sin(r2); if(Math.abs(s)>1)return null; const i2=Math.asin(s);
   return deg(i1+i2-A);}
-function recompute(){updateFormula();}
+function recompute(){updateFormula();if(sc)draw();}   // 原本只更新公式面板：拖滑桿時稜鏡、光線與 HUD 都不會重畫
 
 // 波長→RGB
 function wlColor(nm){let r=0,g=0,b=0;
@@ -179,8 +179,9 @@ function draw(){const W=sc._w,H=sc._h;S.scene(sc,SKY,{});
   const cx=W*0.40, cy=H*0.54, sz=Math.min(150,H*0.46);
   const a2=rad(state.apex/2);
   const T=V(cx, cy-sz*0.62);
-  const L=V(cx-Math.sin(a2)*sz, cy+sz*0.42);
-  const Rr=V(cx+Math.sin(a2)*sz, cy+sz*0.42);
+  // 半底寬 = 高·tan(A/2)，頂角才會真的等於 A（原本用 sin(A/2)·sz，60° 稜鏡實際畫成 51°，光線偏向角與 HUD 不符）
+  const L=V(cx-Math.tan(a2)*sz*1.04, cy+sz*0.42);
+  const Rr=V(cx+Math.tan(a2)*sz*1.04, cy+sz*0.42);
   const G=V((T.x+L.x+Rr.x)/3,(T.y+L.y+Rr.y)/3);
   function outN(Pa,Pb){const f=norm(sub(Pb,Pa));let nn=V(-f.y,f.x);const mid=mul(add(Pa,Pb),0.5);
     if(dot(sub(mid,G),nn)<0)nn=mul(nn,-1);return nn;}
@@ -198,7 +199,7 @@ function draw(){const W=sc._w,H=sc._h;S.scene(sc,SKY,{});
   const AMP=6;
   const refp=tracePrism(550,geo);
   const refAng=refp?Math.atan2(refp[3].y-refp[2].y, refp[3].x-refp[2].x):0;
-  let landMin=1e9,landMax=-1e9;
+  let landMin=1e9,landMax=-1e9,yRed=null,yVio=null;
   LAMS.forEach(lam=>{const pts=tracePrism(lam,geo); if(!pts)return; const c=wlColor(lam);
     // 入射→第一面→第二面(實體段)
     sc.strokeStyle=`rgb(${c[0]},${c[1]},${c[2]})`;sc.lineWidth=2.2;sc.beginPath();
@@ -209,9 +210,11 @@ function draw(){const W=sc._w,H=sc._h;S.scene(sc,SKY,{});
     const dx=Math.cos(ampAng)||1e-6, t=(screenX-pts[2].x)/dx;
     const ly=pts[2].y+Math.sin(ampAng)*Math.max(20,t);
     sc.lineTo(screenX,ly);sc.stroke();
-    landMin=Math.min(landMin,ly);landMax=Math.max(landMax,ly);
+    landMin=Math.min(landMin,ly);landMax=Math.max(landMax,ly);if(lam===660)yRed=ly;if(lam===430)yVio=ly;
     sc.fillStyle=`rgb(${c[0]},${c[1]},${c[2]})`;sc.fillRect(screenX,ly-4,8,8);
   });
+  if(!wref){sc.fillStyle='#ffb3c1';sc.font='bold 13px system-ui';sc.textAlign='center';
+    sc.fillText(deviation(550)==null?'光在第二面發生全反射，無法從斜面射出':'光線打到稜鏡底面，未從第二面射出',W/2,40);sc.textAlign='left';}
   // 稜鏡(半透明)
   sc.beginPath();sc.moveTo(T.x,T.y);sc.lineTo(L.x,L.y);sc.lineTo(Rr.x,Rr.y);sc.closePath();
   const pg=sc.createLinearGradient(L.x,T.y,Rr.x,Rr.y);pg.addColorStop(0,'rgba(150,180,220,.18)');pg.addColorStop(1,'rgba(120,150,200,.10)');
@@ -219,7 +222,8 @@ function draw(){const W=sc._w,H=sc._h;S.scene(sc,SKY,{});
   sc.fillStyle='rgba(190,205,235,.75)';sc.font='12px system-ui';sc.fillText('A='+state.apex+'°',cx-14,T.y-6);
   // 螢幕光譜標註
   if(landMax>landMin){sc.fillStyle='rgba(210,220,240,.8)';sc.font='11px system-ui';
-    sc.fillText('紅',screenX-18,landMax+4);sc.fillText('紫',screenX-18,landMin+4);
+    // 依實際落點標紅、紫（原本寫反：紅光偏折最少、落在上方＝landMin）
+    if(yRed!=null)sc.fillText('紅',screenX-18,yRed+4);if(yVio!=null)sc.fillText('紫',screenX-18,yVio+4);
     sc.fillText('光譜',screenX-26,(landMin+landMax)/2);}
   updateHud();
 }
@@ -233,7 +237,9 @@ function updateHud(){const nr=nOf(660),nv=nOf(430),dr=deviation(660),dv=deviatio
 
 document.getElementById('glass').onclick=function(){gk=(gk==='crown')?'flint':'crown';
   this.textContent='玻璃：'+(gk==='crown'?'冕牌':'火石');this.classList.toggle('on',gk==='crown');recompute();draw();};
-document.querySelectorAll('[data-p]').forEach(b=>b.onclick=()=>{const a=b.dataset.p.split(',');setP(+a[0],+a[1]);});
+// 「接近最小偏向角」依目前玻璃即時計算：光在稜鏡內對稱穿過（r₁=A/2）時 sinθ₁ = n·sin(A/2)（原寫死 42°，冕牌實際約 49°）
+document.querySelectorAll('[data-p]').forEach(b=>b.onclick=()=>{const a=b.dataset.p.split(',');
+  const inc=a[1]==='min'?Math.round(deg(Math.asin(Math.min(1,nOf(550)*Math.sin(rad(+a[0]/2)))))):+a[1];setP(+a[0],inc);});
 
 window.addEventListener('load',()=>{setupCanvases();recompute();draw();});
 window.addEventListener('resize',()=>{setupCanvases();draw();});
