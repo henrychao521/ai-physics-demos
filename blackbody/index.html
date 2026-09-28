@@ -72,7 +72,7 @@
   <div class="note">
     <b>物理重點：</b>普朗克輻射定律 <code>B(λ,T)=2hc²/λ⁵ · 1/(e^(hc/λkT)−1)</code> 描述黑體在各波長的輻射強度。
     峰值波長 <code>λ_max = b/T</code>（維因位移定律，b=2.898×10⁻³ m·K）：T 加倍 → λ_max 減半（更藍）。
-    曲線下總面積（總輻射功率）<code>P = σT⁴</code>（史特凡-波茲曼，σ=5.67×10⁻⁸）：T 加倍 → 功率變 <b>16 倍</b>。
+    曲線下總面積（總輻射功率；畫面曲線每次自動縮放到同一高度，所以要看右上角數值才看得出 T⁴ 的差距）<code>P = σT⁴</code>（史特凡-波茲曼，σ=5.67×10⁻⁸ W/(m²·K⁴)）：T 加倍 → 功率變 <b>16 倍</b>。
     可見光只占 380–750 nm 一小段；低溫物體峰值在<b>紅外</b>（看不見、只覺得熱），高溫才進入可見甚至<b>紫外</b>。
     古典理論在短波長發散（「紫外災變」），普朗克引入<b>能量量子化</b> E=hf 才解決——量子力學的開端。
   </div>
@@ -100,6 +100,8 @@ function setT(T){state.T=T;const r=document.getElementById('r_T');if(r)r.value=T
 function planck(lam,T){return (2*hP*cL*cL/Math.pow(lam,5))/(Math.exp(hP*cL/(lam*kB*T))-1);}  // λ in m
 function lamMax(){return bW/state.T*1e9;}            // nm
 function power(){return sigma*Math.pow(state.T,4);}  // W/m²
+// 三位有效數字（HUD 與公式面板共用，避免低溫時 0.1 對 0.06、0.00 倍這類矛盾）
+function sig3(x){if(x===0)return '0';const d=Math.max(0,2-Math.floor(Math.log10(Math.abs(x))));return x.toFixed(Math.min(d,6));}
 let tintOn=true;
 function recompute(){draw();updateFormula();}
 
@@ -127,8 +129,8 @@ function updateFormula(){const lm=lamMax(),P=power(),Psun=sigma*Math.pow(5800,4)
   document.getElementById('formula').innerHTML=
     `<h4>📐 計算公式（即時代入　b=2.898×10⁻³、σ=5.67×10⁻⁸）</h4>`
     + frow('維因峰值 λ_max','b / T',`2.898e-3 / ${state.T}`, lm.toFixed(0)+' nm（'+region+'）')
-    + frow('總輻射功率 P','σ·T⁴',`5.67e-8·${state.T}⁴`, (P/1e6).toFixed(2)+' MW/m²')
-    + frow('相對太陽','P / P☉',`${(P/1e6).toFixed(1)} / ${(Psun/1e6).toFixed(1)}`, (P/Psun).toFixed(2)+' 倍')
+    + frow('總輻射功率 P','σ·T⁴',`5.67e-8·${state.T}⁴`, sig3(P/1e6)+' MW/m²')
+    + frow('相對太陽','P / P☉',`${sig3(P/1e6)} / ${sig3(Psun/1e6)}`, sig3(P/Psun)+' 倍')
     + `<div class="frel">📈 <b>λ_max = b/T</b>：T 加倍 → 峰值波長減半(更藍)　·　<b>P = σT⁴</b>：T 加倍 → 總功率變 16 倍　·　可見光僅 380–750 nm，低溫峰值落在看不見的紅外。</div>`;
 }
 
@@ -154,7 +156,7 @@ function draw(){const W=sc._w,H=sc._h;
   sc.fillStyle='rgba(170,185,215,.7)';sc.font='10px system-ui';
   for(const nm of [500,1000,1500,2000]){const x=xOf(nm);sc.beginPath();sc.moveTo(x,y0);sc.lineTo(x,y0+3);sc.stroke();sc.fillText(nm,x-10,y0+16);}
   sc.fillText('波長 (nm)',x0+gw-58,mt+10);
-  sc.save();sc.translate(14,mt+gh/2);sc.rotate(-Math.PI/2);sc.fillText('輻射強度',-22,0);sc.restore();
+  sc.save();sc.translate(14,mt+gh/2);sc.rotate(-Math.PI/2);sc.fillText('輻射強度（相對值）',-46,0);sc.restore();
   // 普朗克曲線 + 填色
   const col=bbColor(state.T);
   sc.beginPath();
@@ -203,7 +205,7 @@ function updateHud(col){const lm=lamMax(),P=power();
   document.getElementById('hud').innerHTML=
    `<div class="chip amber">溫度 T<b>${state.T} K</b></div>`+
    `<div class="chip cyan">峰值 λmax<b>${lm.toFixed(0)} nm · ${region}</b></div>`+
-   `<div class="chip green">總功率 σT⁴<b>${(P/1e6).toFixed(1)} MW/m²</b></div>`;
+   `<div class="chip green">總功率 σT⁴<b>${sig3(P/1e6)} MW/m²</b></div>`;
 }
 
 document.getElementById('tint').onclick=function(){tintOn=!tintOn;this.classList.toggle('on',tintOn);this.textContent='譜線著色：'+(tintOn?'開':'關');draw();};

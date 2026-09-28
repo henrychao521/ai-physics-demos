@@ -91,7 +91,8 @@ sliders.forEach(s=>{ state[s.id]=s.val;
     <input type="range" id="r_${s.id}" min="${s.min}" max="${s.max}" step="${s.step}" value="${s.val}">`;
   sBar.appendChild(d);
   d.querySelector('input').addEventListener('input',e=>{state[s.id]=parseFloat(e.target.value);
-    document.getElementById('v_'+s.id).textContent=`${state[s.id].toFixed(2)} ${s.unit}`; recompute(); });
+    document.getElementById('v_'+s.id).textContent=`${state[s.id].toFixed(2)} ${s.unit}`; recompute();
+    resetClocks(); });   // 改速度就重新計數（原本沿用舊速度累積的滴答，比例與面板 1/γ 對不上）
 });
 function setBeta(b){state.beta=b;const r=document.getElementById('r_beta');if(r)r.value=b;document.getElementById('v_beta').textContent=`${b.toFixed(2)} c`;recompute();}
 
@@ -114,8 +115,10 @@ function updateFormula(){const b=state.beta,g=gamma();
 // ---- 視圖：兩個光鐘 ----
 let sc;
 const SKY={skyTop:'#0c1424',skyBottom:'#070d16',vignette:'rgba(0,0,0,.42)'};
-function setupCanvases(){sc=S.fit(document.getElementById('scene'),1.7);}
-const D=110;               // 鏡距(像素)，靜止鐘
+// 窄螢幕改直式比例、鏡距依畫布高度縮放（原本手機畫布只有約 200 px 高，D=110 的運動鐘下鏡畫到畫布外）
+function setupCanvases(){const w=document.getElementById('scene').parentElement.clientWidth;sc=S.fit(document.getElementById('scene'),w<560?0.95:1.7);D=Math.min(110,Math.round(sc._h*0.24));}
+const bFrac=()=>sc&&sc._w<560?0.62:0.52;   // 運動鐘上鏡在畫布高度的比例
+let D=110;                 // 鏡距(像素)，兩鐘相同；setupCanvases 依畫布高度調整
 let cpx=180;               // 「光速」像素/秒
 // 鐘B(運動)狀態
 let labTime=0, properB=0, ticksA=0, ticksB=0;
@@ -129,14 +132,14 @@ function layout(){const W=sc._w,H=sc._h;return {
 function draw(){const W=sc._w,H=sc._h;S.scene(sc,SKY,{});
   const g=gamma();
   // ---- 鐘A：靜止 ----
-  const Ax=Math.min(130,W*0.18), AtopY=44, AbotY=44+D;
+  const Ax=Math.min(130,W*0.18), AtopY=W<560?100:Math.max(74,Math.min(92,H*0.52-D-40)), AbotY=AtopY+D;   // 原 AtopY=44 被左上 HUD 蓋住上鏡與標籤
   drawClockBody(Ax,AtopY,AbotY,46,'#6cd0ff');
   sc.fillStyle='#9fd0ff';sc.font='12px system-ui';sc.fillText('靜止鐘（你）',Ax-30,AtopY-12);
   // A 光子(直上直下)
   const ApY=AtopY+yA;
   S.sphere(sc,Ax,ApY,5,[255,238,150]);
   // ---- 鐘B：運動 ----
-  const BtopY=H*0.52, BbotY=H*0.52+D, w0=52, wc=Math.max(8,w0/g); // 寬度收縮
+  const BtopY=H*bFrac(), BbotY=BtopY+D, w0=46, wc=Math.max(8,w0/g); // 寬度收縮：靜止寬度與鐘A 相同（原 52 vs 46，β=0 時兩個「相同的鐘」寬度就不一樣）
   // 光子斜路徑軌跡
   sc.strokeStyle='rgba(255,225,120,.35)';sc.lineWidth=1.6;sc.beginPath();
   trailB.forEach((p,i)=>{i?sc.lineTo(p.x,p.y):sc.moveTo(p.x,p.y);});sc.stroke();
@@ -147,7 +150,7 @@ function draw(){const W=sc._w,H=sc._h;S.scene(sc,SKY,{});
   // 速度箭頭
   if(state.beta>0.01)S.arrow(sc,20+xB+wc/2+12,BbotY+18,20+xB+wc/2+12+34*Math.min(1,state.beta+0.2),BbotY+18,{color:'#ff8fb0',width:2.5});
   // ---- 滴答比較盤 ----
-  const px=W-176,py=46;
+  const px=W-176,py=W<560?78:46;   // 窄螢幕讓出 HUD 第二列
   panel(px,py,'滴答數',ticksA,ticksB,g);
   updateHud(g);
 }
@@ -184,7 +187,7 @@ function step(dt){const g=gamma();
   const vy=cpx/g, vx=state.beta*cpx;
   xB+=vx*dt; yB+=dirB*vy*dt;
   if(yB>=D){yB=D-(yB-D);dirB=-1;halfB();} else if(yB<=0){yB=-yB;dirB=1;halfB();}
-  trailB.push({x:20+xB, y:(sc?sc._h:600)*0.52+yB}); if(trailB.length>240)trailB.shift();
+  trailB.push({x:20+xB, y:(sc?sc._h*bFrac():312)+yB}); if(trailB.length>240)trailB.shift();
   if(20+xB> (sc?sc._w:900)-30){xB=0;trailB=[];}   // 出右界回繞
   labTime+=dt; properB+=dt/g;
 }
@@ -202,7 +205,7 @@ document.getElementById('reset').onclick=()=>resetClocks();
 document.querySelectorAll('[data-b]').forEach(b=>b.onclick=()=>{setBeta(parseFloat(b.dataset.b));resetClocks();});
 
 window.addEventListener('load',()=>{setupCanvases();resetClocks();recompute();requestAnimationFrame(loop);});
-window.addEventListener('resize',()=>{setupCanvases();draw();});
+window.addEventListener('resize',()=>{setupCanvases();resetClocks();draw();});
 </script>
 </body>
 </html>

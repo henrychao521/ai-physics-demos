@@ -139,8 +139,8 @@ function drawScene(){const W=sc._w,H=sc._h;
   // 方塊 B
   block(bxB,baseY-bhB,wB,bhB,tb,'B',MATS[matB].n);
   // 熱流箭頭(由熱→冷)
-  if(Math.abs(ta-tb)>0.3){const ay=baseY-Math.min(bhA,bhB)*0.5, x0=W*0.5,len=gapX+Math.min(wA,wB)*0.3;
-    const dir=hot?-1:1; // hot=A(左)→流向右(B)
+  if(Math.abs(ta-tb)>0.3){const ay=baseY-Math.min(bhA,bhB)*0.5, x0=W*0.5,len=gapX*0.9;   // 箭頭只畫在兩塊之間的縫，不壓到溫度文字
+    const dir=hot?1:-1; // hot=A(左)→流向右(B)（原本正負號相反，箭頭由冷指向熱）
     sc.strokeStyle='#ffce54';sc.lineWidth=3;sc.font='12px system-ui';sc.fillStyle='#ffce54';
     for(let k=-1;k<=1;k++){const yy=ay+k*16;arr(W*0.5-dir*len,yy,W*0.5+dir*len,yy);}
     sc.fillText('熱流 Q',W*0.5-16,ay-Math.min(bhA,bhB)*0.5-6);}
@@ -160,7 +160,7 @@ function drawGraph(){const W=gc._w,H=gc._h,mL=40,mR=14,mT=14,mB=24,Tw=12;
   gc.clearRect(0,0,W,H);gc.fillStyle='#0c0a08';gc.fillRect(0,0,W,H);
   const Tmin=0,Tmax=100,X=tt=>mL+tt/Tw*(W-mL-mR),Y=T=>H-mB-(T-Tmin)/(Tmax-Tmin)*(H-mT-mB);
   gc.strokeStyle='#241c16';gc.lineWidth=1;gc.fillStyle='#6b5c50';gc.font='10px system-ui';
-  for(let T=0;T<=100;T+=20){gc.beginPath();gc.moveTo(mL,Y(T));gc.lineTo(W-mR,Y(T));gc.stroke();gc.fillText(T,6,Y(T)+3);}
+  for(let T=0;T<=100;T+=20){gc.beginPath();gc.moveTo(mL,Y(T));gc.lineTo(W-mR,Y(T));gc.stroke();gc.fillText(T,20,Y(T)+3);}
   // 終溫線
   const tf=Tf();gc.strokeStyle='rgba(124,255,178,.6)';gc.setLineDash([5,4]);gc.beginPath();gc.moveTo(mL,Y(tf));gc.lineTo(W-mR,Y(tf));gc.stroke();gc.setLineDash([]);
   gc.fillStyle='#7CFFB2';gc.fillText('終溫 '+tf.toFixed(1)+'°C',W-mR-78,Y(tf)-4);
@@ -170,7 +170,8 @@ function drawGraph(){const W=gc._w,H=gc._h,mL=40,mR=14,mT=14,mB=24,Tw=12;
   // 游標
   const cx=X(Math.min(t,Tw));gc.strokeStyle='rgba(255,255,255,.4)';gc.lineWidth=1;gc.beginPath();gc.moveTo(cx,mT);gc.lineTo(cx,H-mB);gc.stroke();
   gc.fillStyle='#ff7b54';gc.beginPath();gc.arc(cx,Y(TA()),3.5,0,7);gc.fill();gc.fillStyle='#4c9cff';gc.beginPath();gc.arc(cx,Y(TB()),3.5,0,7);gc.fill();
-  gc.fillStyle='#8a99ad';gc.font='10px system-ui';gc.fillText('溫度-時間圖　t →',mL+4,H-7);
+  gc.fillStyle='#8a99ad';gc.font='10px system-ui';gc.fillText('時間 t →（時間軸為示意，未標秒數）',mL+4,H-7);
+  gc.save();gc.translate(11,mT+64);gc.rotate(-Math.PI/2);gc.fillText('溫度 (°C)',0,0);gc.restore();
 }
 function render(){drawScene();drawGraph();}
 let last=0;

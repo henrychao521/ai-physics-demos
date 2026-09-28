@@ -130,16 +130,17 @@ function rayA(O,dx,dy,len,col,w,dash){const ex=O.x+dx*len,ey=O.y+dy*len;sc.strok
   const a=Math.atan2(dy,dx),h=10;sc.beginPath();sc.moveTo(ex,ey);sc.lineTo(ex-h*Math.cos(a-.4),ey-h*Math.sin(a-.4));sc.lineTo(ex-h*Math.cos(a+.4),ey-h*Math.sin(a+.4));sc.closePath();sc.fill();}
 function draw(){const W=sc._w,H=sc._h,O={x:W/2,y:H/2};
   const {th1,th2,tir,tc}=solve();
-  // 介質：上層偏亮(n小)、下層偏藍(n大)
-  const g1=sc.createLinearGradient(0,0,0,H/2);g1.addColorStop(0,'#eef4fb');g1.addColorStop(1,'#dce8f4');sc.fillStyle=g1;sc.fillRect(0,0,W,H/2);
-  const tint=(state.n2-1)/1.5;const g2=sc.createLinearGradient(0,H/2,0,H);
-  g2.addColorStop(0,`rgba(${Math.round(150-tint*90)},${Math.round(200-tint*70)},${Math.round(235-tint*20)},1)`);g2.addColorStop(1,`rgba(${Math.round(70-tint*30)},${Math.round(130-tint*40)},${Math.round(190-tint*20)},1)`);
-  sc.fillStyle=g2;sc.fillRect(0,H/2,W,H/2);
+  // 介質顏色依各自的折射率：n 越大越藍越深（原本上層固定淺色、只有下層隨 n₂ 變，「水→空氣」時水反而是淺色、空氣是藍色）
+  const medC=n=>{const t=Math.max(0,Math.min(1,(n-1)/1.5));return [Math.round(236-t*176),Math.round(244-t*134),Math.round(251-t*56)];};
+  const c1=medC(state.n1),c2=medC(state.n2),rgb=(c,k)=>`rgb(${Math.round(c[0]*k)},${Math.round(c[1]*k)},${Math.round(c[2]*k)})`;
+  const g1=sc.createLinearGradient(0,0,0,H/2);g1.addColorStop(0,rgb(c1,1));g1.addColorStop(1,rgb(c1,0.94));sc.fillStyle=g1;sc.fillRect(0,0,W,H/2);
+  const g2=sc.createLinearGradient(0,H/2,0,H);g2.addColorStop(0,rgb(c2,0.94));g2.addColorStop(1,rgb(c2,0.82));sc.fillStyle=g2;sc.fillRect(0,H/2,W,H/2);
+  const txt=n=>(n-1)/1.5>0.45?'#eef4fb':'#33475c';
   // 界面 + 法線
   sc.strokeStyle='#3a6a9a';sc.lineWidth=2;sc.beginPath();sc.moveTo(0,O.y);sc.lineTo(W,O.y);sc.stroke();
   sc.strokeStyle='rgba(60,90,120,.55)';sc.setLineDash([6,5]);sc.beginPath();sc.moveTo(O.x,24);sc.lineTo(O.x,H-24);sc.stroke();sc.setLineDash([]);
-  sc.fillStyle='#4a5a6a';sc.font='11px system-ui';sc.fillText('法線',O.x+6,36);
-  sc.fillText('介質1  n₁='+state.n1.toFixed(2),12,20);sc.fillStyle='#e8f0fb';sc.fillText('介質2  n₂='+state.n2.toFixed(2),12,H-12);
+  sc.fillStyle=txt(state.n1);sc.font='11px system-ui';sc.fillText('法線',O.x+6,36);
+  sc.fillText('介質1  n₁='+state.n1.toFixed(2),12,20);sc.fillStyle=txt(state.n2);sc.fillText('介質2  n₂='+state.n2.toFixed(2),12,H-12);
   // 入射光
   const din={x:Math.sin(th1),y:Math.cos(th1)};
   rayA({x:O.x-din.x*200,y:O.y-din.y*200},din.x,din.y,200,'#1f9d55',3.5);
@@ -153,7 +154,8 @@ function draw(){const W=sc._w,H=sc._h,O={x:W/2,y:H/2};
   if(!tir){sc.strokeStyle='#e8a000';sc.beginPath();sc.arc(O.x,O.y,34,Math.PI/2,Math.PI/2-th2,true);sc.stroke();
     sc.fillStyle='#e8a000';sc.fillText('θ₂='+(th2*180/Math.PI).toFixed(0)+'°',O.x+10,O.y+48);}
   // 臨界角線
-  if(tc!==null){const tcr=tc*Math.PI/180;rayA(O,-Math.sin(tcr),-Math.cos(tcr),200,'rgba(232,69,60,.5)',1.5,[3,4]);
+  // 臨界角參考線：只畫虛線、不加箭頭（原本箭頭朝外，像一道離開界面的光）
+  if(tc!==null){const tcr=tc*Math.PI/180;sc.strokeStyle='rgba(232,69,60,.6)';sc.lineWidth=1.5;sc.setLineDash([3,4]);sc.beginPath();sc.moveTo(O.x,O.y);sc.lineTo(O.x-Math.sin(tcr)*200,O.y-Math.cos(tcr)*200);sc.stroke();sc.setLineDash([]);
     sc.fillStyle='#c0392b';sc.fillText('臨界角 '+tc.toFixed(1)+'°',O.x-Math.sin(tcr)*210-20,O.y-Math.cos(tcr)*210);}
   drawStats(th2,tir,tc);
   updateFormula();

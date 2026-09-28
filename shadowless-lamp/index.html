@@ -41,7 +41,8 @@
     <h1>外科無影燈光學互動模擬</h1>
     <p>手術無影燈以<b>多顆光源</b>從不同角度照射同一術區。當器械或人手遮擋部分光線時，
        其他角度的光源仍能照亮被遮處，使陰影被「填補」。拖動下方滑桿改變<b>光源數量</b>，
-       觀察手術檯面的陰影如何從濃黑變淡、趨近無影。</p>
+       觀察手術檯面的陰影如何從邊界銳利的全黑（本影）變成較淡、邊緣柔和的半影。
+       光源增加到某個數量後，陰影濃度就不再明顯下降（預設張角 110° 時停在約 40%）；要再<b>加大燈具張角</b>或<b>縮小遮擋物</b>，陰影才會更淡、趨近無影。</p>
   </header>
 
   <div class="row">
@@ -181,8 +182,10 @@ function draw(){
   g.fillText('遮擋物',ob.x-18,ob.y+4);
 
   // lamp housing + sources
-  g.strokeStyle='#33404e';g.lineWidth=10;
-  g.beginPath();g.arc(lampCx,lampCy+lampR*0.35,lampR,Math.PI*1.15,Math.PI*1.85);g.stroke();
+  // 燈罩沿光源所在的同一條曲線（略高 12 px）畫；原本畫成圓心 (500,175)、R=300 的上凸圓弧，大半在畫布外、也不經過光源
+  g.strokeStyle='#33404e';g.lineWidth=10;g.lineCap='round';
+  {const half=state.spread*Math.PI/360+0.12;g.beginPath();for(let k=0;k<=40;k++){const t=-half+2*half*k/40;const x=lampCx+Math.sin(t)*lampR,y=lampCy+(1-Math.cos(t))*lampR*0.35-12;k?g.lineTo(x,y):g.moveTo(x,y);}g.stroke();}
+  g.lineCap='butt';
   for(const s of L){
     const gl=g.createRadialGradient(s.x,s.y,1,s.x,s.y,16);
     gl.addColorStop(0,'#fffbe6');gl.addColorStop(1,'rgba(255,251,230,0)');

@@ -79,6 +79,8 @@
 const S=SIM;
 const state={mag:4};
 function frow(n,sym,sub,val){return `<div class="frow"><span class="fname">${n}</span><span class="fsym">${sym}</span><span class="fsub">= ${sub}</span><span class="fval">${val}</span></div>`;}
+// 三位有效數字的科學記號（原本 toFixed(4) 在 q=1 時只剩 0.0001 一位有效數字）
+function sci3(x){const sup=n=>String(n).replace(/-/g,'⁻').replace(/\d/g,d=>'⁰¹²³⁴⁵⁶⁷⁸⁹'[d]);let e=Math.floor(Math.log10(x)),a=x/10**e;if(+a.toFixed(2)>=10){a/=10;e++;}return a.toFixed(2)+'×10'+sup(e);}
 function updateFormula(){
   const q=state.mag, k=1, r=100;               // k=1 相對單位；r=參考距離 100（相對單位）
   const E=k*q/(r*r);                            // 電場 E = kq/r²
@@ -86,9 +88,9 @@ function updateFormula(){
   const F=k*q*q/(r*r);                          // 兩個同量電荷相距 r 的庫侖力 F = kq₁q₂/r²
   document.getElementById('formula').innerHTML=
     `<h4>📐 計算公式（即時代入　k=1 相對單位・參考距離 r=${r}）</h4>`+
-    frow('電場 E','kq / r²',`1·${q} / ${r}²`, E.toFixed(4)+' (相對)')+
-    frow('電位 V','kq / r',`1·${q} / ${r}`, V.toFixed(3)+' (相對)')+
-    frow('庫侖力 F','kq₁q₂ / r²',`1·${q}·${q} / ${r}²`, F.toFixed(4)+' (相對)')+
+    frow('電場 E','kq / r²',`1·${q} / ${r}²`, sci3(E)+' (相對)')+
+    frow('電位 V','kq / r',`1·${q} / ${r}`, sci3(V)+' (相對)')+
+    frow('庫侖力 F','kq₁q₂ / r²',`1·${q}·${q} / ${r}²`, sci3(F)+' (相對)')+
     `<div class="frel">📈 <b>E、F ∝ 1/r²</b>：距離加倍 → 電場與作用力剩 ¼　·　<b>V ∝ 1/r</b>：電位衰減較慢　·　<b>E、V ∝ q</b>：電荷量加倍 → 兩者皆加倍。</div>`;
 }
 const sBar=document.getElementById('sliders');
@@ -108,14 +110,18 @@ function fieldLine(sx,sy,sign){cc.beginPath();cc.moveTo(sx,sy);let x=sx,y=sy;
 function draw(){const W=900,H=470;
   // 電位熱圖(等位面)
   const cell=5,img=cc.createImageData(W,H);
-  for(let y=0;y<H;y+=cell)for(let x=0;x<W;x+=cell){const v=potential(x+cell/2,y+cell/2),t=Math.tanh(v*0.06),band=Math.round(t*9)/9;
+  for(let y=0;y<H;y+=cell)for(let x=0;x<W;x+=cell){const v=potential(x+cell/2,y+cell/2),t=Math.tanh(v*8),band=Math.round(t*9)/9;   // 係數原為 0.06：畫面距離是 px，V=q/r≈0.01~0.2，×0.06 後全落在第 0 帶→看不到任何等位面
     let r,g,b;if(band>=0){r=18+band*150;g=14+band*22;b=30+band*12;}else{r=14-band*8;g=20-band*30;b=44-band*150;}
     for(let yy=y;yy<Math.min(y+cell,H);yy++)for(let xx=x;xx<Math.min(x+cell,W);xx++){const o=(yy*W+xx)*4;img.data[o]=r;img.data[o+1]=g;img.data[o+2]=b;img.data[o+3]=255;}}
   // putImageData 不受 setTransform 影響(以 device px 寫入)，高清(dpr>1)下只填左上 1/4 → 改經離屏 canvas 再 drawImage(受 transform 縮放填滿全畫布)
   if(!draw._hm){draw._hm=document.createElement('canvas');draw._hm.width=W;draw._hm.height=H;draw._hmx=draw._hm.getContext('2d');}
   draw._hmx.putImageData(img,0,0);cc.drawImage(draw._hm,0,0);
   // 場線
-  for(const c of charges)if(c.q>0){const nL=Math.min(16,6+Math.abs(c.q));for(let i=0;i<nL;i++){const a=i/nL*2*Math.PI;fieldLine(c.x+Math.cos(a)*11,c.y+Math.sin(a)*11,1);}}
+  // 場線條數 ∝ 電荷量（每單位電荷 3 條）；正電荷往外畫。負電荷總量多於正電荷時，多出來的部分由負電荷往回畫
+  // （原本只從正電荷出發，只放負電荷時完全沒有場線）
+  const LPQ=3,qPos=charges.reduce((s,c)=>s+(c.q>0?c.q:0),0),qNeg=charges.reduce((s,c)=>s+(c.q<0?-c.q:0),0);
+  for(const c of charges)if(c.q>0){const nL=Math.round(LPQ*c.q);for(let i=0;i<nL;i++){const a=i/nL*2*Math.PI;fieldLine(c.x+Math.cos(a)*11,c.y+Math.sin(a)*11,1);}}
+  if(qNeg>qPos)for(const c of charges)if(c.q<0){const nL=Math.round(LPQ*(-c.q)*(qNeg-qPos)/qNeg);for(let i=0;i<nL;i++){const a=(i+0.5)/nL*2*Math.PI;fieldLine(c.x+Math.cos(a)*11,c.y+Math.sin(a)*11,-1);}}
   // 場向量
   for(let y=30;y<H;y+=48)for(let x=30;x<W;x+=48){const {ex,ey}=field(x,y),m=Math.hypot(ex,ey);if(m<1e-6)continue;
     const len=Math.min(18,6+Math.log(1+m*4000)*3),ux=ex/m,uy=ey/m,x2=x+ux*len,y2=y+uy*len;
@@ -128,7 +134,7 @@ function draw(){const W=900,H=470;
     const g=cc.createRadialGradient(c.x-r*.35,c.y-r*.35,r*.1,c.x,c.y,r);
     g.addColorStop(0,pos?'#ffb0b0':'#b0c8ff');g.addColorStop(1,pos?'#c01818':'#1840c0');cc.fillStyle=g;cc.beginPath();cc.arc(c.x,c.y,r,0,7);cc.fill();
     cc.strokeStyle='#fff';cc.lineWidth=2;cc.stroke();cc.fillStyle='#fff';cc.font='bold 16px system-ui';cc.textAlign='center';cc.fillText(pos?'+':'−',c.x,c.y+6);cc.textAlign='left';}
-  document.getElementById('sub').textContent=charges.length+' 個電荷　白線＝電場線，色帶＝等位面';
+  document.getElementById('sub').textContent=charges.length+' 個電荷　白線＝電場線（條數∝電荷量），色帶邊界＝等位面';
 }
 let drag=-1;
 function pos(e){const r=cv.getBoundingClientRect();return {x:(e.clientX-r.left)*900/r.width,y:(e.clientY-r.top)*470/r.height};}

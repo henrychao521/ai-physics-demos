@@ -75,7 +75,7 @@
   <header>
     <span class="badge">光學・干涉</span><span class="badge">3D 點雲</span>
     <h1>光譜干涉實驗室（歐幾里得視角）</h1>
-    <p>兩組三維駐波「晶格」互相轉一個小角度疊加，紅、綠、藍三色的波數不同（<b>色散</b>），各自產生不同的干涉圖樣。
+    <p>兩組 3D 駐波「晶格」互相轉一個小角度疊加，紅、綠、藍三色的波數不同（<b>色散</b>），各自產生不同的干涉圖樣。
        只保留<b>建設性干涉</b>的亮點畫成 3D 點雲：三色都亮的地方混成<b>白色</b>，只有部分顏色亮的地方就出現<b>彩色邊緣</b>。
        拖曳畫面可旋轉視角，滾輪可縮放。</p>
   </header>
@@ -119,7 +119,7 @@
         <div class="sld"><label><span>色散係數（Dispersion）</span><span class="v" id="val-disp" style="color:var(--accent2)">1.2x</span></label>
           <input type="range" id="slider-disp" min="1.0" max="2.0" step="0.1" value="1.2">
           <div class="sub"><span>無色差</span><span>強色散</span></div></div>
-        <div class="sld" style="margin-bottom:0"><label><span>光子採樣數（Particles）</span></label>
+        <div class="sld" style="margin-bottom:0"><label><span>光子取樣數（Particles）</span></label>
           <select id="select-res">
             <option value="15000">快速預覽（15k）</option>
             <option value="30000" selected>標準（30k）</option>
@@ -149,7 +149,7 @@
   </div>
 
   <div class="note">
-    <b>物理重點：</b>每一色都是兩組三維駐波的疊加：<code>A = cos(kx)cos(ky)cos(kz)</code>、晶格 B 是把座標繞 z 軸轉 θ 後的同一個波，
+    <b>物理重點：</b>每一色都是兩組 3D 駐波的疊加：<code>A = cos(kx)cos(ky)cos(kz)</code>、晶格 B 是把座標繞 z 軸轉 θ 後的同一個波，
     強度 <code>I = (A + B)² / 4</code>（振幅相加後平方——干涉的本質是<b>振幅</b>相加、不是強度相加）。
     三色波數 <code>k_R = K/√D、k_G = K、k_B = K·√D</code>：紅光波長長、波數小；藍光波長短、波數大。
     兩組晶格只差一點角度，就像疊紗的<b>疊紋（莫列波紋）</b>，會拍出比原本週期大得多的圖樣。
@@ -323,13 +323,13 @@ function drawPlot(){
   if (!pc) return; const W = PW, H = PH, mL = 36, mR = 10, mT = 10, mB = 26;
   pc.clearRect(0, 0, W, H); pc.fillStyle = '#0a1018'; pc.fillRect(0, 0, W, H);
   const limit = 4 * Math.PI, k = waveNumbers(state.baseK, state.dispersion), rr = state.rot * Math.PI / 180, c = Math.cos(rr), s = Math.sin(rr);
-  const X = x => mL + (x + limit) / (2 * limit) * (W - mL - mR), Y = v => H - mB - v * (H - mT - mB);
+  const X = x => mL + (x + limit) / (2 * limit) * (W - mL - mR), Y = v => H - mB - v / 1.08 * (H - mT - mB);   // 上限留 8%：x=0 三色 I=1 的峰原本貼在繪圖區頂端
   pc.font = '10px system-ui'; pc.fillStyle = 'rgba(255,255,255,.5)'; pc.strokeStyle = '#1b2738'; pc.lineWidth = 1;
   [0, 0.25, 0.5, 0.75, 1].forEach(v => { pc.beginPath(); pc.moveTo(mL, Y(v)); pc.lineTo(W - mR, Y(v)); pc.stroke(); pc.fillText(v.toFixed(2), 4, Y(v) + 3); });
   pc.textAlign = 'center';
   [-4, -2, 0, 2, 4].forEach(m => { const x = X(m * Math.PI); pc.strokeStyle = '#1b2738'; pc.beginPath(); pc.moveTo(x, mT); pc.lineTo(x, H - mB); pc.stroke();
     pc.fillText(m === 0 ? '0' : (m + 'π'), x, H - mB + 13); });
-  pc.fillText('x', W - mR - 6, H - 4); pc.textAlign = 'left'; pc.fillText('I', mL + 4, mT + 9);
+  pc.fillText('x', W - mR - 6, H - 4); pc.textAlign = 'left'; pc.fillText('I（相對強度）', mL + 4, mT + 9);
   pc.strokeStyle = 'rgba(255,255,255,.45)'; pc.setLineDash([4, 4]); pc.beginPath(); pc.moveTo(mL, Y(0.25)); pc.lineTo(W - mR, Y(0.25)); pc.stroke(); pc.setLineDash([]);
   pc.strokeStyle = '#3a4a63'; pc.beginPath(); pc.moveTo(mL, mT); pc.lineTo(mL, H - mB); pc.lineTo(W - mR, H - mB); pc.stroke();
   const N = Math.max(200, Math.round(W - mL - mR) * 2);

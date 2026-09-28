@@ -83,7 +83,7 @@
 
   <div class="note">
     <b>物理重點：</b>單一分子撞牆一次把動量 2m·v⊥ 傳給牆；每秒大量碰撞累積成穩定的力，除以面積就是<b>壓力</b>。
-    由動力論可導出 <code>P·V = N·k·T</code>（即 PV=nRT）。溫度正比於分子平均動能 <code>½m·v̄² ∝ T</code>——溫度就是「分子運動劇烈程度」。
+    由動力論可導出 <code>P·V = N·k·T</code>（即 PV=nRT）。溫度正比於分子平均動能 <code>½m·v_rms² ∝ T</code>——溫度就是「分子運動劇烈程度」。
     固定其他量：<b>T↑→P↑</b>、<b>V↓→P↑</b>、<b>N↑→P↑</b>。右方「實測/理論 ≈ 1」即驗證了這條微觀導出的巨觀定律。
   </div>
 
@@ -128,6 +128,8 @@ function step(dt){let imp=0;const b=state.box;
 let sc;
 const THERM={skyTop:'#2a1416',skyBottom:'#12080a',vignette:'rgba(0,0,0,.5)'};
 function setupCanvases(){sc=S.fit(document.getElementById('scene'),1.05);}
+// 顏色依「絕對速率」：以滑桿最高溫 T=40 的 v_rms 為最紅。原本除以當下 v_rms，任何溫度都是同一色
+const VCOL=Math.sqrt(2*40);
 function heatColor(t){ // 0冷藍→1熱紅
   const r=Math.round(60+195*t),g=Math.round(120+60*Math.sin(t*3.14)-90*t),b=Math.round(255-235*t);
   return [Math.max(0,Math.min(255,r)),Math.max(0,Math.min(255,g)),Math.max(0,Math.min(255,b))];}
@@ -140,7 +142,7 @@ function draw(){const W=sc._w,H=sc._h,m=26,size=Math.min(W,H)-2*m;
   sc.fillStyle='rgba(255,255,255,.06)';sc.fillRect(ox,oy,bpx,6);
   // 分子(發光，顏色隨速率)
   const vr=vrms();sc.save();sc.globalCompositeOperation='lighter';
-  for(const p of P){const sp=Math.hypot(p.vx,p.vy),t=Math.min(1,sp/(vr*1.7)),[r,g,b]=heatColor(t);
+  for(const p of P){const sp=Math.hypot(p.vx,p.vy),t=Math.min(1,sp/VCOL),[r,g,b]=heatColor(t);
     const x=ox+p.x*PXR,y=oy+p.y*PXR;const gr=sc.createRadialGradient(x,y,0,x,y,5.5);
     gr.addColorStop(0,`rgba(${r},${g},${b},.95)`);gr.addColorStop(1,`rgba(${r},${g},${b},0)`);
     sc.fillStyle=gr;sc.beginPath();sc.arc(x,y,5.5,0,7);sc.fill();
@@ -151,7 +153,7 @@ function draw(){const W=sc._w,H=sc._h,m=26,size=Math.min(W,H)-2*m;
 function updateHud(){const V=state.box*state.box,Pth=state.N*state.T/V,ratio=Pth>0?Pmeas/Pth:0;
   document.getElementById('hud').innerHTML=chip('溫度 T',state.T.toFixed(0))+chip('體積 V',V.toFixed(1))+chip('分子數 N',state.N+'');
   const rows=[['理論壓力 NkT/V',Pth.toFixed(2),'#4cc2ff'],['實測壓力',Pmeas.toFixed(2),'#ffce54'],
-    ['溫度→平均動能',state.T.toFixed(0),'#ff6b9d'],['PV/(NkT)',(state.N>0?(Pth*V/(state.N*state.T)).toFixed(2):'—'),'#e8eef6']];
+    ['溫度→平均動能',state.T.toFixed(0),'#ff6b9d'],['實測 PV/(NkT)',(state.N>0?(Pmeas*V/(state.N*state.T)).toFixed(2):'—'),'#e8eef6'/* 原本用理論值 Pth 代入，恆等於 1.00 */]];
   document.getElementById('stats').innerHTML=rows.map(r=>`<div class="box"><div class="k">${r[0]}</div><div class="v" style="color:${r[2]}">${r[1]}</div></div>`).join('');
   document.getElementById('check').textContent='實測 / 理論 ≈ '+ratio.toFixed(2)+'（→ PV = NkT 成立）';}
 function chip(k,v){return `<div class="chip">${k}<b>${v}</b></div>`;}
