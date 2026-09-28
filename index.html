@@ -48,11 +48,6 @@
   .t-lamp b{position:absolute;left:50%;top:54%;transform:translateX(-50%);width:42px;height:42px;border-radius:50%;background:#1a2233;border:2px solid #3a4660}
   .t-hover{background:radial-gradient(120px 80px at 50% 95%,rgba(59,130,246,.5) 0,transparent 70%),#0b1220}
   .t-hover b{position:absolute;left:50%;top:42%;transform:translateX(-50%);width:90px;height:26px;border-radius:8px;background:#1e3a8a;border-top:3px solid #60a5fa}
-  .t-house{background:#0e1626;display:flex;align-items:flex-end;justify-content:center;gap:5px;padding:24px}
-  .t-house i{display:block;width:9px;background:#2f4063;border-radius:2px}
-  .t-house i:nth-child(1){height:30%}.t-house i:nth-child(2){height:55%}.t-house i:nth-child(3){height:45%}
-  .t-house i:nth-child(4){height:70%}.t-house i:nth-child(5){height:60%}.t-house i:nth-child(6){height:90%;background:#4cc2ff}
-  .t-house i:nth-child(7){height:48%;background:#ff6b9d}
   .t-beat{background:#070a12}
   .t-proj{background:radial-gradient(120px 90px at 50% 120%,#13203a 0,#070d18 70%)}
   .t-kinematics{background:#070d18}
@@ -1057,7 +1052,7 @@
       <div class="go">開始體驗 →</div>
     </a>
 
-    <div class="section"><h2>🛠 工程・資料</h2><span class="ln"></span><span class="cnt">工程設計・資料視覺化</span></div>
+    <div class="section"><h2>🛠 工程</h2><span class="ln"></span><span class="cnt">工程設計</span></div>
 
     <a class="card" href="hovercraft/">
       <div class="thumb t-hover"><b></b></div>
@@ -1066,19 +1061,11 @@
       <p>選配升力/推力馬達、電池與船體材料，即時計算總重、推重比與升力餘裕，並模擬導風板向量轉向。</p>
       <div class="go">開始體驗 →</div>
     </a>
-
-    <a class="card" href="housing/">
-      <div class="thumb t-house"><i></i><i></i><i></i><i></i><i></i><i></i><i></i></div>
-      <div class="tag"><span class="badge">資料・圖表工具</span> <span class="badge">需連網</span></div>
-      <h3>全台房市趨勢示意儀表板</h3>
-      <p>34 個縣市/行政區、44 季價量軌跡與跨週期對比的互動儀表板（Chart.js）。數值為內插產生的示意數據，非官方統計。</p>
-      <div class="go">開始體驗 →</div>
-    </a>
   </div>
 
   <footer>
     純前端 HTML / Canvas 打造的可執行互動模擬 · 涵蓋國高中物理六大領域 · 適合課堂教學與自學<br>
-    標「需連網」的三頁（光譜干涉實驗室、氣墊船、房市）透過 CDN 載入函式庫，離線或網路白名單環境可能無法開啟；其餘各館可離線使用。<br>
+    標「需連網」的兩頁（光譜干涉實驗室、氣墊船）透過 CDN 載入函式庫，離線或網路白名單環境可能無法開啟；其餘各館可離線使用。<br>
     每個模擬皆經物理數值驗證（守恆律、公式關係實測吻合）。原始碼：<a href="https://github.com/henrychao521/ai-physics-demos" target="_blank" rel="noopener">github.com/henrychao521/ai-physics-demos</a>
   </footer>
 </div>
