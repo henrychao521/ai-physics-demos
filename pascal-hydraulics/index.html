@@ -102,11 +102,13 @@ function F2(){return P()*state.A2;}            // N
 function recompute(){updateFormula();updateHud();}
 
 // ---- 公式面板 ----
+// 1 N/cm² = 10⁴ Pa，換成 SI 帕的科學記號
+function toPa(p){const x=p*1e4;let e=Math.floor(Math.log10(x)),a=x/10**e;if(+a.toFixed(2)>=10){a/=10;e++;}return a.toFixed(2)+'×10'+String(e).replace(/\d/g,d=>'⁰¹²³⁴⁵⁶⁷⁸⁹'[d]);}
 function frow(n,sym,sub,val){return `<div class="frow"><span class="fname">${n}</span><span class="fsym">${sym}</span><span class="fsub">= ${sub}</span><span class="fval">${val}</span></div>`;}
 function updateFormula(){const p=P(),f2=F2(),ratio=state.A2/state.A1,d1=8,d2=d1*state.A1/state.A2;
   document.getElementById('formula').innerHTML=
     `<h4>📐 計算公式（即時代入　帕斯卡原理）</h4>`
-    + frow('壓力 P','F₁ / A₁',`${state.F1} / ${state.A1}`, p.toFixed(1)+' N/cm²')
+    + frow('壓力 P','F₁ / A₁',`${state.F1} N / ${state.A1} cm²`, p.toFixed(1)+' N/cm² = '+toPa(p)+' Pa')
     + frow('輸出力 F₂','P·A₂ = F₁·A₂/A₁',`${state.F1}·${state.A2}/${state.A1}`, f2.toFixed(0)+' N')
     + frow('力放大倍率','A₂ / A₁',`${state.A2} / ${state.A1}`, ratio.toFixed(1)+' 倍')
     + frow('位移比（體積守恆）','d₂/d₁ = A₁/A₂',`${state.A1}/${state.A2}`, (state.A1/state.A2).toFixed(3)+'（大活塞升得少）')
@@ -149,14 +151,18 @@ function draw(){const W=sc._w,H=sc._h;
   const py1=fluidTop0-60+d1px;
   sc.fillStyle='#aab6c8';sc.fillRect(x1-w1/2-3,py1,w1+6,12);
   // F1 箭頭(下)
-  S.arrow(sc,x1,py1-8,x1,py1-8-Math.min(56,state.F1*0.32),{color:'#ff8fb0',width:3,label:'F₁'});
+  // 施力向下壓小活塞（原本箭頭頭朝上）
+  {const L1=Math.min(56,state.F1*0.32);S.arrow(sc,x1,py1-6-L1,x1,py1-2,{color:'#ff8fb0',width:3});
+   sc.fillStyle='#ff8fb0';sc.font='600 13px system-ui';sc.fillText('F₁='+state.F1+' N',x1+w1/2+8,py1-6-L1+10);}
   // 大活塞
   const py2=fluidTop0-90-d2px;
   sc.fillStyle='#c9d6ea';sc.fillRect(x2-w2/2-4,py2,w2+8,14);
   // 負載(方塊/車)壓在大活塞上 + F2 箭頭(上)
   sc.fillStyle='#5a6f93';roundRect(sc,x2-w2*0.38,py2-30,w2*0.76,26,5);sc.fill();
   sc.fillStyle='#dfe8f5';sc.font='12px system-ui';sc.textAlign='center';sc.fillText('負載',x2,py2-13);sc.textAlign='left';
-  S.arrow(sc,x2,py2-2,x2,py2-2-Math.min(70,F2()*0.05),{color:'#6cd0ff',width:3,label:'F₂'});
+  // 兩箭頭比例不同（F₂ 可達 F₁ 的 60 倍），長度只示意方向，數值直接標在旁邊
+  S.arrow(sc,x2,py2-2,x2,py2-2-Math.min(70,F2()*0.05),{color:'#6cd0ff',width:3});
+  sc.fillStyle='#6cd0ff';sc.font='600 13px system-ui';sc.fillText('F₂='+F2().toFixed(0)+' N',x2+w2*0.38+6,py2-2-Math.min(70,F2()*0.05)+10);
   // 標示面積
   sc.fillStyle='#ff8fb0';sc.font='12px system-ui';sc.fillText('A₁='+state.A1+'cm²',x1-26,baseY+16);
   sc.fillStyle='#6cd0ff';sc.fillText('A₂='+state.A2+'cm²',x2-26,baseY+16);
@@ -170,7 +176,7 @@ function loop(ts){const dt=last?Math.min((ts-last)/1000,0.05):0;last=ts;if(pushi
 
 const pbtn=document.getElementById('push');
 pbtn.onclick=()=>{pushing=!pushing;pbtn.classList.toggle('on',pushing);pbtn.textContent=pushing?'⏸ 暫停推送':'▶ 開始推送';};
-const PRE={car:{F1:60,A1:3,A2:90},equal:{F1:80,A1:20,A2:20},big:{F1:50,A1:5,A2:100}};
+const PRE={car:{F1:60,A1:3,A2:90},equal:{F1:80,A1:10,A2:10}   /* 原本 A₁=20 超出滑桿上限 12 */,big:{F1:50,A1:5,A2:100}};
 document.querySelectorAll('[data-preset]').forEach(b=>b.onclick=()=>{const pr=PRE[b.dataset.preset];if(!pr)return;
   ['F1','A1','A2'].forEach(k=>setSlider(k,pr[k]));recompute();});
 
