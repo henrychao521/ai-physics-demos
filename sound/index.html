@@ -136,7 +136,7 @@ function updateFormula(){
       +frow('拍週期 T_拍','1 / |f₁−f₂|', df>0.2?`1 / ${df.toFixed(1)}`:'—', df>0.2?(1/df).toFixed(3)+' s':'—')
       +`<div class="frel">📈 <b>拍頻 = |f₁−f₂|</b>：兩頻率差越大、強弱起伏越快　·　<b>f₁=f₂ → 拍頻=0</b>（聽不到拍音，音準對齊）　·　響度只改振幅、不改音調與拍頻。</div>`;
   }else{
-    html+=`<div class="frel">📈 <b>音調 ∝ 頻率</b>：f 越大音越高　·　<b>響度 ∝ 振幅</b>：音量越大波越高　·　同音調下，正弦最純、方波/鋸齒泛音多較尖銳（音色不同）。開啟「雙音」可觀察拍音。</div>`;
+    html+=`<div class="frel">📈 <b>音調隨頻率升高</b>：f 越大音越高，高八度＝頻率 ×2　·　<b>響度隨振幅增大</b>：音量越大波越高　·　同音調下，正弦最純、方波/鋸齒泛音多較尖銳（音色不同）。開啟「雙音」可觀察拍音。</div>`;
   }
   document.getElementById('formula').innerHTML=html;
 }
