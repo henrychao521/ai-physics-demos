@@ -107,9 +107,9 @@ function updateFormula(){
     : frow('放電 V_C(t)','V₀·e^(−t/τ)',`${V}·e^(−t/${T.toFixed(2)})`, `→ 0 V`);
   document.getElementById('formula').innerHTML=
     `<h4>📐 計算公式（即時代入　一階 RC・解析解）</h4>`
-    + frow('時間常數 τ','R·C',`${R} Ω · ${Cms} mF`, T.toFixed(2)+' s')
+    + frow('時間常數 τ','R·C',`${R} Ω · ${C}×10⁻⁶ F`, T.toFixed(2)+' s')
     + cap
-    + frow('開關瞬間電流 I₀','V / R',`${V} / ${R}`, I0.toFixed(1)+' mA')
+    + frow('開關瞬間電流 I₀','V / R',`${V} V / ${R} Ω`, I0.toFixed(1)+' mA')
     + frow('充滿電量 Q','C·V',`${Cms} mF · ${V} V`, Q0.toFixed(2)+' mC')
     + frow('約完成時間 5τ','5·R·C',`5 · ${T.toFixed(2)}`, (5*T).toFixed(1)+' s')
     + `<div class="frel">📈 <b>τ ∝ R、τ ∝ C</b>：R 或 C 加倍 → 過程慢 2 倍　·　<b>1τ 充到 63%、5τ &gt; 99%</b>　·　<b>電流在開關瞬間最大</b>，之後按 e^(−t/τ) 衰減。</div>`;
