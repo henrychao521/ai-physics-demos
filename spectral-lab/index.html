@@ -1,363 +1,388 @@
 <!DOCTYPE html>
 <html lang="zh-Hant">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>光譜干涉實驗室 (含歐幾里得視角) | Chromatic Euclidean Lab</title>
-    <link rel="icon" href="../assets/favicon.svg" type="image/svg+xml">
-    <link rel="stylesheet" href="../assets/site.css">
-    <script defer src="../assets/nav.js"></script>
-
-    <script src="https://cdn.tailwindcss.com"></script>
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-    <script src="https://cdn.plot.ly/plotly-2.27.0.min.js"></script>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-
-    <style>
-       .chart-container {
-            position: relative;
-            width: 100%;
-            height: 100%;
-            background-color: #000000;
-            overflow: hidden;
-        }
-
-       .custom-scroll::-webkit-scrollbar { width: 6px; }
-       .custom-scroll::-webkit-scrollbar-track { background: #1e293b; }
-       .custom-scroll::-webkit-scrollbar-thumb { background: #475569; border-radius: 3px; }
-
-        input[type=range] { -webkit-appearance: none; background: transparent; }
-        input[type=range]::-webkit-slider-thumb {
-            -webkit-appearance: none;
-            height: 14px; width: 14px;
-            border-radius: 50%;
-            background: #e11d48; /* Rose-600 */
-            cursor: pointer;
-            margin-top: -5px;
-            border: 2px solid #fff;
-        }
-        input[type=range]::-webkit-slider-runnable-track {
-            width: 100%; height: 4px;
-            cursor: pointer;
-            background: #334155;
-            border-radius: 2px;
-        }
-
-        .spinner {
-            border: 3px solid rgba(255, 255, 255, 0.1);
-            border-radius: 50%;
-            border-top: 3px solid #e11d48;
-            width: 30px; height: 30px;
-            animation: spin 0.8s linear infinite;
-        }
-        @keyframes spin { to { transform: rotate(360deg); } }
-    </style>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>光譜干涉實驗室 ｜ 三原色干涉・歐幾里得視角</title>
+<link rel="icon" href="../assets/favicon.svg" type="image/svg+xml">
+<link rel="stylesheet" href="../assets/site.css">
+<script defer src="../assets/nav.js"></script>
+<style>
+  *{box-sizing:border-box}
+  html,body{margin:0;padding:0;background:var(--bg);color:var(--txt);font-family:"Noto Sans TC","PingFang TC","Microsoft JhengHei",system-ui,sans-serif}
+  a{color:var(--accent)}
+  .wrap{max-width:1120px;margin:0 auto;padding:18px 16px 60px}
+  header h1{font-size:1.5rem;margin:.2em 0}
+  header p{color:var(--muted);margin:.2em 0 1em;line-height:1.6}
+  .badge{display:inline-block;background:var(--panel2);border:1px solid var(--line);color:var(--muted);font-size:.72rem;padding:2px 8px;border-radius:99px;margin-right:6px}
+  .grid2{display:grid;grid-template-columns:1fr 300px;gap:14px;align-items:start}
+  @media(max-width:860px){.grid2{grid-template-columns:1fr}}
+  .scene-wrap{position:relative;border-radius:16px;overflow:hidden;border:1px solid var(--line);background:#000;box-shadow:0 18px 50px rgba(0,0,0,.45)}
+  #scene{display:block;width:100%;cursor:grab;touch-action:pan-y}
+  #scene.drag{cursor:grabbing}
+  .hud{position:absolute;top:12px;left:12px;display:flex;gap:8px;flex-wrap:wrap;pointer-events:none;right:12px}
+  .chip{background:rgba(8,14,24,.62);backdrop-filter:blur(6px);border:1px solid rgba(255,255,255,.12);border-radius:10px;padding:6px 11px;color:#eaf2ff;font-size:.78rem;line-height:1.25}
+  .chip b{display:block;font-size:.98rem;font-variant-numeric:tabular-nums;color:#fff}
+  .chip.rose b{color:#ff8fb3}.chip.amber b{color:#ffce54}.chip.cyan b{color:#6cd0ff}
+  .toolbar{position:absolute;bottom:12px;right:12px;display:flex;gap:7px;flex-wrap:wrap;justify-content:flex-end}
+  .toolbar button{background:rgba(8,14,24,.62);backdrop-filter:blur(6px);color:#eaf2ff;border:1px solid rgba(255,255,255,.14);border-radius:9px;padding:7px 11px;font-size:.82rem;cursor:pointer;font-family:inherit}
+  .toolbar button:hover{border-color:var(--accent)}
+  .hint{position:absolute;bottom:14px;left:14px;color:rgba(255,255,255,.45);font-size:.74rem;pointer-events:none}
+  @media(max-width:560px){.toolbar{position:static;justify-content:center;padding:8px 10px;background:rgba(8,12,22,.5);border-top:1px solid var(--line)}.hint{display:none}}
+  .loading{position:absolute;inset:0;background:rgba(0,0,0,.86);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:10px;z-index:5}
+  .loading[hidden]{display:none}
+  .loading .ring{width:30px;height:30px;border:3px solid rgba(255,255,255,.1);border-top-color:var(--rose);border-radius:50%;animation:spin .8s linear infinite}
+  .loading .t1{color:var(--rose);font-weight:700;letter-spacing:.12em;font-size:.85rem}
+  .loading .t2{color:var(--muted);font-size:.75rem;font-family:ui-monospace,Menlo,monospace}
+  .side{display:flex;flex-direction:column;gap:14px}
+  .panel{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:12px 14px}
+  .panel h3{margin:0 0 8px;font-size:.84rem;color:var(--indigo)}
+  .panel p{margin:0 0 10px;color:var(--muted);font-size:.8rem;line-height:1.65}
+  .views{display:grid;grid-template-columns:1fr 1fr;gap:7px}
+  .views button{background:var(--panel2);color:var(--txt);border:1px solid var(--line);border-radius:9px;padding:7px 6px;cursor:pointer;font-family:inherit;text-align:center;line-height:1.3}
+  .views button b{display:block;font-size:.84rem}
+  .views button span{font-size:.72rem;color:var(--muted)}
+  .views button:hover{border-color:var(--indigo)}
+  .views button.on{background:var(--indigo);border-color:var(--indigo);color:#0a0e1f}
+  .views button.on span{color:#1b2350}
+  .sld{margin-bottom:12px}
+  .sld label{display:flex;justify-content:space-between;font-size:.82rem;color:var(--muted);margin-bottom:5px}
+  .sld label .v{color:var(--rose);font-variant-numeric:tabular-nums;font-weight:700}
+  .sld input{width:100%;accent-color:var(--rose)}
+  .sld .sub{display:flex;justify-content:space-between;font-size:.72rem;color:var(--faint);margin-top:2px}
+  select{width:100%;background:var(--panel2);color:var(--txt);border:1px solid var(--line);border-radius:9px;padding:7px 9px;font-family:inherit;font-size:.84rem}
+  .go{width:100%;margin-top:12px;background:linear-gradient(90deg,#be123c,#c2410c);color:#fff;border:0;border-radius:10px;padding:11px;font-weight:700;font-family:inherit;font-size:.88rem;cursor:pointer}
+  .go:hover{filter:brightness(1.12)}
+  .dirty{color:var(--accent2);font-size:.75rem;margin-top:7px;min-height:1em}
+  .lower{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-top:14px}
+  @media(max-width:680px){.lower{grid-template-columns:1fr}}
+  .panel .lab{font-size:.78rem;color:var(--muted);margin-bottom:6px}
+  #plot{display:block;width:100%;border-radius:8px;background:#0a1018}
+  .legend{display:flex;gap:14px;flex-wrap:wrap;font-size:.78rem;color:var(--muted);margin-top:8px}
+  .legend i{display:inline-block;width:18px;height:3px;border-radius:2px;vertical-align:middle;margin-right:5px}
+  .guide{margin:0;color:var(--muted);font-size:.84rem;line-height:1.75}
+  .guide b{color:var(--txt)}
+  .dots{display:inline-flex;gap:4px;vertical-align:middle;margin-left:4px}
+  .dots i{width:8px;height:8px;border-radius:50%;display:inline-block}
+  .note{background:var(--panel);border-left:3px solid var(--accent2);border-radius:8px;padding:12px 14px;color:var(--muted);font-size:.86rem;line-height:1.7;margin-top:14px}
+  .note b{color:var(--txt)}.note code{background:var(--bg2);padding:1px 6px;border-radius:5px;color:var(--green);font-size:.85em}
+  footer{color:var(--muted);font-size:.78rem;margin-top:24px;text-align:center;line-height:1.7}
+  @keyframes spin{to{transform:rotate(360deg)}}
+</style>
 </head>
-<body data-demo="光譜干涉實驗室" class="bg-slate-950 text-slate-200 font-sans min-h-screen md:h-screen flex flex-col overflow-x-hidden md:overflow-hidden">
+<body data-demo="光譜干涉實驗室">
+<div class="wrap">
+  <header>
+    <span class="badge">光學・干涉</span><span class="badge">3D 點雲</span>
+    <h1>光譜干涉實驗室（歐幾里得視角）</h1>
+    <p>兩組三維駐波「晶格」互相轉一個小角度疊加，紅、綠、藍三色的波數不同（<b>色散</b>），各自產生不同的干涉圖樣。
+       只保留<b>建設性干涉</b>的亮點畫成 3D 點雲：三色都亮的地方混成<b>白色</b>，只有部分顏色亮的地方就出現<b>彩色邊緣</b>。
+       拖曳畫面可旋轉視角，滾輪可縮放。</p>
+  </header>
 
-    <!-- 頁面自有 header 已移除，改用共用頂部導覽列（nav.js 注入）避免雙頂列擠壓內容高度 -->
+  <div class="grid2">
+    <div>
+      <div class="scene-wrap" id="sceneWrap">
+        <canvas id="scene" aria-label="三色干涉 3D 點雲（可拖曳旋轉）"></canvas>
+        <div class="hud" id="hud"></div>
+        <div class="hint">🖱 拖曳旋轉・滾輪縮放</div>
+        <div class="toolbar">
+          <button id="resetCam">↺ 預設視角</button>
+          <button id="savePng">⤓ 存成 PNG</button>
+        </div>
+        <div class="loading" id="loading" hidden>
+          <div class="ring"></div>
+          <div class="t1">計算光場中</div>
+          <div class="t2" id="loadText">取樣向量場…</div>
+        </div>
+      </div>
+    </div>
 
-    <!-- Main Workspace -->
-    <main class="flex-1 flex flex-col md:flex-row overflow-visible md:overflow-hidden">
+    <div class="side">
+      <div class="panel">
+        <h3>👁 歐幾里得視角（有理數視線）</h3>
+        <p>當視線斜率 tan θ = p/q 為簡單有理數時，視線與晶格排列共振，形成最強烈的「視覺走廊」與色散效應。</p>
+        <div class="views">
+          <button data-view="1,1"><b>1:1（45°）</b><span>主對角線</span></button>
+          <button data-view="1,2"><b>1:2（26.6°）</b><span>次級走廊</span></button>
+          <button data-view="1,3"><b>1:3（18.4°）</b><span>狹窄通道</span></button>
+          <button data-view="0,1"><b>0:1（0°）</b><span>正視圖</span></button>
+        </div>
+      </div>
+      <div class="panel">
+        <h3 style="color:var(--muted)">光學參數設定</h3>
+        <div class="sld"><label><span>基礎頻率（Base K）</span><span class="v" id="val-k">1.2</span></label>
+          <input type="range" id="slider-k" min="0.5" max="2.5" step="0.1" value="1.2"></div>
+        <div class="sld"><label><span>晶格夾角（Rotation）</span><span class="v" id="val-rot">5°</span></label>
+          <input type="range" id="slider-rot" min="0" max="45" step="0.5" value="5">
+          <div class="sub"><span>微小角度差異產生大尺度波形</span></div></div>
+        <div class="sld"><label><span>色散係數（Dispersion）</span><span class="v" id="val-disp" style="color:var(--accent2)">1.2x</span></label>
+          <input type="range" id="slider-disp" min="1.0" max="2.0" step="0.1" value="1.2">
+          <div class="sub"><span>無色差</span><span>強色散</span></div></div>
+        <div class="sld" style="margin-bottom:0"><label><span>光子採樣數（Particles）</span></label>
+          <select id="select-res">
+            <option value="15000">快速預覽（15k）</option>
+            <option value="30000" selected>標準（30k）</option>
+            <option value="60000">高解析（60k）</option>
+          </select></div>
+        <button class="go" id="btn-render">⟳ 重新計算光場</button>
+        <div class="dirty" id="dirty"></div>
+      </div>
+    </div>
+  </div>
 
-        <!-- Left Control Panel -->
-        <aside class="w-full md:w-80 bg-slate-900 border-b md:border-b-0 md:border-r border-slate-800 flex flex-col custom-scroll md:overflow-y-auto md:shrink-0 z-10 shadow-2xl">
+  <div class="formula" id="formula"></div>
 
-            <!-- Section: Euclidean View Controls (RESTORED) -->
-            <div class="p-5 border-b border-slate-800 bg-indigo-950/30">
-                <h3 class="text-xs font-bold text-indigo-400 uppercase tracking-wider mb-3 flex items-center">
-                    <i class="fa-solid fa-eye mr-2"></i> 歐幾里得視角 (Rational View)
-                </h3>
-                <p class="text-[11px] text-indigo-200/80 mb-3 leading-relaxed">
-                    當視線斜率 tan θ = p/q 為簡單有理數時，視線與晶格排列共振，形成最強烈的「視覺走廊」與色散效應。
-                </p>
-                <div class="grid grid-cols-2 gap-2">
-                    <button onclick="setCameraView(1, 1)" class="bg-indigo-900 hover:bg-indigo-800 border border-indigo-700/50 text-white text-xs py-2 px-2 rounded transition text-center shadow group">
-                        <span class="block font-bold group-hover:text-rose-300 transition">1:1 (45°)</span>
-                        <span class="text-indigo-400 scale-75 block">主對角線</span>
-                    </button>
-                    <button onclick="setCameraView(1, 2)" class="bg-indigo-900 hover:bg-indigo-800 border border-indigo-700/50 text-white text-xs py-2 px-2 rounded transition text-center shadow group">
-                        <span class="block font-bold group-hover:text-rose-300 transition">1:2 (26.6°)</span>
-                        <span class="text-indigo-400 scale-75 block">次級走廊</span>
-                    </button>
-                    <button onclick="setCameraView(1, 3)" class="bg-indigo-900 hover:bg-indigo-800 border border-indigo-700/50 text-white text-xs py-2 px-2 rounded transition text-center shadow group">
-                        <span class="block font-bold group-hover:text-rose-300 transition">1:3 (18.4°)</span>
-                        <span class="text-indigo-400 scale-75 block">狹窄通道</span>
-                    </button>
-                    <button onclick="setCameraView(0, 1)" class="bg-indigo-900 hover:bg-indigo-800 border border-indigo-700/50 text-white text-xs py-2 px-2 rounded transition text-center shadow group">
-                        <span class="block font-bold group-hover:text-rose-300 transition">0:1 (0°)</span>
-                        <span class="text-indigo-400 scale-75 block">正視圖</span>
-                    </button>
-                </div>
-            </div>
+  <div class="lower">
+    <div class="panel">
+      <div class="lab">沿 x 軸（y = z = 0）的三色強度剖面 I(x)，與目前參數同步</div>
+      <canvas id="plot"></canvas>
+      <div class="legend"><span><i style="background:#ff5a5a"></i>紅 I_R</span><span><i style="background:#4ade80"></i>綠 I_G</span><span><i style="background:#60a5fa"></i>藍 I_B</span><span><i style="background:rgba(255,255,255,.45)"></i>亮度門檻 0.25</span></div>
+    </div>
+    <div class="panel">
+      <div class="lab">觀察指南 <span class="dots"><i style="background:#ef4444"></i><i style="background:#22c55e"></i><i style="background:#3b82f6"></i></span></div>
+      <p class="guide"><b>白色中心</b>：三原色都發生建設性干涉的區域。<br>
+        <b>彩色邊緣</b>：切換到<b style="color:var(--indigo)">有理數比例</b>視角時，觀察「視覺走廊」兩側的紅藍分離現象。<br>
+        <b>色散 = 1.0</b> 時三色波數相同，點雲只剩黑白灰；把色散調大，紅（波數小）與藍（波數大）的亮紋位置錯開，彩色邊緣就變寬。
+        左圖剖面裡三條曲線的峰值位置錯開多少，就是彩色邊緣有多寬。</p>
+    </div>
+  </div>
 
-            <!-- Section: Wave Parameters -->
-            <div class="p-5 space-y-6">
-                <h3 class="text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">光學參數設定</h3>
+  <div class="note">
+    <b>物理重點：</b>每一色都是兩組三維駐波的疊加：<code>A = cos(kx)cos(ky)cos(kz)</code>、晶格 B 是把座標繞 z 軸轉 θ 後的同一個波，
+    強度 <code>I = (A + B)² / 4</code>（振幅相加後平方——干涉的本質是<b>振幅</b>相加、不是強度相加）。
+    三色波數 <code>k_R = K/√D、k_G = K、k_B = K·√D</code>：紅光波長長、波數小；藍光波長短、波數大。
+    兩組晶格只差一點角度，就像疊紗的<b>疊紋（莫列波紋）</b>，會拍出比原本週期大得多的圖樣。
+    點雲用<b>蒙地卡羅取樣</b>：隨機撒點，平均亮度 &gt; 0.25 才有機會留下、越亮越容易留下，所以點越密的地方越亮。
+  </div>
 
-                <!-- Base Frequency -->
-                <div>
-                    <label class="flex justify-between text-xs text-slate-300 mb-1">
-                        基礎頻率 (Base K) <span id="val-k" class="text-rose-400 font-mono">1.2</span>
-                    </label>
-                    <input type="range" id="slider-k" min="0.5" max="2.5" step="0.1" value="1.2" class="w-full">
-                </div>
+  <footer>純前端 HTML / Canvas（自寫 3D 透視投影與深度排序，零外部相依、可離線）。蒙地卡羅取樣，每次重新計算的點位會略有不同。</footer>
+</div>
 
-                <!-- Rotation -->
-                <div>
-                    <label class="flex justify-between text-xs text-slate-300 mb-1">
-                        晶格夾角 (Rotation) <span id="val-rot" class="text-rose-400 font-mono">5°</span>
-                    </label>
-                    <input type="range" id="slider-rot" min="0" max="45" step="0.5" value="5" class="w-full">
-                    <p class="text-[10px] text-slate-500 mt-1">微小角度差異產生的大尺度波形</p>
-                </div>
+<script>
+/*PHYS:BEGIN*/
+// 三色波數（色散）：紅 = K/√D、綠 = K、藍 = K·√D
+function waveNumbers(baseK, dispersion){
+  return { k_R: baseK / Math.sqrt(dispersion), k_G: baseK, k_B: baseK * Math.sqrt(dispersion) };
+}
+// 單點三色強度：晶格 A 與繞 z 軸轉 rot 度的晶格 B，振幅相加後平方 /4
+function intensityAt(x, y, z, k, cosT, sinT){
+  const xp = x * cosT - y * sinT, yp = x * sinT + y * cosT, zp = z;
+  const I = kk => { const a = Math.cos(kk*x) * Math.cos(kk*y) * Math.cos(kk*z);
+                    const b = Math.cos(kk*xp) * Math.cos(kk*yp) * Math.cos(kk*zp);
+                    return Math.pow(a + b, 2) / 4; };
+  return { R: I(k.k_R), G: I(k.k_G), B: I(k.k_B) };
+}
+// 蒙地卡羅取樣（亂數呼叫順序與舊版相同：x、y、z，亮度過門檻才抽第 4 個）
+function computeOptics(st, rnd){
+  rnd = rnd || Math.random;
+  const count = st.points, limit = 4.0 * Math.PI;
+  const k = waveNumbers(st.baseK, st.dispersion);
+  const rotRad = st.rot * Math.PI / 180, cosT = Math.cos(rotRad), sinT = Math.sin(rotRad);
+  const X = new Float64Array(count), Y = new Float64Array(count), Z = new Float64Array(count);
+  const R = new Uint8Array(count), G = new Uint8Array(count), B = new Uint8Array(count);
+  let valid = 0, attempts = 0; const maxAttempts = count * 60;
+  while (valid < count && attempts < maxAttempts) {
+    attempts++;
+    const x = (rnd() - 0.5) * 2 * limit, y = (rnd() - 0.5) * 2 * limit, z = (rnd() - 0.5) * 2 * limit;
+    const I = intensityAt(x, y, z, k, cosT, sinT);
+    const total = (I.R + I.G + I.B) / 3;
+    if (total > 0.25 && rnd() < Math.pow(total, 1.5)) {
+      X[valid] = x; Y[valid] = y; Z[valid] = z;
+      R[valid] = Math.floor(Math.min(255, I.R * 300));
+      G[valid] = Math.floor(Math.min(255, I.G * 300));
+      B[valid] = Math.floor(Math.min(255, I.B * 300));
+      valid++;
+    }
+  }
+  return { n: valid, x: X.subarray(0, valid), y: Y.subarray(0, valid), z: Z.subarray(0, valid),
+           r: R.subarray(0, valid), g: G.subarray(0, valid), b: B.subarray(0, valid),
+           attempts, limit, eff: (valid / attempts * 100).toFixed(1) };
+}
+// 有理數視角：視線在 xy 平面上斜率 p/q，半徑 2、z = 0.5
+function cameraEye(p, q){ const a = Math.atan2(p, q), r = 2.0; return { x: r * Math.cos(a), y: r * Math.sin(a), z: 0.5 }; }
+/*PHYS:END*/
 
-                <!-- Dispersion Factor -->
-                <div class="bg-slate-800 p-3 rounded border border-slate-700">
-                    <label class="flex justify-between text-xs text-slate-300 mb-1">
-                        色散係數 (Dispersion) <span id="val-disp" class="text-amber-400 font-mono">1.2x</span>
-                    </label>
-                    <input type="range" id="slider-disp" min="1.0" max="2.0" step="0.1" value="1.2" class="w-full">
-                    <div class="flex justify-between text-[10px] mt-1">
-                        <span class="text-slate-500">無色差</span>
-                        <span class="text-slate-500">強色散</span>
-                    </div>
-                </div>
+const state = { points: 30000, baseK: 1.2, rot: 5, dispersion: 1.2 };
+let DATA = null, rendered = null;       // rendered = 產生目前點雲時的參數
+const DEFAULT_EYE = { x: 1.5, y: 1.5, z: 0.5 };
+const cam = { eye: { ...DEFAULT_EYE } };
+const $ = id => document.getElementById(id);
+const els = { sliK: $('slider-k'), sliRot: $('slider-rot'), sliDisp: $('slider-disp'), selRes: $('select-res'),
+  valK: $('val-k'), valRot: $('val-rot'), valDisp: $('val-disp'), btn: $('btn-render'), loader: $('loading'), loadText: $('loadText') };
 
-                <!-- Resolution -->
-                <div>
-                    <label class="flex justify-between text-xs text-slate-300 mb-1">
-                        光子採樣數 (Particles)
-                    </label>
-                    <select id="select-res" class="w-full bg-slate-800 border border-slate-700 text-slate-300 text-xs rounded px-2 py-1 focus:border-rose-500">
-                        <option value="15000">快速預覽 (15k)</option>
-                        <option value="30000" selected>標準 (30k)</option>
-                        <option value="60000">高解析 (60k)</option>
-                    </select>
-                </div>
+// ---------- 3D 點雲繪製（透視投影 + 深度桶排序 + 像素級 alpha 混色）----------
+const cv = $('scene'); let ctx, W = 0, H = 0, DPR = 1, img = null;
+const FOVY = Math.PI / 4, OPACITY = 0.75, DOT_R = 2.4; // 點半徑（CSS px）
+function setupScene(){
+  cv.style.width = '100%';
+  const cw = cv.parentElement.clientWidth;
+  const aspect = cw < 560 ? 0.92 : 1.32;
+  W = cw; H = Math.round(cw / aspect); DPR = Math.min(window.devicePixelRatio || 1, 2);
+  cv.width = Math.round(W * DPR); cv.height = Math.round(H * DPR);
+  cv.style.width = W + 'px'; cv.style.height = H + 'px';
+  ctx = cv.getContext('2d'); img = ctx.createImageData(cv.width, cv.height);
+}
+function basis(){
+  const e = cam.eye, d = Math.hypot(e.x, e.y, e.z);
+  const f = { x: -e.x / d, y: -e.y / d, z: -e.z / d };            // 看向原點
+  let r = { x: f.y * 1 - f.z * 0, y: f.z * 0 - f.x * 1, z: 0 };     // f × up(0,0,1)
+  let rl = Math.hypot(r.x, r.y); if (rl < 1e-9) { r = { x: 1, y: 0, z: 0 }; rl = 1; }
+  r.x /= rl; r.y /= rl;
+  const u = { x: r.y * f.z - r.z * f.y, y: r.z * f.x - r.x * f.z, z: r.x * f.y - r.y * f.x };
+  return { e, f, r, u };
+}
+let depthBuf = null, sxBuf = null, syBuf = null, order = null;
+function drawScene(){
+  if (!ctx) return;
+  const w = cv.width, h = cv.height, px = img.data;
+  for (let i = 0; i < px.length; i += 4) { px[i] = 0; px[i+1] = 0; px[i+2] = 0; px[i+3] = 255; }
+  if (DATA && DATA.n) {
+    const n = DATA.n, { e, f, r, u } = basis();
+    const sc = 0.5 / DATA.limit;                        // 資料立方體縮到 [-0.5, 0.5]
+    const focal = (Math.min(w, h) / 2) / Math.tan(FOVY / 2);
+    if (!depthBuf || depthBuf.length < n) { depthBuf = new Float64Array(n); sxBuf = new Float64Array(n); syBuf = new Float64Array(n); order = new Uint32Array(n); }
+    let dmin = Infinity, dmax = -Infinity;
+    for (let i = 0; i < n; i++) {
+      const vx = DATA.x[i] * sc - e.x, vy = DATA.y[i] * sc - e.y, vz = DATA.z[i] * sc - e.z;
+      const zc = vx * f.x + vy * f.y + vz * f.z;
+      depthBuf[i] = zc;
+      if (zc > 0.02) { sxBuf[i] = w / 2 + (vx * r.x + vy * r.y + vz * r.z) / zc * focal;
+                       syBuf[i] = h / 2 - (vx * u.x + vy * u.y + vz * u.z) / zc * focal; }
+      if (zc < dmin) dmin = zc; if (zc > dmax) dmax = zc;
+    }
+    // 桶排序：由遠到近
+    const NB = 512, cnt = new Uint32Array(NB + 1), span = (dmax - dmin) || 1;
+    const bin = i => Math.min(NB - 1, Math.floor((dmax - depthBuf[i]) / span * NB));
+    for (let i = 0; i < n; i++) cnt[bin(i) + 1]++;
+    for (let b = 0; b < NB; b++) cnt[b + 1] += cnt[b];
+    for (let i = 0; i < n; i++) order[cnt[bin(i)]++] = i;
+    const rad = DOT_R * DPR, ri = Math.ceil(rad), r2 = rad * rad, a = OPACITY, ia = 1 - a;
+    for (let k = 0; k < n; k++) {
+      const i = order[k]; if (depthBuf[i] <= 0.02) continue;
+      const cx = sxBuf[i], cy = syBuf[i];
+      if (cx < -ri || cy < -ri || cx > w + ri || cy > h + ri) continue;
+      const cr = DATA.r[i] * a, cg = DATA.g[i] * a, cb = DATA.b[i] * a;
+      const x0 = Math.max(0, Math.floor(cx - ri)), x1 = Math.min(w - 1, Math.ceil(cx + ri));
+      const y0 = Math.max(0, Math.floor(cy - ri)), y1 = Math.min(h - 1, Math.ceil(cy + ri));
+      for (let yy = y0; yy <= y1; yy++) { const dy = yy + 0.5 - cy;
+        for (let xx = x0; xx <= x1; xx++) { const dx = xx + 0.5 - cx;
+          if (dx * dx + dy * dy > r2) continue;
+          const p = (yy * w + xx) * 4;
+          px[p] = cr + px[p] * ia; px[p+1] = cg + px[p+1] * ia; px[p+2] = cb + px[p+2] * ia; } }
+    }
+  }
+  ctx.putImageData(img, 0, 0);
+  if (!DATA) { ctx.setTransform(DPR, 0, 0, DPR, 0, 0); ctx.fillStyle = 'rgba(255,255,255,.4)'; ctx.font = '13px system-ui';
+    ctx.textAlign = 'center'; ctx.fillText('準備計算光場…', W / 2, H / 2); ctx.textAlign = 'left'; ctx.setTransform(1, 0, 0, 1, 0, 0); }
+  updateHud();
+}
+let raf = 0; function requestDraw(){ if (!raf) raf = requestAnimationFrame(() => { raf = 0; drawScene(); }); }
 
-                <button id="btn-render" class="w-full bg-gradient-to-r from-rose-700 to-orange-700 hover:from-rose-600 hover:to-orange-600 text-white font-bold py-3 px-4 rounded shadow-lg text-xs flex items-center justify-center gap-2 mt-4 transition-all">
-                    <i class="fa-solid fa-rotate"></i> 重新計算光場
-                </button>
-            </div>
+function camAngles(){ const e = cam.eye; return { az: Math.atan2(e.y, e.x), el: Math.atan2(e.z, Math.hypot(e.x, e.y)), d: Math.hypot(e.x, e.y, e.z) }; }
+function setAngles(az, el, d){ el = Math.max(-1.45, Math.min(1.45, el)); d = Math.max(0.9, Math.min(6, d));
+  cam.eye = { x: d * Math.cos(el) * Math.cos(az), y: d * Math.cos(el) * Math.sin(az), z: d * Math.sin(el) }; }
+function markView(key){ document.querySelectorAll('[data-view]').forEach(b => b.classList.toggle('on', b.dataset.view === key)); }
 
-            <div class="mt-auto p-4 border-t border-slate-800 text-[10px] text-slate-600">
-                <p>Renderer: WebGL Scatter3D (Monte Carlo Sampling)</p>
-            </div>
-        </aside>
+// 歐幾里得視角按鈕（保留全域 setCameraView，與舊版相容）
+window.setCameraView = (p, q) => { cam.eye = cameraEye(p, q); markView(p + ',' + q); requestDraw(); };
+document.querySelectorAll('[data-view]').forEach(b => b.onclick = () => { const [p, q] = b.dataset.view.split(',').map(Number); setCameraView(p, q); });
+$('resetCam').onclick = () => { cam.eye = { ...DEFAULT_EYE }; markView(''); requestDraw(); };
+$('savePng').onclick = () => { const a = document.createElement('a'); a.download = 'spectral-lab.png'; a.href = cv.toDataURL('image/png'); a.click(); };
 
-        <!-- Right Visualization Area -->
-        <section class="flex-1 min-h-[75vh] md:min-h-0 bg-black relative flex flex-col">
+// 拖曳旋轉（滑鼠：水平＝方位角、垂直＝仰角；觸控：水平拖曳旋轉，垂直保留給頁面捲動）＋ 滾輪／雙指縮放
+const ptrs = new Map(); let pinch0 = 0, pinchD0 = 0;
+cv.addEventListener('pointerdown', ev => { ptrs.set(ev.pointerId, { x: ev.clientX, y: ev.clientY }); cv.setPointerCapture(ev.pointerId); cv.classList.add('drag');
+  if (ptrs.size === 2) { const [a, b] = [...ptrs.values()]; pinch0 = Math.hypot(a.x - b.x, a.y - b.y); pinchD0 = camAngles().d; } });
+cv.addEventListener('pointermove', ev => { const p = ptrs.get(ev.pointerId); if (!p) return;
+  const dx = ev.clientX - p.x, dy = ev.clientY - p.y; p.x = ev.clientX; p.y = ev.clientY;
+  const A = camAngles();
+  if (ptrs.size === 2) { const [a, b] = [...ptrs.values()]; const dd = Math.hypot(a.x - b.x, a.y - b.y); if (pinch0 > 0) setAngles(A.az, A.el, pinchD0 * pinch0 / dd); }
+  else setAngles(A.az - dx * 0.008, A.el + (ev.pointerType === 'touch' ? 0 : dy * 0.008), A.d);
+  markView(''); requestDraw(); });
+const endPtr = ev => { ptrs.delete(ev.pointerId); if (!ptrs.size) cv.classList.remove('drag'); pinch0 = 0; };
+cv.addEventListener('pointerup', endPtr); cv.addEventListener('pointercancel', endPtr);
+cv.addEventListener('wheel', ev => { ev.preventDefault(); const A = camAngles(); setAngles(A.az, A.el, A.d * Math.exp(ev.deltaY * 0.001)); requestDraw(); }, { passive: false });
 
-            <!-- Plot Container -->
-            <div id="chart-3d" class="w-full h-full"></div>
+function chip(k, v, cls){ return `<div class="chip ${cls}">${k}<b>${v}</b></div>`; }
+function updateHud(){
+  const A = camAngles();
+  $('hud').innerHTML = DATA
+    ? chip('光子點數', DATA.n.toLocaleString(), 'rose') + chip('取樣效率', DATA.eff + '%', 'amber') +
+      chip('視線方位', (A.az * 180 / Math.PI).toFixed(1) + '°', 'cyan')
+    : '';
+}
 
-            <!-- Loading Overlay -->
-            <div id="loading-overlay" class="absolute inset-0 bg-black/90 backdrop-blur-md flex flex-col items-center justify-center z-50 hidden">
-                <div class="spinner mb-4"></div>
-                <div class="text-rose-500 font-bold tracking-widest text-sm">CALCULATING SPECTRUM</div>
-                <div class="text-slate-500 text-xs mt-2 font-mono" id="loading-text">Sampling vector field...</div>
-            </div>
+// ---------- 剖面圖 I(x)：自畫座標軸、刻度、門檻線 ----------
+const pv = $('plot'); let pc, PW = 0, PH = 0;
+function setupPlot(){ pv.style.width = '100%'; const dpr = window.devicePixelRatio || 1;
+  PW = Math.max(200, pv.clientWidth); PH = Math.round(PW / 2.1);
+  pv.width = Math.round(PW * dpr); pv.height = Math.round(PH * dpr); pv.style.height = PH + 'px';
+  pc = pv.getContext('2d'); pc.setTransform(dpr, 0, 0, dpr, 0, 0); }
+function drawPlot(){
+  if (!pc) return; const W = PW, H = PH, mL = 36, mR = 10, mT = 10, mB = 26;
+  pc.clearRect(0, 0, W, H); pc.fillStyle = '#0a1018'; pc.fillRect(0, 0, W, H);
+  const limit = 4 * Math.PI, k = waveNumbers(state.baseK, state.dispersion), rr = state.rot * Math.PI / 180, c = Math.cos(rr), s = Math.sin(rr);
+  const X = x => mL + (x + limit) / (2 * limit) * (W - mL - mR), Y = v => H - mB - v * (H - mT - mB);
+  pc.font = '10px system-ui'; pc.fillStyle = 'rgba(255,255,255,.5)'; pc.strokeStyle = '#1b2738'; pc.lineWidth = 1;
+  [0, 0.25, 0.5, 0.75, 1].forEach(v => { pc.beginPath(); pc.moveTo(mL, Y(v)); pc.lineTo(W - mR, Y(v)); pc.stroke(); pc.fillText(v.toFixed(2), 4, Y(v) + 3); });
+  pc.textAlign = 'center';
+  [-4, -2, 0, 2, 4].forEach(m => { const x = X(m * Math.PI); pc.strokeStyle = '#1b2738'; pc.beginPath(); pc.moveTo(x, mT); pc.lineTo(x, H - mB); pc.stroke();
+    pc.fillText(m === 0 ? '0' : (m + 'π'), x, H - mB + 13); });
+  pc.fillText('x', W - mR - 6, H - 4); pc.textAlign = 'left'; pc.fillText('I', mL + 4, mT + 9);
+  pc.strokeStyle = 'rgba(255,255,255,.45)'; pc.setLineDash([4, 4]); pc.beginPath(); pc.moveTo(mL, Y(0.25)); pc.lineTo(W - mR, Y(0.25)); pc.stroke(); pc.setLineDash([]);
+  pc.strokeStyle = '#3a4a63'; pc.beginPath(); pc.moveTo(mL, mT); pc.lineTo(mL, H - mB); pc.lineTo(W - mR, H - mB); pc.stroke();
+  const N = Math.max(200, Math.round(W - mL - mR) * 2);
+  [['R', '#ff5a5a'], ['G', '#4ade80'], ['B', '#60a5fa']].forEach(([ch, col]) => {
+    pc.strokeStyle = col; pc.lineWidth = 1.6; pc.globalAlpha = .9; pc.beginPath();
+    for (let i = 0; i <= N; i++) { const x = -limit + 2 * limit * i / N; const v = intensityAt(x, 0, 0, k, c, s)[ch];
+      i ? pc.lineTo(X(x), Y(v)) : pc.moveTo(X(x), Y(v)); }
+    pc.stroke(); pc.globalAlpha = 1; });
+}
 
-            <!-- Info Overlay -->
-            <div class="absolute bottom-6 right-6 pointer-events-none bg-slate-900/80 p-4 rounded-lg backdrop-blur text-right border border-slate-800 shadow-2xl max-w-xs">
-                <div class="text-xs text-rose-400 font-bold mb-2 uppercase tracking-wide">觀察指南</div>
-                <p class="text-[11px] text-slate-300 leading-relaxed mb-2">
-                    <strong class="text-white">白色中心</strong>：三原色建設性干涉區域。<br>
-                    <strong class="text-white">彩色邊緣</strong>：當視角切換至 <span class="text-indigo-300">有理數比例</span> 時，請觀察「視覺走廊」兩側的紅藍分離現象。
-                </p>
-                <div class="flex justify-end gap-1 mt-2">
-                    <span class="inline-block w-2 h-2 rounded-full bg-red-500"></span>
-                    <span class="inline-block w-2 h-2 rounded-full bg-green-500"></span>
-                    <span class="inline-block w-2 h-2 rounded-full bg-blue-500"></span>
-                </div>
-            </div>
+// ---------- 公式面板 ----------
+function frow(n, sym, sub, val){ return `<div class="frow"><span class="fname">${n}</span><span class="fsym">${sym}</span><span class="fsub">= ${sub}</span><span class="fval">${val}</span></div>`; }
+function updateFormula(){
+  const K = state.baseK, D = state.dispersion, k = waveNumbers(K, D), f = v => v.toFixed(3);
+  const lam = kk => (2 * Math.PI / kk).toFixed(2);
+  $('formula').innerHTML = `<h4>📐 計算公式（即時代入目前滑桿值）</h4>` +
+    frow('紅光波數 k_R', 'K / √D', `${K} / √${D}`, f(k.k_R)) +
+    frow('綠光波數 k_G', 'K', `${K}`, f(k.k_G)) +
+    frow('藍光波數 k_B', 'K · √D', `${K} · √${D}`, f(k.k_B)) +
+    frow('波長 λ = 2π/k', '紅／綠／藍', `2π / k`, `${lam(k.k_R)}／${lam(k.k_G)}／${lam(k.k_B)}`) +
+    frow('單色強度 I', '(A + B)² / 4', `A = cos kx·cos ky·cos kz，B 為轉 ${state.rot}° 的晶格`, '0 ～ 1') +
+    frow('留點條件', '(I_R+I_G+I_B)/3 > 0.25', '且 亂數 < 平均亮度^1.5', '') +
+    frow('點的顏色', 'min(255, I × 300)', 'R、G、B 各自換算', '') +
+    `<div class="frel">📈 <b>D 越大 → k_R 與 k_B 差越多</b>，三色亮紋錯位越明顯（彩色邊緣變寬）　·　<b>K 越大 → 波長越短</b>，晶格越密　·　<b>夾角 θ 越小 → 疊紋週期越大</b>。` +
+    (rendered && (rendered.baseK !== state.baseK || rendered.rot !== state.rot || rendered.dispersion !== state.dispersion || rendered.points !== state.points)
+      ? ` <span style="color:var(--accent2)">參數已改變，按「重新計算光場」才會更新點雲。</span>` : '') + `</div>`;
+}
 
-        </section>
+// ---------- 事件 ----------
+function updateState(){
+  state.baseK = parseFloat(els.sliK.value); state.rot = parseFloat(els.sliRot.value);
+  state.dispersion = parseFloat(els.sliDisp.value); state.points = parseInt(els.selRes.value);
+  els.valK.textContent = state.baseK; els.valRot.textContent = state.rot + '°'; els.valDisp.textContent = state.dispersion + 'x';
+  const changed = rendered && (rendered.baseK !== state.baseK || rendered.rot !== state.rot || rendered.dispersion !== state.dispersion || rendered.points !== state.points);
+  $('dirty').textContent = changed ? '● 參數已改變，按上方按鈕更新點雲' : '';
+  drawPlot(); updateFormula();
+}
+function render(){
+  els.loader.hidden = false; els.loadText.textContent = '取樣向量場…';
+  setTimeout(() => {
+    DATA = computeOptics(state); rendered = { ...state };
+    els.loadText.textContent = `投射 ${DATA.n} 個光子（效率 ${DATA.eff}%）…`;
+    drawScene(); els.loader.hidden = true; updateState();
+  }, 50);
+}
+[els.sliK, els.sliRot, els.sliDisp].forEach(e => e.addEventListener('input', updateState));
+els.selRes.addEventListener('change', updateState);
+els.btn.addEventListener('click', render);
 
-    </main>
-
-    <script>
-        // --- Core State ---
-        const state = {
-            points: 30000,
-            baseK: 1.2,
-            rot: 5,
-            dispersion: 1.2
-        };
-
-        // --- DOM Elements ---
-        const els = {
-            sliK: document.getElementById('slider-k'),
-            sliRot: document.getElementById('slider-rot'),
-            sliDisp: document.getElementById('slider-disp'),
-            selRes: document.getElementById('select-res'),
-            valK: document.getElementById('val-k'),
-            valRot: document.getElementById('val-rot'),
-            valDisp: document.getElementById('val-disp'),
-            btnRender: document.getElementById('btn-render'),
-            loader: document.getElementById('loading-overlay'),
-            loadText: document.getElementById('loading-text')
-        };
-
-        // --- Camera Helper (Euclidean View) ---
-        // Sets the camera to look along a vector with rational slope p/q
-        window.setCameraView = (p, q) => {
-            const gd = document.getElementById('chart-3d');
-            if (!gd || !gd._fullLayout) return; // 圖表尚未初始化前點擊直接返回，避免 Plotly.relayout 丟錯
-            const radius = 2.0; // Distance from center
-
-            // Plotly uses Cartesian coordinates for eye position.
-            // We want to orbit in the XY plane to see the vertical corridors.
-            // Angle theta such that tan(theta) = p/q (slope in XY plane)
-            // Note: In visual lattice theory, slope corresponds to y/x.
-            const angle = Math.atan2(p, q);
-
-            // Keep Z low (0.5) to look "through" the forest of waves
-            const x = radius * Math.cos(angle);
-            const y = radius * Math.sin(angle);
-
-            Plotly.relayout('chart-3d', {
-                'scene.camera.eye': { x: x, y: y, z: 0.5 },
-                'scene.camera.up': { x: 0, y: 0, z: 1 },
-                'scene.camera.center': { x: 0, y: 0, z: 0 }
-            });
-        };
-
-        // --- Optical Physics Core ---
-        const computeOptics = () => {
-            const count = state.points;
-            const limit = 4.0 * Math.PI;
-
-            // Wavelength/Frequency Logic
-            // Red (Low Freq, Long Wave), Blue (High Freq, Short Wave)
-            const kb = state.baseK;
-            const disp = state.dispersion;
-            const k_G = kb;
-            const k_R = kb / Math.sqrt(disp);
-            const k_B = kb * Math.sqrt(disp);
-
-            const rotRad = state.rot * Math.PI / 180;
-            const cosT = Math.cos(rotRad);
-            const sinT = Math.sin(rotRad);
-
-            const pX = [], pY = [], pZ = [], colors = [];
-
-            // Monte Carlo Sampling
-            let validPoints = 0;
-            let attempts = 0;
-            const maxAttempts = count * 60;
-
-            while (validPoints < count && attempts < maxAttempts) {
-                attempts++;
-
-                const x = (Math.random() - 0.5) * 2 * limit;
-                const y = (Math.random() - 0.5) * 2 * limit;
-                const z = (Math.random() - 0.5) * 2 * limit;
-
-                // Rotated Coords for Lattice 2
-                const xp = x * cosT - y * sinT;
-                const yp = x * sinT + y * cosT;
-                const zp = z;
-
-                // Intensity Calculation: (Amplitude Sum)^2
-                const AmpA_R = Math.cos(k_R*x) * Math.cos(k_R*y) * Math.cos(k_R*z);
-                const AmpB_R = Math.cos(k_R*xp) * Math.cos(k_R*yp) * Math.cos(k_R*zp);
-                const Int_R = Math.pow(AmpA_R + AmpB_R, 2) / 4;
-
-                const AmpA_G = Math.cos(k_G*x) * Math.cos(k_G*y) * Math.cos(k_G*z);
-                const AmpB_G = Math.cos(k_G*xp) * Math.cos(k_G*yp) * Math.cos(k_G*zp);
-                const Int_G = Math.pow(AmpA_G + AmpB_G, 2) / 4;
-
-                const AmpA_B = Math.cos(k_B*x) * Math.cos(k_B*y) * Math.cos(k_B*z);
-                const AmpB_B = Math.cos(k_B*xp) * Math.cos(k_B*yp) * Math.cos(k_B*zp);
-                const Int_B = Math.pow(AmpA_B + AmpB_B, 2) / 4;
-
-                // Probability Filter (Visualizing constructive interference)
-                const totalBrightness = (Int_R + Int_G + Int_B) / 3;
-
-                // Only keep bright points to form the structure
-                if (totalBrightness > 0.25 && Math.random() < Math.pow(totalBrightness, 1.5)) {
-                    pX.push(x); pY.push(y); pZ.push(z);
-
-                    // Color Mapping (RGB Synthesis)
-                    // Enhance saturation for clearer spectral separation
-                    const r = Math.floor(Math.min(255, Int_R * 300));
-                    const g = Math.floor(Math.min(255, Int_G * 300));
-                    const b = Math.floor(Math.min(255, Int_B * 300));
-
-                    colors.push(`rgb(${r},${g},${b})`);
-                    validPoints++;
-                }
-            }
-            return { x: pX, y: pY, z: pZ, c: colors, eff: (validPoints/attempts*100).toFixed(1) };
-        };
-
-        // --- Rendering ---
-        const render = () => {
-            els.loader.classList.remove('hidden');
-
-            setTimeout(() => {
-                const data = computeOptics();
-                els.loadText.innerText = `Raycasting ${data.x.length} photons (Eff: ${data.eff}%)...`;
-
-                const trace = {
-                    type: 'scatter3d',
-                    mode: 'markers',
-                    x: data.x, y: data.y, z: data.z,
-                    marker: {
-                        size: 2,
-                        color: data.c,
-                        opacity: 0.75
-                    },
-                    hoverinfo: 'none'
-                };
-
-                const layout = {
-                    margin: { t: 0, b: 0, l: 0, r: 0 },
-                    paper_bgcolor: '#000000',
-                    showlegend: false,
-                    scene: {
-                        camera: { eye: { x: 1.5, y: 1.5, z: 0.5 } }, // Default view
-                        xaxis: { visible: false },
-                        yaxis: { visible: false },
-                        zaxis: { visible: false },
-                        aspectmode: 'cube',
-                        bgcolor: '#000000',
-                        dragmode: 'orbit'
-                    }
-                };
-
-                // Use react for efficient updates if plot exists, otherwise newPlot
-                const gd = document.getElementById('chart-3d');
-                Plotly.react(gd, [trace], layout, {responsive: true});
-
-                els.loader.classList.add('hidden');
-            }, 50);
-        };
-
-        // --- Event Listeners ---
-        const updateState = () => {
-            state.baseK = parseFloat(els.sliK.value);
-            state.rot = parseFloat(els.sliRot.value);
-            state.dispersion = parseFloat(els.sliDisp.value);
-            state.points = parseInt(els.selRes.value);
-
-            els.valK.innerText = state.baseK;
-            els.valRot.innerText = state.rot + '°';
-            els.valDisp.innerText = state.dispersion + 'x';
-        };
-
-        els.sliK.addEventListener('input', updateState);
-        els.sliRot.addEventListener('input', updateState);
-        els.sliDisp.addEventListener('input', updateState);
-        els.selRes.addEventListener('change', updateState);
-        els.btnRender.addEventListener('click', render);
-
-        // Init
-        updateState();
-        setTimeout(render, 500);
-
-    </script>
+function layout(){ setupScene(); setupPlot(); drawScene(); drawPlot(); }
+updateState(); layout();
+window.addEventListener('load', () => { layout(); render(); });
+let rzT = 0; window.addEventListener('resize', () => { clearTimeout(rzT); rzT = setTimeout(layout, 120); });
+</script>
 </body>
 </html>
