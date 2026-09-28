@@ -323,13 +323,13 @@ function drawPlot(){
   if (!pc) return; const W = PW, H = PH, mL = 36, mR = 10, mT = 10, mB = 26;
   pc.clearRect(0, 0, W, H); pc.fillStyle = '#0a1018'; pc.fillRect(0, 0, W, H);
   const limit = 4 * Math.PI, k = waveNumbers(state.baseK, state.dispersion), rr = state.rot * Math.PI / 180, c = Math.cos(rr), s = Math.sin(rr);
-  const X = x => mL + (x + limit) / (2 * limit) * (W - mL - mR), Y = v => H - mB - v * (H - mT - mB);
+  const X = x => mL + (x + limit) / (2 * limit) * (W - mL - mR), Y = v => H - mB - v / 1.08 * (H - mT - mB);   // 上限留 8%：x=0 三色 I=1 的峰原本貼在繪圖區頂端
   pc.font = '10px system-ui'; pc.fillStyle = 'rgba(255,255,255,.5)'; pc.strokeStyle = '#1b2738'; pc.lineWidth = 1;
   [0, 0.25, 0.5, 0.75, 1].forEach(v => { pc.beginPath(); pc.moveTo(mL, Y(v)); pc.lineTo(W - mR, Y(v)); pc.stroke(); pc.fillText(v.toFixed(2), 4, Y(v) + 3); });
   pc.textAlign = 'center';
   [-4, -2, 0, 2, 4].forEach(m => { const x = X(m * Math.PI); pc.strokeStyle = '#1b2738'; pc.beginPath(); pc.moveTo(x, mT); pc.lineTo(x, H - mB); pc.stroke();
     pc.fillText(m === 0 ? '0' : (m + 'π'), x, H - mB + 13); });
-  pc.fillText('x', W - mR - 6, H - 4); pc.textAlign = 'left'; pc.fillText('I', mL + 4, mT + 9);
+  pc.fillText('x', W - mR - 6, H - 4); pc.textAlign = 'left'; pc.fillText('I（相對強度）', mL + 4, mT + 9);
   pc.strokeStyle = 'rgba(255,255,255,.45)'; pc.setLineDash([4, 4]); pc.beginPath(); pc.moveTo(mL, Y(0.25)); pc.lineTo(W - mR, Y(0.25)); pc.stroke(); pc.setLineDash([]);
   pc.strokeStyle = '#3a4a63'; pc.beginPath(); pc.moveTo(mL, mT); pc.lineTo(mL, H - mB); pc.lineTo(W - mR, H - mB); pc.stroke();
   const N = Math.max(200, Math.round(W - mL - mR) * 2);
