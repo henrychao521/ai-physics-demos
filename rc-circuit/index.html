@@ -92,6 +92,10 @@ sliders.forEach(s=>{ state[s.id]=s.val;
 });
 function fmt(x){return (Math.round(x*100)/100).toString();}
 function tau(){return state.R*state.C*1e-6;}
+// τ 最小 0.01 s；顯示用 3 位有效數字（原 toFixed(2) 把 0.0225 s 顯示成 0.02 s，差 11%）
+function sig3(x){return String(+x.toPrecision(3));}
+// 動畫慢動作：5τ 小於 2.5 s 時放慢，至少 2.5 s 跑完一輪（τ=0.01 s 時原本一幀就跨 1.6τ）
+function slow(){return Math.min(1,5*tau()/2.5);}
 function Vc(tt){const T=tau();return charging?state.V*(1-Math.exp(-tt/T)):state.V*Math.exp(-tt/T);}
 function Ic(tt){const T=tau(),i=state.V/state.R*Math.exp(-tt/T);return charging?i:-i;}
 
@@ -103,15 +107,15 @@ function updateFormula(){
   const I0=V/R*1000;                          // 開關瞬間電流 (mA)
   const Q0=(C*1e-6)*V*1000;                   // 充滿電量 Q=CV (mC)
   const cap=charging
-    ? frow('充電 V_C(t)','V(1−e^(−t/τ))',`${V}·(1−e^(−t/${T.toFixed(2)}))`, `→ ${V} V`)
-    : frow('放電 V_C(t)','V₀·e^(−t/τ)',`${V}·e^(−t/${T.toFixed(2)})`, `→ 0 V`);
+    ? frow('充電 V_C(t)','V(1−e^(−t/τ))',`${V}·(1−e^(−t/${sig3(T)}))`, `→ ${V} V`)
+    : frow('放電 V_C(t)','V₀·e^(−t/τ)',`${V}·e^(−t/${sig3(T)})`, `→ 0 V`);
   document.getElementById('formula').innerHTML=
     `<h4>📐 計算公式（即時代入　一階 RC・解析解）</h4>`
-    + frow('時間常數 τ','R·C',`${R} Ω · ${C}×10⁻⁶ F`, T.toFixed(2)+' s')
+    + frow('時間常數 τ','R·C',`${R} Ω · ${C}×10⁻⁶ F`, sig3(T)+' s')
     + cap
     + frow('開關瞬間電流 I₀','V / R',`${V} V / ${R} Ω`, I0.toFixed(1)+' mA')
     + frow('充滿電量 Q','C·V',`${Cms} mF · ${V} V`, Q0.toFixed(2)+' mC')
-    + frow('約完成時間 5τ','5·R·C',`5 · ${T.toFixed(2)}`, (5*T).toFixed(1)+' s')
+    + frow('約完成時間 5τ','5·R·C',`5 · ${sig3(T)}`, sig3(5*T)+' s')
     + `<div class="frel">📈 <b>τ ∝ R、τ ∝ C</b>：R 或 C 加倍 → 過程慢 2 倍　·　<b>1τ 充到 63%、5τ &gt; 99%</b>　·　<b>電流在開關瞬間最大</b>，之後按 e^(−t/τ) 衰減。</div>`;
 }
 
@@ -126,9 +130,11 @@ function drawCirc(){const W=circ._w,H=circ._h,vc=Vc(t),frac=vc/state.V,I=Ic(t);
   S.scene(circ,COOL,{});
   const L=46,R=W-46,T=46,B=H-46;
   wire(L,T,R,T,I);wire(R,T,R,B,I);wire(R,B,L,B,I);wire(L,B,L,T,I);
-  // 電池(左)
+  // 電池(左)：放電時電源已移出迴路（原本放電時仍畫著電池，看起來像電池在對電容反向供電）
+  if(!charging){circ.fillStyle='#9fb2cc';circ.font='11px system-ui';circ.fillText('電源已移除',L+8,H/2+4);}
+  else{
   const bg=circ.createLinearGradient(L-9,0,L+9,0);bg.addColorStop(0,'#5ad0a0');bg.addColorStop(.5,'#aef0d6');bg.addColorStop(1,'#2a8a68');
-  circ.fillStyle=bg;rr(L-9,H/2-22,18,44,4);circ.fill();circ.fillStyle='#d8f0ff';circ.font='11px system-ui';circ.fillText(state.V+'V',L-18,H/2+40);
+  circ.fillStyle=bg;rr(L-9,H/2-22,18,44,4);circ.fill();circ.fillStyle='#d8f0ff';circ.font='11px system-ui';circ.fillText(state.V+'V',L-18,H/2+40);}
   // 電阻(上,鋸齒)
   circ.strokeStyle='#ffce54';circ.lineWidth=3;const rx=W/2-30;circ.beginPath();circ.moveTo(rx,T);for(let i=0;i<6;i++)circ.lineTo(rx+5+i*10,T+(i%2?9:-9));circ.lineTo(rx+60,T);circ.stroke();
   circ.fillStyle='#ffce54';circ.fillText('R',W/2-2,T-12);
@@ -138,24 +144,30 @@ function drawCirc(){const W=circ._w,H=circ._h,vc=Vc(t),frac=vc/state.V,I=Ic(t);
   circ.fillStyle=`rgba(108,208,255,${0.15+frac*0.65})`;circ.fillRect(cx-15,cyt+2,30,Math.max(2,(cyb-cyt-4)*frac));
   circ.fillStyle='#6cd0ff';circ.fillText('C',cx+22,H/2+4);circ.fillStyle='#9fd8e8';circ.fillText('V_C='+vc.toFixed(2)+'V',cx-40,B-10);}
 function rr(x,y,w,h,r){circ.beginPath();circ.moveTo(x+r,y);circ.arcTo(x+w,y,x+w,y+h,r);circ.arcTo(x+w,y+h,x,y+h,r);circ.arcTo(x,y+h,x,y,r);circ.arcTo(x,y,x+w,y,r);circ.closePath();}
-function drawPlot(){const W=pc._w,H=pc._h,mL=42,mR=42,mT=14,mB=24;pc.fillStyle='#08121c';pc.fillRect(0,0,W,H);
-  const T=tau(),tEnd=5*T,X=tt=>mL+tt/tEnd*(W-mL-mR),Yv=v=>H-mB-(v/state.V)*(H-mT-mB),Imax=state.V/state.R,Yi=i=>H-mB-(Math.abs(i)/Imax)*(H-mT-mB);
+function drawPlot(){const W=pc._w,H=pc._h,mL=42,mR=46,mT=46,mB=24,hd=1.08;   /* mT：讓出上方 HTML 標題列（原本圖例與標題疊在一起） */pc.fillStyle='#08121c';pc.fillRect(0,0,W,H);
+  const T=tau(),tEnd=5*T,X=tt=>mL+tt/tEnd*(W-mL-mR),Yv=v=>H-mB-(v/state.V/hd)*(H-mT-mB),Imax=state.V/state.R,Yi=i=>H-mB-(Math.abs(i)/Imax/hd)*(H-mT-mB);
   pc.strokeStyle='#1a3038';pc.setLineDash([4,4]);pc.beginPath();pc.moveTo(X(T),mT);pc.lineTo(X(T),H-mB);pc.stroke();
   const lvl=charging?0.632:0.368;pc.beginPath();pc.moveTo(mL,Yv(state.V*lvl));pc.lineTo(W-mR,Yv(state.V*lvl));pc.stroke();pc.setLineDash([]);
-  pc.fillStyle='#8a99ad';pc.font='11px system-ui';pc.fillText('τ='+T.toFixed(2)+'s',X(T)-14,H-9);pc.fillText((lvl*100).toFixed(0)+'%',mL+4,Yv(state.V*lvl)-4);
+  pc.fillStyle='#8a99ad';pc.font='11px system-ui';pc.fillText('τ='+sig3(T)+'s',X(T)-14,H-9);pc.fillText((lvl*100).toFixed(0)+'%',mL+4,Yv(state.V*lvl)-4);
   pc.strokeStyle='#4cc2ff';pc.lineWidth=2.5;pc.beginPath();for(let i=0;i<=240;i++){const tt=tEnd*i/240;pc[i?'lineTo':'moveTo'](X(tt),Yv(Vc(tt)));}pc.stroke();
   pc.strokeStyle='#ffce54';pc.lineWidth=2.5;pc.beginPath();for(let i=0;i<=240;i++){const tt=tEnd*i/240;pc[i?'lineTo':'moveTo'](X(tt),Yi(Ic(tt)));}pc.stroke();
-  pc.fillStyle='#4cc2ff';pc.fillText('V_C',mL+4,mT+10);pc.fillStyle='#ffce54';pc.fillText('I',mL+40,mT+10);
+  pc.fillStyle='#4cc2ff';pc.fillText('V_C',mL+4,mT-12);pc.fillStyle='#ffce54';pc.fillText(charging?'I':'|I|（放電時電流反向；兩條曲線重合）',mL+40,mT-12);
+  // 刻度：左 V_C（V）、右 |I|（mA）、下方以 τ 為單位
+  pc.font='10px system-ui';pc.textAlign='right';pc.fillStyle='#4cc2ff';pc.fillText(fmt(state.V)+' V',mL-4,Yv(state.V)+4);pc.fillText('0',mL-4,H-mB+3);
+  pc.textAlign='left';pc.fillStyle='#ffce54';pc.fillText(sig3(Imax*1000)+' mA',W-mR+4,Yi(Imax)+4);pc.fillText('0',W-mR+4,H-mB+3);
+  pc.strokeStyle='#3a4a5a';pc.beginPath();pc.moveTo(mL,H-mB);pc.lineTo(W-mR,H-mB);pc.stroke();
+  pc.fillStyle='#8a99ad';pc.textAlign='center';for(let k=0;k<=5;k++){if(k===1)continue;pc.fillText(k?k+'τ':'0',X(k*T),H-9);}pc.textAlign='left';
+  if(slow()<1){pc.fillStyle='#ffce54';pc.textAlign='right';pc.fillText('慢動作 ×'+sig3(slow()),W-mR,mT-12);pc.textAlign='left';}
   const cx=X(Math.min(t,tEnd));pc.strokeStyle='#fff';pc.lineWidth=1;pc.beginPath();pc.moveTo(cx,mT);pc.lineTo(cx,H-mB);pc.stroke();
   pc.fillStyle='#fff';pc.beginPath();pc.arc(cx,Yv(Vc(t)),3.5,0,7);pc.fill();pc.beginPath();pc.arc(cx,Yi(Ic(t)),3.5,0,7);pc.fill();}
 function draw(){drawCirc();drawPlot();drawStats();}
 function drawStats(){const vc=Vc(t),i=Ic(t),Q=state.C*1e-6*vc;
-  const rows=[['時間常數 τ=RC',tau().toFixed(2)+' s','#e8eef6'],['電容電壓 V_C',vc.toFixed(2)+' V','#4cc2ff'],['電流 I',(i*1000).toFixed(1)+' mA','#ffce54'],
+  const rows=[['時間常數 τ=RC',sig3(tau())+' s','#e8eef6'],['電容電壓 V_C',vc.toFixed(2)+' V','#4cc2ff'],['電流 I',(i*1000).toFixed(1)+' mA','#ffce54'],
     ['電量 Q=CV_C',(Q*1000).toFixed(2)+' mC','#7CFFB2'],['充電程度',(vc/state.V*100).toFixed(0)+'%','#ff6b9d']];
   document.getElementById('stats').innerHTML=rows.map(r=>`<div class="box"><div class="k">${r[0]}</div><div class="v" style="color:${r[2]}">${r[1]}</div></div>`).join('');}
 
 let lastTs=0;
-function loop(ts){const dt=lastTs?Math.min((ts-lastTs)/1000,0.05):0;lastTs=ts;flow+=dt;if(playing){t+=dt;if(t>5*tau())t=0;}draw();requestAnimationFrame(loop);}
+function loop(ts){const dt=lastTs?Math.min((ts-lastTs)/1000,0.05):0;lastTs=ts;flow+=dt;if(playing){t+=dt*slow();if(t>5*tau())t=0;}draw();requestAnimationFrame(loop);}
 const mC=document.getElementById('mCharge'),mD=document.getElementById('mDischarge');
 mC.onclick=()=>{charging=true;mC.classList.add('on');mD.classList.remove('on');t=0;updateFormula();};
 mD.onclick=()=>{charging=false;mD.classList.add('on');mC.classList.remove('on');t=0;updateFormula();};
