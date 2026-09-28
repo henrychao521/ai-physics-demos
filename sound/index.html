@@ -99,14 +99,17 @@ function glowLine(ctx,pts,rgb,w){ctx.save();ctx.globalCompositeOperation='lighte
   ctx.strokeStyle=`rgb(${rgb})`;ctx.lineWidth=w;ctx.beginPath();pts.forEach((p,i)=>i?ctx.lineTo(p[0],p[1]):ctx.moveTo(p[0],p[1]));ctx.stroke();ctx.restore();}
 function drawWave(){const W=wc._w,H=wc._h,mid=H/2;wc.fillStyle='#080c16';wc.fillRect(0,0,W,H);
   wc.strokeStyle='#16202f';wc.beginPath();wc.moveTo(0,mid);wc.lineTo(W,mid);wc.stroke();
-  const cycles=6,A=(H/2-12)*(state.vol/100*0.8+0.2),pts=[];
+  // 固定顯示 15 ms：頻率越高、畫面上的週期越多（原本固定畫 6 個週期，改 f₁ 波形完全不變，看不出音調）。
+  // 振幅與音量成正比（原本 0% 音量仍畫 20% 振幅）。
+  const WIN=0.015,cycles=state.f1*WIN,A=(H/2-12)*(state.vol/100),pts=[];
   for(let i=0;i<=W;i++)pts.push([i,mid-wsample(wf,i/W*cycles*2*Math.PI)*A]);
   glowLine(wc,pts,'76,194,255',2.6);
+  wc.fillStyle='#8a99ad';wc.font='10px system-ui';wc.textAlign='right';wc.fillText('顯示 15 ms（'+cycles.toFixed(1)+' 個週期）',W-6,H-5);wc.textAlign='left';
   document.getElementById('sub1').textContent=wf+'　f₁='+state.f1+' Hz';}
 function drawBeat(){const W=bc._w,H=bc._h,mid=H/2;bc.fillStyle='#080c16';bc.fillRect(0,0,W,H);
   bc.strokeStyle='#16202f';bc.beginPath();bc.moveTo(0,mid);bc.lineTo(W,mid);bc.stroke();
   if(!dual){bc.fillStyle='#46566b';bc.font='13px system-ui';bc.fillText('（單音模式：開啟「雙音」以觀察拍音）',W/2-130,mid);return;}
-  const df=Math.abs(state.f1-state.f2),win=df>0.2?3/df:0.02,A=(H/2-14)*(state.vol/100*0.8+0.2);
+  const df=Math.abs(state.f1-state.f2),win=df>0.2?3/df:0.02,A=(H/2-14)*(state.vol/100);
   // 包絡(填色)
   bc.fillStyle='rgba(124,255,178,.1)';bc.beginPath();
   for(let i=0;i<=W;i++){const e=A*Math.abs(2*Math.cos(Math.PI*df*(i/W*win)));bc.lineTo(i,mid-e*0.5);}
