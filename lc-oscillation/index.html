@@ -75,7 +75,7 @@
     這與<b>彈簧簡諧運動完全類比</b>：Q↔位移 x、I↔速度 v、1/C↔彈性係數 k、L↔質量 m。真實電路有電阻會逐漸衰減（阻尼振盪）；收音機選台就是調 LC 共振頻率。
   </div>
 
-  <footer>純前端 HTML / Canvas（SIM 工具庫）。理想無阻尼 LC；電荷／電流以 cos／sin 同步振盪、能量條總和守恆，頻率依 ω=1/√(LC) 計算。</footer>
+  <footer>純前端 HTML / Canvas（SIM 工具庫）。理想無阻尼 LC；動畫放慢顯示（速度與 ω 成正比）；電荷／電流以 cos／sin 同步振盪、能量條總和守恆，頻率依 ω=1/√(LC) 計算。</footer>
 </div>
 
 <script>
@@ -138,8 +138,9 @@ function draw(){const W=sc._w,H=sc._h;S.scene(sc,SKY,{});
   sc.strokeStyle='#6cd0ff';sc.lineWidth=4;
   sc.beginPath();sc.moveTo(lx-16,capY1);sc.lineTo(lx+16,capY1);sc.moveTo(lx-16,capY2);sc.lineTo(lx+16,capY2);sc.stroke();
   // 電容電荷(±,量∝|q|,符號隨 q)
-  const nq=Math.round(Math.abs(q)*6);
-  for(let k=0;k<nq;k++){const xx=lx-12+k*5;
+  // 符號間距 8px（原 5px 時一排「−」連成一條線，看起來像第三片極板）
+  const nq=Math.round(Math.abs(q)*4);
+  for(let k=0;k<nq;k++){const xx=lx-15+k*8;
     sc.fillStyle=q>=0?'#ff8fb0':'#6cd0ff';sc.font='bold 12px system-ui';sc.fillText(q>=0?'+':'−',xx,capY1-5);
     sc.fillStyle=q>=0?'#6cd0ff':'#ff8fb0';sc.fillText(q>=0?'−':'+',xx,capY2+14);}
   sc.fillStyle='#9fd0ff';sc.font='12px system-ui';sc.fillText('電容 C',lx-18,by+18);
@@ -147,14 +148,17 @@ function draw(){const W=sc._w,H=sc._h;S.scene(sc,SKY,{});
   sc.strokeStyle='#ffd27a';sc.lineWidth=3;
   const coilN=5, coilY0=ty+20, coilY1=by-20, dyc=(coilY1-coilY0)/coilN;
   sc.beginPath();sc.moveTo(rx,ty);sc.lineTo(rx,coilY0);
-  for(let k=0;k<coilN;k++){const y=coilY0+k*dyc;sc.moveTo(rx,y);sc.arc(rx+9,y+dyc/2,dyc/2,Math.PI,0,false);}
-  sc.moveTo(rx,coilY1);sc.lineTo(rx,by);sc.stroke();
+  // 標準電感符號：沿導線連續的半圓凸起（原本每圈從導線拉斜線到弧起點，畫成一排斷開的帽子形）
+  for(let k=0;k<coilN;k++){const y=coilY0+k*dyc;sc.arc(rx,y+dyc/2,dyc/2,-Math.PI/2,Math.PI/2,false);}
+  sc.lineTo(rx,by);sc.stroke();
   sc.fillStyle='#ffd27a';sc.font='12px system-ui';sc.fillText('電感 L',rx-4,by+18);
   // 電流方向(沿迴路移動點,密度∝|I|,方向∝sign(I))
-  const dir=Math.sign(cur)||1, speed=Math.abs(cur);
+  // cur＝dQ/dt（Q 為上板電荷）：cur<0 時上板放電，電流從上板經上方導線往右流（loopPoint 的 +s 方向）。
+  // 點的位置＝已流過的電荷量 ∝ (1−q)，所以點隨電流來回移動、速度 ∝ |I|。
+  const dir=-(Math.sign(cur)||1), speed=Math.abs(cur);
   sc.fillStyle=`rgba(124,255,178,${0.4+0.6*speed})`;
-  const peri=2*((rx-lx)+(by-ty)); const nd=14;
-  for(let k=0;k<nd;k++){let s=((k/nd)+phase*dir*0.06)%1; s=(s+1)%1;
+  const nd=14;
+  for(let k=0;k<nd;k++){let s=((k/nd)+0.25*(1-q))%1; s=(s+1)%1;
     const p=loopPoint(s,lx,rx,ty,by); sc.beginPath();sc.arc(p.x,p.y,2.2+2*speed,0,7);sc.fill();}
   // 電流箭頭(上邊中央)
   if(speed>0.05){const ax=(lx+rx)/2;S.arrow(sc,ax-dir*16,ty,ax+dir*16,ty,{color:'#7CFFB2',width:2.5});}
@@ -173,6 +177,7 @@ function draw(){const W=sc._w,H=sc._h;S.scene(sc,SKY,{});
   sc.strokeStyle='#6cd0ff';sc.lineWidth=2;sc.beginPath();trail.forEach((p,k)=>{const x=gx+k,y=gy-p.q*gh;k?sc.lineTo(x,y):sc.moveTo(x,y);});sc.stroke();
   sc.strokeStyle='#7CFFB2';sc.lineWidth=2;sc.beginPath();trail.forEach((p,k)=>{const x=gx+k,y=gy-p.i*gh;k?sc.lineTo(x,y):sc.moveTo(x,y);});sc.stroke();
   sc.fillStyle='#6cd0ff';sc.font='11px system-ui';sc.fillText('Q',gx+gw-30,ty+10);sc.fillStyle='#7CFFB2';sc.fillText('I',gx+gw-14,ty+10);
+  sc.fillStyle='rgba(150,170,210,.7)';sc.textAlign='right';sc.fillText('時間 t →',gx+gw,by+16);sc.textAlign='left';
   updateHud();
 }
 function loopPoint(s,lx,rx,ty,by){const w=rx-lx,h=by-ty,P=2*(w+h);let d=s*P;
@@ -186,7 +191,8 @@ function updateHud(){const f=freq(),T=period();
 
 let last=0;
 function loop(ts){const dt=last?Math.min((ts-last)/1000,0.05):0;last=ts;
-  if(running)phase+=dt*2.6;
+  // 畫面放慢顯示，但速度與實際 ω 成正比（L=C=1 時 2.6 rad/s）：加大 L 或 C 看得出變慢
+  if(running)phase+=dt*2.6/Math.sqrt(state.L*state.C);
   draw();requestAnimationFrame(loop);}
 
 const rb=document.getElementById('run');
