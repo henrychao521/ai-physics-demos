@@ -96,7 +96,7 @@
   <div class="formula" id="formula"></div>
 
   <div class="panel">
-    <div class="lab"><span>總動量（綠，水平不動）與總動能（黃，非彈性碰撞時階梯下降）對時間</span></div>
+    <div class="lab"><span>總動量（綠，水平不動；中間細線＝0）與總動能（黃，非彈性碰撞時階梯下降）對時間 t。縱軸是相對值：各以碰前的數值為基準</span></div>
     <canvas id="plot"></canvas>
   </div>
 
@@ -153,8 +153,10 @@ function updateFormula(){
   const nv2=((1+e)*m1*v1+(m2-e*m1)*v2)/M;    // 碰後 v₂'
   const KEf=0.5*m1*nv1*nv1+0.5*m2*nv2*nv2;   // 碰後總動能
   const lossPct=KEi>1e-6?(1-KEf/KEi)*100:0;  // 動能損耗比例
+  const noHit=!(v1>v2);                      // 球1在左：v₁ ≤ v₂ 時兩球永遠追不上、不會相碰
   document.getElementById('formula').innerHTML=
     `<h4>📐 計算公式（即時代入　開放軌道・系統不受外力）</h4>`+
+    (noHit?`<div class="frel" style="margin:0 0 6px;padding:0;border:none">⚠️ 此設定 v₁ ≤ v₂（球1 在左），兩球會分開、<b>不會相碰</b>；下面的碰後速度只是「假如相碰」的計算值。</div>`:'')+
     frow('總動量 p','m₁v₁ + m₂v₂',`${m1}·${v1} + ${m2}·${v2}`, P.toFixed(2)+' kg·m/s')+
     frow('碰前動能 KEᵢ','½m₁v₁² + ½m₂v₂²',`½·${m1}·${v1}² + ½·${m2}·${v2}²`, KEi.toFixed(2)+' J')+
     frow("碰後 v₁'",'[(m₁−e·m₂)v₁+(1+e)m₂v₂]/(m₁+m₂)',`[(${m1}−${e}·${m2})·${v1}+(1+${e})·${m2}·${v2}]/${M}`, nv1.toFixed(2)+' m/s')+
@@ -211,10 +213,14 @@ function chip(k,v,cls){return `<div class="chip ${cls}">${k}<b>${v}</b></div>`;}
 function drawPlot(){const W=pc._w,H=pc._h,mL=38,mR=12,mT=12,mB=18;pc.clearRect(0,0,W,H);if(history.length<2)return;
   const t1=history[history.length-1].t,t0=Math.max(0,t1-12),X=t=>mL+(t-t0)/((t1-t0)||1)*(W-mL-mR);
   const pAbs=Math.max(Math.abs(P0),1),keMax=Math.max(KE0,1);
-  const Yp=p=>H-mB-(p/pAbs*0.5+0.5)*(H-mT-mB),Yk=k=>H-mB-(k/keMax)*(H-mT-mB);
+  // 上限留白：初值不貼上框，且兩條線不重疊（動量初值在 90% 高、動能初值在 78% 高）
+  const Yp=p=>H-mB-(p/pAbs*0.4+0.5)*(H-mT-mB),Yk=k=>H-mB-(k/keMax)*0.78*(H-mT-mB);
   pc.strokeStyle='#1b2738';pc.beginPath();pc.moveTo(mL,Yp(0));pc.lineTo(W-mR,Yp(0));pc.stroke();
   pc.strokeStyle='#ffce54';pc.lineWidth=2;pc.beginPath();history.forEach((s,i)=>{const x=X(s.t),y=Yk(s.ke);if(s.t>=t0)i&&history[i-1].t>=t0?pc.lineTo(x,y):pc.moveTo(x,y);});pc.stroke();
   pc.strokeStyle='#7CFFB2';pc.lineWidth=2;pc.beginPath();history.forEach((s,i)=>{const x=X(s.t),y=Yp(s.p);if(s.t>=t0)i&&history[i-1].t>=t0?pc.lineTo(x,y):pc.moveTo(x,y);});pc.stroke();
+  pc.fillStyle='rgba(170,185,215,.7)';pc.font='10px system-ui';pc.strokeStyle='rgba(150,170,210,.5)';pc.lineWidth=1;
+  for(let s=Math.ceil(t0);s<=t1;s++){const x=X(s);pc.beginPath();pc.moveTo(x,H-mB);pc.lineTo(x,H-mB+3);pc.stroke();pc.fillText(s,x-3,H-4);}
+  pc.fillText('t (s)',W-mR-26,H-4);
   pc.fillStyle='#7CFFB2';pc.font='11px system-ui';pc.fillText('總動量',mL+4,mT+10);pc.fillStyle='#ffce54';pc.fillText('總動能',mL+58,mT+10);}
 function render(){draw();drawPlot();}
 
