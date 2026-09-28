@@ -124,7 +124,7 @@ function updateFormula(){const m=model();
     `<h4>📐 計算公式（即時代入　nR=1、膨脹比 r=2.2）</h4>`
     + frow('吸熱 Qh','Th·ln r',`${m.Th}·ln2.2`, m.Qh.toFixed(1)+' J')
     + frow('放熱 Qc','Tc·ln r',`${m.Tc}·ln2.2`, m.Qc.toFixed(1)+' J')
-    + frow('淨功 W','Qh − Qc',`${m.Qh.toFixed(0)}−${m.Qc.toFixed(0)}`, m.W.toFixed(1)+' J')
+    + frow('淨功 W','Qh − Qc',`${m.Qh.toFixed(1)} − ${m.Qc.toFixed(1)}`, m.W.toFixed(1)+' J')
     + frow('卡諾效率 η','1 − Tc/Th',`1 − ${m.Tc}/${m.Th}`, (m.eta*100).toFixed(1)+'%')
     + `<div class="frel">📈 <b>η = 1 − Tc/Th</b>：溫差越大效率越高　·　<b>Qh = W + Qc</b>（能量守恆）　·　η 永遠 < 100%（需 Tc=0 才達 100%，不可能）——熱力學第二定律。</div>`;
 }
@@ -132,7 +132,9 @@ function updateFormula(){const m=model();
 // ---- 視圖 ----
 let sc;
 const SKY={skyTop:'#0d1322',skyBottom:'#070d16',vignette:'rgba(0,0,0,.42)'};
-function setupCanvases(){sc=S.fit(document.getElementById('scene'),1.85);}
+function setupCanvases(){const cv=document.getElementById('scene');
+  // 手機加高：原本 1.85 的寬高比在 390 寬時汽缸只剩約 37 px 高
+  sc=S.fit(cv,cv.parentElement.clientWidth<560?1.0:1.85);}
 let u=0, running=true;
 const SEGNAME=['① 等溫膨脹（吸熱 Qh）','② 絕熱膨脹（降溫）','③ 等溫壓縮（放熱 Qc）','④ 絕熱壓縮（升溫）'];
 function draw(){const W=sc._w,H=sc._h;S.scene(sc,SKY,{});
@@ -157,13 +159,15 @@ function draw(){const W=sc._w,H=sc._h;S.scene(sc,SKY,{});
   sc.fillStyle='#8390aa';sc.fillRect(cylX+cylW/2-4,pistonY-30,8,22);
   // 冷熱庫(依目前接觸高亮)
   const hot=p.heat==='in', cold=p.heat==='out';
-  sc.fillStyle=hot?'rgba(255,90,90,.85)':'rgba(255,90,90,.28)';sc.fillRect(cylX-4,cylBot+4,cylW+8,14);
-  sc.fillStyle='#fff';sc.font='11px system-ui';sc.fillText('高溫庫 '+state.Th+'K',cylX-2,cylBot+15);
-  // 能流箭頭 Qh→引擎→W,Qc
+  // 缸底接觸的熱庫：①接高溫庫、③接低溫庫、②④隔熱（原本只畫高溫庫，放熱階段看不到低溫庫）
+  sc.fillStyle=hot?'rgba(255,90,90,.85)':cold?'rgba(90,150,255,.85)':'rgba(150,160,180,.35)';sc.fillRect(cylX-4,cylBot+4,cylW+8,14);
+  sc.fillStyle='#fff';sc.font='11px system-ui';sc.fillText(hot?'高溫庫 '+state.Th+'K':cold?'低溫庫 '+state.Tc+'K':'隔熱',cylX-2,cylBot+15);
+  // 能流箭頭：Qh 流入、Qc 流出
   if(hot){S.arrow(sc,cylX-22,cylBot+11,cylX-6,cylBot+11,{color:'#ff7a7a',width:3,label:'Qh'});}
-  // 階段標籤
+  if(cold){S.arrow(sc,cylX-6,cylBot+11,cylX-24,cylBot+11,{color:'#6ca8ff',width:3,label:'Qc'});}
+  // 階段標籤（放在熱庫下方；原本在缸頂上方，被數值卡片蓋住）
   sc.fillStyle=hot?'#ff9a9a':(cold?'#8fc0ff':'#cfe0ff');sc.font='bold 13px system-ui';
-  sc.fillText(SEGNAME[p.seg],cylX-8,cylTop-14);
+  sc.fillText(SEGNAME[p.seg],cylX-8,cylBot+40);
   // ===== 中：能量條 Qh=W+Qc =====
   const ebx=cylX+cylW+(CP?22:44), ebw=CP?18:30, ebTop=cylTop+6, ebH=cylH-12;
   const total=m.Qh; const wH=ebH*(m.W/total), cH=ebH*(m.Qc/total);
@@ -182,7 +186,7 @@ function draw(){const W=sc._w,H=sc._h;S.scene(sc,SKY,{});
   // 軸
   sc.strokeStyle='rgba(150,170,210,.5)';sc.lineWidth=1.2;
   sc.beginPath();sc.moveTo(gx,cylTop);sc.lineTo(gx,gy0);sc.lineTo(gx+gw,gy0);sc.stroke();
-  sc.fillStyle='rgba(180,195,225,.8)';sc.font='11px system-ui';sc.fillText('P',gx-12,cylTop+8);sc.fillText('V',gx+gw-6,gy0+16);
+  sc.fillStyle='rgba(180,195,225,.8)';sc.font='11px system-ui';sc.fillText('P',gx-12,cylTop+8);sc.fillText('V',gx+gw-6,gy0+16);sc.fillStyle='rgba(180,195,225,.55)';sc.font='10px system-ui';sc.fillText('（nR = 1，相對單位）',gx+4,gy0+16);
   // 循環曲線(取樣) + 填色(=W 面積)
   const N=160; sc.beginPath();
   for(let i=0;i<=N;i++){const pp=point(i/N*4,m);const x=X(pp.V),y=Y(pp.P);i?sc.lineTo(x,y):sc.moveTo(x,y);}
@@ -194,7 +198,7 @@ function draw(){const W=sc._w,H=sc._h;S.scene(sc,SKY,{});
   // 角點
   m.st.forEach((q,i)=>{S.sphere(sc,X(q.V),Y(q.P),3.5,[200,210,230]);sc.fillStyle='rgba(200,210,230,.8)';sc.font='10px system-ui';sc.fillText((i+1),X(q.V)+5,Y(q.P)-5);});
   // 目前狀態點
-  S.sphere(sc,X(p.V),Y(p.P),6,[255,225,120]);
+  S.sphere(sc,X(p.V),Y(p.P),6,[48,100,68]);
   sc.fillStyle='rgba(124,255,178,.85)';sc.font='11px system-ui';sc.fillText('面積 = 淨功 W',gx+gw*0.34,cylTop+18);
   updateHud(m);
 }
