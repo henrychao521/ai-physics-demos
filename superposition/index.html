@@ -112,7 +112,8 @@ function draw(){
   g.fillStyle='#05070b';g.fillRect(0,0,W,H);
   const f1=state.f1,f2=state.f2,ph=phase;
   // 三條基準線
-  const lanes=[70,150,270];
+  // 三條基準線與標籤錯開：原本 [70,150,270] 時「波 2」「相加」標籤壓在上一條波形的波谷上
+  const lanes=[60,150,272];
   g.strokeStyle='#141c28';g.lineWidth=1;
   lanes.forEach(y=>{g.beginPath();g.moveTo(0,y);g.lineTo(W,y);g.stroke();});
   // 波1 (青)、波2 (洋紅)
@@ -120,9 +121,9 @@ function draw(){
   wave(lanes[1],34,f2,'#ff6bd0',ph*1.0);
   // 標籤
   g.fillStyle='#6b7785';g.font='12px sans-serif';
-  g.fillText('波 1：sin(2πf₁x)',12,lanes[0]-44);
-  g.fillText('波 2：sin(2πf₂x)',12,lanes[1]-44);
-  g.fillText('相加：波1 + 波2（白）＋ 拍頻包絡（黃）',12,lanes[2]-78);
+  g.fillText('波 1：sin(2πf₁x)',12,14);
+  g.fillText('波 2：sin(2πf₂x)',12,lanes[1]-39);
+  g.fillText('相加：波1 + 波2（白）＋ 拍頻包絡（黃）',12,lanes[2]-73);
   // 包絡 envelope = 2cos(π(f1-f2)x)
   const df=f1-f2;
   g.strokeStyle='#ffce54';g.setLineDash([5,4]);g.lineWidth=1.5;
