@@ -125,7 +125,8 @@ function drawGrid(){const W=380,H=380;gc.fillStyle='#070f0b';gc.fillRect(0,0,W,H
       gc.fillStyle='#7CFFB2';gc.beginPath();gc.arc(x,y,r,0,7);gc.fill();}
     else{gc.fillStyle='#27332c';gc.beginPath();gc.arc(x,y,r*0.85,0,7);gc.fill();}}
   document.getElementById('sub').textContent=remaining()+' / '+state.N0+' 未衰變';}
-function drawPlot(){const W=560,H=380,mL=38,mR=14,mT=34,mB=36;   // mT 留白：N₀ 不貼頂、圖例與軸名不壓曲線pc.fillStyle='#08120c';pc.fillRect(0,0,W,H);
+function drawPlot(){const W=560,H=380,mL=38,mR=14,mT=34,mB=36;   // mT 留白：N₀ 不貼頂、圖例與軸名不壓曲線
+  pc.fillStyle='#08120c';pc.fillRect(0,0,W,H);
   const tEnd=6*state.T,X=tt=>mL+tt/tEnd*(W-mL-mR),Y=n=>H-mB-n/state.N0*(H-mT-mB);
   pc.font='10px system-ui';
   for(let k=0;k<=6;k++){const tx=X(k*state.T);pc.strokeStyle='#13251a';pc.beginPath();pc.moveTo(tx,mT);pc.lineTo(tx,H-mB);pc.stroke();pc.fillStyle='#5a7a66';pc.fillText(k+'T',tx-6,H-mB+14);}
