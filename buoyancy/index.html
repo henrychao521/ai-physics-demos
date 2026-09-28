@@ -80,7 +80,7 @@
 <script>
 const S=SIM, g=9.8;
 const sliders=[
-  {id:'rhoO',name:'物體密度 ρ_物',min:100,max:2500,step:10,val:600,unit:'kg/m³'},
+  {id:'rhoO',name:'物體密度 ρ_物',min:100,max:8000,step:10,val:600,unit:'kg/m³'},
   {id:'rhoL',name:'液體密度 ρ_液',min:600,max:1300,step:10,val:1000,unit:'kg/m³'},
   {id:'V',name:'物體體積 V',min:2,max:16,step:.5,val:8,unit:'L'},
 ];
@@ -105,7 +105,7 @@ function updateFormula(){
   document.getElementById('formula').innerHTML=
     `<h4>📐 計算公式（即時代入　平衡狀態）</h4>`
     + frow('重量 W','ρ_物·V·g',`${rO}·${Vm.toFixed(3)}·${g}`, W.toFixed(1)+' N')
-    + frow('沒入比例 f','ρ_物 / ρ_液',`${rO} / ${rL}`, (fracEq*100).toFixed(0)+' %')
+    + frow('沒入比例 f','ρ_物 / ρ_液', rO<=rL?`${rO} / ${rL}`:`${rO} > ${rL} → 下沉，完全沒入 f = 1`, (fracEq*100).toFixed(0)+' %')
     + frow('浮力 F_浮','ρ_液·(f·V)·g',`${rL}·${(fracEq*Vm).toFixed(3)}·${g}`, buoy.toFixed(1)+' N')
     + frow('水中視重','W − F_浮',`${W.toFixed(1)} − ${buoy.toFixed(1)}`, apparent.toFixed(1)+' N')
     + `<div class="frel">📈 <b>沒入比例 = ρ_物/ρ_液</b>：冰917÷海水1025≈0.9 → 露出約 1/10（冰山一角）　·　<b>ρ_物 &lt; ρ_液 才漂浮</b>，相等則懸浮、較大則下沉　·　<b>體積 V 不改沉浮</b>：放大 V 時 W 與 F_浮同倍放大，比例不變。</div>`;
@@ -162,7 +162,7 @@ function drawStats(info){const apparent=Math.max(0,info.weight-info.buoy);
 }
 let lastTs=0;
 function loop(ts){const dt=lastTs?Math.min((ts-lastTs)/1000,0.04):0;lastTs=ts;tt+=dt;let info;for(let i=0;i<3;i++)info=physics((dt||0.016)/3);draw(info);requestAnimationFrame(loop);}
-const PRE={wood:{rhoO:600,rhoL:1000,V:8},ice:{rhoO:917,rhoL:1025,V:10},iron:{rhoO:2500,rhoL:1000,V:6},deadsea:{rhoO:1050,rhoL:1240,V:9}};
+const PRE={wood:{rhoO:600,rhoL:1000,V:8},ice:{rhoO:917,rhoL:1025,V:10},iron:{rhoO:7870,rhoL:1000,V:6},deadsea:{rhoO:1050,rhoL:1240,V:9}};
 document.querySelectorAll('[data-preset]').forEach(b=>b.onclick=()=>{const p=PRE[b.dataset.preset];if(!p)return;['rhoO','rhoL','V'].forEach(k=>setSlider(k,p[k]));yTop=-0.18;vy=0;updateFormula();});
 window.addEventListener('load',()=>{setupCanvases();updateFormula();requestAnimationFrame(loop);});
 window.addEventListener('resize',()=>{setupCanvases();});
