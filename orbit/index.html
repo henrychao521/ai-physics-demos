@@ -106,12 +106,16 @@ const D0=170,MU_PER_M=505400*Math.pow(170/160,3);
 function MU(){return state.M*MU_PER_M;}
 function vcirc(){return Math.sqrt(MU()/D0);}
 let pos,vel,trace,wedges,simT,lastWedgeT,playing=true,escaped=false;
-function launch(){pos={x:D0,y:0};vel={x:0,y:-state.ratio*vcirc()};trace=[{x:pos.x,y:pos.y}];wedges=[{x:pos.x,y:pos.y}];simT=0;lastWedgeT=0;escaped=false;if(typeof updateFormula==='function')updateFormula();}
+let wedgePts=[];
+function launch(){pos={x:D0,y:0};vel={x:0,y:-state.ratio*vcirc()};trace=[{x:pos.x,y:pos.y}];wedges=[{x:pos.x,y:pos.y,pts:[]}];wedgePts=[];simT=0;lastWedgeT=0;escaped=false;if(typeof updateFormula==='function')updateFormula();}
 function accel(p){const r=Math.hypot(p.x,p.y),f=-MU()/(r*r*r);return {x:f*p.x,y:f*p.y};}
+// 楔形（克卜勒第二定律）：每 0.16 s 模擬時間切一塊。邊界在「子步」檢查、並保存沿途軌跡點，
+// 楔形畫成扇形（沿軌跡）而非三角形；原本用三角形弦、且以畫格為單位切時間，偏心率大時近日點楔形面積看起來差到 90%。
 function integrate(dt){const n=12,h=dt/n;
-  for(let i=0;i<n;i++){let a=accel(pos);pos.x+=vel.x*h+0.5*a.x*h*h;pos.y+=vel.y*h+0.5*a.y*h*h;const a2=accel(pos);vel.x+=0.5*(a.x+a2.x)*h;vel.y+=0.5*(a.y+a2.y)*h;}
-  simT+=dt;trace.push({x:pos.x,y:pos.y});if(trace.length>2400)trace.shift();
-  if(simT-lastWedgeT>=0.16){wedges.push({x:pos.x,y:pos.y});if(wedges.length>16)wedges.shift();lastWedgeT=simT;}
+  for(let i=0;i<n;i++){let a=accel(pos);pos.x+=vel.x*h+0.5*a.x*h*h;pos.y+=vel.y*h+0.5*a.y*h*h;const a2=accel(pos);vel.x+=0.5*(a.x+a2.x)*h;vel.y+=0.5*(a.y+a2.y)*h;
+    simT+=h;wedgePts.push({x:pos.x,y:pos.y});
+    if(simT-lastWedgeT>=0.16-1e-9){wedges.push({x:pos.x,y:pos.y,pts:wedgePts});wedgePts=[];if(wedges.length>16)wedges.shift();lastWedgeT+=0.16;}}
+  trace.push({x:pos.x,y:pos.y});if(trace.length>2400)trace.shift();
   const r=Math.hypot(pos.x,pos.y);if(r>D0*4.2){escaped=true;if(r>2200)launch();}}
 function orbit(){const r=Math.hypot(pos.x,pos.y),v=Math.hypot(vel.x,vel.y),mu=MU(),eps=0.5*v*v-mu/r,h=pos.x*vel.y-pos.y*vel.x;
   const a=eps<0?-mu/(2*eps):Infinity,e=Math.sqrt(Math.max(0,1+2*eps*h*h/(mu*mu))),T=eps<0?2*Math.PI*Math.sqrt(a*a*a/mu):null;
@@ -135,7 +139,7 @@ function updateFormula(){
     + frow('發射速度 v','(v/v_圓)·v_c',`${ratio.toFixed(2)}·${vc.toFixed(1)}`, v0.toFixed(1))
     + frow('半長軸 a','−GM / 2ε　(ε=½v²−GM/r)','由能量 ε 解出', aTxt)
     + frow('週期 T','2π·√(a³ / GM)','克卜勒第三定律 T²∝a³', Ttxt)
-    + frow('偏心率 e','√(1 + 2εh²/GM²)','由能量 ε 與角動量 h', o.e.toFixed(3))
+    + frow('偏心率 e','√(1 + 2εh²/(GM)²)','由能量 ε 與角動量 h', o.e.toFixed(3))
     + `<div class="frel">📈 <b>v=v_c → 圓</b>、<b>v&lt;v_c → 橢圓</b>　·　<b>v ≥ √2·v_c (≈${vesc.toFixed(1)}) → 逃逸</b>（拋物線/雙曲線）　·　<b>T² ∝ a³</b>：軌道越大週期越長　·　近恆星快、遠恆星慢（等面積，角動量守恆）。</div>`;
 }
 
@@ -150,19 +154,19 @@ function draw(){const W=sc._w,H=sc._h,cx=W/2,cy=H/2;
   const X=x=>cx+x*0.62,Y=y=>cy+y*0.62;
   // 等面積楔形
   for(let i=0;i<wedges.length-1;i++){sc.fillStyle=i%2?'rgba(108,208,255,.18)':'rgba(255,206,84,.18)';
-    sc.beginPath();sc.moveTo(X(0),Y(0));sc.lineTo(X(wedges[i].x),Y(wedges[i].y));sc.lineTo(X(wedges[i+1].x),Y(wedges[i+1].y));sc.closePath();sc.fill();}
+    sc.beginPath();sc.moveTo(X(0),Y(0));sc.lineTo(X(wedges[i].x),Y(wedges[i].y));for(const q of wedges[i+1].pts)sc.lineTo(X(q.x),Y(q.y));sc.closePath();sc.fill();}
   // 軌跡(漸隱)
   for(let i=1;i<trace.length;i++){const t=i/trace.length;sc.strokeStyle=`rgba(120,170,255,${t*0.6})`;sc.lineWidth=1+t;
     sc.beginPath();sc.moveTo(X(trace[i-1].x),Y(trace[i-1].y));sc.lineTo(X(trace[i].x),Y(trace[i].y));sc.stroke();}
   // 恆星(發光)
-  S.bulb(sc,X(0),Y(0),9+state.M*0.8,'255,210,90',1.1);
+  S.bulb(sc,X(0),Y(0),6+state.M*0.5,'255,210,90',1.1);
   // 行星 + 向量
   const o=orbit(),px=X(pos.x),py=Y(pos.y);
   S.arrow(sc,px,py,px+vel.x*0.18,py+vel.y*0.18,{color:S.C.vel,width:3,label:'v'});
   const ax=accel(pos),al=Math.hypot(ax.x,ax.y);
   S.arrow(sc,px,py,px+ax.x/al*40,py+ax.y/al*40,{color:S.C.acc,width:2.5,label:'g'});
   S.sphere(sc,px,py,7,[210,70,60]);
-  sc.fillStyle='rgba(160,180,230,.55)';sc.font='11px system-ui';sc.fillText('每個楔形＝相同時間掃過的面積（克卜勒第二定律）',12,H-12);
+  sc.fillStyle='rgba(160,180,230,.55)';sc.font='11px system-ui';sc.fillText('每個楔形＝相同時間（0.16 s）掃過的面積（克卜勒第二定律）',12,H-58);
   updateHud(o);
 }
 function updateHud(o){
