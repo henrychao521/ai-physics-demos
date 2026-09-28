@@ -23,11 +23,13 @@
   .chip{background:rgba(8,14,24,.62);backdrop-filter:blur(6px);border:1px solid rgba(255,255,255,.12);border-radius:10px;padding:6px 11px;color:#eaf2ff;font-size:.8rem;line-height:1.25}
   .chip b{display:block;font-size:1.02rem;font-variant-numeric:tabular-nums;color:#fff}
   .chip.green b{color:#7CFFB2}.chip.cyan b{color:#6cd0ff}.chip.amber b{color:#ffce54}
-  .toolbar{position:absolute;bottom:12px;right:12px;display:flex;gap:7px;flex-wrap:wrap;justify-content:flex-end}
+  .toolbar{display:flex;gap:7px;flex-wrap:wrap;justify-content:flex-end;padding:8px 10px;background:rgba(8,12,22,.5);border-top:1px solid var(--line)}
   .toolbar button{background:rgba(8,14,24,.62);backdrop-filter:blur(6px);color:#eaf2ff;border:1px solid rgba(255,255,255,.14);border-radius:9px;padding:7px 11px;font-size:.82rem;cursor:pointer;font-family:inherit}
   .toolbar button.on{background:var(--accent);color:#04121c;border-color:var(--accent);font-weight:700}
-  @media(max-width:560px){.toolbar{position:static;justify-content:center;padding:8px 10px;background:rgba(8,12,22,.5);border-top:1px solid var(--line)}}
-  .gwrap{margin-top:14px}
+  @media(max-width:560px){.toolbar{justify-content:center}}
+  .gwrap{margin-top:8px}
+  .hint{margin:8px 2px 0;color:var(--muted);font-size:.8rem;line-height:1.6}
+  .hint b{color:var(--txt)}
   .bar{display:flex;gap:14px;flex-wrap:wrap;align-items:flex-end;background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:14px 16px;margin-top:14px}
   .sld{flex:1;min-width:160px}
   .sld label{display:flex;justify-content:space-between;font-size:.82rem;color:var(--muted);margin-bottom:5px}
@@ -56,10 +58,12 @@
     <div class="hud" id="hud"></div>
     <div class="toolbar">
       <button id="play" class="on">⏸ 暫停</button>
+      <button id="shadowBtn" class="on" aria-pressed="true">等速對照：開</button>
       <button id="reset">↺ 重新計時</button>
     </div>
   </div>
 
+  <p class="hint">上方是<b>位置軸</b>（公尺）、下方三張圖是<b>時間軸</b>（秒）；等加速度時車子不會和時間游標對齊，淡色的<b>影子車</b>是「同一段時間走完同一段距離」的等速對照，它才會和游標同步。</p>
   <div class="gwrap scene-wrap"><canvas id="graph"></canvas></div>
 
   <div class="bar" id="sliders"></div>
@@ -118,8 +122,8 @@ function frow(n,sym,sub,val){return `<div class="frow"><span class="fname">${n}<
 function updateFormula(){const u=state.u,a=state.a, dec=a<0;
   let html=`<h4>📐 計算公式（即時代入　等加速度運動）</h4>`
     + frow('速度方程','v = u + a·t',`${u} + (${a})·t`, dec?'減速':(a>0?'加速':'等速'))
-    + frow('位移方程','x = u·t + ½a·t²',`${u}·t + ${(0.5*a)}·t²`, a===0?'等速直線':'拋物線');
-  if(dec){ html+= frow('停止時間','t = u / |a|',`${u} / ${Math.abs(a)}`, tStop.toFixed(2)+' s')
+    + frow('位移方程','x = u·t + ½a·t²',`${u}·t ${a<0?'−':'+'} ${fmt(Math.abs(0.5*a))}·t²`, a===0?'等速直線':'拋物線');
+  if(dec){ html+= frow('停止時間','t = u / |a|',`${u} / ${Math.abs(a)}`, tStop.toFixed(2)+' s'+(tStop>Tw?`（超過圖表的 ${Tw} s）`:''))
     + frow('煞車距離','s = u² / (2|a|)',`${u}² / (2·${Math.abs(a)})`, (u*u/(2*Math.abs(a))).toFixed(1)+' m'); }
   else { const T=6; html+= frow(T+'秒末速度','v = u + a·t',`${u} + ${a}·${T}`, (u+a*T).toFixed(1)+' m/s')
     + frow(T+'秒位移','x = ut + ½at²',`${u}·${T} + ${0.5*a}·${T}²`, xf(T).toFixed(1)+' m'); }
@@ -128,33 +132,54 @@ function updateFormula(){const u=state.u,a=state.a, dec=a<0;
 }
 
 // ---- 視圖：軌道 ----
-let sc,gc;
+// 上方軌道（位置軸）與下方三圖（時間軸）用同一組左右邊界：軌道的終點（圖表時間窗結束時的位置）
+// 和時間軸的終點對在同一條垂直線上，等速影子車因此會和時間游標同步。
+let sc,gc,showShadow=true;
+const PAD_L=46,PAD_R=30;
 const ROAD={skyTop:'#0e1828',skyBottom:'#070d18',vignette:'rgba(0,0,0,.45)'};
-function setupCanvases(){sc=S.fit(document.getElementById('scene'),3.4);gc=S.fit(document.getElementById('graph'),2.1);}
-function drawScene(){const W=sc._w,H=sc._h,mL=20,mR=20,gY=H-26;
+function setupCanvases(){const gw=document.getElementById('graph').parentElement.clientWidth;
+  sc=S.fit(document.getElementById('scene'),gw<560?1.7:3.4);   // 手機加高，數值卡片才不會蓋住車道
+  gc=S.fit(document.getElementById('graph'),gw<560?1.45:2.1);}
+function xEndOf(){const xe=xf(Tw);return xe>1e-6?xe:10;}   // 軌道全長＝時間窗結束時的位置
+function tickDec(step){return step>=1?0:step>=0.1?1:2;}
+function drawCar(c,cx,cy,bw,bh,cols,alpha){
+  c.save();c.globalAlpha=alpha;c.translate(cx,cy);
+  const gr=c.createLinearGradient(0,-bh/2,0,bh/2);gr.addColorStop(0,cols[0]);gr.addColorStop(1,cols[1]);
+  c.fillStyle=gr;roundRect(c,-bw/2,-bh/2,bw,bh,5);c.fill();
+  c.fillStyle='#0a1018';roundRect(c,-bw*0.18,-bh/2-bh*0.5,bw*0.5,bh*0.5,3);c.fill();   // 車頂
+  c.fillStyle='#13202e';c.beginPath();c.arc(-bw*0.28,bh/2,bh*0.32,0,7);c.arc(bw*0.28,bh/2,bh*0.32,0,7);c.fill();
+  c.restore();
+}
+function drawScene(){const W=sc._w,H=sc._h,gY=H-26;
   S.scene(sc,ROAD,{ground:gY});
-  const span=Math.max(xMax*1.08,10), s=(W-mL-mR)/span, X=x=>mL+x*s;
+  const span=xEndOf(), s=(W-PAD_L-PAD_R)/span, X=x=>PAD_L+x*s;
   // 距離刻度
-  sc.fillStyle='rgba(255,255,255,.5)';sc.font='11px system-ui';
-  const step=niceStep(span);
-  for(let x=0;x<=span;x+=step){sc.strokeStyle='rgba(255,255,255,.12)';sc.lineWidth=1;sc.beginPath();sc.moveTo(X(x),18);sc.lineTo(X(x),gY);sc.stroke();
-    sc.fillStyle='rgba(255,255,255,.5)';sc.fillText(x.toFixed(0)+'m',X(x)+2,gY+16);}
+  sc.font='11px system-ui';
+  const step=niceStep(span), dec=tickDec(step);
+  for(let i=0;i*step<=span*1.0001;i++){const x=i*step;sc.strokeStyle='rgba(255,255,255,.12)';sc.lineWidth=1;sc.beginPath();sc.moveTo(X(x),18);sc.lineTo(X(x),gY);sc.stroke();
+    sc.fillStyle='rgba(255,255,255,.5)';sc.textAlign='center';sc.fillText(x.toFixed(dec)+' m',X(x),gY+16);sc.textAlign='left';}
+  const bw=Math.min(42,Math.max(28,s*2.2)), bh=bw*0.42, cy=gY-16;
+  // 等速對照影子車（上方車道）：x = (總距離/總時間)·t
+  if(showShadow){const vAvg=xf(Tw)/Tw, xs=vAvg*t, sx=X(xs), sy=cy-bh-26;
+    sc.save();sc.setLineDash([4,5]);sc.strokeStyle='rgba(200,215,235,.28)';sc.lineWidth=1;
+    sc.beginPath();sc.moveTo(X(0),sy+bh/2+3);sc.lineTo(X(span),sy+bh/2+3);sc.stroke();sc.restore();
+    drawCar(sc,sx,sy,bw,bh,['#d6e2f2','#8c9bb0'],0.5);
+    sc.fillStyle='rgba(214,226,242,.7)';sc.font='11px system-ui';
+    sc.fillText(`等速對照 v = ${fmt(vAvg)} m/s`,PAD_L+4,sy+bh/2+16);
+  }
   // 車
-  const xc=xf(t), cx=X(xc), cy=gY-16, bw=Math.min(42,Math.max(28,s*2.2)), bh=bw*0.42;
+  const xc=xf(t), cx=X(xc);
   // 拖尾(已走路徑)
   sc.strokeStyle='rgba(124,255,178,.5)';sc.lineWidth=3;sc.beginPath();sc.moveTo(X(0),cy+bh/2+3);sc.lineTo(cx,cy+bh/2+3);sc.stroke();
   S.shadow(sc,cx,gY,bw*0.5,4);
-  sc.save();sc.translate(cx,cy);
-  const gr=sc.createLinearGradient(0,-bh/2,0,bh/2);gr.addColorStop(0,'#6cd0ff');gr.addColorStop(1,'#2a6da4');
-  sc.fillStyle=gr;roundRect(sc,-bw/2,-bh/2,bw,bh,5);sc.fill();
-  sc.fillStyle='#0a1018';roundRect(sc,-bw*0.18,-bh/2-bh*0.5,bw*0.5,bh*0.5,3);sc.fill();   // 車頂
-  sc.fillStyle='#13202e';sc.beginPath();sc.arc(-bw*0.28,bh/2,bh*0.32,0,7);sc.arc(bw*0.28,bh/2,bh*0.32,0,7);sc.fill();
-  sc.restore();
+  drawCar(sc,cx,cy,bw,bh,['#6cd0ff','#2a6da4'],1);
   // 速度箭頭
   const v=vf(t); if(Math.abs(v)>0.1)S.arrow(sc,cx,cy-bh,cx+Math.sign(v)*Math.min(60,Math.abs(v)*3.2),cy-bh,{color:S.C.vel,width:3,label:'v'});
   updateHud();
 }
-function niceStep(span){const raw=span/7,p=Math.pow(10,Math.floor(Math.log10(raw))),n=raw/p;return (n<1.5?1:n<3?2:n<7?5:10)*p;}
+function niceStep(span,div=7){const raw=span/div,p=Math.pow(10,Math.floor(Math.log10(raw))),n=raw/p;return (n<1.5?1:n<3?2:n<7?5:10)*p;}
+// 取整齊的上限：至少比資料最大值高 4%，免得曲線貼著上框
+function niceTop(v){if(v<=0)return 1;const st=niceStep(v,4);return Math.ceil(v*1.04/st-1e-9)*st;}
 function roundRect(c,x,y,w,h,r){c.beginPath();c.moveTo(x+r,y);c.arcTo(x+w,y,x+w,y+h,r);c.arcTo(x+w,y+h,x,y+h,r);c.arcTo(x,y+h,x,y,r);c.arcTo(x,y,x+w,y,r);c.closePath();}
 function updateHud(){const xc=xf(t),v=vf(t),a=t<tStop?state.a:0;
   document.getElementById('hud').innerHTML=
@@ -163,31 +188,56 @@ function updateHud(){const xc=xf(t),v=vf(t),a=t<tStop?state.a:0;
    `<div class="chip cyan">速度 v<b>${v.toFixed(1)} m/s</b></div>`+
    `<div class="chip amber">加速度 a<b>${a.toFixed(1)} m/s²</b></div>`;
 }
-// ---- 視圖：三圖 ----
-function drawGraph(){const W=gc._w,H=gc._h,mL=40,mR=12,gap=10;
+// ---- 視圖：三圖（共用同一條時間軸）----
+function aRange(){const a=state.a;if(a===0)return {lo:-1,hi:1};
+  const A=Math.abs(a),st=A<=2?0.5:A<=5?1:2,top=Math.ceil(A*1.15/st)*st;   // 上下留 ≥15% 餘裕
+  return a>0?{lo:-st,hi:top}:{lo:-top,hi:st};}
+function fmtTick(v){return Math.abs(v)<1e-9?'0':(Math.round(v*100)/100).toString();}
+function drawGraph(){const W=gc._w,H=gc._h,mL=PAD_L,mR=PAD_R,gap=10,top=18,bot=22;
   gc.clearRect(0,0,W,H);gc.fillStyle='#080c14';gc.fillRect(0,0,W,H);
-  const rowH=(H-gap*2-8)/3;
+  const rowH=(H-top-bot-gap*2)/3, ar=aRange();
   const panels=[
-    {y:4,         lab:'x-t (位置 m)',  col:'#7CFFB2', f:tt=>xf(tt), lo:0, hi:Math.max(xMax,1)},
-    {y:4+rowH+gap,lab:'v-t (速度 m/s)', col:'#6cd0ff', f:tt=>vf(tt), lo:0, hi:Math.max(vMax,1)},
-    {y:4+2*(rowH+gap),lab:'a-t (加速度 m/s²)',col:'#ffce54', f:tt=>(tt<tStop?state.a:0), lo:Math.min(state.a,-1,0), hi:Math.max(state.a,1,0)},
+    {y:top,            lab:'x-t（位置 m）',  col:'#7CFFB2', f:tt=>xf(tt), lo:0, hi:niceTop(xMax)},
+    {y:top+rowH+gap,   lab:'v-t（速度 m/s）', col:'#6cd0ff', f:tt=>vf(tt), lo:0, hi:niceTop(vMax)},
+    {y:top+2*(rowH+gap),lab:'a-t（加速度 m/s²）',col:'#ffce54', f:tt=>(tt<tStop?state.a:0), lo:ar.lo, hi:ar.hi},
   ];
-  const Xt=tt=>mL+tt/Tw*(W-mL-mR);
-  for(const p of panels){const y0=p.y,y1=p.y+rowH;const rng=(p.hi-p.lo)||1;const Y=v=>y1-(v-p.lo)/rng*(rowH);
-    gc.strokeStyle='#1b2433';gc.lineWidth=1;gc.strokeRect(mL,y0,W-mL-mR,rowH);
+  const Xt=tt=>mL+tt/Tw*(W-mL-mR), tStep=niceStep(Tw,6), tDec=tickDec(tStep);
+  const ticks=[];for(let i=0;i*tStep<=Tw*1.0001;i++)ticks.push(i*tStep);
+  gc.font='11px system-ui';
+  panels.forEach((p,k)=>{const y0=p.y,y1=p.y+rowH;const rng=(p.hi-p.lo)||1;const Y=v=>y1-(v-p.lo)/rng*(rowH);
+    // 時間格線（三張圖同一組 x）
+    gc.strokeStyle='#141c2a';gc.lineWidth=1;
+    for(const tk of ticks){gc.beginPath();gc.moveTo(Xt(tk),y0);gc.lineTo(Xt(tk),y1);gc.stroke();}
+    gc.strokeStyle='#1b2433';gc.strokeRect(mL,y0,W-mL-mR,rowH);
     // 0 軸
     if(p.lo<0&&p.hi>0){gc.strokeStyle='#2a3650';gc.beginPath();gc.moveTo(mL,Y(0));gc.lineTo(W-mR,Y(0));gc.stroke();}
+    // x-t 的等速對照弦（影子車的位置）
+    if(k===0&&showShadow){gc.save();gc.setLineDash([4,4]);gc.strokeStyle='rgba(214,226,242,.35)';gc.lineWidth=1.2;
+      gc.beginPath();gc.moveTo(Xt(0),Y(0));gc.lineTo(Xt(Tw),Y(xf(Tw)));gc.stroke();gc.restore();}
     // 曲線
     gc.strokeStyle=p.col;gc.lineWidth=2;gc.beginPath();
-    for(let i=0;i<=120;i++){const tt=i/120*Tw,X=Xt(tt),YY=Y(p.f(tt));i?gc.lineTo(X,YY):gc.moveTo(X,YY);}gc.stroke();
-    // 標籤
-    gc.fillStyle=p.col;gc.font='11px system-ui';gc.fillText(p.lab,mL+4,y0+13);
-    gc.fillStyle='#5b6880';gc.fillText(p.hi.toFixed(0),4,y0+11);gc.fillText(p.lo.toFixed(0),4,y1-2);
+    for(let i=0;i<=240;i++){const tt=i/240*Tw,X=Xt(tt),YY=Y(p.f(tt));i?gc.lineTo(X,YY):gc.moveTo(X,YY);}gc.stroke();
+    // 標籤與 y 刻度
+    gc.fillStyle=p.col;gc.textAlign='left';gc.fillText(p.lab,mL+4,y0+13);
+    gc.fillStyle='#8a99ad';gc.textAlign='right';
+    gc.fillText(fmtTick(p.hi),mL-5,y0+9);gc.fillText(fmtTick(p.lo),mL-5,y1);
+    if(p.lo<0&&p.hi>0)gc.fillText('0',mL-5,Y(0)+4);
+    gc.textAlign='left';
     // 游標點
     const cx=Xt(t),cy=Y(p.f(t));gc.strokeStyle='rgba(255,255,255,.5)';gc.lineWidth=1;gc.beginPath();gc.moveTo(cx,y0);gc.lineTo(cx,y1);gc.stroke();
     gc.fillStyle='#fff';gc.beginPath();gc.arc(cx,cy,3.5,0,7);gc.fill();
-  }
-  gc.fillStyle='#8a99ad';gc.font='10px system-ui';gc.fillText('t (s) →',W-46,H-3);
+  });
+  // 共用時間軸刻度（只標在最下方）
+  const yb=top+3*rowH+2*gap;
+  gc.fillStyle='#8a99ad';gc.textAlign='center';
+  for(const tk of ticks){gc.strokeStyle='#5b6880';gc.beginPath();gc.moveTo(Xt(tk),yb);gc.lineTo(Xt(tk),yb+4);gc.stroke();
+    gc.fillText(tk.toFixed(tDec),Xt(tk),yb+15);}
+  gc.textAlign='left';gc.fillText('t (s)',4,yb+15);
+  // 游標的 t 值（標在最上方）
+  const cx=Xt(t),lbl=`t = ${t.toFixed(2)} s`;gc.font='600 11px system-ui';
+  const tw=gc.measureText(lbl).width+10,bx=Math.min(Math.max(cx-tw/2,mL),W-mR-tw);
+  gc.fillStyle='rgba(255,255,255,.12)';roundRect(gc,bx,1,tw,15,4);gc.fill();
+  gc.fillStyle='#fff';gc.textAlign='center';gc.fillText(lbl,bx+tw/2,12);gc.textAlign='left';
 }
 function render(){drawScene();drawGraph();}
 
@@ -198,6 +248,8 @@ function loop(ts){const dt=last?Math.min((ts-last)/1000,0.05):0;last=ts;
   render();requestAnimationFrame(loop);}
 const pb=document.getElementById('play');
 pb.onclick=()=>{playing=!playing;pb.classList.toggle('on',playing);pb.textContent=playing?'⏸ 暫停':'▶ 播放';};
+const shb=document.getElementById('shadowBtn');
+shb.onclick=()=>{showShadow=!showShadow;shb.classList.toggle('on',showShadow);shb.setAttribute('aria-pressed',showShadow);shb.textContent='等速對照：'+(showShadow?'開':'關');render();};
 document.getElementById('reset').onclick=()=>{t=0;playing=true;pb.classList.add('on');pb.textContent='⏸ 暫停';};
 const PRE={const:{u:12,a:0},accel:{u:0,a:3},brake:{u:18,a:-4},fall:{u:0,a:9.8}};
 document.querySelectorAll('[data-preset]').forEach(b=>b.onclick=()=>{const pr=PRE[b.dataset.preset];if(!pr)return;
