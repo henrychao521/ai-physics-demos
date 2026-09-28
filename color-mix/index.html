@@ -116,7 +116,8 @@ function softLight(cx,cy,r,rgb){const g=sc.createRadialGradient(cx,cy,0,cx,cy,r)
   g.addColorStop(0,`rgb(${rgb})`);g.addColorStop(.72,`rgb(${rgb})`);g.addColorStop(1,'rgba(0,0,0,0)');
   sc.fillStyle=g;sc.beginPath();sc.arc(cx,cy,r,0,7);sc.fill();}
 function draw(){const W=sc._w,H=sc._h;sc.globalCompositeOperation='source-over';sc.fillStyle='#000';sc.fillRect(0,0,W,H);
-  const cx=W/2,cy=H/2-8,Rr=Math.min(W,H)*0.30,off=Rr*0.62;
+  // off=0.5Rr：三圓都在平坦發光區（0.72Rr 內）的重疊範圍夠大，中央白光看得到（原 0.62Rr 只剩約 5×5px）
+  const cx=W/2,cy=H/2-8,Rr=Math.min(W,H)*0.30,off=Rr*0.5;
   const centers=[[cx,cy-off],[cx-off,cy+off*0.7],[cx+off,cy+off*0.7]];
   const cols=[`${state.R},0,0`,`0,${state.G},0`,`0,0,${state.B}`];
   sc.globalCompositeOperation='lighter';
@@ -124,7 +125,7 @@ function draw(){const W=sc._w,H=sc._h;sc.globalCompositeOperation='source-over';
   sc.globalCompositeOperation='source-over';
   // 投影機示意
   sc.fillStyle='rgba(255,255,255,.5)';sc.font='12px system-ui';
-  sc.fillText('R',centers[0][0]-5,centers[0][1]-Rr-8);sc.fillText('G',centers[1][0]-Rr-2,centers[1][1]+Rr+18);sc.fillText('B',centers[2][0]+Rr-8,centers[2][1]+Rr+18);
+  sc.fillText('R',centers[0][0]-5,Math.max(14,centers[0][1]-Rr-8));sc.fillText('G',centers[1][0]-Rr-2,centers[1][1]+Rr+18);sc.fillText('B',centers[2][0]+Rr-8,centers[2][1]+Rr+18);
   const hex='#'+[state.R,state.G,state.B].map(v=>v.toString(16).padStart(2,'0')).join('');
   document.getElementById('sw').style.background=`rgb(${state.R},${state.G},${state.B})`;
   document.getElementById('hex').textContent=hex.toUpperCase();
@@ -144,7 +145,7 @@ function updateFormula(){
     `<h4>📐 計算公式（即時代入　加法混色・每通道 0~255）</h4>`+
     frow('混合色 (加法)','色 = (R, G, B)',`(${R}, ${G}, ${B})`, hex)+
     frow('感知亮度 Y','0.299R + 0.587G + 0.114B',`0.299·${R} + 0.587·${G} + 0.114·${B}`, Y.toFixed(0)+' / 255')+
-    frow('互補色 (減法 CMY)','C,M,Y = 255−R, 255−G, 255−B',`255−${R}, 255−${G}, 255−${B}`, `(${C}, ${M}, ${Yc})`)+
+    frow('印出同色所需顏料量 (減法 CMY)','C,M,Y = 255−R, 255−G, 255−B',`255−${R}, 255−${G}, 255−${B}`, `(${C}, ${M}, ${Yc})`)+
     `<div class="frel">📈 <b>加法越加越亮</b>：每加一色光 Y 變大，RGB 全 255 → 白光（最亮）　·　<b>全 0 → 黑（全暗）</b>　·　<b>綠對亮度權重最大</b>（0.587）：同樣數值的綠看起來比藍亮約 5 倍　·　<b>R+G+B 一通道為 0 即得 CMY</b>：黃=R+G（B=0）、青=G+B、洋紅=R+B，與顏料減法互補。</div>`;
 }
 function colorName(){const {R,G,B}=state,hi=v=>v>200,lo=v=>v<60;
