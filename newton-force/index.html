@@ -140,17 +140,24 @@ function drawScene(t){const W=sc._w,H=sc._h,gy=H-52;
   for(let y=gy+8;y<H;y+=12){sc.beginPath();sc.moveTo(0,y);sc.lineTo(W,y);sc.stroke();}
   // 箱子位置（自動捲動）
   const span=Math.max(xAt(TTOT),2),boxX=90+(xAt(t)/span)*(W-280);
+  // 地面公尺刻度：畫面依 5 秒內的位移自動縮放，刻度讓學生知道箱子實際走了多遠
+  {const pxm=(W-280)/span,st=[0.5,1,2,5,10,20,50,100,200,500].find(v=>v*pxm>=60)||1000;sc.fillStyle='rgba(255,220,180,.55)';sc.strokeStyle='rgba(255,220,180,.4)';sc.font='10px system-ui';
+   for(let d=0;d<=span+1e-9;d+=st){const x=90+(46+state.m*3.2)/2+d*pxm;/* 0 m 對齊箱子起點的中心 */sc.beginPath();sc.moveTo(x,gy);sc.lineTo(x,gy+6);sc.stroke();sc.fillText(d+' m',x-6,gy+17);}}
   const bw=46+state.m*3.2,bh=bw,bx=boxX,by=gy-bh,cx=bx+bw/2,cyy=by+bh/2;
   // 接觸陰影
   S.shadow(sc,cx,gy,bw*0.55,0);
   // 木箱
   drawCrate(bx,by,bw,bh);
   // ===== 受力箭頭（各自作用點）=====
-  const sF=2.3;
+  // 所有力共用同一比例（原本 W、N 用 0.48 px/N、F、f 用 2.3 px/N：39 N 的重力比 20 N 的推力還短）
+  const sF=forceScale();
   // 重力 W：質心
-  S.arrow(sc,cx,cyy,cx,cyy+state.m*state.g*0.42*sF*0.5,{color:S.C.gravity,width:3,label:'W'});
+  S.arrow(sc,cx,cyy,cx,cyy+state.m*state.g*sF,{color:S.C.gravity,width:3,label:'W'});
   // 正向力 N：底部接觸點(中)，向上
-  S.arrow(sc,cx,gy,cx,gy-state.m*state.g*0.42*sF*0.5,{color:S.C.normal,width:3,label:'N'});
+  S.arrow(sc,cx,gy,cx,gy-state.m*state.g*sF,{color:S.C.normal,width:3,label:'N'});
+  // 比例尺
+  {const ref=[1,2,5,10,20,50,100,200,500].find(v=>v*sF>=36)||500;sc.strokeStyle='rgba(255,233,200,.8)';sc.lineWidth=2;sc.beginPath();sc.moveTo(W-20-ref*sF,gy+36);sc.lineTo(W-20,gy+36);sc.moveTo(W-20-ref*sF,gy+31);sc.lineTo(W-20-ref*sF,gy+41);sc.moveTo(W-20,gy+31);sc.lineTo(W-20,gy+41);sc.stroke();
+   sc.fillStyle='rgba(255,233,200,.85)';sc.font='11px system-ui';sc.textAlign='right';sc.fillText('力箭頭比例 '+ref+' N',W-24-ref*sF,gy+40);sc.textAlign='left';}
   // 施力 F：被推的左側面(質心高度)，向右
   if(state.F>0.5)S.arrow(sc,bx-state.F*sF,cyy,bx,cyy,{color:'#4cc2ff',width:4,label:'F'});
   // 摩擦 f：底部接觸面，向左
@@ -162,6 +169,8 @@ function drawScene(t){const W=sc._w,H=sc._h,gy=H-52;
   if(state.F>0.5){sc.fillStyle='#e8b98a';sc.beginPath();sc.arc(bx-state.F*sF-6,cyy,7,0,7);sc.fill();}
   updateHud(t);
 }
+// 力箭頭比例（px/N）：預設 2.3；重力太大時縮小免得穿出畫布底，推力太大時縮小免得從畫面左緣外開始
+function forceScale(){const H=sc._h,bh=46+state.m*3.2,room=52+bh/2-22;return Math.min(2.3,room/Math.max(state.m*state.g,1),72/Math.max(state.F,1));}
 function drawCrate(x,y,w,h){
   const g=sc.createLinearGradient(0,y,0,y+h);g.addColorStop(0,'#b88347');g.addColorStop(.5,'#8a5a2b');g.addColorStop(1,'#5e3d1c');
   sc.fillStyle=g;sc.fillRect(x,y,w,h);
@@ -174,12 +183,17 @@ function drawCrate(x,y,w,h){
   sc.fillStyle='#ffe9c8';sc.font='600 11px system-ui';sc.textAlign='center';sc.fillText(state.m+' kg',x+w/2,y+h/2+4);sc.textAlign='left';
 }
 function drawPlot(t){const W=pc._w,H=pc._h,mL=40,mR=40,mT=12,mB=22;pc.clearRect(0,0,W,H);
-  const vmax=Math.max(vAt(TTOT),1),xmax=Math.max(xAt(TTOT),1);
+  const vmax=Math.max(vAt(TTOT),1)*1.12,xmax=Math.max(xAt(TTOT),1)*1.12;   // 上限留 12% 空間，曲線終點不貼上框
   const X=tt=>mL+tt/TTOT*(W-mL-mR),Yv=v=>H-mB-(v/vmax)*(H-mT-mB),Yx=x=>H-mB-(x/xmax)*(H-mT-mB);
   pc.strokeStyle='#1b2738';pc.lineWidth=1;for(let i=0;i<=5;i++){const tx=X(TTOT*i/5);pc.beginPath();pc.moveTo(tx,mT);pc.lineTo(tx,H-mB);pc.stroke();
     pc.fillStyle='#46566b';pc.font='11px system-ui';pc.fillText((TTOT*i/5).toFixed(0)+'s',tx-7,H-7);}
   pc.strokeStyle='#6cd0ff';pc.lineWidth=2.5;pc.beginPath();for(let i=0;i<=120;i++){const tt=TTOT*i/120;const x=X(tt),y=Yv(vAt(tt));i?pc.lineTo(x,y):pc.moveTo(x,y);}pc.stroke();
   pc.strokeStyle='#7CFFB2';pc.lineWidth=2.5;pc.beginPath();for(let i=0;i<=120;i++){const tt=TTOT*i/120;const x=X(tt),y=Yx(xAt(tt));i?pc.lineTo(x,y):pc.moveTo(x,y);}pc.stroke();
+  // 左軸 v (m/s)、右軸 x (m)
+  pc.font='10px system-ui';pc.fillStyle='#6cd0ff';pc.textAlign='right';pc.fillText('0',mL-4,H-mB+3);pc.fillText((vmax/1.12).toFixed(1),mL-4,Yv(vmax/1.12)+3);pc.fillText('m/s',mL-4,mT+8);
+  pc.fillStyle='#7CFFB2';pc.textAlign='left';pc.fillText('0',W-mR+4,H-mB+3);pc.fillText((xmax/1.12).toFixed(1),W-mR+4,Yx(xmax/1.12)+3);pc.fillText('m',W-mR+4,mT+8);
+  pc.strokeStyle='rgba(255,255,255,.12)';pc.setLineDash([3,3]);pc.beginPath();pc.moveTo(mL,Yv(vmax/1.12));pc.lineTo(W-mR,Yv(vmax/1.12));pc.stroke();pc.setLineDash([]);
+  pc.font='11px system-ui';
   pc.fillStyle='#6cd0ff';pc.fillText('● 速度 v（直線，斜率=a）',mL+4,mT+11);pc.fillStyle='#7CFFB2';pc.fillText('● 位移 x',mL+184,mT+11);
   const cx=X(t);pc.strokeStyle='#fff';pc.beginPath();pc.moveTo(cx,mT);pc.lineTo(cx,H-mB);pc.stroke();
   pc.fillStyle='#fff';[Yv(vAt(t)),Yx(xAt(t))].forEach(y=>{pc.beginPath();pc.arc(cx,y,3,0,7);pc.fill();});}
