@@ -103,7 +103,7 @@ const STAGE={skyTop:'#0c1a20',skyBottom:'#060d12',vignette:'rgba(0,0,0,.55)'};
 function setupCanvases(){sc=S.fit(document.getElementById('scene'),2.6);}
 function draw(){const W=sc._w,H=sc._h,m=40,y0=H/2;
   S.scene(sc,STAGE,{});
-  const n=nearest(),af=ampFactor(),A=(H/2-44)*af,x0=m,x1=W-m;
+  const n=nearest(),af=ampFactor(),A=(H/2-44)*af,x0=m,x1=W-m,NS=Math.max(300,n*24);   // 取樣數隨諧波增加，高次諧波不鋸齒
   // 端點夾具
   for(const xx of [x0,x1]){const g=sc.createLinearGradient(xx-6,0,xx+6,0);g.addColorStop(0,'#8a96ac');g.addColorStop(.5,'#dfe6f0');g.addColorStop(1,'#5e6878');
     sc.fillStyle=g;sc.fillRect(xx-(xx===x0?6:0),y0-34,8,68);}
@@ -111,25 +111,26 @@ function draw(){const W=sc._w,H=sc._h,m=40,y0=H/2;
   sc.strokeStyle='rgba(120,150,180,.2)';sc.lineWidth=1;sc.beginPath();sc.moveTo(x0,y0);sc.lineTo(x1,y0);sc.stroke();
   // 包絡(填色)
   if(af>0.1){sc.fillStyle='rgba(124,255,178,.08)';sc.beginPath();
-    for(let i=0;i<=300;i++){const x=i/300,px=x0+x*(x1-x0);sc.lineTo(px,y0-A*Math.sin(n*Math.PI*x));}
-    for(let i=300;i>=0;i--){const x=i/300,px=x0+x*(x1-x0);sc.lineTo(px,y0+A*Math.sin(n*Math.PI*x));}sc.closePath();sc.fill();
+    for(let i=0;i<=NS;i++){const x=i/NS,px=x0+x*(x1-x0);sc.lineTo(px,y0-A*Math.sin(n*Math.PI*x));}
+    for(let i=NS;i>=0;i--){const x=i/NS,px=x0+x*(x1-x0);sc.lineTo(px,y0+A*Math.sin(n*Math.PI*x));}sc.closePath();sc.fill();
     sc.strokeStyle='rgba(124,255,178,.3)';sc.lineWidth=1;
-    [1,-1].forEach(sg=>{sc.beginPath();for(let i=0;i<=300;i++){const x=i/300,px=x0+x*(x1-x0);sc.lineTo(px,y0-sg*A*Math.sin(n*Math.PI*x));}sc.stroke();});}
+    [1,-1].forEach(sg=>{sc.beginPath();for(let i=0;i<=NS;i++){const x=i/NS,px=x0+x*(x1-x0);sc.lineTo(px,y0-sg*A*Math.sin(n*Math.PI*x));}sc.stroke();});}
   // 弦(發光)
   const col=af>0.5?[76,194,255]:[90,130,160];
   sc.save();sc.globalCompositeOperation='lighter';sc.shadowColor=`rgba(${col},.8)`;sc.shadowBlur=af>0.5?14:4;
   sc.strokeStyle=`rgb(${col})`;sc.lineWidth=3.2;sc.beginPath();
-  for(let i=0;i<=300;i++){const x=i/300,px=x0+x*(x1-x0),py=y0-A*Math.sin(n*Math.PI*x)*Math.cos(phase);i?sc.lineTo(px,py):sc.moveTo(px,py);}sc.stroke();sc.restore();
+  for(let i=0;i<=NS;i++){const x=i/NS,px=x0+x*(x1-x0),py=y0-A*Math.sin(n*Math.PI*x)*Math.cos(phase);i?sc.lineTo(px,py):sc.moveTo(px,py);}sc.stroke();sc.restore();
   // 節點/腹點
   if(af>0.35){for(let k=0;k<=n;k++){const px=x0+k/n*(x1-x0);S.sphere(sc,px,y0,4,[150,80,60]);}
-    for(let k=0;k<n;k++){const px=x0+(k+.5)/n*(x1-x0);sc.fillStyle='#ffce54';sc.beginPath();sc.arc(px,y0-A*Math.cos(phase),3.5,0,7);sc.fill();}
+    // 相鄰腹點反相（sin(nπx) 在第 k 個腹點為 (−1)^k），黃點要跟著弦上下，不能全部畫在同一側
+    for(let k=0;k<n;k++){const px=x0+(k+.5)/n*(x1-x0);sc.fillStyle='#ffce54';sc.beginPath();sc.arc(px,y0-A*(k%2?-1:1)*Math.cos(phase),3.5,0,7);sc.fill();}
     sc.fillStyle='#7CFFB2';sc.font='11px system-ui';sc.fillText('節點',x0-4,y0+26);
-    sc.fillStyle='#ffce54';sc.fillText('腹點',(x0+x1)/2-12,y0-A-10);}
+    sc.fillStyle='#ffce54';sc.fillText('腹點',x0+0.5/n*(x1-x0)-12,y0-A-10);}   // 標在第一個腹點上方（n 為偶數時正中央是節點）
   updateHud(n,af);
 }
 function updateHud(n,af){const fn=n*f1(),lam=2*state.L/n;
-  document.getElementById('hud').innerHTML=chip('波速 v',v().toFixed(0)+' m/s')+chip('基頻 f₁',f1().toFixed(1)+' Hz')+chip('諧波 n',''+n)+chip('波長 λ',lam.toFixed(2)+' m');
-  const rows=[['波速 v=√(T/μ)',v().toFixed(0)+' m/s','#4cc2ff'],['諧波頻率 f_n',fn.toFixed(1)+' Hz','#7CFFB2'],['共振度',(af*100).toFixed(0)+'%','#ff6b9d'],['腹點/節點',n+' / '+(n+1),'#ffce54']];
+  document.getElementById('hud').innerHTML=chip('波速 v',v().toFixed(1)+' m/s')+chip('基頻 f₁',f1().toFixed(1)+' Hz')+chip('諧波 n',''+n)+chip('波長 λ',lam.toFixed(2)+' m');
+  const rows=[['波速 v=√(T/μ)',v().toFixed(1)+' m/s','#4cc2ff'],['諧波頻率 f_n',fn.toFixed(1)+' Hz','#7CFFB2'],['共振度',(af*100).toFixed(0)+'%','#ff6b9d'],['腹點/節點',n+' / '+(n+1),'#ffce54']];
   document.getElementById('stats').innerHTML=rows.map(r=>`<div class="box"><div class="k">${r[0]}</div><div class="v" style="color:${r[2]}">${r[1]}</div></div>`).join('');
   const r=document.getElementById('reson');
   if(af>0.85){r.textContent='✓ 共振！驅動 ≈ 第 '+n+' 諧波 ('+(n*f1()).toFixed(0)+' Hz) — 形成清晰駐波';r.style.background='rgba(124,255,178,.16)';r.style.color='#7CFFB2';}
@@ -143,9 +144,9 @@ function updateFormula(){
   const vv=v(), f1v=f1(), n=nearest(), fn=n*f1v, lam=2*L/n, af=ampFactor();
   document.getElementById('formula').innerHTML=
     `<h4>📐 計算公式（即時代入　兩端固定弦・μ=${mu} kg/m）</h4>`
-    + frow('波速 v','√(T / μ)',`√(${T} / ${mu})`, vv.toFixed(0)+' m/s')
-    + frow('基頻 f₁','v / 2L',`${vv.toFixed(0)} / (2·${L})`, f1v.toFixed(1)+' Hz')
-    + frow('第 n 諧波 f_n','n·v / 2L',`${n}·${vv.toFixed(0)} / (2·${L})`, fn.toFixed(1)+' Hz')
+    + frow('波速 v','√(T / μ)',`√(${T} / ${mu})`, vv.toFixed(1)+' m/s')
+    + frow('基頻 f₁','v / 2L',`${vv.toFixed(1)} / (2·${L})`, f1v.toFixed(1)+' Hz')
+    + frow('第 n 諧波 f_n','n·v / 2L',`${n}·${vv.toFixed(1)} / (2·${L})`, fn.toFixed(1)+' Hz')
     + frow('波長 λ_n','2L / n',`2·${L} / ${n}`, lam.toFixed(2)+' m')
     + `<div class="frel">📈 <b>張力變 4 倍 → 波速變 2 倍</b>（v ∝ √T）　·　<b>弦越長 f_n 越低</b>（f_n ∝ 1/L，調音原理）　·　驅動 f=${fmt(f)} Hz 最接近第 ${n} 諧波 ${fn.toFixed(0)} Hz，共振度 ${(af*100).toFixed(0)}%</div>`;
 }
