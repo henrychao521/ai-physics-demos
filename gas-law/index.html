@@ -75,7 +75,7 @@
   <div class="note">
     <b>物理重點：</b>理想氣體狀態方程式 <code>PV = nRT</code>（R=8.314 J/mol·K）。三條經典定律都是它的特例：
     <b>波以耳</b>（等溫 T 定）<code>P ∝ 1/V</code>，PV 圖上是<b>雙曲線</b>；<b>給呂薩克</b>（等容 V 定）<code>P ∝ T</code>，鉛直移動；
-    <b>查理</b>（等壓 P 定）<code>V ∝ T</code>，水平移動。微觀上 <code>P = (1/3)·(N/V)·m·v̄²</code>，溫度越高分子均方速率越大、撞牆越猛 → 壓力越大。
+    <b>查理</b>（等壓 P 定）<code>V ∝ T</code>，水平移動。微觀上 <code>P = (1/3)·(N/V)·m·v_rms²</code>（v_rms² 是速率平方的平均），溫度越高分子均方速率越大、撞牆越猛 → 壓力越大。
   </div>
 
   <footer>純前端 HTML / Canvas（SIM 工具庫）。分子速率 ∝ √T（v_rms），壓力由狀態方程式 P=nRT/V 計算。</footer>
@@ -132,7 +132,7 @@ function updateStats(){
 // ---- 氣缸（分子）----
 let cc,pc,parts=[],tt=0;
 const THERM={skyTop:'#1c1410',skyBottom:'#0c0806',vignette:'rgba(0,0,0,.5)'};
-function count(){return Math.round(8+state.n*14);}
+function count(){return Math.round(18*state.n);}   // 分子數 ∝ n（原 8+14n 不成正比）
 function initParts(){parts=[];for(let i=0;i<40;i++)parts.push({x:Math.random(),y:Math.random(),a:Math.random()*7});}
 function setupCanvases(){cc=S.fit(document.getElementById('cyl'),1.15);pc=S.fit(document.getElementById('pv'),1.5);}
 function drawCyl(){const W=cc._w,H=cc._h;
@@ -206,12 +206,18 @@ let anim=null;
 function animateTo(target,dur){anim={from:{T:state.T,V:state.V},to:target,t:0,dur};}
 document.querySelectorAll('[data-proc]').forEach(b=>b.onclick=()=>{const k=b.dataset.proc;
   if(k==='iso')animateTo({T:state.T,V:Math.max(2,state.V>6?3:11)},1.2);          // 等溫：改 V
-  else if(k==='isobar'){const Pc=P();const Tn=state.T>375?200:520;animateTo({T:Tn,V:state.n*R*Tn/Pc},1.2);} // 等壓：T、V 同變保持 P
+  else if(k==='isobar'){const Pc=P();let Tn=state.T>375?200:520;
+    // 等壓：V = nRT/P。終點體積限制在滑桿範圍 2~12 L（原本可到 14 L，超出氣缸與 PV 圖），再反推終點溫度
+    const Vn=Math.min(12,Math.max(2,state.n*R*Tn/Pc));Tn=Pc*Vn/(state.n*R);
+    animateTo({T:Tn,V:Vn},1.2);anim.isobarP=Pc;}
   else if(k==='isochor')animateTo({T:state.T>375?200:560,V:state.V},1.2);        // 等容：改 T
 });
 function stepAnim(dt){if(!anim)return;anim.t+=dt;const f=Math.min(1,anim.t/anim.dur),e=f<.5?2*f*f:1-Math.pow(-2*f+2,2)/2;
+  if(anim.isobarP){   // 等壓：只內插 T，V 由 nRT/P 算出，不再捨入到滑桿格點（捨入會讓 P 飄 2%）
+    const T=anim.from.T+(anim.to.T-anim.from.T)*e;setSlider('T',Math.round(T*10)/10);setSlider('V',Math.round(state.n*R*state.T/anim.isobarP*100)/100);
+  }else{
   setSlider('T',Math.round((anim.from.T+(anim.to.T-anim.from.T)*e)/10)*10);
-  setSlider('V',Math.round((anim.from.V+(anim.to.V-anim.from.V)*e)*2)/2);
+  setSlider('V',Math.round((anim.from.V+(anim.to.V-anim.from.V)*e)*2)/2);}
   onChange();if(f>=1)anim=null;}
 document.getElementById('reset').onclick=()=>{trail=[];};
 
