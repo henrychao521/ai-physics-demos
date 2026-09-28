@@ -84,11 +84,12 @@
 </div>
 
 <script>
-const S=SIM, SCALE=2.2, COLORS=['#4cc2ff','#ff6b9d','#7CFFB2'];
+const S=SIM, COLORS=['#4cc2ff','#ff6b9d','#7CFFB2'];
+let SCALE=2.2;   // 像素/N；窄螢幕依畫布縮小（原固定 2.2，手機上「同向」合力與「三力平衡」箭頭畫出畫布）
 let n=2, forces=[{x:60,y:30},{x:-20,y:55},{x:40,y:-60}];
 let sc;
 const GRID={skyTop:'#10192b',skyBottom:'#0a0f1c',vignette:'rgba(0,0,0,.4)'};
-function setupCanvases(){sc=S.fit(document.getElementById('scene'),1.35);}
+function setupCanvases(){sc=S.fit(document.getElementById('scene'),1.35);SCALE=Math.min(2.2,(Math.min(sc._w,sc._h)/2-10)/62);}
 function O(){return {x:sc._w/2,y:sc._h/2};}
 function toS(F){const o=O();return {x:o.x+F.x*SCALE,y:o.y-F.y*SCALE};}
 function resultant(){let R={x:0,y:0};for(let i=0;i<n;i++){R.x+=forces[i].x;R.y+=forces[i].y;}return R;}
