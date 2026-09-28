@@ -67,6 +67,8 @@ const App = () => {
     const totalMass = liftMotor.weight + (thrustMotor.weight * thrustCount) + battery.weight + material.baseWeight + escW + fixedW;
     const voltFactor = battery.voltage / 14.8;
     const totalLiftF = liftMotor.thrust * (throttle.lift / 100) * voltFactor;
+    // 簡化估計係數 0.76：氣墊室把風扇風壓作用在整片底面，可托起比風扇自由推力更大的重量（約 1/0.76≈1.3 倍）；
+    // 此值為示意用經驗估計，未經實測，實際依裙板漏氣、底面積而定
     const isHovering = totalLiftF > (totalMass * 0.76);
     const hoverH = isHovering ? Math.min(10, (totalLiftF - (totalMass * 0.76)) / 25) : 0;
     const rawThrust = (thrustMotor.thrust * thrustCount) * (throttle.thrust / 100) * voltFactor;
@@ -254,6 +256,7 @@ const App = () => {
                   <p><b className="text-slate-200">● 轉向向量分析：</b> 導風板偏轉 <b>{vaneAngle}°</b> 時，有效推力將損失約 <b>{(100 - Math.cos(vaneAngle*Math.PI/180)*100).toFixed(1)}%</b>，並轉化為側向轉向力 <b>{physics.fSide.toFixed(0)}g</b>。</p>
                   <p><b className="text-slate-200">● 結構冗餘設計：</b> 選用 <b>{material.name}</b> 時，建議在推力馬達座（Thrust Mount）加入額外的支撐肋，以應對 <b>{thrustCount > 1 ? '雙馬達' : '單馬達'}</b> 帶來的振動頻率。</p>
                   <p><b className="text-slate-200">● 能源管理 (Energy Density)：</b> 目前電池佔總重 <b>{((battery.weight / physics.totalMass) * 100).toFixed(1)}%</b>。建議在實際行駛中，升力油門保持在臨界值上方 10% 即可，以最大化航行時間。</p>
+                  <p><b className="text-slate-200">● 懸浮判定（簡化假設）：</b> 本模擬假設升力風扇推力達總重的 <b>76%</b> 即可浮起——氣墊室把風壓作用在整片底面，托起的重量可大於風扇自由推力。76% 是示意用估計係數，並非精確工程公式，實際要看裙板漏氣與底面積。</p>
                 </div>
               </div>
             </div>
