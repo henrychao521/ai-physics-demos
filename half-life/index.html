@@ -113,7 +113,7 @@ function updateFormula(){
 function reset(){atoms=[];for(let i=0;i<state.N0;i++)atoms.push(true);t=0;hist=[{t:0,n:state.N0}];updateFormula();}
 function remaining(){let n=0;for(const a of atoms)if(a)n++;return n;}
 function step(dt){const prob=1-Math.pow(2,-dt/state.T);for(let i=0;i<atoms.length;i++)if(atoms[i]&&Math.random()<prob)atoms[i]=false;
-  t+=dt;hist.push({t,n:remaining()});if(hist.length>3000)hist.shift();if(t>6*state.T)t=6*state.T;}
+  t+=dt;hist.push({t,n:remaining()});if(hist.length>3000)hist.shift();}
 function _hd(c,w,h){var d=window.devicePixelRatio||1;c.width=w*d;c.height=h*d;var x=c.getContext('2d');x.setTransform(d,0,0,d,0,0);return x;}
 const gridC=document.getElementById('grid'),gc=_hd(gridC,380,380);
 const plot=document.getElementById('plot'),pc=_hd(plot,560,380);
@@ -125,14 +125,16 @@ function drawGrid(){const W=380,H=380;gc.fillStyle='#070f0b';gc.fillRect(0,0,W,H
       gc.fillStyle='#7CFFB2';gc.beginPath();gc.arc(x,y,r,0,7);gc.fill();}
     else{gc.fillStyle='#27332c';gc.beginPath();gc.arc(x,y,r*0.85,0,7);gc.fill();}}
   document.getElementById('sub').textContent=remaining()+' / '+state.N0+' 未衰變';}
-function drawPlot(){const W=560,H=380,mL=38,mR=14,mT=14,mB=24;pc.fillStyle='#08120c';pc.fillRect(0,0,W,H);
+function drawPlot(){const W=560,H=380,mL=38,mR=14,mT=34,mB=36;   // mT 留白：N₀ 不貼頂、圖例與軸名不壓曲線pc.fillStyle='#08120c';pc.fillRect(0,0,W,H);
   const tEnd=6*state.T,X=tt=>mL+tt/tEnd*(W-mL-mR),Y=n=>H-mB-n/state.N0*(H-mT-mB);
   pc.font='10px system-ui';
-  for(let k=0;k<=6;k++){const tx=X(k*state.T);pc.strokeStyle='#13251a';pc.beginPath();pc.moveTo(tx,mT);pc.lineTo(tx,H-mB);pc.stroke();pc.fillStyle='#5a7a66';pc.fillText(k+'T',tx-6,H-9);}
+  for(let k=0;k<=6;k++){const tx=X(k*state.T);pc.strokeStyle='#13251a';pc.beginPath();pc.moveTo(tx,mT);pc.lineTo(tx,H-mB);pc.stroke();pc.fillStyle='#5a7a66';pc.fillText(k+'T',tx-6,H-mB+14);}
   for(let k=1;k<=4;k++){const ny=state.N0/Math.pow(2,k);pc.strokeStyle='#1c3328';pc.setLineDash([3,4]);pc.beginPath();pc.moveTo(mL,Y(ny));pc.lineTo(W-mR,Y(ny));pc.stroke();pc.setLineDash([]);pc.fillStyle='#5a7a66';pc.fillText('N₀/'+Math.pow(2,k),mL+2,Y(ny)-3);}
   pc.strokeStyle='#8a99ad';pc.lineWidth=1.5;pc.setLineDash([5,4]);pc.beginPath();for(let i=0;i<=200;i++){const tt=tEnd*i/200,n=state.N0*Math.pow(.5,tt/state.T);pc[i?'lineTo':'moveTo'](X(tt),Y(n));}pc.stroke();pc.setLineDash([]);
   pc.strokeStyle='#7CFFB2';pc.lineWidth=2;pc.beginPath();hist.forEach((h,i)=>{i?pc.lineTo(X(h.t),Y(h.n)):pc.moveTo(X(h.t),Y(h.n));});pc.stroke();
-  pc.fillStyle='#7CFFB2';pc.fillText('實際',mL+4,mT+10);pc.fillStyle='#8a99ad';pc.fillText('理論',mL+44,mT+10);}
+  // 軸名：縱軸 N（顆）寫在左上、N₀ 標在頂線右端；橫軸自成一列，不壓到曲線
+  pc.fillStyle='#5a7a66';pc.fillText('N（顆）',2,Y(state.N0)+4);pc.textAlign='right';pc.fillText('N₀ = '+state.N0,W-mR,Y(state.N0)-3);
+  pc.fillText('時間 t（每格 = 半衰期 T = '+fmt(state.T)+' s）',W-mR,H-4);pc.textAlign='left';}
 function draw(){drawGrid();drawPlot();drawStats();}
 function drawStats(){const n=remaining(),frac=n/state.N0,theo=state.N0*Math.pow(.5,t/state.T);
   const rows=[['剩餘原子數',n+'','#7CFFB2'],['已衰變',(state.N0-n)+'','#8a99ad'],['經過時間',t.toFixed(1)+' s','#e8eef6'],
@@ -140,7 +142,7 @@ function drawStats(){const n=remaining(),frac=n/state.N0,theo=state.N0*Math.pow(
   document.getElementById('stats').innerHTML=rows.map(r=>`<div class="box"><div class="k">${r[0]}</div><div class="v" style="color:${r[2]}">${r[1]}</div></div>`).join('');}
 
 let acc=0,lastTs=0;
-function loop(ts){const dt=lastTs?Math.min((ts-lastTs)/1000,0.05):0;lastTs=ts;if(playing){acc+=dt;if(acc>0.1){if(t<6*state.T)step(acc);acc=0;}}draw();requestAnimationFrame(loop);}
+function loop(ts){const dt=lastTs?Math.min((ts-lastTs)/1000,0.05):0;lastTs=ts;if(playing){acc+=dt;if(acc>0.1){if(t<6*state.T)step(Math.min(acc,6*state.T-t));acc=0;}}draw();requestAnimationFrame(loop);}
 const pb=document.getElementById('play');
 pb.onclick=()=>{playing=!playing;pb.classList.toggle('on',playing);pb.textContent=playing?'⏸ 暫停':'▶ 播放';};
 document.getElementById('reset').onclick=()=>{reset();playing=true;pb.classList.add('on');pb.textContent='⏸ 暫停';};
