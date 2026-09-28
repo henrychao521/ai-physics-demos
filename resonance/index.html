@@ -132,7 +132,7 @@ function drawScene(){const W=sc._w,H=sc._h,cx=W/2,topY=Math.max(H*0.12,92);   /*
   const my=H*0.55+Math.sin(phase-lag)*Adisp;     // 振子位置（穩態）
   sc.strokeStyle='#9aa6c0';sc.lineWidth=2;sc.beginPath();
   const segs=14;for(let i=0;i<=segs;i++){const yy=dy+ (my-dy)*i/segs, xx=cx+(i%2?12:-12)*(i>0&&i<segs?1:0);i?sc.lineTo(xx,yy):sc.moveTo(cx,yy);}sc.stroke();
-  // 質點(球)
+  // 振子(球)
   S.sphere(sc,cx,my,16,[252,88,72]);
   // 平衡線
   sc.strokeStyle='rgba(255,255,255,.15)';sc.setLineDash([4,4]);sc.beginPath();sc.moveTo(cx-60,H*0.55);sc.lineTo(cx+60,H*0.55);sc.stroke();sc.setLineDash([]);
