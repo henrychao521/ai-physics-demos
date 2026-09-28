@@ -59,7 +59,7 @@
   <div class="formula" id="formula"></div>
 
   <div class="grid2">
-    <div class="stage"><div class="lab">波耳軌域（電子躍遷放出光子）</div><div class="sub" id="sub"></div><canvas id="atom" width="430" height="360"></canvas></div>
+    <div class="stage"><div class="lab">波耳軌域（電子躍遷放出光子；半徑未按比例，實際 r<sub>n</sub> ∝ n²）</div><div class="sub" id="sub"></div><canvas id="atom" width="430" height="360"></canvas></div>
     <div class="stage"><div class="lab">能階圖（箭頭＝躍遷）</div><canvas id="levels" width="430" height="360"></canvas></div>
   </div>
 
@@ -69,7 +69,7 @@
 
   <div class="note">
     <b>物理重點：</b>能階能量 <code>E_n = −13.6/n²</code> eV（負號＝束縛態，n=1 最低最穩）。躍遷放出光子能量 <code>ΔE = 13.6(1/n_f² − 1/n_i²)</code>，波長 <code>λ = 1240/ΔE</code> nm。
-    落到 <b>n=1</b> 是<b>來曼系</b>（紫外）、<b>n=2</b> 是<b>巴耳末系</b>（可見光：Hα 紅、Hβ 青、Hγ 紫）、<b>n=3</b> 是帕申系（紅外）。光譜線是每種元素的<b>指紋</b>，天文學家靠它判斷遙遠恆星成分。
+    落到 <b>n=1</b> 是<b>來曼系</b>（紫外）、<b>n=2</b> 是<b>巴耳末系</b>（可見光：Hα 紅、Hβ 青、Hγ 藍紫）、<b>n=3</b> 是帕申系（紅外）。光譜線是每種元素的<b>指紋</b>，天文學家靠它判斷遙遠恆星成分。
   </div>
 
   <footer>純前端 HTML / Canvas（SIM 工具庫）。氫原子，hc=1240 eV·nm。</footer>
@@ -79,16 +79,17 @@
 const S=SIM; let ni=3,nf=2,anim=1;
 function En(n){return -13.6/(n*n);} function dE(){return En(ni)-En(nf);} function lambda(){return 1240/dE();}
 function series(){return nf===1?'來曼系 (紫外)':nf===2?'巴耳末系 (可見光)':nf===3?'帕申系 (紅外)':'n_f='+nf;}
+function fE(v){return v.toFixed(3);} function fdE(v){return v>=1?v.toFixed(3):v.toPrecision(4);}
 function frow(n,sym,sub,val){return `<div class="frow"><span class="fname">${n}</span><span class="fsym">${sym}</span><span class="fsub">= ${sub}</span><span class="fval">${val}</span></div>`;}
 function updateFormula(){
   const Ei=En(ni), Ef=En(nf), de=dE(), lam=lambda();
   document.getElementById('formula').innerHTML=
     `<h4>📐 計算公式（即時代入　氫原子・hc=1240 eV·nm）</h4>`+
-    frow('起始能階 E<sub>'+ni+'</sub>','−13.6 / n_i²',`−13.6 / ${ni}²`, Ei.toFixed(2)+' eV')+
-    frow('末態能階 E<sub>'+nf+'</sub>','−13.6 / n_f²',`−13.6 / ${nf}²`, Ef.toFixed(2)+' eV')+
-    frow('光子能量 ΔE','13.6·(1/n_f² − 1/n_i²)',`13.6·(1/${nf}² − 1/${ni}²)`, de.toFixed(2)+' eV')+
-    frow('波長 λ','1240 / ΔE',`1240 / ${de.toFixed(2)}`, lam.toFixed(0)+' nm')+
-    `<div class="frel">📈 <b>能階越高越擠</b>：E_n ∝ −1/n²，n 越大能量越接近 0（束縛越弱）　·　<b>ΔE 越大 → λ 越短</b>（λ ∝ 1/ΔE）：跳得越深放出越短波長的光　·　<b>落到 n_f=2 即巴耳末系</b>（可見光，Hα 紅、Hβ 青、Hγ 紫）。</div>`;
+    frow('起始能階 E<sub>'+ni+'</sub>','−13.6 / n_i²',`−13.6 / ${ni}²`, fE(Ei)+' eV')+
+    frow('末態能階 E<sub>'+nf+'</sub>','−13.6 / n_f²',`−13.6 / ${nf}²`, fE(Ef)+' eV')+
+    frow('光子能量 ΔE','13.6·(1/n_f² − 1/n_i²)',`13.6·(1/${nf}² − 1/${ni}²)`, fdE(de)+' eV')+
+    frow('波長 λ','1240 / ΔE',`1240 / ${fdE(de)}`, lam.toFixed(0)+' nm')+
+    `<div class="frel">📈 <b>能階越高越擠</b>：E_n ∝ −1/n²，n 越大能量越接近 0（束縛越弱）　·　<b>ΔE 越大 → λ 越短</b>（λ ∝ 1/ΔE）：跳得越深放出越短波長的光　·　<b>落到 n_f=2 即巴耳末系</b>（可見光，Hα 紅、Hβ 青、Hγ 藍紫）。</div>`;
 }
 function wl2rgb(lam){let r,g,b;if(lam<380)return[170,130,255];if(lam>720)return[150,50,50];
   if(lam<440){r=-(lam-440)/60;g=0;b=1;}else if(lam<490){r=0;g=(lam-440)/50;b=1;}else if(lam<510){r=0;g=1;b=-(lam-510)/20;}
@@ -117,11 +118,14 @@ function drawAtom(){const W=430,H=360,cx=W/2,cy=H/2;
   document.getElementById('sub').textContent=ni+' → '+nf+' 躍遷';}
 function drawLevels(){const W=430,H=360,mL=40,mR=80,mT=20,mB=20;lc.fillStyle='#0a0818';lc.fillRect(0,0,W,H);
   const Y=E=>mT+(-E)/13.6*(H-mT-mB);
+  // n≥4 能階彼此只差 4–7px，標籤往上錯開（每列 12px）再用細線連回能階
+  let ly=H;
   for(let n=1;n<=6;n++){const y=Y(En(n)),act=(n===ni||n===nf);lc.strokeStyle=act?'#6cc8ff':'#314056';lc.lineWidth=act?2:1;lc.beginPath();lc.moveTo(mL,y);lc.lineTo(W-mR,y);lc.stroke();
-    lc.fillStyle='#8a99ad';lc.font='11px system-ui';lc.fillText('n='+n,W-mR+6,y+4);lc.fillStyle='#5b6880';lc.fillText(En(n).toFixed(2)+'eV',W-mR+34,y+4);}
+    const ty=Math.min(y,ly-12);ly=ty;if(ty<y-1){lc.strokeStyle='#314056';lc.lineWidth=1;lc.beginPath();lc.moveTo(W-mR,y);lc.lineTo(W-mR+5,ty);lc.stroke();}
+    lc.fillStyle='#8a99ad';lc.font='11px system-ui';lc.fillText('n='+n,W-mR+6,ty+4);lc.fillStyle='#5b6880';lc.fillText(En(n).toFixed(2)+'eV',W-mR+34,ty+4);}
   const x=mL+(W-mL-mR)*0.42,y1=Y(En(ni)),y2=Y(En(nf)),[R,G,B]=wl2rgb(lambda());lc.strokeStyle=`rgb(${R},${G},${B})`;lc.fillStyle=`rgb(${R},${G},${B})`;lc.lineWidth=2.5;
-  lc.beginPath();lc.moveTo(x,y1);lc.lineTo(x,y2);lc.stroke();lc.beginPath();lc.moveTo(x,y2);lc.lineTo(x-5,y2+9);lc.lineTo(x+5,y2+9);lc.closePath();lc.fill();
-  lc.fillText('放出光子 '+dE().toFixed(2)+'eV',x+10,(y1+y2)/2);}
+  lc.beginPath();lc.moveTo(x,y1);lc.lineTo(x,y2);lc.stroke();lc.beginPath();const hl=Math.min(9,y2-y1);lc.moveTo(x,y2);lc.lineTo(x-5,y2-hl);lc.lineTo(x+5,y2-hl);lc.closePath();lc.fill();
+  lc.fillText('放出光子 '+fdE(dE())+'eV',x+10,(y1+y2)/2);}
 function drawSpec(){const W=1080,H=92;spc.fillStyle='#05030a';spc.fillRect(0,0,W,H);
   for(let x=0;x<W;x++){const lam=380+x/W*(720-380),[R,G,B]=wl2rgb(lam);spc.fillStyle=`rgb(${R},${G},${B})`;spc.globalAlpha=.5;spc.fillRect(x,20,1,H-40);}
   spc.globalAlpha=1;spc.fillStyle='#46566b';spc.font='11px system-ui';for(let lam=400;lam<=700;lam+=50){const x=(lam-380)/(720-380)*W;spc.fillText(lam+'nm',x-12,H-6);}
@@ -130,8 +134,8 @@ function drawSpec(){const W=1080,H=92;spc.fillStyle='#05030a';spc.fillRect(0,0,W
   document.getElementById('serlab').textContent=series()+'　λ='+lam.toFixed(0)+'nm';}
 function draw(){drawAtom();drawLevels();drawSpec();drawStats();}
 function drawStats(){
-  const rows=[['起始能量 E_'+ni,En(ni).toFixed(2)+' eV','#6cc8ff'],['末態能量 E_'+nf,En(nf).toFixed(2)+' eV','#7CFFB2'],
-    ['光子能量 ΔE',dE().toFixed(2)+' eV','#ffce54'],['波長 λ=1240/ΔE',lambda().toFixed(0)+' nm','#ff6b9d'],['光譜系列',series().split(' ')[0],'#8b9cff']];
+  const rows=[['起始能量 E_'+ni,fE(En(ni))+' eV','#6cc8ff'],['末態能量 E_'+nf,fE(En(nf))+' eV','#7CFFB2'],
+    ['光子能量 ΔE',fdE(dE())+' eV','#ffce54'],['波長 λ=1240/ΔE',lambda().toFixed(0)+' nm','#ff6b9d'],['光譜系列',series().split(' ')[0],'#8b9cff']];
   document.getElementById('stats').innerHTML=rows.map(r=>`<div class="box"><div class="k">${r[0]}</div><div class="v" style="color:${r[2]}">${r[1]}</div></div>`).join('');}
 let animating=false;
 function emitPhoton(){anim=0;const t0=performance.now();(function go(){const e=Math.min(1,(performance.now()-t0)/700);anim=e;draw();if(e<1)requestAnimationFrame(go);else{anim=1;draw();}})();}
