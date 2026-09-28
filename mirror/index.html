@@ -130,6 +130,8 @@ let imgQ=0,imgIh=0;
 // 反射線：鏡面點 M=(0,my) 反射後通過像點 I=(-q, ih)；實像往前(左)實線、虛像實線往前+虛線往後到鏡後
 function reflRay(my,col){
   const ix=-imgQ, iy=imgIh, mx=0;
+  if(!isFinite(imgQ)){ // p=f：反射光彼此平行射出，方向 (−f, −h)（原本畫到 −∞ 座標，反射光整條消失）
+    const F=f(),k=(AX+40)/SCALE/Math.abs(F);ray(mx,my,mx-F*k,my-state.h*k,col);return;}
   if(imgQ>0){ // 實像（鏡前，ix<0）
     ray(mx,my,ix,iy,col);
     ray(ix,iy, ix+(ix-mx)*0.28, iy+(iy-my)*0.28, col);
@@ -148,13 +150,14 @@ function draw(){layout();const W=sc._w,H=sc._h;
   // 鏡面弧（凹：向右凸；凸：向左凸）反射面在左
   const lh=Math.min(H/2-16,132), bulge=concave?16:-16;
   sc.strokeStyle='#7d8aa0';sc.lineWidth=6;sc.lineCap='round';
-  sc.beginPath();sc.moveTo(AX,AY-lh);sc.quadraticCurveTo(AX+bulge,AY,AX,AY+lh);sc.stroke();
+  // 鏡頂點（主軸處）要落在 AX＝光線反射的位置；原本頂點畫在 AX+bulge，光線在鏡面前 16 px 就反射
+  sc.beginPath();sc.moveTo(AX-bulge,AY-lh);sc.quadraticCurveTo(AX+bulge,AY,AX-bulge,AY+lh);sc.stroke();
   // 反射面高光
   sc.strokeStyle='rgba(180,210,240,.9)';sc.lineWidth=2;
-  sc.beginPath();sc.moveTo(AX-1,AY-lh);sc.quadraticCurveTo(AX+bulge-1,AY,AX-1,AY+lh);sc.stroke();
+  sc.beginPath();sc.moveTo(AX-bulge-1,AY-lh);sc.quadraticCurveTo(AX+bulge-1,AY,AX-bulge-1,AY+lh);sc.stroke();
   // 鏡背斜線（在鏡的後側）
   sc.strokeStyle='rgba(110,125,150,.55)';sc.lineWidth=1;
-  for(let yy=-lh;yy<lh;yy+=11){const bx=AX+bulge*(1-Math.pow(yy/lh,2));sc.beginPath();sc.moveTo(bx,AY+yy);sc.lineTo(bx+8,AY+yy-7);sc.stroke();}
+  for(let yy=-lh;yy<lh;yy+=11){const bx=AX-bulge*Math.pow(yy/lh,2);sc.beginPath();sc.moveTo(bx,AY+yy);sc.lineTo(bx+8,AY+yy-7);sc.stroke();}
   sc.lineCap='butt';
   // F / C 標記（凹：鏡前 x=-f、-2f；凸：鏡後）
   sc.font='11px system-ui';
