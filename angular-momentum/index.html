@@ -115,8 +115,8 @@ function updateFormula(){const i=I(),w=omega(),ke=KE();
 }
 function updateHud(){
   document.getElementById('hud').innerHTML=
-   `<div class="chip green">角動量 L<b>${state.L} (守恆)</b></div>`+
-   `<div class="chip cyan">轉動慣量 I<b>${I().toFixed(2)}</b></div>`+
+   `<div class="chip green">角動量 L（守恆）<b>${state.L} kg·m²/s</b></div>`+
+   `<div class="chip cyan">轉動慣量 I<b>${I().toFixed(2)} kg·m²</b></div>`+
    `<div class="chip amber">角速度 ω<b>${omega().toFixed(2)} rad/s</b></div>`;
 }
 
@@ -136,9 +136,9 @@ function draw(){const W=sc._w,H=sc._h,cx=W/2,cy=H/2;
   // 手臂 + 配重(沿 ang 兩側)
   for(const sgn of [1,-1]){const ax=cx+Math.cos(ang)*rpx*sgn, ay=cy+Math.sin(ang)*rpx*sgn;
     sc.strokeStyle='#9aa6c0';sc.lineWidth=5;sc.beginPath();sc.moveTo(cx,cy);sc.lineTo(ax,ay);sc.stroke();
-    S.sphere(sc,ax,ay,8+state.m*2.2,[230,140,70]);}
+    S.sphere(sc,ax,ay,8+state.m*2.2,[26,78,56]);}   // 橘色配重（SIM.sphere 吃 HSL）
   // 中心身體
-  S.sphere(sc,cx,cy,16,[108,160,230]);
+  S.sphere(sc,cx,cy,16,[212,62,58]);   // 藍色身體（HSL）
   // ω 旋轉箭頭
   sc.strokeStyle='#6cd0ff';sc.lineWidth=2.5;sc.beginPath();sc.arc(cx,cy,Rmax*1.08,ang,ang+1.2);sc.stroke();
   const ea=ang+1.2,ex=cx+Math.cos(ea)*Rmax*1.08,ey=cy+Math.sin(ea)*Rmax*1.08;
