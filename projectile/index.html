@@ -104,7 +104,7 @@
     </div>
   </div>
 
-  <footer>純前端 HTML / Canvas（SIM 工具庫）。高清渲染、半隱式積分、空氣阻力為二次阻力。</footer>
+  <footer>純前端 HTML / Canvas（SIM 工具庫）。高清渲染、RK4 積分、空氣阻力為二次阻力。</footer>
 </div>
 
 <script>
@@ -114,7 +114,7 @@ const sliders=[
   {id:'ang',name:'仰角 θ',  min:0,  max:90, step:1, val:50, unit:'°'},
   {id:'g',  name:'重力 g',  min:1,  max:25, step:.1,val:9.8,unit:'m/s²'},
   {id:'h0', name:'發射高度', min:0, max:50, step:1, val:0, unit:'m'},
-  {id:'k',  name:'阻力係數', min:0, max:.04,step:.001,val:.012,unit:''},
+  {id:'k',  name:'阻力係數 k（a=−k|v|v）', min:0, max:.04,step:.001,val:.012,unit:'1/m'},
 ];
 const st={}; let dragOn=false, showVec=true, showComp=true;
 const sBar=document.getElementById('sliders');
@@ -136,11 +136,15 @@ function simulate(){
   const v0=st.v0,th=st.ang*Math.PI/180,g=st.g,h0=st.h0,k=dragOn?st.k:0;
   let x=0,y=h0,vx=v0*Math.cos(th),vy=v0*Math.sin(th),t=0;
   const dt=0.004,path=[{t,x,y,vx,vy}];let guard=0;
-  while(guard++<300000){const sp=Math.hypot(vx,vy);
-    vx+=(-k*sp*vx)*dt; vy+=(-g-k*sp*vy)*dt;
-    const nx=x+vx*dt,ny=y+vy*dt,nt=t+dt;
-    if(ny<0){const f=y/(y-ny);path.push({t:t+dt*f,x:x+(nx-x)*f,y:0,vx,vy});break;}
-    x=nx;y=ny;t=nt;path.push({t,x,y,vx,vy});if(t>120)break;}
+  // RK4：原本的半隱式 Euler 每步有 O(dt) 誤差，無阻力 45° 時射程算成 79.9 m、公式面板卻是 80.0 m
+  const acc=(vx,vy)=>{const sp=Math.hypot(vx,vy);return [-k*sp*vx,-g-k*sp*vy];};
+  while(guard++<300000){
+    const a1=acc(vx,vy), a2=acc(vx+a1[0]*dt/2,vy+a1[1]*dt/2), a3=acc(vx+a2[0]*dt/2,vy+a2[1]*dt/2), a4=acc(vx+a3[0]*dt,vy+a3[1]*dt);
+    const nx=x+dt*(vx+(vx+a1[0]*dt/2)*2+(vx+a2[0]*dt/2)*2+(vx+a3[0]*dt))/6;
+    const ny=y+dt*(vy+(vy+a1[1]*dt/2)*2+(vy+a2[1]*dt/2)*2+(vy+a3[1]*dt))/6;
+    const nvx=vx+dt*(a1[0]+2*a2[0]+2*a3[0]+a4[0])/6, nvy=vy+dt*(a1[1]+2*a2[1]+2*a3[1]+a4[1])/6, nt=t+dt;
+    if(ny<0){const f=y/(y-ny);path.push({t:t+dt*f,x:x+(nx-x)*f,y:0,vx:vx+(nvx-vx)*f,vy:vy+(nvy-vy)*f});break;}
+    x=nx;y=ny;vx=nvx;vy=nvy;t=nt;path.push({t,x,y,vx,vy});if(t>120)break;}
   PATH=path; let H=0,Hi=0;path.forEach((p,i)=>{if(p.y>H){H=p.y;Hi=i;}});
   const L=path[path.length-1];
   STATS={T:L.t,R:L.x,H,vImp:Math.hypot(L.vx,L.vy),tH:path[Hi].t};
@@ -213,12 +217,22 @@ function drawCannon(px,py,angDeg,s){
 }
 function roundRect(c,x,y,w,h,r){c.beginPath();c.moveTo(x+r,y);c.arcTo(x+w,y,x+w,y+h,r);c.arcTo(x+w,y+h,x,y+h,r);c.arcTo(x,y+h,x,y,r);c.arcTo(x,y,x+w,y,r);c.closePath();}
 function drawPlot(cur){
-  const W=pc._w,H=pc._h,mL=34,mR=12,mT=10,mB=20; pc.clearRect(0,0,W,H);
+  const W=pc._w,H=pc._h,mL=44,mR=40,mT=14,mB=22; pc.clearRect(0,0,W,H);   // 左軸速度、右軸高度、下方時間，各自標刻度與單位
   const T=Math.max(STATS.T,0.1); let vmax=0,ymax=Math.max(STATS.H,st.h0,1)*1.1;
   PATH.forEach(p=>vmax=Math.max(vmax,Math.abs(p.vx),Math.abs(p.vy)));vmax=Math.max(vmax,1)*1.1;
   const X=t=>mL+t/T*(W-mL-mR), midY=mT+(H-mT-mB)/2;
   const Yv=v=>midY-v/vmax*(H-mT-mB)/2, Yy=y=>H-mB-y/ymax*(H-mT-mB);
   pc.strokeStyle='#1b2738';pc.lineWidth=1;pc.beginPath();pc.moveTo(mL,midY);pc.lineTo(W-mR,midY);pc.stroke();
+  pc.beginPath();pc.moveTo(mL,mT);pc.lineTo(mL,H-mB);pc.moveTo(W-mR,mT);pc.lineTo(W-mR,H-mB);pc.stroke();
+  pc.font='10px system-ui';const vs=niceStep(vmax*2.2),ys=niceStep(ymax*1.4),ts=niceStep(T*7/Math.max(3,Math.floor((W-mL-mR)/45)));
+  pc.textAlign='right';pc.fillStyle='#8aa0b8';
+  for(let v=-Math.floor(vmax/vs)*vs;v<=vmax;v+=vs)pc.fillText(+v.toFixed(1),mL-4,Yv(v)+3);
+  pc.textAlign='left';pc.fillStyle='#7CFFB2';
+  for(let y=0;y<=ymax;y+=ys)pc.fillText(+y.toFixed(1),W-mR+4,Yy(y)+3);
+  pc.textAlign='center';pc.fillStyle='#8aa0b8';
+  for(let t=0;t<=T+1e-9;t+=ts)pc.fillText(+t.toFixed(2),X(t),H-mB+12);
+  pc.textAlign='left';pc.fillText('v (m/s)',2,mT-3);pc.textAlign='right';pc.fillStyle='#7CFFB2';pc.fillText('y (m)',W-2,mT-3);
+  pc.fillStyle='#8aa0b8';pc.fillText('t (s)',W-2,H-mB+12);pc.textAlign='left';
   // y(t)
   pc.strokeStyle='#7CFFB2';pc.lineWidth=2;pc.beginPath();PATH.forEach((p,i)=>{const x=X(p.t),y=Yy(p.y);i?pc.lineTo(x,y):pc.moveTo(x,y);});pc.stroke();
   // vx,vy
