@@ -149,31 +149,34 @@ function draw(){const G=geom(),W=G.W,H=G.H;
   const peakX=G.ox+G.ux*G.Lpx, peakY=G.gY+G.uy*G.Lpx;
   // 斜面三角形
   sc.fillStyle='#1a2740';sc.strokeStyle='#3a4a6a';sc.lineWidth=2;
-  sc.beginPath();sc.moveTo(G.ox,G.gY);sc.lineTo(peakX,peakY);sc.lineTo(G.ox,peakY);sc.closePath();sc.fill();sc.stroke();
+  // 斜面實體在斜面線與地面之間（原本第三個頂點取 (ox,peakY)，把實體畫在斜面上方，物體像嵌在懸垂的楔形裡）
+  sc.beginPath();sc.moveTo(G.ox,G.gY);sc.lineTo(peakX,peakY);sc.lineTo(peakX,G.gY);sc.closePath();sc.fill();sc.stroke();
   // 斜面表面高光
   sc.strokeStyle='#5a78aa';sc.lineWidth=3;sc.beginPath();sc.moveTo(G.ox,G.gY);sc.lineTo(peakX,peakY);sc.stroke();
   // 角度弧 + 標示
-  sc.strokeStyle='rgba(255,206,84,.8)';sc.lineWidth=1.5;sc.beginPath();sc.arc(G.ox,G.gY,34,Math.PI,Math.PI-G.th);sc.stroke();
+  sc.strokeStyle='rgba(255,206,84,.8)';sc.lineWidth=1.5;sc.beginPath();sc.arc(G.ox,G.gY,34,Math.PI,Math.PI+G.th);sc.stroke();   // 從地面(向左)轉到斜面(左上)；原本 π→π−θ 會畫成 360°−θ 的大圓
   sc.fillStyle='#ffce54';sc.font='12px system-ui';sc.fillText('θ='+state.th+'°',G.ox-66,G.gY-12);
   // 物體位置(沿斜面)
   const d=G.Lpx*(0.18+0.74*dpos);
   const bh=Math.max(20,Math.min(34,G.Lpx*0.12)), bw=bh*1.3;
   const cx=G.ox+G.ux*d+G.nx*(bh/2), cy=G.gY+G.uy*d+G.ny*(bh/2);
   // 物體(沿斜面旋轉的方塊)
-  sc.save();sc.translate(cx,cy);sc.rotate(-G.th);
+  sc.save();sc.translate(cx,cy);sc.rotate(G.th);   // 斜面在畫布上是往右下 θ，方塊底邊要轉 +θ 才貼齊斜面
   const grd=sc.createLinearGradient(0,-bh/2,0,bh/2);grd.addColorStop(0,'#dfe8f5');grd.addColorStop(.5,'#9fb2d0');grd.addColorStop(1,'#5d6f93');
   sc.fillStyle=grd;roundRect(sc,-bw/2,-bh/2,bw,bh,5);sc.fill();sc.strokeStyle='#33405c';sc.lineWidth=1.5;sc.stroke();
   sc.fillStyle='#1a2233';sc.font='bold 12px system-ui';sc.textAlign='center';sc.fillText(state.m+'kg',0,4);sc.textAlign='left';
   sc.restore();
   // 力箭頭(從物體質心)
-  const p=phys, sX=0.10;  // N/像素縮放
+  const p=phys, sX=Math.min(3.6,H*0.4/49);  // 像素/N（原 0.10 px/N，20 N 的力只畫 2 px，箭頭幾乎看不見）；5 kg 的 mg≈畫面高 40%
   // 重力 mg(向下)
   const Wg=p.m*g;
   S.arrow(sc,cx,cy,cx,cy+Wg*sX,{color:'#ff9e2e',width:3,label:'mg'});
   // 正向力 N(外法線)
   S.arrow(sc,cx,cy,cx+G.nx*p.N*sX,cy+G.ny*p.N*sX,{color:'#6cd0ff',width:3,label:'N'});
   // 摩擦力 f(上坡，阻止下滑)
-  if(p.f>0.2)S.arrow(sc,cx,cy,cx+G.ux*p.f*sX,cy+G.uy*p.f*sX,{color:'#ff5470',width:2.6,label:'f'});
+  // 摩擦力作用在接觸面：從方塊底邊中點畫（從質心畫會被方塊蓋住）
+  const fx=cx-G.nx*bh/2, fy=cy-G.ny*bh/2;
+  if(p.f>0.2)S.arrow(sc,fx,fy,fx+G.ux*p.f*sX,fy+G.uy*p.f*sX,{color:'#ff5470',width:2.6,label:'f'});
   // 重力分量(虛線)
   if(showComp){
     S.arrow(sc,cx,cy,cx-G.ux*p.Wpar*sX,cy-G.uy*p.Wpar*sX,{color:'#ffd36a',width:2,dash:true,label:'mg·sinθ'}); // 沿面下坡(=−上坡)
