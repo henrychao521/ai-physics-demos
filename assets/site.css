@@ -46,7 +46,13 @@ a{color:var(--accent)}
 .site-nav .back{margin-left:auto;color:var(--accent);text-decoration:none;font-size:.83rem;
   border:1px solid var(--line);padding:7px 13px;border-radius:99px;white-space:nowrap;transition:.15s}
 .site-nav .back:hover{border-color:var(--accent);background:rgba(76,194,255,.1)}
+/* nav.js 是 defer 晚到才插入導覽列：先用 body 上緣預留同高空間、導覽列再以負邊距佔回，
+   避免線上載入時整頁被往下推 54px（動態體檢 CLS 0.15–0.33 的主因）。 */
+body[data-demo]{padding-top:54px}
+body[data-demo]>.site-nav{margin-top:-54px}
 @media(max-width:600px){
+  body[data-demo]{padding-top:50px}
+  body[data-demo]>.site-nav{margin-top:-50px}
   .site-nav{height:50px;gap:10px}
   .site-nav .brand{font-size:.88rem}
   .site-nav .brand .b1-long{display:none}

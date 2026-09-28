@@ -30,6 +30,8 @@
   .stage .lab{position:absolute;top:10px;left:12px;font-size:.78rem;color:#b8b0e0;z-index:2}
   .stage .sub{position:absolute;top:10px;right:12px;font-size:.78rem;color:#b8b0e0;z-index:2}
   canvas{display:block;width:100%}
+  /* 光譜條在手機只剩約 30px 高，左右兩個浮貼標籤會互相壓住：窄螢幕改成疊在畫布上方的一般文字 */
+  @media(max-width:600px){.stage.spec{padding-top:6px}.stage.spec .lab,.stage.spec .sub{position:static;display:block;padding:2px 12px}.stage.spec .sub{padding-bottom:6px}}
   .statgrid{display:grid;grid-template-columns:repeat(auto-fit,minmax(120px,1fr));gap:10px;margin-top:14px}
   .box{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:10px 12px}
   .box .k{font-size:.72rem;color:var(--muted)}.box .v{font-size:1.02rem;font-variant-numeric:tabular-nums;font-weight:700}
@@ -61,7 +63,7 @@
     <div class="stage"><div class="lab">能階圖（箭頭＝躍遷）</div><canvas id="levels" width="430" height="360"></canvas></div>
   </div>
 
-  <div class="stage" style="margin-top:14px"><div class="lab">氫原子發射光譜（這條躍遷的譜線位置）</div><div class="sub" id="serlab"></div><canvas id="spec" width="1080" height="92"></canvas></div>
+  <div class="stage spec" style="margin-top:14px"><div class="lab">氫原子發射光譜（這條躍遷的譜線位置）</div><div class="sub" id="serlab"></div><canvas id="spec" width="1080" height="92"></canvas></div>
 
   <div class="statgrid" id="stats"></div>
 
@@ -135,6 +137,8 @@ let animating=false;
 function emitPhoton(){anim=0;const t0=performance.now();(function go(){const e=Math.min(1,(performance.now()-t0)/700);anim=e;draw();if(e<1)requestAnimationFrame(go);else{anim=1;draw();}})();}
 document.getElementById('emit').onclick=emitPhoton;
 document.querySelectorAll('[data-tr]').forEach(b=>b.onclick=()=>{const[a,c]=b.dataset.tr.split(',').map(Number);ni=a;nf=c;refreshBtns();emitPhoton();});
+// 先在解析當下就建好按鈕、公式與統計（不等 load），避免首次繪製後才插入內容造成版面位移；load 後再重畫一次讓畫布字型到位
+refreshBtns();
 window.addEventListener('load',()=>{refreshBtns();anim=1;draw();updateFormula();});
 </script>
 </body>
