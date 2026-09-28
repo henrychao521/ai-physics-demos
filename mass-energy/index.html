@@ -112,8 +112,8 @@ function updateFormula(){const A=state.A,b=beA(A),tot=totalBE(A);
 // ---- 視圖：結合能曲線 ----
 let cc;
 const NUC={skyTop:'#1a120a',skyBottom:'#0b0805',vignette:'rgba(0,0,0,.4)'};
-function setupCanvases(){cc=S.fit(document.getElementById('curve'),2.0);}
-function draw(){const W=cc._w,H=cc._h,mL=42,mR=16,mT=18,mB=30;
+function setupCanvases(){const cv=document.getElementById('curve');cc=S.fit(cv,cv.parentElement.clientWidth<560?1.0:2.0);}
+function draw(){const W=cc._w,H=cc._h,mL=42,mR=16,mT=72,mB=30;   // mT：讓出左上數值卡片的高度（原 18，y 軸標題、刻度 9 與 Fe-56 標籤被卡片蓋住）
   S.scene(cc,NUC,{});
   const Amax=240,Bmax=9.5,X=a=>mL+a/Amax*(W-mL-mR),Y=b=>H-mB-b/Bmax*(H-mT-mB);
   // 軸
@@ -121,7 +121,7 @@ function draw(){const W=cc._w,H=cc._h,mL=42,mR=16,mT=18,mB=30;
   for(let b=0;b<=9;b+=3){cc.beginPath();cc.moveTo(mL,Y(b));cc.lineTo(W-mR,Y(b));cc.stroke();cc.fillText(b,6,Y(b)+3);}
   for(let a=0;a<=240;a+=40){cc.fillText(a,X(a)-6,H-mB+13);}
   cc.fillStyle='#8a99ad';cc.fillText('質量數 A →',W-72,H-6);
-  cc.save();cc.translate(12,mT+60);cc.rotate(-Math.PI/2);cc.fillText('每核子結合能 (MeV) →',0,0);cc.restore();
+  cc.save();cc.translate(12,(mT+H-mB)/2+50);cc.rotate(-Math.PI/2);cc.fillText('每核子結合能 E_b/A (MeV) →',0,0);cc.restore();
   // 曲線
   cc.strokeStyle='#ffce54';cc.lineWidth=2.6;cc.beginPath();
   for(let a=1;a<=238;a++){const x=X(a),y=Y(beA(a));a===1?cc.moveTo(x,y):cc.lineTo(x,y);}cc.stroke();
@@ -132,7 +132,7 @@ function draw(){const W=cc._w,H=cc._h,mL=42,mR=16,mT=18,mB=30;
   if(reaction){const a1=reaction.from,a2=reaction.to;
     cc.strokeStyle='#ff8fb0';cc.lineWidth=2;cc.beginPath();cc.moveTo(X(a1),Y(beA(a1)));cc.lineTo(X(a2),Y(beA(a2)));cc.stroke();
     [[a1,reaction.fromLab,'#ff8fb0'],[a2,reaction.toLab,'#7CFFB2']].forEach(([a,lab,col])=>{cc.fillStyle=col;cc.beginPath();cc.arc(X(a),Y(beA(a)),5,0,7);cc.fill();
-      cc.font='bold 11px system-ui';cc.fillText(lab,X(a)-8,Y(beA(a))-9);});
+      cc.font='bold 11px system-ui';cc.fillText(lab,Math.min(X(a)-8,W-mR-cc.measureText(lab).width),Y(beA(a))-9);});
     cc.fillStyle='#7CFFB2';cc.font='12px system-ui';cc.fillText('往高峰→放能 '+reaction.dE.toFixed(0)+' MeV',(X(a1)+X(a2))/2-50,Y((beA(a1)+beA(a2))/2)+(reaction.type==='fus'?-16:24));
   }else{
     // 當前 A 點
