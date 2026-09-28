@@ -196,7 +196,7 @@ function draw(){const W=sc._w,H=sc._h;S.scene(sc,SKY,{});
     for(let i=0;i<=40;i++){const pp=point(s+i/40,m);const x=X(pp.V),y=Y(pp.P);i?sc.lineTo(x,y):sc.moveTo(x,y);}
     sc.strokeStyle=col;sc.lineWidth=(s===p.seg)?3:1.8;sc.stroke();}
   // 角點
-  m.st.forEach((q,i)=>{S.sphere(sc,X(q.V),Y(q.P),3.5,[200,210,230]);sc.fillStyle='rgba(200,210,230,.8)';sc.font='10px system-ui';sc.fillText((i+1),X(q.V)+5,Y(q.P)-5);});
+  m.st.forEach((q,i)=>{S.sphere(sc,X(q.V),Y(q.P),3.5,[220,37,84]);sc.fillStyle='rgba(200,210,230,.8)';sc.font='10px system-ui';sc.fillText((i+1),X(q.V)+5,Y(q.P)-5);});
   // 目前狀態點
   S.sphere(sc,X(p.V),Y(p.P),6,[48,100,68]);
   sc.fillStyle='rgba(124,255,178,.85)';sc.font='11px system-ui';sc.fillText('面積 = 淨功 W',gx+gw*0.34,cylTop+18);

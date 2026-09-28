@@ -137,7 +137,7 @@ function draw(){const W=sc._w,H=sc._h;S.scene(sc,SKY,{});
   sc.fillStyle='#9fd0ff';sc.font='12px system-ui';sc.fillText('靜止鐘（你）',Ax-30,AtopY-12);
   // A 光子(直上直下)
   const ApY=AtopY+yA;
-  S.sphere(sc,Ax,ApY,5,[255,238,150]);
+  S.sphere(sc,Ax,ApY,5,[50,100,79]);
   // ---- 鐘B：運動 ----
   const BtopY=H*bFrac(), BbotY=BtopY+D, w0=46, wc=Math.max(8,w0/g); // 寬度收縮：靜止寬度與鐘A 相同（原 52 vs 46，β=0 時兩個「相同的鐘」寬度就不一樣）
   // 光子斜路徑軌跡
@@ -145,7 +145,7 @@ function draw(){const W=sc._w,H=sc._h;S.scene(sc,SKY,{});
   trailB.forEach((p,i)=>{i?sc.lineTo(p.x,p.y):sc.moveTo(p.x,p.y);});sc.stroke();
   drawClockBody(20+xB,BtopY,BbotY,wc,'#ffb86c');
   const BpY=BtopY+yB;
-  S.sphere(sc,20+xB,BpY,5,[255,238,150]);
+  S.sphere(sc,20+xB,BpY,5,[50,100,79]);
   sc.fillStyle='#ffcf9a';sc.font='12px system-ui';sc.fillText('運動鐘 → v='+state.beta.toFixed(2)+'c',24+xB-6,BtopY-12);
   // 速度箭頭
   if(state.beta>0.01)S.arrow(sc,20+xB+wc/2+12,BbotY+18,20+xB+wc/2+12+34*Math.min(1,state.beta+0.2),BbotY+18,{color:'#ff8fb0',width:2.5});
