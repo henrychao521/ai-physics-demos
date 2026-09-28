@@ -100,6 +100,19 @@
   .t-debroglie{background:#070d18}
   .t-massenergy{background:#070d18}
   .ext{font-size:.7rem;color:var(--accent2)}
+  /* 程度徽章（R10）：對照十二年國教 108 課綱自然科學領域學習內容 */
+  .tag{line-height:2}
+  .lv{display:inline-block;font-size:.7rem;font-weight:700;padding:1px 9px;border-radius:999px;
+    white-space:nowrap;vertical-align:middle;border:1px solid;line-height:1.6;cursor:help}
+  .lv-jh{color:var(--green);border-color:#7cffb266;background:#7cffb214}
+  .lv-hs{color:var(--accent);border-color:#4cc2ff66;background:#4cc2ff14}
+  .lv-el{color:var(--indigo);border-color:#8b9cff73;background:#8b9cff17}
+  .lv-ex{color:var(--accent2);border:1px dashed #ffce5480;background:#ffce5412}
+  .lvcode{font-size:.68rem;color:var(--faint);margin:0 4px 0 6px;white-space:nowrap;vertical-align:middle;
+    font-family:ui-monospace,"SF Mono",Menlo,monospace;cursor:help}
+  .lvlegend{margin:14px 0 0;color:var(--muted);font-size:.8rem;line-height:2.1;max-width:760px}
+  .lvlegend .lv{margin-right:2px}
+  .lvlegend a{color:var(--accent)}
   footer{color:var(--muted);font-size:.8rem;margin-top:42px;line-height:1.8;border-top:1px solid var(--line);padding-top:18px}
   footer a{color:var(--accent)}
 </style>
@@ -121,6 +134,8 @@
     <h1>物理互動模擬平台</h1>
     <p class="lead">涵蓋國高中物理六大領域——<b style="color:var(--txt)">力學、熱學、波動、光學、電磁、近代物理</b>——的即時互動模擬，
        每個都可調參數、即時看公式與圖表變化，並附物理重點說明。適合課堂教學、課後自學與成果展示。點擊任一卡片開始體驗。</p>
+    <p class="lvlegend">程度徽章：<span class="lv lv-jh">國中</span> 國中自然　<span class="lv lv-hs">高中</span> 高中物理必修　<span class="lv lv-el">高中選修</span> 高中物理加深加廣選修　<span class="lv lv-ex">課綱外延伸</span> 課綱未列、大學或工程延伸。
+       依頁面核心內容對應<a href="https://www.naer.edu.tw/PageSyllabus?fid=52" target="_blank" rel="noopener">十二年國教 108 課綱</a>自然科學領域學習內容，旁邊小字為主要代碼（Ⅳ＝國中、Ⅴc＝高中必修、Ⅴa＝高中選修），滑鼠移到徽章上可看完整代碼（完整對照與依據見 README）。</p>
   </div>
 
   <div class="cards">
@@ -128,7 +143,7 @@
 
     <a class="card feat" href="spectral-lab/">
       <div class="thumb t-spec"></div>
-      <div class="tag"><span class="badge">3D・光譜干涉</span> <span class="badge">需連網</span></div>
+      <div class="tag"><span class="lv lv-ex" title="課綱外延伸｜108 課綱學習內容：PKa-Ⅴc-5、PKa-Ⅴa-13">課綱外延伸</span><span class="lvcode" title="課綱外延伸｜108 課綱學習內容：PKa-Ⅴc-5、PKa-Ⅴa-13">PKa-Ⅴc-5</span> <span class="badge">3D・光譜干涉</span> <span class="badge">需連網</span></div>
       <h3>光譜干涉實驗室（歐幾里得視角）</h3>
       <p>三維光場的三原色建設性干涉，可調頻率、晶格夾角與色散，並切換有理數視線比例觀察「視覺走廊」與紅藍色散。</p>
       <div class="go">開始體驗 →</div>
@@ -142,7 +157,7 @@
           <path d="M0,76 Q9,40 18,76 T36,76 T54,76 T72,76 T90,40 T108,76 T126,76 T144,60 T162,76 T180,90 T198,76 T216,76 T234,112 T252,76 T270,76 T288,50 T300,76" fill="none" stroke="#e8eef6" stroke-width="1.6"/>
         </svg>
       </div>
-      <div class="tag"><span class="badge">概念整合・波動</span></div>
+      <div class="tag"><span class="lv lv-el" title="高中選修｜108 課綱學習內容：PKa-Ⅴa-5、PKa-Ⅴa-13">高中選修</span><span class="lvcode" title="高中選修｜108 課綱學習內容：PKa-Ⅴa-5、PKa-Ⅴa-13">PKa-Ⅴa-5</span> <span class="badge">概念整合・波動</span></div>
       <h3>干涉與摩爾紋：同一種疊加</h3>
       <p>一維拍頻即時示範，說明光的干涉、繞射與摩爾紋本質都是「兩個週期圖案疊加 → 差頻拍頻」，並連到兩個細部模擬。</p>
       <div class="go">開始體驗 →</div>
@@ -161,7 +176,7 @@
           <circle cx="272" cy="38" r="4" fill="#7CFFB2"/><circle cx="272" cy="56" r="4" fill="#6cd0ff"/>
         </svg>
       </div>
-      <div class="tag"><span class="badge">力學・運動學</span></div>
+      <div class="tag"><span class="lv lv-el" title="高中選修｜108 課綱學習內容：PEb-Ⅴa-2、Eb-Ⅳ-8">高中選修</span><span class="lvcode" title="高中選修｜108 課綱學習內容：PEb-Ⅴa-2、Eb-Ⅳ-8">PEb-Ⅴa-2</span> <span class="badge">力學・運動學</span></div>
       <h3>一維等加速度運動</h3>
       <p>調初速與加速度，看物體沿軌道運動與 x-t／v-t／a-t 三圖即時連動；v=u+at、x=ut+½at²，等速／加速／煞車／自由落體。</p>
       <div class="go">開始體驗 →</div>
@@ -177,7 +192,7 @@
           <line x1="60" y1="96" x2="60" y2="70" stroke="#ffce54" stroke-width="2"/>
         </svg>
       </div>
-      <div class="tag"><span class="badge">力學・運動學</span></div>
+      <div class="tag"><span class="lv lv-el" title="高中選修｜108 課綱學習內容：PEb-Ⅴa-5、PEb-Ⅴa-1、PKb-Ⅴc-2">高中選修</span><span class="lvcode" title="高中選修｜108 課綱學習內容：PEb-Ⅴa-5、PEb-Ⅴa-1、PKb-Ⅴc-2">PEb-Ⅴa-5</span> <span class="badge">力學・運動學</span></div>
       <h3>拋體運動實驗室</h3>
       <p>調初速、仰角、重力與空氣阻力，看拋物線軌跡與速度的水平／鉛直分量，並同步高度與速度的時間圖。</p>
       <div class="go">開始體驗 →</div>
@@ -193,7 +208,7 @@
           <rect x="240" y="128" width="40" height="10" rx="3" fill="#ff6b9d"/>
         </svg>
       </div>
-      <div class="tag"><span class="badge">力學・功與能</span></div>
+      <div class="tag"><span class="lv lv-jh" title="國中｜108 課綱學習內容：Ba-Ⅳ-7、Ba-Ⅳ-5、PBa-Ⅴc-2">國中</span><span class="lvcode" title="國中｜108 課綱學習內容：Ba-Ⅳ-7、Ba-Ⅳ-5、PBa-Ⅴc-2">Ba-Ⅳ-7</span> <span class="badge">力學・功與能</span></div>
       <h3>能量守恆雲霄飛車</h3>
       <p>小車滑下軌道，動能／位能／熱能三色長條即時消長；打開摩擦看力學能轉熱、越盪越低，理解能量守恆。</p>
       <div class="go">開始體驗 →</div>
@@ -211,7 +226,7 @@
           <polygon points="214,44 206,40 206,48" fill="#ff6b9d"/>
         </svg>
       </div>
-      <div class="tag"><span class="badge">力學・動量</span></div>
+      <div class="tag"><span class="lv lv-el" title="高中選修｜108 課綱學習內容：PEb-Ⅴa-11、PEb-Ⅴa-10、PEb-Ⅴa-15">高中選修</span><span class="lvcode" title="高中選修｜108 課綱學習內容：PEb-Ⅴa-11、PEb-Ⅴa-10、PEb-Ⅴa-15">PEb-Ⅴa-11</span> <span class="badge">力學・動量</span></div>
       <h3>碰撞實驗台</h3>
       <p>兩球對撞，調質量、初速與回復係數；看總動量守恆（綠條恆定）與動能在非彈性碰撞時階梯損耗成熱。</p>
       <div class="go">開始體驗 →</div>
@@ -230,7 +245,7 @@
           <polygon points="200,58 190,52 190,64" fill="#ffce54"/>
         </svg>
       </div>
-      <div class="tag"><span class="badge">力學・牛頓運動定律</span></div>
+      <div class="tag"><span class="lv lv-hs" title="高中｜108 課綱學習內容：PEb-Ⅴc-4、PEb-Ⅴc-5、Eb-Ⅳ-11、Eb-Ⅳ-4">高中</span><span class="lvcode" title="高中｜108 課綱學習內容：PEb-Ⅴc-4、PEb-Ⅴc-5、Eb-Ⅳ-11、Eb-Ⅳ-4">PEb-Ⅴc-4</span> <span class="badge">力學・牛頓運動定律</span></div>
       <h3>牛頓第二定律：推箱子</h3>
       <p>施力、質量、摩擦三滑桿，看自由體圖、合力與加速度，體會 F合=ma 與「推不動」的靜摩擦門檻。</p>
       <div class="go">開始體驗 →</div>
@@ -248,7 +263,7 @@
           <line x1="172" y1="82" x2="139" y2="68" stroke="#ff5470" stroke-width="2.5"/>
         </svg>
       </div>
-      <div class="tag"><span class="badge">力學・牛頓運動定律</span></div>
+      <div class="tag"><span class="lv lv-el" title="高中選修｜108 課綱學習內容：PEb-Ⅴa-7、PEb-Ⅴa-15、PEb-Ⅴc-5">高中選修</span><span class="lvcode" title="高中選修｜108 課綱學習內容：PEb-Ⅴa-7、PEb-Ⅴa-15、PEb-Ⅴc-5">PEb-Ⅴa-7</span> <span class="badge">力學・牛頓運動定律</span></div>
       <h3>斜面與力的分解</h3>
       <p>把重力分解成沿斜面 mg·sinθ 與垂直 mg·cosθ，看正向力 N、摩擦與滑動門檻 tanθ vs μ，以及加速度 a=g(sinθ−μcosθ)。</p>
       <div class="go">開始體驗 →</div>
@@ -266,7 +281,7 @@
           <polygon points="170,76 180,71 180,81" fill="#ffce54"/>
         </svg>
       </div>
-      <div class="tag"><span class="badge">力學・圓周運動</span></div>
+      <div class="tag"><span class="lv lv-el" title="高中選修｜108 課綱學習內容：PEb-Ⅴa-6、PEb-Ⅴa-9、Eb-Ⅳ-9">高中選修</span><span class="lvcode" title="高中選修｜108 課綱學習內容：PEb-Ⅴa-6、PEb-Ⅴa-9、Eb-Ⅳ-9">PEb-Ⅴa-6</span> <span class="badge">力學・圓周運動</span></div>
       <h3>等速圓周運動：向心加速度</h3>
       <p>速率不變但速度方向一直變 → 必有指向圓心的向心加速度；按「放手」看物體沿切線飛出（慣性）。</p>
       <div class="go">開始體驗 →</div>
@@ -283,7 +298,7 @@
           <polygon points="200,76 192,68 205,69" fill="#6cd0ff"/>
         </svg>
       </div>
-      <div class="tag"><span class="badge">力學・轉動與角動量</span></div>
+      <div class="tag"><span class="lv lv-el" title="高中選修｜108 課綱學習內容：PEb-Ⅴa-14、PKe-Ⅴa-3">高中選修</span><span class="lvcode" title="高中選修｜108 課綱學習內容：PEb-Ⅴa-14、PKe-Ⅴa-3">PEb-Ⅴa-14</span> <span class="badge">力學・轉動與角動量</span></div>
       <h3>角動量守恆（溜冰者效應）</h3>
       <p>沒有外力矩時 L=Iω 守恆；配重往內收 I 變小→ω 變大轉更快，KE=L²/2I 增加（收手做功）；溜冰者、星球塌縮加速自轉的原理。</p>
       <div class="go">開始體驗 →</div>
@@ -298,7 +313,7 @@
           <path d="M110,76 Q150,122 190,76 T270,76" fill="none" stroke="#ff6b9d" stroke-width="2" opacity=".8"/>
         </svg>
       </div>
-      <div class="tag"><span class="badge">力學・簡諧運動</span></div>
+      <div class="tag"><span class="lv lv-el" title="高中選修｜108 課綱學習內容：PEb-Ⅴa-4、PEb-Ⅴa-9">高中選修</span><span class="lvcode" title="高中選修｜108 課綱學習內容：PEb-Ⅴa-4、PEb-Ⅴa-9">PEb-Ⅴa-4</span> <span class="badge">力學・簡諧運動</span></div>
       <h3>簡諧運動三表徵</h3>
       <p>圓周投影＝彈簧振子，加上單擺，三種表徵同步呈現；位置對時間都是正弦曲線，並比較週期公式。</p>
       <div class="go">開始體驗 →</div>
@@ -315,7 +330,7 @@
           <path d="M92,76 L240,52 L262,62 Z" fill="#4cc2ff22"/>
         </svg>
       </div>
-      <div class="tag"><span class="badge">力學・萬有引力</span></div>
+      <div class="tag"><span class="lv lv-hs" title="高中｜108 課綱學習內容：PEb-Ⅴc-3、PKb-Ⅴc-1、PKb-Ⅴa-3、PKb-Ⅴa-4">高中</span><span class="lvcode" title="高中｜108 課綱學習內容：PEb-Ⅴc-3、PKb-Ⅴc-1、PKb-Ⅴa-3、PKb-Ⅴa-4">PEb-Ⅴc-3</span> <span class="badge">力學・萬有引力</span></div>
       <h3>行星軌道沙盒</h3>
       <p>萬有引力下的圓／橢圓／逃逸軌道，彩色楔形示範克卜勒第二定律「等時間掃過等面積」，含週期與偏心率。</p>
       <div class="go">開始體驗 →</div>
@@ -334,7 +349,7 @@
           <circle cx="90" cy="100" r="4" fill="#e8eef6"/>
         </svg>
       </div>
-      <div class="tag"><span class="badge">力學・向量</span></div>
+      <div class="tag"><span class="lv lv-el" title="高中選修｜108 課綱學習內容：PEb-Ⅴa-7、Eb-Ⅳ-3">高中選修</span><span class="lvcode" title="高中選修｜108 課綱學習內容：PEb-Ⅴa-7、Eb-Ⅳ-3">PEb-Ⅴa-7</span> <span class="badge">力學・向量</span></div>
       <h3>力的合成（向量加法）</h3>
       <p>拖曳力向量，用平行四邊形／頭尾相接求合力；即時分量表與力平衡判定。</p>
       <div class="go">開始體驗 →</div>
@@ -349,7 +364,7 @@
           <rect x="208" y="108" width="30" height="30" fill="#ff6b9d"/>
         </svg>
       </div>
-      <div class="tag"><span class="badge">力學・簡單機械</span></div>
+      <div class="tag"><span class="lv lv-jh" title="國中｜108 課綱學習內容：Eb-Ⅳ-7、Eb-Ⅳ-2">國中</span><span class="lvcode" title="國中｜108 課綱學習內容：Eb-Ⅳ-7、Eb-Ⅳ-2">Eb-Ⅳ-7</span> <span class="badge">力學・簡單機械</span></div>
       <h3>槓桿與滑輪</h3>
       <p>槓桿力矩平衡（W₁d₁=W₂d₂，橫桿會傾倒）與滑輪組省力倍數；體會「省力但費距離、功守恆」。</p>
       <div class="go">開始體驗 →</div>
@@ -366,7 +381,7 @@
           <polygon points="112,56 107,66 117,66" fill="#4cc2ff"/>
         </svg>
       </div>
-      <div class="tag"><span class="badge">壓力・浮力</span></div>
+      <div class="tag"><span class="lv lv-jh" title="國中｜108 課綱學習內容：Eb-Ⅳ-6">國中</span><span class="lvcode" title="國中｜108 課綱學習內容：Eb-Ⅳ-6">Eb-Ⅳ-6</span> <span class="badge">壓力・浮力</span></div>
       <h3>浮力與密度</h3>
       <p>阿基米德原理：浮力＝排開液體重量；比較物體與液體密度看浮沉，沒入比例＝ρ物/ρ液（冰山一角）。</p>
       <div class="go">開始體驗 →</div>
@@ -384,7 +399,7 @@
           <line x1="229" y1="42" x2="229" y2="20" stroke="#6cd0ff" stroke-width="3"/><polygon points="229,19 224,28 234,28" fill="#6cd0ff"/>
         </svg>
       </div>
-      <div class="tag"><span class="badge">力學・流體靜力學</span></div>
+      <div class="tag"><span class="lv lv-jh" title="國中｜108 課綱學習內容：Eb-Ⅳ-5">國中</span><span class="lvcode" title="國中｜108 課綱學習內容：Eb-Ⅳ-5">Eb-Ⅳ-5</span> <span class="badge">力學・流體靜力學</span></div>
       <h3>帕斯卡原理／液壓機</h3>
       <p>密閉流體壓力均勻傳遞 P=F₁/A₁；大活塞得放大力 F₂=F₁·A₂/A₁，面積比＝力放大倍率；省力不省功（功守恆），千斤頂與煞車的原理。</p>
       <div class="go">開始體驗 →</div>
@@ -402,7 +417,7 @@
           <circle cx="205" cy="105" r="3.5" fill="#c4b5ff"/><circle cx="150" cy="72" r="3.5" fill="#8b9cff"/>
         </svg>
       </div>
-      <div class="tag"><span class="badge">熱學・氣體動力論</span></div>
+      <div class="tag"><span class="lv lv-el" title="高中選修｜108 課綱學習內容：PBb-Ⅴa-2、PBb-Ⅴa-1、PBb-Ⅴc-1">高中選修</span><span class="lvcode" title="高中選修｜108 課綱學習內容：PBb-Ⅴa-2、PBb-Ⅴa-1、PBb-Ⅴc-1">PBb-Ⅴa-2</span> <span class="badge">熱學・氣體動力論</span></div>
       <h3>分子運動箱（PV=nRT）</h3>
       <p>分子撞牆產生壓力，調溫度／體積／分子數看壓力變化；實測壓力與理論 NkT/V 吻合，微觀導出巨觀定律。</p>
       <div class="go">開始體驗 →</div>
@@ -418,7 +433,7 @@
           <line x1="130" y1="64" x2="230" y2="64" stroke="#ff6b9d" stroke-width="4"/>
         </svg>
       </div>
-      <div class="tag"><span class="badge">熱學・比熱與相變</span></div>
+      <div class="tag"><span class="lv lv-jh" title="國中｜108 課綱學習內容：Bb-Ⅳ-3、Bb-Ⅳ-2、Bb-Ⅳ-5">國中</span><span class="lvcode" title="國中｜108 課綱學習內容：Bb-Ⅳ-3、Bb-Ⅳ-2、Bb-Ⅳ-5">Bb-Ⅳ-3</span> <span class="badge">熱學・比熱與相變</span></div>
       <h3>比熱與加熱曲線</h3>
       <p>固定功率加熱冰→水→蒸氣，看熔化與沸騰的水平平台（潛熱）與斜段 Q=mcΔT，理解相變吸熱不升溫。</p>
       <div class="go">開始體驗 →</div>
@@ -436,7 +451,7 @@
           <circle cx="118" cy="82" r="5" fill="#fff"/>
         </svg>
       </div>
-      <div class="tag"><span class="badge">熱學・氣體</span></div>
+      <div class="tag"><span class="lv lv-el" title="高中選修｜108 課綱學習內容：PBb-Ⅴa-1、Ec-Ⅳ-2、PBb-Ⅴc-1">高中選修</span><span class="lvcode" title="高中選修｜108 課綱學習內容：PBb-Ⅴa-1、Ec-Ⅳ-2、PBb-Ⅴc-1">PBb-Ⅴa-1</span> <span class="badge">熱學・氣體</span></div>
       <h3>理想氣體 PV 圖</h3>
       <p>活塞氣缸內分子運動，調溫度／體積／莫耳數即時看壓力 P=nRT/V 與 PV 圖；等溫(波以耳)雙曲線、等壓、等容(查理)過程一目了然。</p>
       <div class="go">開始體驗 →</div>
@@ -451,7 +466,7 @@
           <line x1="128" y1="94" x2="172" y2="94" stroke="#ffce54" stroke-width="3"/><polygon points="172,94 162,88 162,100" fill="#ffce54"/>
         </svg>
       </div>
-      <div class="tag"><span class="badge">熱學・量熱與熱平衡</span></div>
+      <div class="tag"><span class="lv lv-jh" title="國中｜108 課綱學習內容：Bb-Ⅳ-1、Bb-Ⅳ-3、Bb-Ⅳ-4">國中</span><span class="lvcode" title="國中｜108 課綱學習內容：Bb-Ⅳ-1、Bb-Ⅳ-3、Bb-Ⅳ-4">Bb-Ⅳ-1</span> <span class="badge">熱學・量熱與熱平衡</span></div>
       <h3>熱傳導與熱平衡</h3>
       <p>兩物體接觸，熱由高溫流向低溫到溫度相同；終溫＝熱容量 mc 的加權平均、A 放熱＝B 吸熱（Q=mcΔT），切換水／鋁／鐵看比熱的主導效果。</p>
       <div class="go">開始體驗 →</div>
@@ -469,7 +484,7 @@
           <text x="150" y="86" fill="#7CFFB2" font-size="13" font-weight="bold">W</text>
         </svg>
       </div>
-      <div class="tag"><span class="badge">熱學・熱力學第二定律</span></div>
+      <div class="tag"><span class="lv lv-hs" title="高中｜108 課綱學習內容：PBb-Ⅴc-2、PNc-Ⅴc-4">高中</span><span class="lvcode" title="高中｜108 課綱學習內容：PBb-Ⅴc-2、PNc-Ⅴc-4">PBb-Ⅴc-2</span> <span class="badge">熱學・熱力學第二定律</span></div>
       <h3>熱機・卡諾循環</h3>
       <p>吸熱 Qh→做功 W→放熱 Qc 的循環，PV 圖圍出的面積就是淨功；效率 η=1−Tc/Th 永遠小於 1——熱力學第二定律。</p>
       <div class="go">開始體驗 →</div>
@@ -487,7 +502,7 @@
           <line x1="238" y1="28" x2="270" y2="28" stroke="#7CFFB2" stroke-width="2"/><polygon points="271,28 262,24 262,32" fill="#7CFFB2"/>
         </svg>
       </div>
-      <div class="tag"><span class="badge">波動・行進波</span></div>
+      <div class="tag"><span class="lv lv-hs" title="高中｜108 課綱學習內容：PKa-Ⅴc-1、Ka-Ⅳ-1、Ka-Ⅳ-2、PKa-Ⅴa-3">高中</span><span class="lvcode" title="高中｜108 課綱學習內容：PKa-Ⅴc-1、Ka-Ⅳ-1、Ka-Ⅳ-2、PKa-Ⅴa-3">PKa-Ⅴc-1</span> <span class="badge">波動・行進波</span></div>
       <h3>行進波（橫波）</h3>
       <p>y=A·sin(kx−ωt) 沿繩前進；波速 v=fλ、波長 λ=v/f；高亮質點只上下振動，看波動傳遞的是能量與波形而非物質。</p>
       <div class="go">開始體驗 →</div>
@@ -504,7 +519,7 @@
           <circle cx="70" cy="50" r="3" fill="#ffce54"/><circle cx="170" cy="50" r="3" fill="#ffce54"/>
         </svg>
       </div>
-      <div class="tag"><span class="badge">波動・駐波與共振</span></div>
+      <div class="tag"><span class="lv lv-el" title="高中選修｜108 課綱學習內容：PKa-Ⅴa-6、PKa-Ⅴa-7、PKa-Ⅴa-8">高中選修</span><span class="lvcode" title="高中選修｜108 課綱學習內容：PKa-Ⅴa-6、PKa-Ⅴa-7、PKa-Ⅴa-8">PKa-Ⅴa-6</span> <span class="badge">波動・駐波與共振</span></div>
       <h3>駐波弦：共振與諧波</h3>
       <p>掃動頻率找共振，形成 n=1,2,3… 駐波，看節點與腹點；張力與弦長如何決定諧波頻率（弦樂器調音原理）。</p>
       <div class="go">開始體驗 →</div>
@@ -522,7 +537,7 @@
           <text x="120" y="36" fill="#7CFFB2" font-size="12" font-weight="bold">A</text>
         </svg>
       </div>
-      <div class="tag"><span class="badge">波動・聲音・駐波</span></div>
+      <div class="tag"><span class="lv lv-el" title="高中選修｜108 課綱學習內容：PKa-Ⅴa-7、PKa-Ⅴa-6、PKa-Ⅴa-8、Ka-Ⅳ-5">高中選修</span><span class="lvcode" title="高中選修｜108 課綱學習內容：PKa-Ⅴa-7、PKa-Ⅴa-6、PKa-Ⅴa-8、Ka-Ⅳ-5">PKa-Ⅴa-7</span> <span class="badge">波動・聲音・駐波</span></div>
       <h3>空氣柱共鳴管</h3>
       <p>管內空氣駐波：開口端為腹點、封閉端為節點。開管 f=nv/2L 含全諧波、閉管 f=(2n−1)v/4L 只有奇諧——長笛與簫的發聲原理。</p>
       <div class="go">開始體驗 →</div>
@@ -538,7 +553,7 @@
           <polygon points="200,68 188,84 212,84" fill="#ffce54"/>
         </svg>
       </div>
-      <div class="tag"><span class="badge">波動・都卜勒效應</span></div>
+      <div class="tag"><span class="lv lv-hs" title="高中｜108 課綱學習內容：PKa-Ⅴc-2">高中</span><span class="lvcode" title="高中｜108 課綱學習內容：PKa-Ⅴc-2">PKa-Ⅴc-2</span> <span class="badge">波動・都卜勒效應</span></div>
       <h3>都卜勒效應與音爆</h3>
       <p>移動音源的波前壓縮／拉伸，觀察者聽到的頻率隨接近／遠離升降；超音速時形成馬赫錐（音爆）。</p>
       <div class="go">開始體驗 →</div>
@@ -551,7 +566,7 @@
           <path d="M10,76 C40,10 60,10 90,76 C120,142 140,142 170,76 C200,10 220,10 250,76 C270,120 285,120 300,90" fill="none" stroke="#7CFFB2" stroke-width="2.5"/>
         </svg>
       </div>
-      <div class="tag"><span class="badge">波動・聲音</span></div>
+      <div class="tag"><span class="lv lv-jh" title="國中｜108 課綱學習內容：Ka-Ⅳ-5、PKa-Ⅴa-5">國中</span><span class="lvcode" title="國中｜108 課綱學習內容：Ka-Ⅳ-5、PKa-Ⅴa-5">Ka-Ⅳ-5</span> <span class="badge">波動・聲音</span></div>
       <h3>聲波合成器（拍音）</h3>
       <p>聲音三要素響度／音調／音色，兩音疊加成拍音；Web Audio 真實發聲，用耳朵驗證拍頻=|f₁−f₂|。</p>
       <div class="go">開始體驗 →</div>
@@ -567,7 +582,7 @@
           <circle cx="158" cy="30" r="4" fill="#ff8fb0"/>
         </svg>
       </div>
-      <div class="tag"><span class="badge">波動・振動與共振</span></div>
+      <div class="tag"><span class="lv lv-el" title="高中選修｜108 課綱學習內容：PKa-Ⅴa-8、PEb-Ⅴa-4">高中選修</span><span class="lvcode" title="高中選修｜108 課綱學習內容：PKa-Ⅴa-8、PEb-Ⅴa-4">PKa-Ⅴa-8</span> <span class="badge">波動・振動與共振</span></div>
       <h3>受迫振盪與共振</h3>
       <p>驅動頻率接近自然頻率時振幅暴增（共振）；看 A(f) 共振曲線與阻尼如何決定峰的高低尖銳，行軍過橋、收音機選台、樂器的原理。</p>
       <div class="go">開始體驗 →</div>
@@ -587,7 +602,7 @@
           <line x1="240" y1="76" x2="240" y2="104" stroke="#ffce54" stroke-width="3"/>
         </svg>
       </div>
-      <div class="tag"><span class="badge">光學・幾何光學</span></div>
+      <div class="tag"><span class="lv lv-el" title="高中選修｜108 課綱學習內容：PKa-Ⅴa-12、Ka-Ⅳ-9、Ka-Ⅳ-8">高中選修</span><span class="lvcode" title="高中選修｜108 課綱學習內容：PKa-Ⅴa-12、Ka-Ⅳ-9、Ka-Ⅳ-8">PKa-Ⅴa-12</span> <span class="badge">光學・幾何光學</span></div>
       <h3>透鏡成像（凸／凹）</h3>
       <p>三主光線追跡凸／凹透鏡成像，看實像／虛像、正立／倒立、放大／縮小如何隨物距切換，1/f=1/p+1/q。</p>
       <div class="go">開始體驗 →</div>
@@ -607,7 +622,7 @@
           <circle cx="138" cy="76" r="2.6" fill="#7088a0"/>
         </svg>
       </div>
-      <div class="tag"><span class="badge">光學・幾何光學</span></div>
+      <div class="tag"><span class="lv lv-jh" title="國中｜108 課綱學習內容：Ka-Ⅳ-8、Ka-Ⅳ-9、PKa-Ⅴc-4">國中</span><span class="lvcode" title="國中｜108 課綱學習內容：Ka-Ⅳ-8、Ka-Ⅳ-9、PKa-Ⅴc-4">Ka-Ⅳ-8</span> <span class="badge">光學・幾何光學</span></div>
       <h3>球面鏡成像（凹／凸）</h3>
       <p>凹面鏡／凸面鏡反射成像，主光線追跡看實像／虛像與放大率；焦距 f=R/2、1/f=1/p+1/q，刮鬍鏡與汽車後照鏡的原理。</p>
       <div class="go">開始體驗 →</div>
@@ -624,7 +639,7 @@
           <line x1="150" y1="76" x2="240" y2="30" stroke="#6b86a8" stroke-width="1.5"/>
         </svg>
       </div>
-      <div class="tag"><span class="badge">光學・折射</span></div>
+      <div class="tag"><span class="lv lv-el" title="高中選修｜108 課綱學習內容：PKa-Ⅴa-11、Ka-Ⅳ-8、PKa-Ⅴc-4">高中選修</span><span class="lvcode" title="高中選修｜108 課綱學習內容：PKa-Ⅴa-11、Ka-Ⅳ-8、PKa-Ⅴc-4">PKa-Ⅴa-11</span> <span class="badge">光學・折射</span></div>
       <h3>折射與全反射</h3>
       <p>Snell 定律 n₁sinθ₁=n₂sinθ₂，看光在界面轉彎；密→疏介質超過臨界角時全反射，即光纖原理。</p>
       <div class="go">開始體驗 →</div>
@@ -642,7 +657,7 @@
           <line x1="132" y1="94" x2="288" y2="100" stroke="#9a6cff" stroke-width="2"/>
         </svg>
       </div>
-      <div class="tag"><span class="badge">光學・色散</span></div>
+      <div class="tag"><span class="lv lv-jh" title="國中｜108 課綱學習內容：Ka-Ⅳ-10">國中</span><span class="lvcode" title="國中｜108 課綱學習內容：Ka-Ⅳ-10">Ka-Ⅳ-10</span> <span class="badge">光學・色散</span></div>
       <h3>稜鏡色散</h3>
       <p>折射率隨波長改變 n(λ)，白光通過三角稜鏡兩次折射被分成彩虹；紫光偏折最多、紅光最少——牛頓的稜鏡實驗。</p>
       <div class="go">開始體驗 →</div>
@@ -660,7 +675,7 @@
           <circle cx="270" cy="76" r="14" fill="#bcd0c0" opacity="0.55"/>
         </svg>
       </div>
-      <div class="tag"><span class="badge">光學・偏振</span></div>
+      <div class="tag"><span class="lv lv-el" title="高中選修｜108 課綱學習內容：PKc-Ⅴa-15">高中選修</span><span class="lvcode" title="高中選修｜108 課綱學習內容：PKc-Ⅴa-15">PKc-Ⅴa-15</span> <span class="badge">光學・偏振</span></div>
       <h3>偏振與馬呂士定律</h3>
       <p>自然光經起偏器變線偏振，再經檢偏器時 I=I₀cos²θ；正交（90°）全暗，但兩片之間插第三片又透光——偏光眼鏡與 LCD 原理。</p>
       <div class="go">開始體驗 →</div>
@@ -676,7 +691,7 @@
           </g>
         </svg>
       </div>
-      <div class="tag"><span class="badge">光學・顏色</span></div>
+      <div class="tag"><span class="lv lv-jh" title="國中｜108 課綱學習內容：Ka-Ⅳ-11、Ka-Ⅳ-10">國中</span><span class="lvcode" title="國中｜108 課綱學習內容：Ka-Ⅳ-11、Ka-Ⅳ-10">Ka-Ⅳ-11</span> <span class="badge">光學・顏色</span></div>
       <h3>加法混色盤（RGB）</h3>
       <p>光的三原色疊加，重疊區即時合成黃／青／洋紅／白；對照顏料的減法混色，理解螢幕發光原理。</p>
       <div class="go">開始體驗 →</div>
@@ -695,7 +710,7 @@
           <circle cx="240" cy="34" r="12" fill="#fff5b0"/><circle cx="240" cy="34" r="20" fill="#fff5b0" opacity=".25"/>
         </svg>
       </div>
-      <div class="tag"><span class="badge">電磁・電路</span></div>
+      <div class="tag"><span class="lv lv-jh" title="國中｜108 課綱學習內容：Kc-Ⅳ-7、Kc-Ⅳ-8、PKc-Ⅴa-6">國中</span><span class="lvcode" title="國中｜108 課綱學習內容：Kc-Ⅳ-7、Kc-Ⅳ-8、PKc-Ⅴa-6">Kc-Ⅳ-7</span> <span class="badge">電磁・電路</span></div>
       <h3>電路：串聯與並聯</h3>
       <p>電池點亮燈泡，比較串聯（越串越暗、斷一全滅）與並聯（各自滿亮、互不影響），即時算 V=IR 與亮度。</p>
       <div class="go">開始體驗 →</div>
@@ -712,7 +727,7 @@
           <path d="M106,82 Q150,132 194,82" fill="none" stroke="#e8eef6" stroke-width="1" opacity=".4"/>
         </svg>
       </div>
-      <div class="tag"><span class="badge">電磁・靜電學</span></div>
+      <div class="tag"><span class="lv lv-el" title="高中選修｜108 課綱學習內容：PKc-Ⅴa-1、PKc-Ⅴa-3、PKc-Ⅴc-1">高中選修</span><span class="lvcode" title="高中選修｜108 課綱學習內容：PKc-Ⅴa-1、PKc-Ⅴa-3、PKc-Ⅴc-1">PKc-Ⅴa-1</span> <span class="badge">電磁・靜電學</span></div>
       <h3>電場與電位</h3>
       <p>放置正負電荷看電場向量與等位面，拖曳即時重組；庫侖定律與平方反比，電偶極場線由正到負。</p>
       <div class="go">開始體驗 →</div>
@@ -729,7 +744,7 @@
           <text x="202" y="83" fill="#6cd0ff" font-size="22" font-weight="bold">−</text>
         </svg>
       </div>
-      <div class="tag"><span class="badge">電磁・靜電學</span></div>
+      <div class="tag"><span class="lv lv-el" title="高中選修｜108 課綱學習內容：PKc-Ⅴa-1、PKc-Ⅴa-3">高中選修</span><span class="lvcode" title="高中選修｜108 課綱學習內容：PKc-Ⅴa-1、PKc-Ⅴa-3">PKc-Ⅴa-1</span> <span class="badge">電磁・靜電學</span></div>
       <h3>平行板電容器</h3>
       <p>C=ε₀A/d、Q=CV、板間電場 E=V/d、儲存能量 U=½CV²；看板面積／間距／電壓如何影響電容，插入介電質讓電容變大。</p>
       <div class="go">開始體驗 →</div>
@@ -749,7 +764,7 @@
           <g fill="#7CFFB2"><polygon points="108,128 103,119 113,119"/><polygon points="192,24 187,33 197,33"/></g>
         </svg>
       </div>
-      <div class="tag"><span class="badge">電磁・電動機</span></div>
+      <div class="tag"><span class="lv lv-el" title="高中選修｜108 課綱學習內容：PKc-Ⅴa-8、Kc-Ⅳ-5">高中選修</span><span class="lvcode" title="高中選修｜108 課綱學習內容：PKc-Ⅴa-8、Kc-Ⅳ-5">PKc-Ⅴa-8</span> <span class="badge">電磁・電動機</span></div>
       <h3>直流馬達</h3>
       <p>通電線圈兩側受 F=BIL 反向力成力偶，力矩 τ=NBIA·sinθ 使線圈轉動；換向器每半圈反向電流維持同向旋轉——電能變動能。</p>
       <div class="go">開始體驗 →</div>
@@ -766,7 +781,7 @@
           <line x1="248" y1="80" x2="278" y2="80" stroke="#bcd0eb" stroke-width="1.6"/><polygon points="278,80 271,76 271,84" fill="#bcd0eb"/>
         </svg>
       </div>
-      <div class="tag"><span class="badge">電磁・波動・光</span></div>
+      <div class="tag"><span class="lv lv-hs" title="高中｜108 課綱學習內容：PKc-Ⅴc-5、PKa-Ⅴc-7、PKc-Ⅴc-6、PKd-Ⅴc-1、PKc-Ⅴa-15">高中</span><span class="lvcode" title="高中｜108 課綱學習內容：PKc-Ⅴc-5、PKa-Ⅴc-7、PKc-Ⅴc-6、PKd-Ⅴc-1、PKc-Ⅴa-15">PKc-Ⅴc-5</span> <span class="badge">電磁・波動・光</span></div>
       <h3>電磁波</h3>
       <p>電場 E 與磁場 B 互相垂直、同相前進，速度恆為 c=λf；拖動頻率掃過無線電→可見光→γ 射線整個電磁波譜，看 λ 與光子能量 E=hf。</p>
       <div class="go">開始體驗 →</div>
@@ -781,7 +796,7 @@
           <line x1="56" y1="20" x2="56" y2="132" stroke="#2a3850" stroke-width="1" stroke-dasharray="4 4"/>
         </svg>
       </div>
-      <div class="tag"><span class="badge">電磁・RC 電路</span></div>
+      <div class="tag"><span class="lv lv-ex" title="課綱外延伸｜108 課綱學習內容：PKc-Ⅴa-5、PKc-Ⅴa-3">課綱外延伸</span><span class="lvcode" title="課綱外延伸｜108 課綱學習內容：PKc-Ⅴa-5、PKc-Ⅴa-3">PKc-Ⅴa-5</span> <span class="badge">電磁・RC 電路</span></div>
       <h3>RC 充放電</h3>
       <p>電容充放電的指數曲線與時間常數 τ=RC，t=τ 充到 63%；計時、閃光燈、濾波電路的基礎。</p>
       <div class="go">開始體驗 →</div>
@@ -800,7 +815,7 @@
           <text x="266" y="80" fill="#ffd27a" font-size="13" font-weight="bold">L</text>
         </svg>
       </div>
-      <div class="tag"><span class="badge">電磁・電磁振盪</span></div>
+      <div class="tag"><span class="lv lv-ex" title="課綱外延伸｜108 課綱學習內容：PKc-Ⅴc-3、PBa-Ⅴc-1">課綱外延伸</span><span class="lvcode" title="課綱外延伸｜108 課綱學習內容：PKc-Ⅴc-3、PBa-Ⅴc-1">PKc-Ⅴc-3</span> <span class="badge">電磁・電磁振盪</span></div>
       <h3>LC 振盪電路</h3>
       <p>能量在電容的電場能與電感的磁場能之間來回擺盪，電荷與電流持續振盪；f=1/2π√(LC)，與彈簧簡諧運動完全類比。</p>
       <div class="go">開始體驗 →</div>
@@ -818,7 +833,7 @@
           <circle cx="150" cy="76" r="3" fill="#ffce54"/>
         </svg>
       </div>
-      <div class="tag"><span class="badge">電磁・電流磁效應</span></div>
+      <div class="tag"><span class="lv lv-el" title="高中選修｜108 課綱學習內容：PKc-Ⅴa-7、Kc-Ⅳ-4">高中選修</span><span class="lvcode" title="高中選修｜108 課綱學習內容：PKc-Ⅴa-7、Kc-Ⅳ-4">PKc-Ⅴa-7</span> <span class="badge">電磁・電流磁效應</span></div>
       <h3>電流的磁效應</h3>
       <p>直導線／圓線圈／螺線管的磁場與安培右手定則；B=μ₀I/2πr、μ₀I/2R、μ₀nI，拖探針量磁場，電磁鐵與螺線管原理。</p>
       <div class="go">開始體驗 →</div>
@@ -836,7 +851,7 @@
           <line x1="200" y1="76" x2="164" y2="76" stroke="#ff6b9d" stroke-width="2.5"/>
         </svg>
       </div>
-      <div class="tag"><span class="badge">電磁・勞侖茲力</span></div>
+      <div class="tag"><span class="lv lv-el" title="高中選修｜108 課綱學習內容：PKc-Ⅴa-9">高中選修</span><span class="lvcode" title="高中選修｜108 課綱學習內容：PKc-Ⅴa-9">PKc-Ⅴa-9</span> <span class="badge">電磁・勞侖茲力</span></div>
       <h3>磁場中的帶電粒子</h3>
       <p>勞侖茲力 F=qv×B 永遠垂直速度，使粒子走圓周；r=mv/qB，反轉磁場或電荷則旋向相反（質譜儀、極光原理）。</p>
       <div class="go">開始體驗 →</div>
@@ -854,7 +869,7 @@
           <circle cx="150" cy="130" r="10" fill="#fff5b0"/><circle cx="150" cy="130" r="18" fill="#fff5b0" opacity=".3"/>
         </svg>
       </div>
-      <div class="tag"><span class="badge">電磁・電磁感應</span></div>
+      <div class="tag"><span class="lv lv-el" title="高中選修｜108 課綱學習內容：PKc-Ⅴa-10、PKc-Ⅴa-12、Kc-Ⅳ-6">高中選修</span><span class="lvcode" title="高中選修｜108 課綱學習內容：PKc-Ⅴa-10、PKc-Ⅴa-12、Kc-Ⅳ-6">PKc-Ⅴa-10</span> <span class="badge">電磁・電磁感應</span></div>
       <h3>電磁感應發電機</h3>
       <p>線圈在磁場中旋轉產生交流電壓，法拉第定律 EMF=-N·dΦ/dt；磁通與電動勢相差 90°，發電廠原理。</p>
       <div class="go">開始體驗 →</div>
@@ -870,7 +885,7 @@
           <line x1="201" y1="76" x2="258" y2="76" stroke="#6cd0ff" stroke-width="2"/>
         </svg>
       </div>
-      <div class="tag"><span class="badge">電磁・電磁感應應用</span></div>
+      <div class="tag"><span class="lv lv-el" title="高中選修｜108 課綱學習內容：PKc-Ⅴa-12、PKc-Ⅴa-11、Mc-Ⅳ-5">高中選修</span><span class="lvcode" title="高中選修｜108 課綱學習內容：PKc-Ⅴa-12、PKc-Ⅴa-11、Mc-Ⅳ-5">PKc-Ⅴa-12</span> <span class="badge">電磁・電磁感應應用</span></div>
       <h3>變壓器（升壓／降壓）</h3>
       <p>主／次線圈匝數比決定電壓比 Vs/Vp=Ns/Np；升壓必降流、功率守恆 VpIp=VsIs，高壓輸電與充電器的原理。</p>
       <div class="go">開始體驗 →</div>
@@ -888,7 +903,7 @@
           <circle cx="240" cy="108" r="4" fill="#4cc2ff"/>
         </svg>
       </div>
-      <div class="tag"><span class="badge">近代物理・量子</span></div>
+      <div class="tag"><span class="lv lv-el" title="高中選修｜108 課綱學習內容：PKd-Ⅴa-4、PKd-Ⅴc-1、PKd-Ⅴc-2">高中選修</span><span class="lvcode" title="高中選修｜108 課綱學習內容：PKd-Ⅴa-4、PKd-Ⅴc-1、PKd-Ⅴc-2">PKd-Ⅴa-4</span> <span class="badge">近代物理・量子</span></div>
       <h3>光電效應</h3>
       <p>頻率不夠光再強也打不出電子；夠高才發射且 KE=hf−W 只看頻率。愛因斯坦光量子，量子物理開端。</p>
       <div class="go">開始體驗 →</div>
@@ -905,7 +920,7 @@
           <circle cx="250" cy="44" r="20" fill="#fff4e6"/><circle cx="250" cy="44" r="30" fill="#fff4e6" opacity="0.18"/>
         </svg>
       </div>
-      <div class="tag"><span class="badge">近代物理・熱輻射</span></div>
+      <div class="tag"><span class="lv lv-el" title="高中選修｜108 課綱學習內容：PKd-Ⅴa-3、Bb-Ⅳ-4">高中選修</span><span class="lvcode" title="高中選修｜108 課綱學習內容：PKd-Ⅴa-3、Bb-Ⅳ-4">PKd-Ⅴa-3</span> <span class="badge">近代物理・熱輻射</span></div>
       <h3>黑體輻射</h3>
       <p>溫度越高，輻射峰值越往藍移（維因 λ_max=b/T）、總功率以 T⁴ 暴增（史特凡）；看燈泡、太陽、天狼星為何顏色不同。</p>
       <div class="go">開始體驗 →</div>
@@ -925,7 +940,7 @@
           <path d="M250 132 L284 132" stroke="#ff8fb0" stroke-width="2.4"/><polygon points="284,132 277,128 277,136" fill="#ff8fb0"/>
         </svg>
       </div>
-      <div class="tag"><span class="badge">近代物理・相對論</span></div>
+      <div class="tag"><span class="lv lv-ex" title="課綱外延伸｜108 課綱學習內容：PBa-Ⅴc-3">課綱外延伸</span><span class="lvcode" title="課綱外延伸｜108 課綱學習內容：PBa-Ⅴc-3">PBa-Ⅴc-3</span> <span class="badge">近代物理・相對論</span></div>
       <h3>時間膨脹（光鐘）</h3>
       <p>運動鐘的光子走更長斜路徑，所以走得比較慢：Δt=γΔt₀、γ=1/√(1−β²)；同步比較兩鐘滴答數，並看長度收縮 L=L₀/γ。</p>
       <div class="go">開始體驗 →</div>
@@ -941,7 +956,7 @@
           <circle cx="130" cy="100" r="3" fill="#2a3340"/><circle cx="180" cy="120" r="3" fill="#2a3340"/>
         </svg>
       </div>
-      <div class="tag"><span class="badge">近代物理・核物理</span></div>
+      <div class="tag"><span class="lv lv-el" title="高中選修｜108 課綱學習內容：PKe-Ⅴa-2、PKe-Ⅴc-2">高中選修</span><span class="lvcode" title="高中選修｜108 課綱學習內容：PKe-Ⅴa-2、PKe-Ⅴc-2">PKe-Ⅴa-2</span> <span class="badge">近代物理・核物理</span></div>
       <h3>放射性半衰期</h3>
       <p>原子隨機衰變，每過一個半衰期剩一半，N=N₀(½)^(t/T)；原子越少鋸齒越明顯，碳-14 定年原理。</p>
       <div class="go">開始體驗 →</div>
@@ -957,7 +972,7 @@
           <g fill="#bfe6ff"><circle cx="228" cy="34" r="4.5"/><circle cx="242" cy="80" r="4.5"/><circle cx="222" cy="118" r="4.5"/></g>
         </svg>
       </div>
-      <div class="tag"><span class="badge">近代物理・核物理</span></div>
+      <div class="tag"><span class="lv lv-hs" title="高中｜108 課綱學習內容：PNc-Ⅴc-1、PBa-Ⅴc-4、PBa-Ⅴc-3、PNc-Ⅴc-2">高中</span><span class="lvcode" title="高中｜108 課綱學習內容：PNc-Ⅴc-1、PBa-Ⅴc-4、PBa-Ⅴc-3、PNc-Ⅴc-2">PNc-Ⅴc-1</span> <span class="badge">近代物理・核物理</span></div>
       <h3>核分裂連鎖反應</h3>
       <p>中子撞鈾-235 使其分裂、放出更多中子引發連鎖反應；增殖係數 k 控制次臨界／臨界／超臨界，每次分裂約 200 MeV 來自質量虧損 E=Δmc²。</p>
       <div class="go">開始體驗 →</div>
@@ -978,7 +993,7 @@
           <line x1="150" y1="76" x2="264" y2="40" stroke="#ff3b3b" stroke-width="2"/>
         </svg>
       </div>
-      <div class="tag"><span class="badge">近代物理・原子模型</span></div>
+      <div class="tag"><span class="lv lv-el" title="高中選修｜108 課綱學習內容：PKd-Ⅴa-7、PKd-Ⅴc-3、PKd-Ⅴc-4">高中選修</span><span class="lvcode" title="高中選修｜108 課綱學習內容：PKd-Ⅴa-7、PKd-Ⅴc-3、PKd-Ⅴc-4">PKd-Ⅴa-7</span> <span class="badge">近代物理・原子模型</span></div>
       <h3>波耳原子模型</h3>
       <p>電子只能在特定能階；躍遷放出光子，能量差決定波長。氫原子光譜 Hα 656nm、巴耳末／來曼系，量子化的起點。</p>
       <div class="go">開始體驗 →</div>
@@ -993,7 +1008,7 @@
           <polygon points="100,106 108,102 108,110" fill="#6cd0ff"/><polygon points="190,106 182,102 182,110" fill="#6cd0ff"/>
         </svg>
       </div>
-      <div class="tag"><span class="badge">近代物理・量子</span></div>
+      <div class="tag"><span class="lv lv-el" title="高中選修｜108 課綱學習內容：PKd-Ⅴa-5、PKd-Ⅴc-5、PKd-Ⅴc-6">高中選修</span><span class="lvcode" title="高中選修｜108 課綱學習內容：PKd-Ⅴa-5、PKd-Ⅴc-5、PKd-Ⅴc-6">PKd-Ⅴa-5</span> <span class="badge">近代物理・量子</span></div>
       <h3>物質波（德布羅意）</h3>
       <p>任何運動粒子都有波長 λ=h/p；比較電子／質子／棒球，只有極輕極慢的粒子 λ 才接近原子尺度、波動性才觀測得到，波粒二象性與電子顯微鏡的原理。</p>
       <div class="go">開始體驗 →</div>
@@ -1009,7 +1024,7 @@
           <circle cx="112" cy="34" r="4.5" fill="#7CFFB2"/>
         </svg>
       </div>
-      <div class="tag"><span class="badge">近代物理・核物理</span></div>
+      <div class="tag"><span class="lv lv-hs" title="高中｜108 課綱學習內容：PBa-Ⅴc-3、PBa-Ⅴc-4">高中</span><span class="lvcode" title="高中｜108 課綱學習內容：PBa-Ⅴc-3、PBa-Ⅴc-4">PBa-Ⅴc-3</span> <span class="badge">近代物理・核物理</span></div>
       <h3>質能等效與結合能</h3>
       <p>E=Δmc²；每核子結合能曲線在鐵-56 最高，核分裂（重核→中核）與核融合（輕核→中核）都往高峰移動而釋放能量，核能與太陽發光的本質。</p>
       <div class="go">開始體驗 →</div>
@@ -1022,7 +1037,7 @@
         <i style="left:34%"></i><i style="left:42%;opacity:.6"></i><i style="left:50%"></i>
         <i style="left:58%;opacity:.6"></i><i style="left:66%"></i>
       </div>
-      <div class="tag"><span class="badge">波動光學</span></div>
+      <div class="tag"><span class="lv lv-el" title="高中選修｜108 課綱學習內容：PKa-Ⅴa-13、PKa-Ⅴc-5、PKa-Ⅴc-6">高中選修</span><span class="lvcode" title="高中選修｜108 課綱學習內容：PKa-Ⅴa-13、PKa-Ⅴc-5、PKa-Ⅴc-6">PKa-Ⅴa-13</span> <span class="badge">波動光學</span></div>
       <h3>繞射成像模擬</h3>
       <p>雙狹縫 / 單狹縫的干涉與繞射；可調相位差與「前後距離差 ΔL」，觀察主峰偏移與非對稱條紋。</p>
       <div class="go">開始體驗 →</div>
@@ -1030,7 +1045,7 @@
 
     <a class="card" href="moire/">
       <div class="thumb t-moire"></div>
-      <div class="tag"><span class="badge">取樣・拍頻</span></div>
+      <div class="tag"><span class="lv lv-ex" title="課綱外延伸｜108 課綱學習內容：PKa-Ⅴa-5">課綱外延伸</span><span class="lvcode" title="課綱外延伸｜108 課綱學習內容：PKa-Ⅴa-5">PKa-Ⅴa-5</span> <span class="badge">取樣・拍頻</span></div>
       <h3>摩爾紋（Moiré）</h3>
       <p>兩組光柵疊加產生低頻摩爾條紋；調整間距與角度、或開啟旋轉動畫，感受微小差異被放大的現象。</p>
       <div class="go">開始體驗 →</div>
@@ -1038,7 +1053,7 @@
 
     <a class="card" href="https://henrychao521.github.io/shadowless-lamp-sim/" target="_blank" rel="noopener">
       <div class="thumb t-lamp"><b></b></div>
-      <div class="tag"><span class="badge">幾何光學・3D</span> <span class="ext">外部專案 ↗</span></div>
+      <div class="tag"><span class="lv lv-jh" title="國中｜108 課綱學習內容：Ka-Ⅳ-6">國中</span><span class="lvcode" title="國中｜108 課綱學習內容：Ka-Ⅳ-6">Ka-Ⅳ-6</span> <span class="badge">幾何光學・3D</span> <span class="ext">外部專案 ↗</span></div>
       <h3>外科無影燈光學模擬器（3D 專業版）</h3>
       <p>Three.js + IES 光錐疊加的真實光學模擬，含陰影稀釋分析、學習單與操作說明。為本主題的完整版。</p>
       <div class="go">前往 3D 模擬器 ↗</div>
@@ -1046,7 +1061,7 @@
 
     <a class="card" href="shadowless-lamp/">
       <div class="thumb t-lamp" style="opacity:.85"><b></b></div>
-      <div class="tag"><span class="badge">幾何光學・2D</span></div>
+      <div class="tag"><span class="lv lv-jh" title="國中｜108 課綱學習內容：Ka-Ⅳ-6">國中</span><span class="lvcode" title="國中｜108 課綱學習內容：Ka-Ⅳ-6">Ka-Ⅳ-6</span> <span class="badge">幾何光學・2D</span></div>
       <h3>外科無影燈（2D 概念版）</h3>
       <p>2D 側視的多光源消影示意：增加光源數量、拖曳遮擋物，快速理解陰影互補的核心概念。</p>
       <div class="go">開始體驗 →</div>
@@ -1056,7 +1071,7 @@
 
     <a class="card" href="hovercraft/">
       <div class="thumb t-hover"><b></b></div>
-      <div class="tag"><span class="badge">工程・動力分析</span> <span class="badge">需連網</span></div>
+      <div class="tag"><span class="lv lv-ex" title="課綱外延伸｜108 課綱學習內容：Eb-Ⅳ-13、Eb-Ⅳ-5">課綱外延伸</span><span class="lvcode" title="課綱外延伸｜108 課綱學習內容：Eb-Ⅳ-13、Eb-Ⅳ-5">Eb-Ⅳ-13</span> <span class="badge">工程・動力分析</span> <span class="badge">需連網</span></div>
       <h3>RC 氣墊船工程模擬器</h3>
       <p>選配升力/推力馬達、電池與船體材料，即時計算總重、推重比與升力餘裕，並模擬導風板向量轉向。</p>
       <div class="go">開始體驗 →</div>
