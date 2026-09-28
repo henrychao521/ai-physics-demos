@@ -153,11 +153,15 @@ function drawBeaker(cur){const W=bc._w,H=bc._h;
     bc.save();bc.globalCompositeOperation='lighter';
     for(let i=0;i<6;i++){const sx=bL+bw*(i+.5)/6,sy=top-((tt*40+i*30)%80);
       bc.fillStyle='rgba(220,230,255,.10)';bc.beginPath();bc.arc(sx+Math.sin(tt*2+i)*8,sy,10,0,7);bc.fill();}bc.restore();}
-  if(!phase.includes('氣體')){ // 水
+  if(phase.includes('固體')){ // −20→0°C 全部是冰：畫整塊冰，不畫液態水
+    const ig=bc.createLinearGradient(0,wlevel,0,bot);ig.addColorStop(0,'rgba(225,240,255,.75)');ig.addColorStop(1,'rgba(150,190,225,.6)');
+    bc.fillStyle=ig;bc.fillRect(bL,wlevel,bw,bot-wlevel);bc.strokeStyle='rgba(255,255,255,.35)';bc.lineWidth=1;
+    for(let i=1;i<4;i++){bc.beginPath();bc.moveTo(bL+bw*i/4,wlevel);bc.lineTo(bL+bw*i/4-10,bot);bc.stroke();}}
+  else if(!phase.includes('氣體')){ // 水
     S.water(bc,bL,wlevel,bw,bot-wlevel,tt);
     if(phase.includes('沸騰')){bc.fillStyle='rgba(255,255,255,.6)';
       for(let i=0;i<10;i++){const bxx=bL+Math.random()*bw,byy=wlevel+((tt*60+i*40)%(bot-wlevel));bc.beginPath();bc.arc(bxx,bot-((tt*70+i*37)%(bot-wlevel)),2+Math.random()*2,0,7);bc.fill();}}}
-  if(phase.includes('固體')||phase.includes('熔化')){ // 冰塊
+  if(phase.includes('熔化')){ // 熔化中：冰塊浮在水面
     for(let i=0;i<3;i++){const ix=bL+12+i*(bw/3),iy=wlevel-6-i%2*6;
       bc.fillStyle='rgba(210,235,255,.85)';rr(bc,ix,iy,bw/4,bw/4,4);bc.fill();bc.strokeStyle='rgba(255,255,255,.6)';bc.lineWidth=1;bc.stroke();}}
   // 玻璃杯
@@ -169,11 +173,16 @@ function drawBeaker(cur){const W=bc._w,H=bc._h;
   bc.fillStyle=cur.col;bc.fillRect(thx-3,fy,6,thBot-fy);bc.beginPath();bc.arc(thx,thBot+7,8,0,7);bc.fill();
   bc.fillStyle='#fff';bc.font='bold 13px system-ui';bc.textAlign='center';bc.fillText(cur.T.toFixed(0)+'°C',thx,thTop-6);bc.textAlign='left';}
 function rr(c,x,y,w,h,r){c.beginPath();c.moveTo(x+r,y);c.arcTo(x+w,y,x+w,y+h,r);c.arcTo(x+w,y+h,x,y+h,r);c.arcTo(x,y+h,x,y,r);c.arcTo(x,y,x+w,y,r);c.closePath();}
-function drawCurve(cur){const W=cc2._w,H=cc2._h,mL=42,mR=14,mT=14,mB=26;
+// 縱軸畫到 140°C（資料最高 130°C）免得蒸氣段貼頂；上方 mT 讓開左上角的相態標籤
+function drawCurve(cur){const W=cc2._w,H=cc2._h,mL=54,mR=14,mT=60,mB=34,Tax=140;
   cc2.fillStyle='#0b0810';cc2.fillRect(0,0,W,H);
-  const X=tt2=>mL+tt2/Math.max(tEnd,.001)*(W-mL-mR),Y=T=>H-mB-(T-T0)/(Tend-T0)*(H-mT-mB);
+  const X=tt2=>mL+tt2/Math.max(tEnd,.001)*(W-mL-mR),Y=T=>H-mB-(T-T0)/(Tax-T0)*(H-mT-mB);
   cc2.strokeStyle='#1a1420';cc2.lineWidth=1;cc2.fillStyle='#6b5a66';cc2.font='11px system-ui';
-  for(let T=T0;T<=Tend;T+=20){const y=Y(T);cc2.beginPath();cc2.moveTo(mL,y);cc2.lineTo(W-mR,y);cc2.stroke();cc2.fillText(T+'°',8,y+4);}
+  cc2.textAlign='right';for(let T=T0;T<=Tax;T+=20){const y=Y(T);cc2.beginPath();cc2.moveTo(mL,y);cc2.lineTo(W-mR,y);cc2.stroke();cc2.fillText(T+'°',mL-6,y+4);}
+  // 時間刻度
+  const tst=[1,2,5,10,20,50,100,200,500,1000,2000,5000].find(v=>tEnd/v<=7)||10000;
+  cc2.textAlign='center';for(let ts=0;ts<=tEnd+1e-9;ts+=tst){const x=X(ts);cc2.strokeStyle='#2a2030';cc2.beginPath();cc2.moveTo(x,H-mB);cc2.lineTo(x,H-mB+4);cc2.stroke();cc2.fillText(ts,x,H-mB+15);}
+  cc2.textAlign='left';cc2.save();cc2.translate(14,(mT+H-mB)/2);cc2.rotate(-Math.PI/2);cc2.textAlign='center';cc2.fillText('溫度 T (°C)',0,0);cc2.restore();
   [0,100].forEach(Tc=>{cc2.strokeStyle='#33283a';cc2.setLineDash([4,4]);cc2.beginPath();cc2.moveTo(mL,Y(Tc));cc2.lineTo(W-mR,Y(Tc));cc2.stroke();cc2.setLineDash([]);});
   cc2.lineWidth=3.5;cc2.lineCap='round';
   for(const s of seg){cc2.strokeStyle=s.col;cc2.beginPath();let first=true;
@@ -183,7 +192,7 @@ function drawCurve(cur){const W=cc2._w,H=cc2._h,mL=42,mR=14,mT=14,mB=26;
   const Q=Math.min(state.P*t,Qmax),cx=X(Q/state.P),cy=Y(cur.T);
   cc2.strokeStyle='rgba(255,255,255,.6)';cc2.setLineDash([3,3]);cc2.beginPath();cc2.moveTo(cx,mT);cc2.lineTo(cx,H-mB);cc2.stroke();cc2.setLineDash([]);
   cc2.fillStyle='#fff';cc2.beginPath();cc2.arc(cx,cy,5,0,7);cc2.fill();
-  cc2.fillStyle='#6b5a66';cc2.fillText('加熱時間 (s)',W-100,H-9);}
+  cc2.fillStyle='#6b5a66';cc2.textAlign='right';cc2.fillText('加熱時間 t (s)',W-mR,H-3);cc2.textAlign='left';}
 function draw(){const Q=Math.min(state.P*t,Qmax),cur=TofQ(Q);drawBeaker(cur);drawCurve(cur);
   document.getElementById('phase').textContent=cur.ph;document.getElementById('phase').style.color=cur.col;
   const pct=Qmax>0?Q/Qmax*100:0;
