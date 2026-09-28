@@ -149,6 +149,9 @@ function draw(){setupReady();layout();const W=sc._w,H=sc._h;
   ray(O.x,O.y,0,0,'#d68a00');
   {const slope=-h/p;ray(0,0,xR,slope*xR,'#d68a00');if(q<0)ray(0,0,q,ih,'#d68a00',[4,4]);}
   // 像
+  // 光線③ 對準（物側）焦點入射 → 平行主軸射出（物理重點列了三條主光線，原本只畫兩條）
+  // 入射線延長通過 x=−F（凸透鏡為物側焦點；凹透鏡 F<0，即對準另一側焦點），打到透鏡的高度恰為像高 ih
+  if(isFinite(q)){ray(O.x,O.y,0,ih,'#7b4bd6');ray(0,ih,xR,ih,'#7b4bd6');if(q<0)ray(0,ih,q,ih,'#7b4bd6',[4,4]);}
   if(Math.abs(q)<200)arrowObj(q,ih,q>0?'#c0392b':'#e07a3c','像'+(q>0?'(實)':'(虛)'),q<0);
   drawStats(q,m);
   updateFormula();
