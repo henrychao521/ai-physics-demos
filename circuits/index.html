@@ -96,6 +96,8 @@ sliders.forEach(s=>{ state[s.id]=s.val;
   d.querySelector('input').addEventListener('input',e=>{state[s.id]=parseFloat(e.target.value);
     document.getElementById('v_'+s.id).textContent=`${fmt(state[s.id])} ${s.unit}`;updateFormula();});
 });
+// 小於 1 的量多留一位小數，讓代入式（例：0.286·7）算得回顯示的答案
+function f3(x){return x>=1?x.toFixed(2):x>=0.1?x.toFixed(3):x.toPrecision(3);}
 function fmt(x){return (Math.round(x*100)/100).toString();}
 function setSlider(id,val){state[id]=val;const r=document.getElementById('r_'+id);if(r)r.value=val;
   const s=sliders.find(z=>z.id===id);if(s)document.getElementById('v_'+id).textContent=`${fmt(val)} ${s.unit}`;}
@@ -109,18 +111,18 @@ function updateFormula(){
   if(series){
     document.getElementById('formula').innerHTML=
       `<h4>📐 計算公式（即時代入　串聯　V = IR）</h4>`+
-      frow('總電阻 R總','R₁+R₂+…= N·R',`${N}·${fmt(R)}`, c.Rtot.toFixed(1)+' Ω')+
-      frow('總電流 I','V / R總',`${fmt(V)} / ${c.Rtot.toFixed(1)}`, c.Itot.toFixed(2)+' A')+
-      frow('每燈電壓 V燈','I·R',`${c.Ib.toFixed(2)}·${fmt(R)}`, c.Vb.toFixed(2)+' V')+
-      frow('每燈功率 P','I²·R',`${c.Ib.toFixed(2)}²·${fmt(R)}`, c.Pb.toFixed(2)+' W')+
+      frow('總電阻 R總','R₁+R₂+…= N·R',`${N}·${fmt(R)}`, c.Rtot.toFixed(2)+' Ω')+
+      frow('總電流 I','V / R總',`${fmt(V)} / ${c.Rtot.toFixed(2)}`, f3(c.Itot)+' A')+
+      frow('每燈電壓 V燈','I·R',`${f3(c.Ib)}·${fmt(R)}`, f3(c.Vb)+' V')+
+      frow('每燈功率 P','I²·R',`${f3(c.Ib)}²·${fmt(R)}`, f3(c.Pb)+' W')+
       `<div class="frel">📈 <b>串聯越串總電阻越大</b>：燈越多 → 總電流越小 → 每顆越暗　·　每顆電流相同 (I 處處相等)　·　斷一顆 → 全部熄滅。</div>`;
   }else{
     document.getElementById('formula').innerHTML=
       `<h4>📐 計算公式（即時代入　並聯　V = IR）</h4>`+
-      frow('總電阻 R總','R / N',`${fmt(R)} / ${N}`, c.Rtot.toFixed(1)+' Ω')+
-      frow('每燈電壓 V燈','＝ 電源 V',`${fmt(V)}`, c.Vb.toFixed(2)+' V')+
-      frow('每燈電流 I燈','V / R',`${fmt(V)} / ${fmt(R)}`, c.Ib.toFixed(2)+' A')+
-      frow('總電流 I','V / R總 = N·I燈',`${N}·${c.Ib.toFixed(2)}`, c.Itot.toFixed(2)+' A')+
+      frow('總電阻 R總','R / N',`${fmt(R)} / ${N}`, c.Rtot.toFixed(2)+' Ω')+
+      frow('每燈電壓 V燈','＝ 電源 V',`${fmt(V)}`, f3(c.Vb)+' V')+
+      frow('每燈電流 I燈','V / R',`${fmt(V)} / ${fmt(R)}`, f3(c.Ib)+' A')+
+      frow('總電流 I','V / R總 = N·I燈',`${N}·${f3(c.Ib)}`, f3(c.Itot)+' A')+
       `<div class="frel">📈 <b>並聯越並總電阻越小</b>：燈越多 → 總電流越大　·　每顆兩端都拿到全電壓 → <b>亮度不變</b>　·　斷一顆 → 其他照亮 (家用電器都並聯)。</div>`;
   }
 }
@@ -151,19 +153,19 @@ function draw(){const W=sc._w,H=sc._h,c=calc(),N=state.N,I=c.Itot;
     sc.fillStyle='rgba(150,200,190,.7)';sc.font='12px system-ui';sc.fillText('串聯：同一條路，電流處處相等',left,H-26);
   }else{const top=72,bot=H-56,railL=180,railR=W-110;
     battery(120,(top+bot)/2);
-    // 梯形並聯：正極→左幹線→各支路→右幹線→負極；幹線每段電流＝尚未分出／已匯入的支路數 × Ib
+    // 梯形並聯：正極→左幹線→各支路→右幹線→負極（wire 起點→終點＝黃點移動方向，回程線要由右往左、由下往上）；幹線每段電流＝尚未分出／已匯入的支路數 × Ib
     const ys=[];for(let i=0;i<N;i++)ys.push(top+(bot-top)*(i+1)/(N+1));
-    wire(120,(top+bot)/2-18,120,top,I);wire(120,(top+bot)/2+18,120,bot,I);wire(120,top,railL,top,I);wire(120,bot,railR,bot,I);
+    wire(120,(top+bot)/2-18,120,top,I);wire(120,bot,120,(top+bot)/2+18,I);wire(120,top,railL,top,I);wire(railR,bot,120,bot,I);
     wire(railL,top,railL,ys[0],I);for(let i=0;i<N-1;i++)wire(railL,ys[i],railL,ys[i+1],(N-1-i)*c.Ib);
     for(let i=0;i<N-1;i++)wire(railR,ys[i],railR,ys[i+1],(i+1)*c.Ib);wire(railR,ys[N-1],railR,bot,I);
     for(let i=0;i<N;i++){const y=ys[i];wire(railL,y,railR,y,c.Ib);bulb((railL+railR)/2,y,16,c.bright);}
     sc.fillStyle='rgba(150,200,190,.7)';sc.font='12px system-ui';sc.fillText('並聯：各走各的支路，每顆都拿到全電壓',railL,H-22);}
-  document.getElementById('hud').innerHTML=chip('總電阻',c.Rtot.toFixed(1)+' Ω')+chip('總電流',c.Itot.toFixed(2)+' A')+chip('每燈亮度',(c.bright*100).toFixed(0)+'%');
+  document.getElementById('hud').innerHTML=chip('總電阻',c.Rtot.toFixed(2)+' Ω')+chip('總電流',f3(c.Itot)+' A')+chip('每燈亮度',(c.bright*100).toFixed(0)+'%');
   drawStats(c);}
 function chip(k,v){return `<div class="chip">${k}<b>${v}</b></div>`;}
 function drawStats(c){
-  const rows=[['等效總電阻',c.Rtot.toFixed(2)+' Ω','#4cc2ff'],['電池總電流',c.Itot.toFixed(2)+' A','#ffce54'],['每燈電壓',c.Vb.toFixed(2)+' V','#7CFFB2'],
-    ['每燈電流',c.Ib.toFixed(2)+' A','#8b9cff'],['每燈功率(亮度)',c.Pb.toFixed(2)+' W','#ff6b9d'],['亮度(相對)',(c.bright*100).toFixed(0)+'%','#e8eef6']];
+  const rows=[['等效總電阻',c.Rtot.toFixed(2)+' Ω','#4cc2ff'],['電池總電流',f3(c.Itot)+' A','#ffce54'],['每燈電壓',f3(c.Vb)+' V','#7CFFB2'],
+    ['每燈電流',f3(c.Ib)+' A','#8b9cff'],['每燈功率(亮度)',f3(c.Pb)+' W','#ff6b9d'],['亮度(相對單燈)',(c.bright*100).toFixed(0)+'%','#e8eef6']];
   document.getElementById('stats').innerHTML=rows.map(r=>`<div class="box"><div class="k">${r[0]}</div><div class="v" style="color:${r[2]}">${r[1]}</div></div>`).join('');}
 
 let lastTs=0;
