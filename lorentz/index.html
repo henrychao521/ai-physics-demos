@@ -95,7 +95,9 @@ let sc,p={x:0,y:0},vel={x:0,y:0},trail=[];
 function radius(){return state.m*state.v/(Math.abs(qsign)*state.B);}
 function omega(){return qsign*state.B*Bdir/state.m;}
 function reset(){p={x:sc?sc._w/2:300,y:sc?sc._h/2:250};vel={x:state.v,y:0};trail=[];updateFormula();}
-function step(dt){const w=omega(),ang=-w*dt,cosA=Math.cos(ang),sinA=Math.sin(ang);
+// 畫布 y 向下：速度以 +w·dt 旋轉，才與 F=(−v_y·w, v_x·w)·m 一致（原本 −w·dt 使粒子往 F 的反方向彎，
+// B 入頁的正電荷變成順時針，物理上應為逆時針）
+function step(dt){const w=omega(),ang=w*dt,cosA=Math.cos(ang),sinA=Math.sin(ang);
   const nx=vel.x*cosA-vel.y*sinA,ny=vel.x*sinA+vel.y*cosA;vel.x=nx;vel.y=ny;p.x+=vel.x*dt;p.y+=vel.y*dt;
   trail.push({x:p.x,y:p.y});if(trail.length>1200)trail.shift();
   if(p.x<20||p.x>sc._w-20||p.y<20||p.y>sc._h-20)reset();}
@@ -131,7 +133,7 @@ function updateFormula(){
   const T=2*Math.PI*m/(q*B);              // 與 HUD 同源：T = 2πm/(qB)
   const F=q*v*B;                          // 與 HUD 同源：F = qvB
   document.getElementById('formula').innerHTML=
-    `<h4>📐 計算公式（即時代入　v⊥B・等速圓周）</h4>`
+    `<h4>📐 計算公式（即時代入　v⊥B・等速圓周・模擬單位：q=1，長度以畫面像素計）</h4>`
     + frow('勞侖茲力 F','q·v·B',`${q}·${v}·${B}`, F.toFixed(1))
     + frow('迴旋半徑 r','m·v / (q·B)',`${m}·${v} / (${q}·${B})`, r.toFixed(1))
     + frow('週期 T','2π·m / (q·B)',`2π·${m} / (${q}·${B})`, T.toFixed(2))
