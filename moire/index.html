@@ -142,11 +142,12 @@ function updateReadout(){
   const a2eff=state.a2+(running?phaseAnim:0);
   const dth=(a2eff-state.a1)*Math.PI/180;
   if(pattern==='lines'){
-    const inv=1/(state.p1*state.p1)+1/(state.p2*state.p2)-2*Math.cos(dth)/(state.p1*state.p2);
+    // 線光柵轉 180° 與原圖相同：取 |cosΔθ|（兩波向量差、和中較短者），否則 Δθ>90° 時算出的間距是錯的
+    const inv=1/(state.p1*state.p1)+1/(state.p2*state.p2)-2*Math.abs(Math.cos(dth))/(state.p1*state.p2);
     if(inv<=1e-9){ readoutEl.textContent='兩光柵完全重合 → 摩爾條紋間距 → ∞（無條紋）'; }
     else{
       const pm=1/Math.sqrt(inv);
-      readoutEl.innerHTML=`摩爾條紋間距 p<sub>M</sub> = 1/√(1/p₁²+1/p₂²−2cosΔθ/p₁p₂) ≈ <b>${pm.toFixed(0)} px</b>　（Δθ=${(a2eff-state.a1).toFixed(1)}°）`;
+      readoutEl.innerHTML=`摩爾條紋間距 p<sub>M</sub> = 1/√(1/p₁²+1/p₂²−2|cosΔθ|/p₁p₂) ≈ <b>${pm.toFixed(0)} px</b>　（Δθ=${(a2eff-state.a1).toFixed(1)}°）`;
     }
   }else if(pattern==='circles'){
     const dp=Math.abs(state.p1-state.p2);
