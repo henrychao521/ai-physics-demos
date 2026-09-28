@@ -72,7 +72,7 @@ const sliders=[
   {id:'n',   name:'光源數量', min:1, max:24, step:1, val:1, unit:'顆'},
   {id:'spread',name:'燈具張角', min:20, max:160, step:1, val:110, unit:'°'},
   {id:'obR', name:'遮擋物大小', min:15, max:90, step:1, val:48, unit:'px'},
-  {id:'obH', name:'遮擋物高度', min:120, max:380, step:1, val:300, unit:'px'},
+  {id:'obH', name:'遮擋物離檯面高度', min:110, max:370, step:1, val:190, unit:'px'},
 ];
 const state={obX:500};
 const ctrl=document.getElementById('controls');
@@ -99,7 +99,7 @@ function lights(){
   }
   return arr;
 }
-function obstacle(){ return {x:state.obX, y:state.obH, r:state.obR}; }
+function obstacle(){ return {x:state.obX, y:tableY-state.obH, r:state.obR}; } // obH＝離檯面高度，數值越大越高
 
 // 線段(p->q) 是否被圓(c,r)遮擋
 function blocked(px,py,qx,qy,c){
@@ -208,10 +208,11 @@ function pos(e){const r=cv.getBoundingClientRect();const sx=1000/r.width,sy=560/
   const cx=(e.touches?e.touches[0].clientX:e.clientX), cy=(e.touches?e.touches[0].clientY:e.clientY);
   return {x:(cx-r.left)*sx,y:(cy-r.top)*sy};}
 cv.addEventListener('pointerdown',e=>{const p=pos(e);const ob=obstacle();
-  if(dragMode||Math.hypot(p.x-ob.x,p.y-ob.y)<ob.r+10){dragging=true;state.obX=p.x;state.obH=Math.max(120,Math.min(380,p.y));
-    document.getElementById('r_obH').value=Math.round(state.obH);draw();}});
+  if(dragMode||Math.hypot(p.x-ob.x,p.y-ob.y)<ob.r+10){dragging=true;state.obX=p.x;state.obH=Math.max(110,Math.min(370,tableY-p.y));
+    document.getElementById('r_obH').value=Math.round(state.obH);
+    document.getElementById('v_obH').textContent=`${Math.round(state.obH)} px`;draw();}});
 cv.addEventListener('pointermove',e=>{if(!dragging)return;const p=pos(e);
-  state.obX=Math.max(0,Math.min(W,p.x));state.obH=Math.max(120,Math.min(380,p.y));
+  state.obX=Math.max(0,Math.min(W,p.x));state.obH=Math.max(110,Math.min(370,tableY-p.y));
   document.getElementById('r_obH').value=Math.round(state.obH);
   document.getElementById('v_obH').textContent=`${Math.round(state.obH)} px`;draw();});
 window.addEventListener('pointerup',()=>dragging=false);
