@@ -185,7 +185,8 @@ function draw(){
 
   // screen half-range chosen ~ to show a useful span of fringes
   const fringe = lam*L/Math.max(state.d*1e-6, 1e-6);   // double-slit spacing
-  const half = Math.max(fringe*9, lam*L/(state.a*1e-6)*1.2);
+  // 單縫模式與 d 無關：顯示範圍取中央亮紋半寬 λL/a 的 3 倍（中央亮紋＋兩側各兩個次亮紋）
+  const half = mode==='double' ? Math.max(fringe*9, lam*L/(state.a*1e-6)*1.2) : lam*L/(state.a*1e-6)*3;
   const n=W;
   const I=new Float64Array(n); let Imax=1e-9;
   for(let i=0;i<n;i++){
@@ -205,6 +206,7 @@ function draw(){
   const [R,G,B]=wl2rgb(state.lambda);
   // fringe strip
   const stripH=70, stripY=H-stripH;
+  const cB=stripY-22, cT=30;   // 曲線基線與頂端（上留標籤空間、下留 y 軸刻度帶）
   // 逐列填色取代 putImageData(後者不受 setTransform 影響，dpr>1 會只填左半/錯位)；fillRect 走邏輯座標受 transform 縮放
   for(let i=0;i<n;i++){
     const inten=Math.min(1,I[i]/Imax);
@@ -217,23 +219,34 @@ function draw(){
   pc.beginPath(); pc.moveTo(W/2,0); pc.lineTo(W/2,stripY); pc.stroke();
   pc.fillStyle='#6b7785'; pc.font='12px sans-serif';
   pc.fillText('y = 0（光軸）', W/2+6, 14);
+  pc.textAlign='right'; pc.fillText('縱軸：相對光強 I / I_max', W-8, 14); pc.textAlign='left';
+  // 螢幕位置刻度（mm）
+  const hm=half*1000; let st=[0.1,0.2,0.5,1,2,5,10,20,50,100,200,500].find(v=>hm/v<=4)||1000;
+  pc.font='10px sans-serif'; pc.textAlign='center'; pc.strokeStyle='#3a4756';
+  for(let t=-Math.floor(hm/st)*st;t<=hm+1e-9;t+=st){ if(Math.abs(t)>hm*0.86)continue;
+    const tx=W/2+t/hm*(W/2); pc.beginPath(); pc.moveTo(tx,cB+2); pc.lineTo(tx,cB+7); pc.stroke();
+    pc.fillStyle='#6b7785'; pc.fillText((Math.abs(t)<1e-9?0:+t.toFixed(1))+'', tx, cB+17); }
+  pc.textAlign='right'; pc.fillText('螢幕位置 y (mm)', W-8, cB+17); pc.textAlign='left'; pc.font='12px sans-serif';
 
   // intensity curve
   pc.beginPath();
   for(let i=0;i<n;i++){
-    const y=stripY-4-(I[i]/Imax)*(stripY-16);
+    const y=cB-(I[i]/Imax)*(cB-cT);
     if(i===0)pc.moveTo(i,y); else pc.lineTo(i,y);
   }
   pc.lineWidth=2; pc.strokeStyle=`rgb(${R},${G},${B})`; pc.stroke();
 
   // peak marker
   let pk=0; for(let i=0;i<n;i++) if(I[i]>I[pk])pk=i;
-  const pkY=(pk/(n-1)-0.5)*2*half*1000; // mm
+  // 取樣點數為偶數、y=0 不在取樣點上：用拋物線內插找峰頂，避免對稱圖樣顯示「偏移 −0.04 mm」
+  let pkf=pk; if(pk>0&&pk<n-1){const a0=I[pk-1],a1=I[pk],a2=I[pk+1],den=a0-2*a1+a2; if(den<0)pkf=pk+0.5*(a0-a2)/den;}
+  let pkY=(pkf/(n-1)-0.5)*2*half*1000; if(Math.abs(pkY)<0.005)pkY=0; // mm（避免顯示 −0.00）
   pc.fillStyle='#ffce54';
-  pc.beginPath(); pc.arc(pk, stripY-4-(I[pk]/Imax)*(stripY-16), 4,0,7); pc.fill();
+  pc.beginPath(); pc.arc(pkf, cB-(I[pk]/Imax)*(cB-cT), 4,0,7); pc.fill();
   pc.fillText(`主峰偏移 ≈ ${pkY.toFixed(2)} mm`, 10, 18);
   pc.fillStyle='#93a1b0';
-  pc.fillText(`螢幕寬度 ≈ ±${(half*1000).toFixed(1)} mm`, 10, 36);
+  pc.fillText(`顯示範圍 y = ±${(half*1000).toFixed(1)} mm`, 10, 36);
+  if(mode==='double'&&state.a>=state.d){pc.fillStyle='#ff8a65';pc.fillText('注意：縫寬 a ≥ 縫距 d，兩縫已重疊，不是實際可做的雙狹縫',10,72);pc.fillStyle='#93a1b0';}
   if(mode==='double'){
     pc.fillText(`理論條紋間距 Δy = λL/d ≈ ${(fringe*1000).toFixed(2)} mm`, 10, 54);
   } else {
