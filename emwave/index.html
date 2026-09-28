@@ -26,6 +26,8 @@
   .toolbar{position:absolute;bottom:12px;right:12px;display:flex;gap:7px;flex-wrap:wrap;justify-content:flex-end}
   .toolbar button{background:rgba(10,16,24,.62);backdrop-filter:blur(6px);color:#dceaff;border:1px solid rgba(120,180,255,.2);border-radius:9px;padding:7px 11px;font-size:.82rem;cursor:pointer;font-family:inherit}
   .toolbar button.on{background:var(--accent);color:#04121c;border-color:var(--accent);font-weight:700}
+  /* 手機畫布只剩約 185px 高，四個讀數晶片會蓋掉整個波形：改排在畫布下方 */
+  @media(max-width:560px){.scene-wrap .hud{position:static;padding:8px 10px}}
   @media(max-width:560px){.toolbar{position:static;justify-content:center;padding:8px 10px;background:rgba(8,14,22,.5);border-top:1px solid var(--line)}}
   .bar{display:flex;gap:14px;flex-wrap:wrap;align-items:flex-end;background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:14px 16px;margin-top:14px}
   .sld{flex:1;min-width:240px}
@@ -63,7 +65,7 @@
   <div class="presets">
     <span>波段：</span>
     <button class="pbtn" data-f="8">無線電 FM</button>
-    <button class="pbtn" data-f="10.4">微波爐</button>
+    <button class="pbtn" data-f="9.39">微波爐</button>
     <button class="pbtn" data-f="13">紅外線</button>
     <button class="pbtn" data-f="14.74">可見光</button>
     <button class="pbtn" data-f="16">紫外線</button>
@@ -104,7 +106,7 @@ function freq(){return Math.pow(10,state.logf);}
 function lambda(){return cLight/freq();}      // m
 function photonE(){return hP*freq()/eV;}      // eV
 function band(){const f=freq();
-  if(f<1e9)return ['無線電波','#8a6cff'];
+  if(f<3e8)return ['無線電波','#8a6cff'];   // λ > 1 m
   if(f<3e11)return ['微波','#6ca8ff'];
   if(f<4e14)return ['紅外線','#ff7a5a'];
   if(f<7.9e14)return ['可見光',null];
@@ -131,7 +133,7 @@ function updateFormula(){const f=freq(),lam=lambda(),E=photonE(),bd=band()[0];
     `<h4>📐 計算公式（即時代入　c=3×10⁸ m/s、h=6.63×10⁻³⁴ J·s）</h4>`
     + frow('頻率 f','10^'+state.logf.toFixed(2),`掃描值`, f.toExponential(2)+' Hz')
     + frow('波長 λ','c / f',`3e8 / ${f.toExponential(2)}`, fmtLam(lam))
-    + frow('光子能量 E','h·f',`6.63e-34·${f.toExponential(2)}`, E.toExponential(2)+' eV')
+    + frow('光子能量 E','h·f ÷ e（J 換成 eV）',`6.63e-34·${f.toExponential(2)} / 1.60e-19`, E.toExponential(2)+' eV')
     + frow('所屬波段','—','電磁波譜', bd)
     + `<div class="frel">📈 <b>c=λf 恆定</b>：頻率 ×10 → 波長 ÷10（更短）　·　<b>E=hf</b>：頻率越高光子能量越大（X/γ 可游離）　·　可見光只占 380–750 nm 極窄一段。</div>`;
 }
@@ -181,20 +183,27 @@ function draw(){const W=sc._w,H=sc._h;S.scene(sc,SKY,{});
   drawSpectrum(W,H);
   updateHud();
 }
-function drawSpectrum(W,H){const sx=58,sw=W-150,sy=H-30,sh=12;
+function drawSpectrum(W,H){
+  // 桌機的播放／磁場按鈕浮貼在畫布右下角，色帶右端要讓開，否則 X 射線後段與 γ 射線被按鈕蓋住
+  const tb=document.querySelector('.toolbar'), tbw=(tb&&getComputedStyle(tb).position==='absolute')?tb.offsetWidth+24:0;
+  const sx=58,sw=W-sx-Math.max(92,tbw),sy=H-30,sh=12;
   // log f 6..20 → 漸層(代表性顏色)
   const grad=sc.createLinearGradient(sx,0,sx+sw,0);
-  grad.addColorStop(0,'#5a4bd0');grad.addColorStop(0.21,'#6c8aff');grad.addColorStop(0.45,'#ff7a5a');
-  grad.addColorStop(0.62,'#ffe14d');grad.addColorStop(0.64,'#5cff7a');grad.addColorStop(0.71,'#b06cff');
-  grad.addColorStop(0.86,'#6cffd0');grad.addColorStop(1,'#7CFFB2');
+  // 色帶與標籤都依 band() 的分界（log f）：無線電 <8.48、微波 <11.48、紅外 <14.60、可見 <14.90、紫外 <16.48、X <19.48
+  const T=lf=>(lf-6)/14;
+  grad.addColorStop(0,'#5a4bd0');grad.addColorStop(T(8.48),'#6c8aff');grad.addColorStop(T(11.48),'#ff7a5a');
+  grad.addColorStop(T(14.60),'#ff3030');grad.addColorStop(T(14.68),'#ffe14d');grad.addColorStop(T(14.76),'#5cff7a');grad.addColorStop(T(14.84),'#4c7dff');grad.addColorStop(T(14.90),'#8a4bff');
+  grad.addColorStop(T(15.3),'#b06cff');grad.addColorStop(T(16.48),'#6cffd0');grad.addColorStop(T(19.48),'#7CFFB2');grad.addColorStop(1,'#7CFFB2');
   sc.fillStyle=grad;sc.fillRect(sx,sy,sw,sh);
   // 目前位置指標
   const t=(state.logf-6)/14, ix=sx+t*sw;
   sc.fillStyle='#fff';sc.beginPath();sc.moveTo(ix,sy-4);sc.lineTo(ix-5,sy-12);sc.lineTo(ix+5,sy-12);sc.closePath();sc.fill();
   sc.strokeStyle='rgba(255,255,255,.85)';sc.lineWidth=1.4;sc.beginPath();sc.moveTo(ix,sy);sc.lineTo(ix,sy+sh);sc.stroke();
   sc.fillStyle='rgba(190,205,235,.75)';sc.font='10px system-ui';
-  const labs=[['無線電',0.04],['微波',0.24],['紅外',0.42],['可見',0.57],['紫外',0.68],['X',0.80],['γ',0.95]];
-  labs.forEach(l=>sc.fillText(l[0],sx+l[1]*sw-8,sy-3));
+  // 標籤置中於各波段；可見光很窄，標在色帶下方避免和紫外擠在一起
+  const labs=[['無線電',7.24],['微波',9.98],['紅外',13.04],['紫外',15.69],['X',17.98],['γ',19.74]];
+  sc.textAlign='center';labs.forEach(l=>sc.fillText(l[0],sx+T(l[1])*sw,sy-3));
+  sc.fillText('可見',sx+T(14.75)*sw,sy+sh+10);sc.textAlign='left';
 }
 function updateHud(){const f=freq(),lam=lambda(),E=photonE(),bd=band();
   document.getElementById('hud').innerHTML=
