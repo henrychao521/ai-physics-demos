@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>全台房市實證數據系統</title>
+<title>全台房市趨勢示意儀表板</title>
 <link rel="icon" href="../assets/favicon.svg" type="image/svg+xml">
 <link rel="stylesheet" href="../assets/site.css">
 <script defer src="../assets/nav.js"></script>
@@ -46,7 +46,7 @@ select,optgroup,option{background:var(--panel2)!important;color:var(--txt)!impor
 .focus\:ring-blue-100:focus{--tw-ring-color:rgba(76,194,255,.25)!important}
 </style>
 </head>
-<body data-demo="全台房市實證數據系統">
+<body data-demo="全台房市趨勢示意儀表板">
 <div id="root"><div class="app-loading"><div class="ring"></div>載入中…（首次載入需從 CDN 取得 React / Chart.js，請稍候）</div></div>
 <script>
   // CDN 韌性：12 秒後若 React 仍未渲染（CDN 失敗），顯示可讀錯誤與重試，避免無限載入轉圈
@@ -232,11 +232,11 @@ function App() {
       <div className="max-w-7xl mx-auto space-y-8">
         <header className="flex flex-col md:flex-row justify-between items-start md:items-center gap-6 bg-white p-8 rounded-2xl shadow-sm border border-slate-200">
           <div>
-            <h1 className="text-3xl font-black tracking-tighter text-slate-800">全台房市實證數據系統 <span className="text-blue-700">v5.2</span></h1>
-            <p className="text-slate-400 text-xs font-bold uppercase mt-2 tracking-widest">Grounding Data: 2026.03 Official Release</p>
+            <h1 className="text-3xl font-black tracking-tighter text-slate-800">全台房市趨勢示意儀表板 <span className="text-blue-700">v5.2</span></h1>
+            <p className="text-slate-400 text-xs font-bold uppercase mt-2 tracking-widest">示意數據・非官方統計・僅供圖表操作練習</p>
           </div>
           <div className="w-full md:w-[480px]">
-            <label className="block text-[10px] font-bold text-slate-400 uppercase mb-2">觀測區域 (全台 34 個實證數據節點)</label>
+            <label className="block text-[10px] font-bold text-slate-400 uppercase mb-2">觀測區域 (全台 34 個示意數據節點)</label>
             <select value={region} onChange={(e) => setRegion(e.target.value)} className="w-full p-3 bg-slate-50 border border-slate-200 rounded-xl text-sm font-bold focus:ring-4 focus:ring-blue-100 outline-none cursor-pointer">
               <optgroup label="全台 22 縣市 (2025 全年總量基準)">
                 {Object.keys(REAL_DATA).filter(k => !k.startsWith('TP_') && k !== 'TP').map(k => (
@@ -244,7 +244,7 @@ function App() {
                 ))}
                 <option value="TP">臺北市 全市總計 (2025: {REAL_DATA['TP'].v2025.toLocaleString()} 棟)</option>
               </optgroup>
-              <optgroup label="臺北市 12 行政區 (實價登錄案推估)">
+              <optgroup label="臺北市 12 行政區 (示意推估)">
                 {Object.keys(REAL_DATA).filter(k => k.startsWith('TP_')).map(k => (
                   <option key={k} value={k}>{REAL_DATA[k].name}</option>
                 ))}
@@ -255,13 +255,13 @@ function App() {
 
         <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
           <div className="bg-white p-6 rounded-2xl border-t-4 border-slate-800 shadow-sm">
-            <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">2025 Q4 實證單價 (最高: {stats.peakP})</p>
+            <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">2025 Q4 示意單價 (最高: {stats.peakP})</p>
             <div className="mt-2 flex items-baseline gap-1"><span className="text-4xl font-black">{stats.curP}</span><span className="text-xs text-slate-500 font-bold uppercase">萬/坪</span></div>
           </div>
           <div className="bg-white p-6 rounded-2xl border-t-4 border-blue-900 shadow-sm">
-            <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">2025 Q4 結報棟數</p>
+            <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">2025 Q4 示意棟數</p>
             <div className="mt-2 flex items-baseline gap-1"><span className="text-4xl font-black">{stats.curV.toLocaleString()}</span><span className="text-xs text-slate-500 font-bold uppercase">棟</span></div>
-            <p className="text-[10px] text-indigo-500 mt-2 font-bold">反映真實流動性</p>
+            <p className="text-[10px] text-indigo-500 mt-2 font-bold">示意值，非實際成交量</p>
           </div>
           <div className="bg-white p-6 rounded-2xl border-t-4 border-red-500 shadow-sm">
             <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Q4 急凍幅度 (QoQ)</p>
@@ -277,8 +277,8 @@ function App() {
         <section className="bg-white p-8 rounded-3xl border border-slate-200 shadow-sm">
           <div className="mb-8 flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
             <div>
-              <h3 className="text-xl font-black text-slate-800">44 季實證價量連續軌跡 (2015-2025)</h3>
-              <p className="text-sm text-slate-400 mt-1">折線已套用內政部住宅價格指數形狀，柱狀圖嚴格對齊年度總量分配。</p>
+              <h3 className="text-xl font-black text-slate-800">44 季價量示意軌跡 (2015-2025)</h3>
+              <p className="text-sm text-slate-400 mt-1">各地區只輸入 2015／2020／2025 三個錨點價格與 2025 年總量，其餘各季由同一組形狀曲線內插與年度權重分配產生，為示意值，不是逐季查得的官方數字。</p>
             </div>
             <div className="flex gap-6 text-[10px] font-black text-slate-400 uppercase">
               <div className="flex items-center gap-2"><div className="w-4 h-4 bg-slate-200 rounded"></div> 歷史單季棟數</div>
@@ -291,7 +291,7 @@ function App() {
         <section className="space-y-8">
           <div className="flex flex-col md:flex-row justify-between items-end gap-6">
             <div>
-              <h3 className="text-2xl font-black text-slate-800">跨週期實證對比分析</h3>
+              <h3 className="text-2xl font-black text-slate-800">跨週期對比分析（示意數據）</h3>
               <p className="text-sm text-slate-500 mt-1">選取任意兩時點，分析房市政策與金融環境對買氣的衝擊差異。</p>
             </div>
             <div className="flex items-center gap-4 bg-white p-2 rounded-2xl border border-slate-100 shadow-sm">
@@ -335,8 +335,8 @@ function App() {
 
         <div className="bg-white rounded-3xl border border-slate-200 overflow-hidden shadow-sm">
           <div className="px-8 py-6 bg-slate-50 border-b flex justify-between items-center">
-            <h3 className="text-xs font-black uppercase tracking-widest text-slate-500">Verified Empirical Data Log</h3>
-            <span className="text-[10px] text-slate-400 font-bold">※ 數據對齊 2025 年度官方地政結報</span>
+            <h3 className="text-xs font-black uppercase tracking-widest text-slate-500">示意數據明細（內插產生）</h3>
+            <span className="text-[10px] text-slate-400 font-bold">※ 非官方統計，勿作為實際房價引用</span>
           </div>
           <div className="overflow-x-auto max-h-[500px]">
             <table className="w-full text-left text-xs">
@@ -371,9 +371,9 @@ function App() {
         </div>
 
         <footer className="bg-slate-900 text-slate-400 p-10 rounded-[2rem] text-center text-[10px] uppercase tracking-[0.15em] leading-loose shadow-2xl">
-          <p className="text-white font-bold mb-3 tracking-normal text-sm">研究聲明：系統數據已對齊 2026.03 官方結案報告</p>
-          <p>母體來源：中華民國內政部地政司 (買賣移轉棟數)、各縣市地政局 2025 全年統計</p>
-          <p className="opacity-50 mt-4">© 2026 Taiwan Real Estate Empirical Analysis Framework v5.2</p>
+          <p className="text-white font-bold mb-3 tracking-normal text-sm">數據聲明：本頁為圖表操作示範，數值為示意，不是官方統計</p>
+          <p>錨點數值來源未經查證；各季數值以統一形狀函式內插產生。真實房價與交易量請查內政部不動產資訊平台（pip.moi.gov.tw）</p>
+          <p className="opacity-50 mt-4">© 2026 房市趨勢示意儀表板 v5.2</p>
         </footer>
       </div>
     </div>
