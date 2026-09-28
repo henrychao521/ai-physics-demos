@@ -52,7 +52,7 @@
 
   <div class="grid2">
     <div class="scene-wrap">
-      <div class="lab">線圈在磁場中旋轉（燈泡亮度＝|EMF|）</div>
+      <div class="lab">線圈在磁場中旋轉（燈泡亮度 ∝ |EMF|，150 V 全亮）</div>
       <canvas id="gen"></canvas>
       <div class="toolbar">
         <button id="play" class="on">⏸ 暫停</button>
@@ -89,7 +89,7 @@
 const S=SIM; const A=1; let theta=0,playing=true;
 const sliders=[
   {id:'w',name:'轉速 ω',min:.5,max:6,step:.1,val:2,unit:'rad/s'},
-  {id:'B',name:'磁場強度 B',min:.5,max:3,step:.1,val:1.5,unit:''},
+  {id:'B',name:'磁場強度 B',min:.5,max:3,step:.1,val:1.5,unit:'T'},
   {id:'N',name:'線圈匝數 N',min:1,max:50,step:1,val:20,unit:'匝'},
 ];
 const state={};
@@ -131,7 +131,7 @@ function drawGen(){const W=gc._w,H=gc._h,cx=W/2,cy=H/2-14;
   // 磁場箭頭(向右)
   gc.strokeStyle='rgba(120,150,210,.35)';gc.fillStyle='rgba(120,150,210,.35)';gc.lineWidth=1.5;
   for(let y=28;y<H-60;y+=32){gc.beginPath();gc.moveTo(18,y);gc.lineTo(W-18,y);gc.stroke();gc.beginPath();gc.moveTo(W-18,y);gc.lineTo(W-26,y-4);gc.lineTo(W-26,y+4);gc.closePath();gc.fill();}
-  gc.fillStyle='rgba(160,180,220,.6)';gc.font='11px system-ui';gc.fillText('磁場 B →',18,16);
+  gc.fillStyle='rgba(160,180,220,.6)';gc.font='11px system-ui';gc.textAlign='right';gc.fillText('磁場 B →',W-18,16);gc.textAlign='left';   // 左上角有 HTML 標題，標在右上
   // 旋轉線圈(邊視, 金屬)
   const L=Math.min(92,W*0.32),ux=Math.sin(theta),uy=-Math.cos(theta);
   gc.save();gc.translate(cx,cy);gc.rotate(Math.atan2(uy,ux));S.metal(gc,-L,-3,2*L,6);gc.restore();
@@ -140,22 +140,24 @@ function drawGen(){const W=gc._w,H=gc._h,cx=W/2,cy=H/2-14;
   const nx=Math.cos(theta),ny=Math.sin(theta);gc.strokeStyle='rgba(255,107,157,.7)';gc.setLineDash([4,3]);gc.lineWidth=1.5;gc.beginPath();gc.moveTo(cx,cy);gc.lineTo(cx+nx*55,cy+ny*55);gc.stroke();gc.setLineDash([]);
   gc.fillStyle='#ff8fb0';gc.fillText('法線',cx+nx*58,cy+ny*58);gc.fillStyle='rgba(150,160,190,.6)';gc.beginPath();gc.arc(cx,cy,3,0,7);gc.fill();
   // 燈泡
-  const br=Math.min(1,(emf(theta)/Math.max(emfPeak(),.01))**2),bx=cx,by=H-30;
+  // 亮度 ∝ |EMF|，以 150 V 為全亮（原本以各自峰值正規化，轉快轉慢最亮時一樣亮，看不出『轉越快電壓越大』）
+  const br=Math.min(1,Math.abs(emf(theta))/150),bx=cx,by=H-30;
   if(br>0.02)S.bulb(gc,bx,by,12,'255,240,170',br);
   gc.fillStyle=`rgb(${40+br*210},${40+br*200},${40+br*120})`;gc.strokeStyle='#7aa8c0';gc.lineWidth=2;gc.beginPath();gc.arc(bx,by,12,0,7);gc.fill();gc.stroke();
   gc.strokeStyle='#5a7bb0';gc.lineWidth=1.5;gc.beginPath();gc.moveTo(cx+ux*L,cy+uy*L);gc.lineTo(bx-10,by);gc.moveTo(cx-ux*L,cy-uy*L);gc.lineTo(bx+10,by);gc.stroke();}
-function drawPlot(){const W=pc._w,H=pc._h,mL=20,mR=12,mT=12,mB=18,mid=(H-mB+mT)/2;pc.fillStyle='#08101c';pc.fillRect(0,0,W,H);
+function drawPlot(){const W=pc._w,H=pc._h,mL=20,mR=12,mT=34,mB=22,mid=(H-mB+mT)/2;   // mT 讓開左上 HTML 標題
+  pc.fillStyle='#08101c';pc.fillRect(0,0,W,H);
   const span=4*Math.PI,t0=theta-span*0.7,X=th=>mL+(th-t0)/span*(W-mL-mR),fmax=state.B*A||1,emax=emfPeak()||1;
   const Yf=v=>mid-(v/fmax)*(H/2-mT-6),Ye=v=>mid-(v/emax)*(H/2-mT-6);
   pc.strokeStyle='#16202f';pc.beginPath();pc.moveTo(mL,mid);pc.lineTo(W-mR,mid);pc.stroke();
   pc.strokeStyle='#4cc2ff';pc.lineWidth=2.5;pc.beginPath();for(let i=0;i<=300;i++){const th=t0+span*i/300;pc[i?'lineTo':'moveTo'](X(th),Yf(flux(th)));}pc.stroke();
   pc.strokeStyle='#ffce54';pc.lineWidth=2.5;pc.beginPath();for(let i=0;i<=300;i++){const th=t0+span*i/300;pc[i?'lineTo':'moveTo'](X(th),Ye(emf(th)));}pc.stroke();
-  pc.fillStyle='#4cc2ff';pc.font='11px system-ui';pc.fillText('磁通 Φ',mL+4,mT+10);pc.fillStyle='#ffce54';pc.fillText('電動勢 EMF',mL+62,mT+10);
+  pc.fillStyle='#6b7d99';pc.font='11px system-ui';pc.textAlign='right';pc.fillText('時間 t →（Φ、EMF 各以自身峰值縮放）',W-mR,H-5);pc.textAlign='left';pc.fillText('0',4,mid+4);
   const cx=X(theta);pc.strokeStyle='#fff';pc.lineWidth=1;pc.beginPath();pc.moveTo(cx,mT);pc.lineTo(cx,H-mB);pc.stroke();
   pc.fillStyle='#fff';pc.beginPath();pc.arc(cx,Yf(flux(theta)),3.5,0,7);pc.fill();pc.beginPath();pc.arc(cx,Ye(emf(theta)),3.5,0,7);pc.fill();}
 function draw(){drawGen();drawPlot();drawStats();}
 function drawStats(){const f=2*Math.PI/state.w;
-  const rows=[['每匝磁通 Φ',flux(theta).toFixed(2),'#4cc2ff'],['感應電動勢 EMF',emf(theta).toFixed(2),'#ffce54'],['EMF 峰值 NBAω',emfPeak().toFixed(2),'#ff6b9d'],['交流週期',f.toFixed(2)+' s','#e8eef6']];
+  const rows=[['每匝磁通 Φ',flux(theta).toFixed(2)+' Wb','#4cc2ff'],['感應電動勢 EMF',emf(theta).toFixed(2)+' V','#ffce54'],['EMF 峰值 NBAω',emfPeak().toFixed(2)+' V','#ff6b9d'],['交流週期',f.toFixed(2)+' s','#e8eef6']];
   document.getElementById('stats').innerHTML=rows.map(r=>`<div class="box"><div class="k">${r[0]}</div><div class="v" style="color:${r[2]}">${r[1]}</div></div>`).join('');}
 
 let lastTs=0;
