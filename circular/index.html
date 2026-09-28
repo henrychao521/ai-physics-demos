@@ -135,36 +135,46 @@ function draw(){const W=sc._w,H=sc._h,cx=W/2,cy=H/2;
   if(mode==='circle'){
     bx=cx+Math.cos(theta)*state.r*PXR;by=cy-Math.sin(theta)*state.r*PXR;vx=-Math.sin(theta);vy=Math.cos(theta);
     sc.strokeStyle='rgba(120,140,190,.4)';sc.lineWidth=1.5;sc.beginPath();sc.moveTo(cx,cy);sc.lineTo(bx,by);sc.stroke();
-    // 向量(錨定球心)
-    S.arrow(sc,bx,by,bx+vx*v()*PXR*0.5,by-vy*v()*PXR*0.5,{color:S.C.vel,width:3.5,label:'v'});
+    // 向量(錨定球心)。ω 大時 a、F 箭頭會長過半徑（ω=3 時 a 箭頭 261 px > 半徑 171 px、F 箭頭 690 px 衝出畫面），
+    // 此時三支箭頭「同倍率」縮到最長者 ≤ 0.85r，並標示縮小倍率
+    const R=state.r*PXR, Lv=v()*PXR*0.5, La=acc()*PXR*0.17, LF=showF?state.m*acc()*PXR*0.09:0;
+    const k=Math.min(1,0.85*R/Math.max(Lv,La,LF,1e-9));
+    S.arrow(sc,bx,by,bx+vx*Lv*k,by-vy*Lv*k,{color:S.C.vel,width:3.5,label:'v'});
     const ux=cx-bx,uy=cy-by,ul=Math.hypot(ux,uy);
-    S.arrow(sc,bx,by,bx+ux/ul*acc()*PXR*0.17,by+uy/ul*acc()*PXR*0.17,{color:S.C.acc,width:3.5,label:'a'});
-    if(showF){const F=state.m*acc();S.arrow(sc,bx,by,bx+ux/ul*F*PXR*0.09,by+uy/ul*F*PXR*0.09,{color:S.C.force,width:3,label:'F'});}
+    S.arrow(sc,bx,by,bx+ux/ul*La*k,by+uy/ul*La*k,{color:S.C.acc,width:3.5,label:'a'});
+    if(showF){S.arrow(sc,bx,by,bx+ux/ul*LF*k,by+uy/ul*LF*k,{color:S.C.force,width:3,label:'F'});}
+    if(k<0.999){sc.fillStyle='rgba(255,211,106,.85)';sc.font='11px system-ui';sc.fillText(`箭頭已同倍率縮小為 ${Math.round(k*100)}%`,14,38);}
   } else {
     const rx=cx+Math.cos(relTheta)*state.r*PXR,ry=cy-Math.sin(relTheta)*state.r*PXR,tvx=-Math.sin(relTheta),tvy=Math.cos(relTheta);
     const dt=simT-relT,dist=v()*dt*PXR;bx=rx+tvx*dist;by=ry-tvy*dist;
     sc.strokeStyle='rgba(140,150,180,.5)';sc.setLineDash([5,5]);sc.beginPath();sc.moveTo(rx,ry);sc.lineTo(rx+tvx*900,ry-tvy*900);sc.stroke();sc.setLineDash([]);
     sc.fillStyle='#ff6b9d';sc.beginPath();sc.arc(rx,ry,4,0,7);sc.fill();
-    sc.fillStyle='#ffd36a';sc.font='12px system-ui';sc.fillText('放手 → 沿切線等速直線飛出',16,H-16);
+    sc.fillStyle='#ffd36a';sc.font='12px system-ui';sc.fillText('放手 → 沿切線等速直線飛出',14,38);
     S.arrow(sc,bx,by,bx+tvx*v()*PXR*0.5,by-tvy*v()*PXR*0.5,{color:S.C.vel,width:3.5,label:'v'});
   }
   // 球
   S.shadow(sc,bx,by+14,9,8);
   S.sphere(sc,bx,by,9,[205,75,58]);
   sc.fillStyle='rgba(150,170,210,.7)';sc.font='11px system-ui';sc.fillText('速率固定、方向一直變 → 有向心加速度',14,20);
+  // 比例尺：圓的畫面大小固定、改 r 時是整張圖縮放，用比例尺交代長度
+  {const m1=state.r>=2?1:0.5,L=m1*PXR,x1=W-14,x0=x1-L,y=20;
+   sc.strokeStyle='rgba(200,215,240,.8)';sc.lineWidth=2;sc.beginPath();sc.moveTo(x0,y-4);sc.lineTo(x0,y);sc.lineTo(x1,y);sc.lineTo(x1,y-4);sc.stroke();
+   sc.fillStyle='rgba(200,215,240,.85)';sc.textAlign='center';sc.fillText(m1+' m',(x0+x1)/2,y+14);sc.textAlign='left';}
   drawStats();drawPlot();
 }
 function drawStats(){const T=2*Math.PI/state.w;
   const rows=[['速率 v=rω',v().toFixed(2)+' m/s','#43d17a'],['向心加速度 a=v²/r',acc().toFixed(2)+' m/s²','#ffb02e'],
     ['週期 T=2π/ω',T.toFixed(2)+' s','#e8eef6'],['向心力 F=mv²/r',(state.m*acc()).toFixed(2)+' N','#ff5470']];
   document.getElementById('stats').innerHTML=rows.map(r=>`<div class="box"><div class="k">${r[0]}</div><div class="v" style="color:${r[2]}">${r[1]}</div></div>`).join('');}
-function drawPlot(){const W=pc._w,H=pc._h,mL=18,mR=10,mT=10,mB=14;pc.clearRect(0,0,W,H);
+function drawPlot(){const W=pc._w,H=pc._h,mL=44,mR=10,mT=20,mB=20;pc.clearRect(0,0,W,H);
   const win=4*Math.PI/state.w,t0=simT-win,X=t=>mL+(t-t0)/win*(W-mL-mR),Y=val=>H/2-(val/state.r)*(H/2-mT);
   pc.strokeStyle='#15203a';pc.beginPath();pc.moveTo(mL,H/2);pc.lineTo(W-mR,H/2);pc.stroke();
   function curve(fn,col){pc.strokeStyle=col;pc.lineWidth=2;pc.beginPath();
     for(let i=0;i<=240;i++){const t=t0+win*i/240,ang=theta+state.w*(t-simT);pc[i?'lineTo':'moveTo'](X(t),Y(fn(ang)));}pc.stroke();}
   curve(a=>state.r*Math.cos(a),'#4cc2ff');curve(a=>state.r*Math.sin(a),'#7CFFB2');
-  pc.fillStyle='#4cc2ff';pc.font='11px system-ui';pc.fillText('x=r·cosθ',mL+4,mT+8);pc.fillStyle='#7CFFB2';pc.fillText('y=r·sinθ',mL+70,mT+8);
+  pc.fillStyle='#8a99ad';pc.font='10px system-ui';pc.textAlign='right';pc.fillText('+'+fmt(state.r)+' m',mL-4,Y(state.r)+4);pc.fillText('0',mL-4,H/2+4);pc.fillText('−'+fmt(state.r)+' m',mL-4,Y(-state.r)+4);
+  pc.fillText('時間 t →（最近 2 個週期 = '+(4*Math.PI/state.w).toFixed(1)+' s）',W-mR,H-5);pc.textAlign='left';
+  pc.fillStyle='#4cc2ff';pc.font='11px system-ui';pc.fillText('x=r·cosθ',mL+4,13);pc.fillStyle='#7CFFB2';pc.fillText('y=r·sinθ',mL+70,13);
   const cxp=X(simT);pc.strokeStyle='#fff';pc.beginPath();pc.moveTo(cxp,mT);pc.lineTo(cxp,H-mB);pc.stroke();
   pc.fillStyle='#fff';pc.beginPath();pc.arc(cxp,Y(state.r*Math.cos(theta)),3,0,7);pc.fill();pc.beginPath();pc.arc(cxp,Y(state.r*Math.sin(theta)),3,0,7);pc.fill();}
 
