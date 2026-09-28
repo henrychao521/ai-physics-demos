@@ -151,9 +151,12 @@ function draw(){const W=sc._w,H=sc._h,c=calc(),N=state.N,I=c.Itot;
     sc.fillStyle='rgba(150,200,190,.7)';sc.font='12px system-ui';sc.fillText('串聯：同一條路，電流處處相等',left,H-26);
   }else{const top=72,bot=H-56,railL=180,railR=W-110;
     battery(120,(top+bot)/2);
-    wire(120,(top+bot)/2-18,120,top,I);wire(120,(top+bot)/2+18,120,bot,I);wire(120,top,railL,top,I);wire(120,bot,railL,bot,I);
-    wire(railL,top,railL,bot,0);wire(railR,top,railR,bot,0);wire(railL,top,railR,top,0);wire(railL,bot,railR,bot,0);
-    for(let i=0;i<N;i++){const y=top+(bot-top)*(i+1)/(N+1);wire(railL,y,railR,y,c.Ib);bulb((railL+railR)/2,y,16,c.bright);}
+    // 梯形並聯：正極→左幹線→各支路→右幹線→負極；幹線每段電流＝尚未分出／已匯入的支路數 × Ib
+    const ys=[];for(let i=0;i<N;i++)ys.push(top+(bot-top)*(i+1)/(N+1));
+    wire(120,(top+bot)/2-18,120,top,I);wire(120,(top+bot)/2+18,120,bot,I);wire(120,top,railL,top,I);wire(120,bot,railR,bot,I);
+    wire(railL,top,railL,ys[0],I);for(let i=0;i<N-1;i++)wire(railL,ys[i],railL,ys[i+1],(N-1-i)*c.Ib);
+    for(let i=0;i<N-1;i++)wire(railR,ys[i],railR,ys[i+1],(i+1)*c.Ib);wire(railR,ys[N-1],railR,bot,I);
+    for(let i=0;i<N;i++){const y=ys[i];wire(railL,y,railR,y,c.Ib);bulb((railL+railR)/2,y,16,c.bright);}
     sc.fillStyle='rgba(150,200,190,.7)';sc.font='12px system-ui';sc.fillText('並聯：各走各的支路，每顆都拿到全電壓',railL,H-22);}
   document.getElementById('hud').innerHTML=chip('總電阻',c.Rtot.toFixed(1)+' Ω')+chip('總電流',c.Itot.toFixed(2)+' A')+chip('每燈亮度',(c.bright*100).toFixed(0)+'%');
   drawStats(c);}
