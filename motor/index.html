@@ -104,8 +104,7 @@ const Acoil=0.01;  // 線圈面積 m²
 let phi=0.4, w=0, commOn=true;   // phi: 線圈面與磁場夾角 (rad), w: 角速度
 function Fside(){return state.B*state.I*0.1;}      // 單邊受力 F=BIL (L=0.1m)
 function torqueMax(){return state.N*state.B*state.I*Acoil;}
-function torque(){let dir=commOn?1:Math.sign(Math.cos(phi))||1; // 換向器:力矩恆同向; 關閉:隨幾何反向
-  return torqueMax()*Math.sin(phi)* (commOn?1:1) * (commOn? (Math.cos(phi)>=0?1:1):1);}
+function torque(){return commOn?torqueMax()*Math.abs(Math.cos(phi)):torqueMax()*Math.cos(phi);}   // 瞬時力矩（phi＝線圈面與磁場夾角）
 function recompute(){updateFormula();}
 
 // ---- 公式面板 ----
@@ -161,6 +160,7 @@ function drawWire(x,y,out){sc.fillStyle='#1a2233';sc.strokeStyle='#e8b060';sc.li
 function updateHud(){
   document.getElementById('hud').innerHTML=
    `<div class="chip cyan">最大力矩 τ<b>${torqueMax().toFixed(3)} N·m</b></div>`+
+   `<div class="chip cyan">瞬時力矩<b>${torque().toFixed(3)} N·m</b></div>`+
    `<div class="chip rose">單邊力 F<b>${Fside().toFixed(2)} N</b></div>`+
    `<div class="chip green">轉速 ω<b>${Math.abs(w).toFixed(1)} rad/s</b></div>`;
 }
@@ -170,8 +170,10 @@ function loop(ts){const dt=last?Math.min((ts-last)/1000,0.05):0;last=ts;
     const Imom=0.02+state.N*2e-4;
     // 換向器開:每半圈反向電流→力矩恆為同一轉向(∝|sinθ|)→持續轉動
     // 換向器關:電流固定→回復力矩 −NBIA·sinθ→在平衡位置來回擺盪、卡住
-    const tq = commOn ? torqueMax()*Math.abs(Math.sin(phi))
-                      : -torqueMax()*Math.sin(phi);
+    // phi 是「線圈面」與磁場的夾角，力臂 = R·cosφ → τ = NBIA·cosφ（= NBIA·sinθ，θ 為法線與磁場夾角）。
+    // 原本寫 sinφ：線圈面平行磁場（力偶最大、畫面箭頭明顯）時反而沒有力矩，關掉換向器時也停在錯的平衡位置。
+    const tq = commOn ? torqueMax()*Math.abs(Math.cos(phi))
+                      : torqueMax()*Math.cos(phi);
     w += (tq/Imom)*dt - w*1.2*dt;                                  // 阻尼
     phi += w*dt;
   }
