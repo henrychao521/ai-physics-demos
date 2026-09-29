@@ -44,7 +44,7 @@
     <span class="badge">電磁・電流磁效應</span>
     <h1>電流的磁效應（安培右手定則）</h1>
     <p>電流會在周圍產生<b>磁場</b>。<b>直導線</b>外磁場成<b>同心圓</b> <b>B = μ₀I/2πr</b>（右手握住導線、拇指指電流、四指繞磁場）；
-       <b>圓線圈</b>中心 <b>B = μ₀I/2R</b>；<b>螺線管</b>內部接近<b>均勻</b> <b>B = μ₀nI</b>，像條形磁鐵。拖曳探針量任一點磁場。</p>
+       <b>圓線圈</b>中心 <b>B = μ₀I/2R</b>；<b>螺線管</b>內部接近<b>均勻</b> <b>B = μ₀nI</b>，像棒狀磁鐵。拖曳探針量任一點磁場。</p>
   </header>
 
   <div class="scene-wrap">
@@ -60,7 +60,7 @@
 
   <div class="modes">
     <span>提示：</span>
-    <button class="pbtn" id="hintRH">右手定則：握導線、拇指＝電流、四指＝磁場方向</button>
+    <span class="pbtn" id="hintRH" style="cursor:default">右手定則：握導線、拇指＝電流、四指＝磁場方向</span>
   </div>
 
   <div class="bar" id="sliders"></div>
@@ -69,7 +69,7 @@
 
   <div class="note">
     <b>物理重點：</b>電流生磁（厄斯特發現）。<b>直導線</b>：磁場繞導線成同心圓、<code>B = μ₀I/(2πr)</code>，離導線越遠越弱（∝1/r）。
-    <b>圓線圈</b>：把直導線彎成圈，中心磁場 <code>B = μ₀I/(2R)</code>。<b>螺線管</b>：許多圈疊起來，內部磁場近乎均勻 <code>B = μ₀nI</code>（n＝每公尺匝數），外形如條形磁鐵（一端 N、一端 S）。μ₀=4π×10⁻⁷ T·m/A。<b>右手定則</b>判方向：直導線握住、拇指順電流則四指繞向即磁場；線圈/螺線管四指順電流則拇指指向內部 N 極。
+    <b>圓線圈</b>：把直導線彎成圈，中心磁場 <code>B = μ₀I/(2R)</code>。<b>螺線管</b>：許多圈疊起來，內部磁場近乎均勻 <code>B = μ₀nI</code>（n＝每公尺匝數），外形如棒狀磁鐵（一端 N、一端 S）。μ₀=4π×10⁻⁷ T·m/A。<b>右手定則</b>判方向：直導線握住、拇指順電流則四指繞向即磁場；線圈/螺線管四指順電流則拇指指向內部 N 極。
   </div>
 
   <footer>純前端 HTML / Canvas（SIM 工具庫）。磁場大小依安培定律精確計算；線圈／螺線管的場線形狀為示意。</footer>
@@ -114,7 +114,7 @@ function updateFormula(){const I=state.I;let html=`<h4>📐 計算公式（即�
   }else{
     html+=frow('螺線管內部 B','μ₀ n I',`4π×10⁻⁷·${state.n}·${I}`, Bfmt(Bsol()))
       + frow('每公尺匝數 n','n = 總匝數 / 長度',`${state.n}`, state.n+' 匝/m')
-      + `<div class="frel">📈 <b>B ∝ n·I</b>：匝密度或電流加倍 → 磁場加倍，且<b>與半徑無關</b>　·　內部磁場近乎<b>均勻</b>（像條形磁鐵）　·　插入鐵芯（μ_r 大）可再放大數百倍 → 電磁鐵。</div>`;
+      + `<div class="frel">📈 <b>B ∝ n·I</b>：匝密度或電流加倍 → 磁場加倍，且<b>與半徑無關</b>　·　內部磁場近乎<b>均勻</b>（像棒狀磁鐵）　·　插入鐵芯（μ_r 大）可再放大數百倍 → 電磁鐵。</div>`;
   }
   document.getElementById('formula').innerHTML=html;
 }
@@ -210,7 +210,7 @@ function drawSol(cx,cy){const W=sc._w,H=sc._h, len=Math.min(W*0.66,360), rr=Math
   sc.fillStyle='#ff6b9d';sc.font='bold 16px system-ui';sc.fillText('N',(into?x1+6:x0-22),cy+5);
   sc.fillStyle='#6cd0ff';sc.fillText('S',(into?x0-22:x1+6),cy+5);
   sc.fillStyle='#7CFFB2';sc.font='bold 12px system-ui';sc.fillText('內部 B='+Bfmt(Bsol())+'（均勻）',cx-50,ty-18);
-  document.getElementById('sub').textContent='螺線管：內部均勻 B=μ₀nI，外形如條形磁鐵';
+  document.getElementById('sub').textContent='螺線管：內部均勻 B=μ₀nI，外形如棒狀磁鐵';
 }
 
 function refresh(){updateFormula();draw();}
