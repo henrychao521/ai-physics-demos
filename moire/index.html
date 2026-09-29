@@ -130,8 +130,12 @@ function grating(angleDeg,p,color){
     g.lineWidth=p*0.5;
     for(let r=p;r<D;r+=p){ g.beginPath(); g.arc(W/2,H/2,r,0,7); g.stroke(); }
   }else{ // dots
-    for(let x=-D;x<D*2;x+=p)for(let y=-D;y<D*2;y+=p){
-      g.beginPath(); g.arc(x,y,p*0.28,0,7); g.fill(); }
+    // 只鋪旋轉後仍蓋得住畫布的正方形（邊長 D、置中），並整批一次 fill：
+    // 原本鋪 3D×3D 且每點各 fill 一次，p=4 px 時每幀兩層共約 110 萬次繪圖，旋轉動畫會卡住
+    const m=Math.ceil(D/2/p)*p, x0=W/2-m, y0=H/2-m, r=p*0.28;   // 格點對齊旋轉中心
+    g.beginPath();
+    for(let x=x0;x<=W/2+m;x+=p)for(let y=y0;y<=H/2+m;y+=p){ g.moveTo(x+r,y); g.arc(x,y,r,0,2*Math.PI); }
+    g.fill();
   }
   g.restore();
 }
@@ -151,7 +155,7 @@ function updateReadout(){
     }
   }else if(pattern==='circles'){
     const dp=Math.abs(state.p1-state.p2);
-    readoutEl.innerHTML = dp<0.01 ? '兩組同心圓間距相同 → 調整其中一組間距即可產生放射狀拍頻摩爾紋'
+    readoutEl.innerHTML = dp<0.01 ? '兩組同心圓間距相同 → 調整其中一組間距即可產生同心環狀的拍頻摩爾紋'
       : `同心圓拍頻間距 ≈ p₁p₂/|p₁−p₂| ≈ <b>${(state.p1*state.p2/dp).toFixed(0)} px</b>`;
   }else{
     readoutEl.textContent='點陣摩爾：調整角度差或間距差，觀察大尺度的點團週期。';
