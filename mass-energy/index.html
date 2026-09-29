@@ -53,7 +53,7 @@
 
   <div class="mats">
     <span>反應示範：</span>
-    <button class="pbtn" id="dFis">核分裂 U-235 → 兩中核</button>
+    <button class="pbtn" id="dFis">核分裂 U-235＋n（→U-236*）→ 兩中核</button>
     <button class="pbtn" id="dFus">核融合 ²H+³H → He</button>
     <button class="pbtn" id="dClear">清除</button>
   </div>
@@ -153,9 +153,9 @@ function render(){draw();}
 // 反應示範
 function fission(){const a1=236,a2=118; // U-236*→2×~118
   const dE=2*totalBE(a2)-totalBE(a1);
-  reaction={type:'fis',from:a1,to:a2,fromLab:'U(236)',toLab:'×2',dE};setSlider('A',a1);recompute();}
+  reaction={type:'fis',from:a1,to:a2,fromLab:'U(236)',toLab:'×2',dE,detail:`2×${totalBE(a2).toFixed(0)} − ${totalBE(a1).toFixed(0)}`};setSlider('A',a1);recompute();}
 function fusion(){const dE=totalBE(4)-(totalBE(2)+totalBE(3)); // ²H+³H→⁴He(+n)
-  reaction={type:'fus',from:2.5,to:4,fromLab:'²H+³H',toLab:'⁴He',dE};setSlider('A',4);recompute();}
+  reaction={type:'fus',from:2.5,to:4,fromLab:'²H+³H',toLab:'⁴He',dE,detail:`${totalBE(4).toFixed(1)} − (${totalBE(2).toFixed(1)} + ${totalBE(3).toFixed(1)})`};setSlider('A',4);recompute();}
 document.getElementById('dFis').onclick=fission;
 document.getElementById('dFus').onclick=fusion;
 document.getElementById('dClear').onclick=()=>{reaction=null;recompute();};
