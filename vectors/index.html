@@ -77,7 +77,7 @@
   <div class="note">
     <b>物理重點：</b>力是<b>向量</b>，相加要連方向一起加。把各力分解成水平、鉛直分量 <code>Fx = F·cosθ、Fy = F·sinθ</code>，
     分別相加得合力分量，再合成出大小 <code>|R| = √(Rx²+Ry²)</code> 與方向。兩力時可用<b>平行四邊形法</b>；多力時用<b>頭尾相接法</b>。
-    當合力為零（各分量都抵消），物體<b>靜止或等速</b>＝力平衡。
+    當合力為零（各分量都抵消），物體<b>靜止或等速度運動</b>＝力平衡。
   </div>
 
   <footer>純前端 HTML / Canvas（SIM 工具庫）。拖曳互動即時合成向量。</footer>
@@ -123,10 +123,12 @@ function updateTable(R){let rows='';
   for(let i=0;i<n;i++){const F=forces[i],mag=Math.hypot(F.x,F.y);
     rows+=`<tr><td style="color:${COLORS[i]}">F${i+1}</td><td>${mag.toFixed(1)}</td><td>${angStr(F)}</td><td>${F.x.toFixed(1)}</td><td>${F.y.toFixed(1)}</td></tr>`;}
   const Rmag=Math.hypot(R.x,R.y);
-  rows+=`<tr class="res"><td>合力 R</td><td>${Rmag.toFixed(1)}</td><td>${Rmag<0.5?'—':angStr(R)}</td><td>${R.x.toFixed(1)}</td><td>${R.y.toFixed(1)}</td></tr>`;
+  rows+=`<tr class="res"><td>合力 R</td><td>${Rmag.toFixed(1)}</td><td>${Rmag===0?'—':angStr(R)}</td><td>${R.x.toFixed(1)}</td><td>${R.y.toFixed(1)}</td></tr>`;
   document.getElementById('tb').innerHTML=rows;
   const eq=document.getElementById('eq');
-  if(Rmag<2){eq.textContent='✓ 合力 ≈ 0 → 力平衡（靜止或等速）';eq.style.background='rgba(124,255,178,.15)';eq.style.color='#7CFFB2';}
+  // 分量都是整數：只有 Rₓ=R_y=0 才算平衡（原本 |R|<2 就判平衡，1 N、1.4 N 的淨力也被寫成「力平衡」，且與表格顯示的角度矛盾）
+  if(Rmag===0){eq.textContent='✓ 合力 = 0 → 力平衡（靜止或等速度運動）';eq.style.background='rgba(124,255,178,.15)';eq.style.color='#7CFFB2';}
+  else if(Rmag<2){eq.textContent='合力 = '+Rmag.toFixed(1)+' N，很接近 0 → 再微調一點就平衡';eq.style.background='rgba(124,255,178,.08)';eq.style.color='#b8f5cf';}
   else{eq.textContent='合力 = '+Rmag.toFixed(1)+' N → 沿合力方向加速';eq.style.background='rgba(255,206,84,.12)';eq.style.color='#ffce54';}
 }
 function frow(n,sym,sub,val){return `<div class="frow"><span class="fname">${n}</span><span class="fsym">${sym}</span><span class="fsub">= ${sub}</span><span class="fval">${val}</span></div>`;}
@@ -139,14 +141,15 @@ function updateFormula(){
   const sx=Array.from({length:n},(_,i)=>(forces[i].x>=0?'+':'')+forces[i].x.toFixed(0)).join(' ');
   const sy=Array.from({length:n},(_,i)=>(forces[i].y>=0?'+':'')+forces[i].y.toFixed(0)).join(' ');
   const fmt=v=>(v>=0?'+':'−')+Math.abs(v).toFixed(1);
-  const balanced=Rmag<2;
+  const balanced=Rmag===0;
+  const par=v=>v<0?`(${v.toFixed(1)})`:v.toFixed(1);   // 負數代入平方要加括號
   document.getElementById('formula').innerHTML=
     `<h4>📐 計算公式（即時代入　${n} 個力的向量和）</h4>`
-    + frow('水平合量 Rₓ','ΣFₓ', sx.trim(), fmt(R.x)+' N')
-    + frow('鉛直合量 Rᵧ','ΣFᵧ', sy.trim(), fmt(R.y)+' N')
-    + frow('合力大小 |R|','√(Rₓ²+Rᵧ²)',`√(${R.x.toFixed(1)}²+${R.y.toFixed(1)}²)`, Rmag.toFixed(1)+' N')
-    + frow('合力方向 θ','atan2(Rᵧ, Rₓ)', balanced?'—（合力≈0）':`atan2(${R.y.toFixed(1)}, ${R.x.toFixed(1)})`, balanced?'—':ang.toFixed(0)+'°（0–360°含象限）')
-    + `<div class="frel">📈 <b>分量各自相加</b>：水平、鉛直獨立合成，互不影響　·　<b>Rₓ=0 且 Rᵧ=0 → 力平衡</b>（靜止或等速）　·　<b>同向</b>合力最大、<b>反向</b>合力最小（兩力差）、夾角越大合力越小。</div>`;
+    + frow('合力的水平分量 R<sub>x</sub>','ΣF<sub>x</sub>', sx.trim(), fmt(R.x)+' N')
+    + frow('合力的鉛直分量 R<sub>y</sub>','ΣF<sub>y</sub>', sy.trim(), fmt(R.y)+' N')
+    + frow('合力大小 |R|','√(R<sub>x</sub>²+R<sub>y</sub>²)',`√(${par(R.x)}²+${par(R.y)}²)`, Rmag.toFixed(1)+' N')
+    + frow('合力方向 θ','tan θ = R<sub>y</sub>/R<sub>x</sub>（再依正負號判斷象限）', balanced?'—（合力為 0）':(R.x===0?`R<sub>x</sub>=0，R<sub>y</sub>${R.y>0?'&gt;':'&lt;'}0`:`tan⁻¹(${par(R.y)} / ${par(R.x)})`), balanced?'—':ang.toFixed(0)+'°（0–360°含象限）')
+    + `<div class="frel">📈 <b>分量各自相加</b>：水平、鉛直獨立合成，互不影響　·　<b>R<sub>x</sub>=0 且 R<sub>y</sub>=0 → 力平衡</b>（靜止或等速度運動）　·　<b>同向</b>合力最大、<b>反向</b>合力最小（兩力差）、夾角越大合力越小。</div>`;
 }
 let drag=-1;
 function pos(e){const r=sc.canvas?sc.canvas.getBoundingClientRect():document.getElementById('scene').getBoundingClientRect();
@@ -157,7 +160,8 @@ cvEl.addEventListener('pointermove',e=>{if(drag<0)return;const p=pos(e),o=O();fo
 window.addEventListener('pointerup',()=>{drag=-1;cvEl.style.cursor='grab';});
 const b2=document.getElementById('b2'),b3=document.getElementById('b3');
 b2.onclick=()=>{n=2;b2.classList.add('on');b3.classList.remove('on');draw();};
-b3.onclick=()=>{n=3;b3.classList.add('on');b2.classList.remove('on');draw();};
+b3.onclick=()=>{n=3;if(forces[2].x===0&&forces[2].y===0)forces[2]={x:-40,y:-50};   // 兩力情境的第三力是零向量，切回三力時給預設值，否則箭頭長度 0 抓不到
+  b3.classList.add('on');b2.classList.remove('on');draw();};
 const PRE={same:{n:2,f:[{x:50,y:0},{x:35,y:0},{x:0,y:0}]},perp:{n:2,f:[{x:60,y:0},{x:0,y:45},{x:0,y:0}]},
   balance2:{n:2,f:[{x:55,y:25},{x:-55,y:-25},{x:0,y:0}]},tri:{n:3,f:[{x:0,y:60},{x:52,y:-30},{x:-52,y:-30}]}};
 document.querySelectorAll('[data-preset]').forEach(b=>b.onclick=()=>{const p=PRE[b.dataset.preset];if(!p)return;n=p.n;forces=p.f.map(v=>({...v}));
