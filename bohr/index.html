@@ -59,7 +59,7 @@
   <div class="formula" id="formula"></div>
 
   <div class="grid2">
-    <div class="stage"><div class="lab">波耳軌域（電子躍遷放出光子；半徑未按比例，實際 r<sub>n</sub> ∝ n²）</div><div class="sub" id="sub"></div><canvas id="atom" width="430" height="360"></canvas></div>
+    <div class="stage"><div class="lab">波耳軌道（電子躍遷放出光子；半徑未按比例，實際 r<sub>n</sub> ∝ n²）</div><div class="sub" id="sub"></div><canvas id="atom" width="430" height="360"></canvas></div>
     <div class="stage"><div class="lab">能階圖（箭頭＝躍遷）</div><canvas id="levels" width="430" height="360"></canvas></div>
   </div>
 
@@ -137,8 +137,8 @@ function drawStats(){
   const rows=[['起始能量 E_'+ni,fE(En(ni))+' eV','#6cc8ff'],['末態能量 E_'+nf,fE(En(nf))+' eV','#7CFFB2'],
     ['光子能量 ΔE',fdE(dE())+' eV','#ffce54'],['波長 λ=1240/ΔE',lambda().toFixed(0)+' nm','#ff6b9d'],['光譜系列',series().split(' ')[0],'#8b9cff']];
   document.getElementById('stats').innerHTML=rows.map(r=>`<div class="box"><div class="k">${r[0]}</div><div class="v" style="color:${r[2]}">${r[1]}</div></div>`).join('');}
-let animating=false;
-function emitPhoton(){anim=0;const t0=performance.now();(function go(){const e=Math.min(1,(performance.now()-t0)/700);anim=e;draw();if(e<1)requestAnimationFrame(go);else{anim=1;draw();}})();}
+let emitId=0;
+function emitPhoton(){anim=0;const t0=performance.now(),id=++emitId;(function go(){if(id!==emitId)return;const e=Math.min(1,(performance.now()-t0)/700);anim=e;draw();if(e<1)requestAnimationFrame(go);else{anim=1;draw();}})();}  // 連按時只讓最新一次動畫繼續（原本多個迴圈互相覆寫 anim，畫面閃跳）
 document.getElementById('emit').onclick=emitPhoton;
 document.querySelectorAll('[data-tr]').forEach(b=>b.onclick=()=>{const[a,c]=b.dataset.tr.split(',').map(Number);ni=a;nf=c;refreshBtns();emitPhoton();});
 // 先在解析當下就建好按鈕、公式與統計（不等 load），避免首次繪製後才插入內容造成版面位移；load 後再重畫一次讓畫布字型到位
