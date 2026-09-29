@@ -75,7 +75,7 @@
   <div class="note">
     <b>物理重點：</b>引力提供向心力使行星走<b>橢圓</b>（恆星在一焦點）＝克卜勒第一定律。連接行星與恆星的線段在相同時間
     <b>掃過相等面積</b>（dA/dt = 常數 = ½·角動量/質量）＝克卜勒第二定律，所以近恆星時快、遠時慢。對橢圓軌道，
-    <code>T² ∝ a³</code>＝克卜勒第三定律。初速為圓軌道速度 v_c=√(GM/r) 時是圓；小於則橢圓；達到 √2·v_c 逃逸。
+    <code>T² ∝ a³</code>＝克卜勒第三定律。初速為圓軌道速度 v_c=√(GM/r) 時是圓；小於 v_c 是橢圓（發射點是遠日點），介於 v_c 與 √2·v_c 之間也是橢圓（發射點是近日點）；達到 √2·v_c 逃逸。
   </div>
 
   <footer>純前端 HTML / Canvas（SIM 工具庫）。velocity-Verlet 辛積分，長期能量穩定。</footer>
@@ -140,7 +140,7 @@ function updateFormula(){
     + frow('半長軸 a','−GM / 2ε　(ε=½v²−GM/r)','由能量 ε 解出', aTxt)
     + frow('週期 T','2π·√(a³ / GM)','克卜勒第三定律 T²∝a³', Ttxt)
     + frow('偏心率 e','√(1 + 2εh²/(GM)²)','由能量 ε 與角動量 h', o.e.toFixed(3))
-    + `<div class="frel">📈 <b>v=v_c → 圓</b>、<b>v&lt;v_c → 橢圓</b>　·　<b>v ≥ √2·v_c (≈${vesc.toFixed(1)}) → 逃逸</b>（拋物線/雙曲線）　·　<b>T² ∝ a³</b>：軌道越大週期越長　·　近恆星快、遠恆星慢（等面積，角動量守恆）。</div>`;
+    + `<div class="frel">📈 <b>v=v_c → 圓</b>、<b>v&lt;√2·v_c 且 ≠v_c → 橢圓</b>（v&lt;v_c 發射點為遠日點，v&gt;v_c 為近日點）　·　<b>v ≥ √2·v_c (≈${vesc.toFixed(1)}) → 逃逸</b>（拋物線/雙曲線）　·　<b>T² ∝ a³</b>：軌道越大週期越長　·　近恆星快、遠恆星慢（等面積，角動量守恆）。</div>`;
 }
 
 let sc,stars=[];
