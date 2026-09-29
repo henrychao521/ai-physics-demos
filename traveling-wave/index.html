@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>行進波 ｜ 橫波・波速 v=fλ・y=A sin(kx−ωt)</title>
-<meta name="description" content="行進波(橫波)互動模擬：調振幅 A、頻率 f、波速 v，看波形 y=A·sin(kx−ωt) 沿繩前進。波速 v=fλ、波長 λ=v/f、週期 T=1/f、k=2π/λ、ω=2πf。高亮繩上各點只上下振動，波形向前傳遞。">
+<meta name="description" content="行進波(橫波)互動模擬：調振幅 A、頻率 f、波速 v，看波形 y=A·sin(kx−ωt) 沿繩前進。波速 v=fλ、波長 λ=v/f、週期 T=1/f、k=2π/λ、ω=2πf。標成黃色的繩上一點只上下振動，波形向前傳遞。">
 <link rel="icon" href="../assets/favicon.svg" type="image/svg+xml">
 <link rel="stylesheet" href="../assets/site.css">
 <script src="../assets/sim.js"></script>
@@ -47,7 +47,7 @@
     <span class="badge">波動・行進波</span>
     <h1>行進波（橫波）</h1>
     <p>波形 <b>y = A·sin(kx − ωt)</b> 沿繩向前傳遞。調<b>振幅 A</b>、<b>頻率 f</b>、<b>波速 v</b>，波長 <b>λ = v/f</b> 隨之改變。
-       注意<b>繩上高亮的那一點只上下振動</b>（簡諧運動）、並不隨波前進——傳遞的是<b>能量與波形</b>，不是物質。波速 <b>v = fλ</b>。</p>
+       注意<b>繩上標成黃色的那一點只上下振動</b>（簡諧運動）、並不隨波前進——傳遞的是<b>能量與波形</b>，不是物質。波速 <b>v = fλ</b>。</p>
   </header>
 
   <div class="scene-wrap">
@@ -72,7 +72,7 @@
   <div class="note">
     <b>物理重點：</b>行進波傳遞能量與波形，介質（繩上各點）只在原處<b>上下振動</b>（橫波）。一個<b>週期 T</b> 波前進一個<b>波長 λ</b>，
     所以波速 <code>v = λ/T = fλ</code>。其他關係：<code>T = 1/f</code>、<code>角波數 k = 2π/λ</code>、<code>角頻率 ω = 2πf</code>，故 <code>v = ω/k</code>。
-    波速由<b>介質決定</b>（繩的張力與線密度 v=√(T/μ)）：改頻率時波長跟著變、但波速不變。振幅 A 只影響能量（∝A²），不影響波速。
+    波速由<b>介質決定</b>（繩的張力 F 與線密度 μ：v=√(F/μ)）：改頻率時波長跟著變、但波速不變。振幅 A 只影響能量（∝A²），不影響波速。
   </div>
 
   <footer>純前端 HTML / Canvas（SIM 工具庫）。理想無色散橫波；空間自適應顯示約 2.6 個波長。</footer>
@@ -144,6 +144,7 @@ function drawScene(){const W=sc._w,H=sc._h,mid=H/2,A=state.A* (H*0.34/50), L=lam
   const xh=Xspan*0.25, ih=px(xh), yh=yOf(xh);
   sc.strokeStyle='rgba(255,255,255,.25)';sc.setLineDash([3,3]);sc.beginPath();sc.moveTo(ih,mid-A);sc.lineTo(ih,mid+A);sc.stroke();sc.setLineDash([]);
   S.arrow(sc,ih,mid,ih,yh,{color:'#ffce54',width:2.5});
+  if(Math.abs(yh-mid)>14){sc.fillStyle='#ffce54';sc.font='11px system-ui';sc.textAlign='right';sc.fillText('位移 y',ih-6,(mid+yh)/2+4);sc.textAlign='left';}   // 註明箭頭是位移（不是速度）
   S.sphere(sc,ih,yh,7,[45,100,60]);
   sc.fillStyle='#ffce54';sc.font='11px system-ui';sc.fillText('繩上的點只上下動',ih+10,mid-A+4);
   // 波長標記(找相鄰兩波峰)
@@ -155,7 +156,7 @@ function drawScene(){const W=sc._w,H=sc._h,mid=H/2,A=state.A* (H*0.34/50), L=lam
     [[c1,1],[c1+L,-1]].forEach(([cx,d])=>{sc.beginPath();sc.moveTo(px(cx),y);sc.lineTo(px(cx)+d*7,y-4);sc.lineTo(px(cx)+d*7,y+4);sc.closePath();sc.fillStyle='#6cd0ff';sc.fill();});
     sc.fillStyle='#6cd0ff';sc.font='bold 12px system-ui';sc.fillText('λ = '+L.toFixed(2)+' m',(px(c1)+px(c1+L))/2-26,y-7);}
   // 波前進方向箭頭
-  sc.fillStyle='rgba(124,255,178,.8)';sc.font='12px system-ui';sc.fillText('波前進 '+(dir>0?'→':'←'),dir>0?W-90:10,24);
+  sc.fillStyle='rgba(124,255,178,.8)';sc.font='12px system-ui';sc.fillText('波前進 '+(dir>0?'→':'←'),W-90,24);   // 向左時原本畫在 (10,24)，被左上數值卡片蓋住
   updateHud();
 }
 function render(){drawScene();}
@@ -166,7 +167,7 @@ const pb=document.getElementById('play');
 pb.onclick=()=>{playing=!playing;pb.classList.toggle('on',playing);pb.textContent=playing?'⏸ 暫停':'▶ 播放';};
 const db=document.getElementById('dir');
 db.onclick=()=>{dir*=-1;db.textContent=dir>0?'向右 →':'向左 ←';db.classList.add('on');};
-const PRE={slow:{A:30,f:0.5,v:6},fast:{A:22,f:2.2,v:8},big:{A:48,f:1,v:6}};
+const PRE={slow:{A:30,f:0.5,v:6},fast:{A:22,f:2.2,v:6},big:{A:48,f:1,v:6}};
 document.querySelectorAll('[data-preset]').forEach(b=>b.onclick=()=>{const pr=PRE[b.dataset.preset];if(!pr)return;
   ['A','f','v'].forEach(k=>setSlider(k,pr[k]));recompute();});
 
