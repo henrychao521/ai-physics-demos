@@ -21,7 +21,7 @@
     comp: '#8a99ad',     // 分量虛線 灰
   };
 
-  // ---- 高清畫布：CSS 尺寸固定、backing store ×dpr、繪圖用 CSS px ----
+  // ---- 高解析度畫布：CSS 尺寸固定、backing store ×dpr、繪圖用 CSS px ----
   function setup(canvas, cssW, cssH) {
     const dpr = global.devicePixelRatio || 1;
     canvas.width = Math.round(cssW * dpr);
