@@ -24,7 +24,7 @@
 ## 內容（依分館）
 
 ### 🟦 力學館（14）
-- `kinematics-1d/` — 一維等加速度運動：v=u+at、x=ut+½at²，x-t／v-t／a-t 三圖連動。
+- `kinematics-1d/` — 一維等加速度運動：v=v₀+at、x=v₀t+½at²，x-t／v-t／a-t 三圖連動。
 - `projectile/` — 拋體運動：初速/仰角/重力/空氣阻力，拋物線與速度分量、v-t/y-t 圖。
 - `energy-coaster/` — 能量守恆雲霄飛車：動能/位能/熱能三色長條，摩擦轉熱。
 - `collision/` — 碰撞實驗台：彈性↔非彈性，動量守恆 vs 動能階梯損耗。

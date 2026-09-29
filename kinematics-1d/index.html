@@ -3,8 +3,8 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>一維等加速度運動 ｜ x-t・v-t・a-t 三圖連動・v=u+at</title>
-<meta name="description" content="一維等加速度運動互動模擬：調初速 u 與加速度 a，看物體沿軌道運動與 x-t、v-t、a-t 三張圖即時連動。等速、加速、煞車到停、自由落體；v=u+at、x=ut+½at²、v²=u²+2as。">
+<title>一維等加速度運動 ｜ x-t・v-t・a-t 三圖連動・v=v₀+at</title>
+<meta name="description" content="一維等加速度運動互動模擬：調初速 v₀ 與加速度 a，看物體沿軌道運動與 x-t、v-t、a-t 三張圖即時連動。等速、加速、煞車到停、自由落體；v=v₀+at、x=v₀t+½at²、v²=v₀²+2as。">
 <link rel="icon" href="../assets/favicon.svg" type="image/svg+xml">
 <link rel="stylesheet" href="../assets/site.css">
 <script src="../assets/sim.js"></script>
@@ -49,8 +49,8 @@
   <header>
     <span class="badge">力學・運動學</span>
     <h1>一維等加速度運動（x-t・v-t・a-t）</h1>
-    <p>調<b>初速度 u</b> 與<b>加速度 a</b>，看物體沿軌道運動，並對照三張圖：<b>x-t</b>（位置）、<b>v-t</b>（速度）、<b>a-t</b>（加速度）即時連動。
-       <b>v = u + at</b>（v-t 是直線，斜率＝a）、<b>x = ut + ½at²</b>（x-t 是拋物線，斜率＝v）。a&lt;0 為減速，速度歸零即停止。</p>
+    <p>調<b>初速度 v₀</b> 與<b>加速度 a</b>，看物體沿軌道運動，並對照三張圖：<b>x-t</b>（位置）、<b>v-t</b>（速度）、<b>a-t</b>（加速度）即時連動。
+       <b>v = v₀ + at</b>（v-t 是直線，斜率＝a）、<b>x = v₀t + ½at²</b>（x-t 是拋物線，斜率＝v）。a&lt;0 為減速，速度歸零即停止。</p>
   </header>
 
   <div class="scene-wrap">
@@ -78,7 +78,7 @@
   <div class="formula" id="formula"></div>
 
   <div class="note">
-    <b>物理重點：</b>等加速度運動三公式：<code>v = u + at</code>、<code>x = ut + ½at²</code>、<code>v² = u² + 2as</code>。
+    <b>物理重點：</b>等加速度運動三公式：<code>v = v₀ + at</code>、<code>x = v₀t + ½at²</code>、<code>v² = v₀² + 2as</code>。
     圖形意義：<b>v-t 圖斜率 = 加速度 a</b>、<b>v-t 圖面積 = 位移</b>；<b>x-t 圖斜率 = 速度 v</b>。
     a=0 → 等速（x-t 直線）；a&gt;0 → 加速（x-t 上凹拋物線）；a&lt;0 → 減速，速度歸零後停止（如煞車）。自由落體是 a=g≈9.8 m/s² 的特例。
   </div>
@@ -89,7 +89,7 @@
 <script>
 const S=SIM, g=9.8;
 const sliders=[
-  {id:'u',name:'初速度 u',min:0,max:20,step:1,val:8,unit:'m/s'},
+  {id:'u',name:'初速度 v₀',min:0,max:20,step:1,val:8,unit:'m/s'},
   {id:'a',name:'加速度 a',min:-8,max:8,step:.5,val:2,unit:'m/s²'},
 ];
 const state={};
@@ -121,13 +121,13 @@ function vf(tt){return tt<tStop? state.u+state.a*tt : 0;}
 function frow(n,sym,sub,val){return `<div class="frow"><span class="fname">${n}</span><span class="fsym">${sym}</span><span class="fsub">= ${sub}</span><span class="fval">${val}</span></div>`;}
 function updateFormula(){const u=state.u,a=state.a, dec=a<0;
   let html=`<h4>📐 計算公式（即時代入　等加速度運動）</h4>`
-    + frow('速度方程','v = u + a·t',`${u} + (${a})·t`, dec?'減速':(a>0?'加速':'等速'))
-    + frow('位移方程','x = u·t + ½a·t²',`${u}·t ${a<0?'−':'+'} ${fmt(Math.abs(0.5*a))}·t²`, a===0?'等速直線':'拋物線');
-  if(dec){ html+= frow('停止時間','t = u / |a|',`${u} / ${Math.abs(a)}`, tStop.toFixed(2)+' s'+(tStop>Tw?`（超過圖表的 ${Tw} s）`:''))
-    + frow('煞車距離','s = u² / (2|a|)',`${u}² / (2·${Math.abs(a)})`, (u*u/(2*Math.abs(a))).toFixed(1)+' m'); }
-  else { const T=6; html+= frow(T+'秒末速度','v = u + a·t',`${u} + ${a}·${T}`, (u+a*T).toFixed(1)+' m/s')
-    + frow(T+'秒位移','x = ut + ½at²',`${u}·${T} + ${0.5*a}·${T}²`, xf(T).toFixed(1)+' m'); }
-  html+=`<div class="frel">📈 <b>v-t 圖斜率 = a</b>、<b>v-t 圖面積 = 位移</b>　·　<b>x-t 圖斜率 = v</b>（瞬時速度）　·　a=0 等速、a>0 加速(x-t 上凹)、a<0 減速到停　·　v²=u²+2as（不含時間，已知距離求末速）。</div>`;
+    + frow('速度方程','v = v₀ + a·t',`${u} + (${a})·t`, dec?'減速':(a>0?'加速':'等速'))
+    + frow('位移方程','x = v₀·t + ½a·t²',`${u}·t ${a<0?'−':'+'} ${fmt(Math.abs(0.5*a))}·t²`, a===0?'等速直線':'拋物線');
+  if(dec){ html+= frow('停止時間','t = v₀ / |a|',`${u} / ${Math.abs(a)}`, tStop.toFixed(2)+' s'+(tStop>Tw?`（超過圖表的 ${Tw} s）`:''))
+    + frow('煞車距離','s = v₀² / (2|a|)',`${u}² / (2·${Math.abs(a)})`, (u*u/(2*Math.abs(a))).toFixed(1)+' m'); }
+  else { const T=6; html+= frow(T+'秒末速度','v = v₀ + a·t',`${u} + ${a}·${T}`, (u+a*T).toFixed(1)+' m/s')
+    + frow(T+'秒位移','x = v₀t + ½at²',`${u}·${T} + ${0.5*a}·${T}²`, xf(T).toFixed(1)+' m'); }
+  html+=`<div class="frel">📈 <b>v-t 圖斜率 = a</b>、<b>v-t 圖面積 = 位移</b>　·　<b>x-t 圖斜率 = v</b>（瞬時速度）　·　a=0 等速、a>0 加速(x-t 上凹)、a<0 減速到停　·　v²=v₀²+2as（不含時間，已知距離求末速）。</div>`;
   document.getElementById('formula').innerHTML=html;
 }
 
