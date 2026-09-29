@@ -126,9 +126,10 @@ const MX=380;
 let photons=[],electrons=[];
 function spawn(){if(Math.random()<state.I/100*0.8)photons.push({x:0,y:110+Math.random()*180});}
 function step(dt){spawn();photons.forEach(p=>p.x+=320*dt);
-  for(let i=photons.length-1;i>=0;i--){if(photons[i].x>=MX){if(emits()&&Math.random()<0.9)electrons.push({x:MX,y:photons[i].y,vx:60+Math.random()*40,vy:(Math.random()-0.5)*40,ke:KEmax()});photons.splice(i,1);}}
+  for(let i=photons.length-1;i>=0;i--){if(photons[i].x>=MX){if(emits()&&Math.random()<0.9)electrons.push({x:MX-2,y:photons[i].y,vy:(Math.random()-0.5)*60,ke:KEmax()});photons.splice(i,1);}}
   // 速度 ∝ √KE（½mv²=KE）；原本 ∝ KE 會誇大高頻時的速度差
-  electrons.forEach(e=>{e.x+=(40+100*Math.sqrt(e.ke))*dt;e.y+=e.vy*dt;});electrons=electrons.filter(e=>e.x<640+20);if(photons.length>200)photons.splice(0,photons.length-200);}
+  // 光電子從受光的左表面逸出、往左飛回真空（原本往右穿過整塊金屬板）
+  electrons.forEach(e=>{e.x-=(40+100*Math.sqrt(e.ke))*dt;e.y+=e.vy*dt;});electrons=electrons.filter(e=>e.x>-20);if(photons.length>200)photons.splice(0,photons.length-200);}
 function draw(){const W=640,H=380;
   const bg=cc.createLinearGradient(0,0,0,H);bg.addColorStop(0,'#0e1426');bg.addColorStop(1,'#060a14');cc.fillStyle=bg;cc.fillRect(0,0,W,H);
   // 金屬板(立體)
