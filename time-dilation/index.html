@@ -124,7 +124,7 @@ let cpx=180;               // 「光速」像素/秒
 let labTime=0, properB=0, ticksA=0, ticksB=0;
 let xB=0, yA=0, yB=0, dirA=1, dirB=1;   // 光子垂直位置(0..D)與方向
 let trailB=[];
-function resetClocks(){labTime=0;properB=0;ticksA=0;ticksB=0;yA=0;yB=0;dirA=1;dirB=1;xB=0;trailB=[];}
+function resetClocks(){halfFlagA=0;halfFlagB=0;labTime=0;properB=0;ticksA=0;ticksB=0;yA=0;yB=0;dirA=1;dirB=1;xB=0;trailB=[];}
 function layout(){const W=sc._w,H=sc._h;return {
   W,H, ax:Math.min(120,W*0.16), ayTop:H*0.5-D-26, // 鐘A 固定
   laneY:H*0.5+18                                    // 鐘B 軌道頂(鏡)
