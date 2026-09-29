@@ -122,8 +122,8 @@ function frow(n,sym,sub,val){return `<div class="frow"><span class="fname">${n}<
 function updateFormula(){const m=model();
   document.getElementById('formula').innerHTML=
     `<h4>📐 計算公式（即時代入　nR=1、膨脹比 r=2.2）</h4>`
-    + frow('吸熱 Qh','Th·ln r',`${m.Th}·ln2.2`, m.Qh.toFixed(1)+' J')
-    + frow('放熱 Qc','Tc·ln r',`${m.Tc}·ln2.2`, m.Qc.toFixed(1)+' J')
+    + frow('吸熱 Qh','nR·Th·ln r',`1·${m.Th}·ln2.2`, m.Qh.toFixed(1)+' J')
+    + frow('放熱 Qc','nR·Tc·ln r',`1·${m.Tc}·ln2.2`, m.Qc.toFixed(1)+' J')
     + frow('淨功 W','Qh − Qc',`${m.Qh.toFixed(1)} − ${m.Qc.toFixed(1)}`, m.W.toFixed(1)+' J')
     + frow('卡諾效率 η','1 − Tc/Th',`1 − ${m.Tc}/${m.Th}`, (m.eta*100).toFixed(1)+'%')
     + `<div class="frel">📈 <b>η = 1 − Tc/Th</b>：溫差越大效率越高　·　<b>Qh = W + Qc</b>（能量守恆）　·　η 永遠 < 100%（需 Tc=0 才達 100%，不可能）——熱力學第二定律。</div>`;

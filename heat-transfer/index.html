@@ -115,7 +115,7 @@ function updateFormula(){const C1=state.m1*c1(),C2=state.m2*c2(),tf=Tf();
     + frow('B 熱容量 m₂c₂','m₂ · c₂',`${state.m2}·${c2()}`, C2.toFixed(0)+' J/°C')
     + frow('終溫 T_f','(m₁c₁T₁+m₂c₂T₂)/(m₁c₁+m₂c₂)',`(${C1.toFixed(0)}·${state.T1}+${C2.toFixed(0)}·${state.T2})/(${C1.toFixed(0)}+${C2.toFixed(0)})`, tf.toFixed(1)+' °C')
     + frow('交換熱量 Q','m₁c₁(T₁−T_f) = m₂c₂(T_f−T₂)',`${C1.toFixed(0)}·|${state.T1}−${tf.toFixed(1)}|`, (Q/1000).toFixed(2)+' kJ')
-    + `<div class="frel">📈 <b>終溫是 mc 加權平均、必介於兩初溫間</b>　·　<b>mc 越大主導力越強</b>（${C1>C2?'A':'B'} 的 mc 較大，終溫較靠近其初溫）　·　A 放出的熱 = B 吸收的熱（能量守恆）　·　水比熱大 → 同質量同熱量下溫度變化最小。</div>`;
+    + `<div class="frel">📈 <b>終溫是 mc 加權平均、必介於兩初溫間</b>　·　<b>mc 越大主導力越強</b>（${Math.abs(C1-C2)<1e-9*Math.max(C1,C2)?'兩者 mc 相等，終溫在兩初溫正中間':(C1>C2?'A':'B')+' 的 mc 較大，終溫較靠近其初溫'}）　·　A 放出的熱 = B 吸收的熱（能量守恆）　·　水比熱大 → 同質量同熱量下溫度變化最小。</div>`;
 }
 
 // ---- 視圖 ----

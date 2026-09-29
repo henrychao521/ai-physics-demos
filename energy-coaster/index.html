@@ -235,7 +235,7 @@ function updateFormula(){
     frow('釋放高度 h₀','—',`軌道高 − 谷底`, h0.toFixed(1)+' m')+
     frow('總力學能 E₀','m·g·h₀',`${m}·${g}·${h0.toFixed(1)}`, E0v.toFixed(0)+' J')+
     frow('谷底最大速率 v','√(2·g·h₀)',`√(2·${g}·${h0.toFixed(1)})`, vmax.toFixed(1)+' m/s')+
-    frow('滑行摩擦生熱 Q','μ·m·g·Δx',`${mu}·${m}·${g}·Δx`, (fric? '＞0（力學能逐段轉熱）':'0（無摩擦）'))+
+    frow('滑行摩擦生熱 Q','μ·m·g·Δx（Δx＝累計水平滑行距離）',`${mu}·${m}·${g}·Δx`, (fric? (mu*m*g).toFixed(2)+' J/m × Δx（力學能逐段轉熱）':'0（無摩擦）'))+
     `<div class="frel">📈 <b>v ∝ √h₀</b>：釋放高度變 4 倍 → 谷底速率才變 2 倍　·　<b>運動快慢與質量 m 無關</b>（v 不含 m），但 E₀、Q 皆 ∝ m　·　<b>μ=0 時 KE＋PE 守恆</b>，等高處速率相同；μ＞0 時力學能被熱由上往下吃掉、越盪越低。</div>`;
 }
 
