@@ -249,16 +249,23 @@ function updateHud(cur){
 function chip(k,v,cls){return `<div class="chip ${cls}">${k}<b>${v}</b></div>`;}
 function frow(n,sym,sub,val){return `<div class="frow"><span class="fname">${n}</span><span class="fsym">${sym}</span><span class="fsub">= ${sub}</span><span class="fval">${val}</span></div>`;}
 function updateFormula(){
-  const v0=st.v0,th=st.ang,g=st.g,rad=th*Math.PI/180;
+  const v0=st.v0,th=st.ang,g=st.g,rad=th*Math.PI/180,h0=st.h0;
   const Rid=v0*v0*Math.sin(2*rad)/g, Hid=Math.pow(v0*Math.sin(rad),2)/(2*g), Tid=2*v0*Math.sin(rad)/g;
-  const ideal=(st.h0===0&&!dragOn);
-  document.getElementById('formula').innerHTML=
-    `<h4>📐 計算公式（即時代入　理想：無空氣阻力・平地）</h4>`+
+  // 高處發射（h0>0）改用含 h₀ 的落地時間式；原本一律用平地公式，懸崖平拋（θ=0）時 R、H、T 全算成 0
+  const vy0=v0*Math.sin(rad), Th=(vy0+Math.sqrt(vy0*vy0+2*g*h0))/g, Rh=v0*Math.cos(rad)*Th, Hh=h0+vy0*vy0/(2*g);
+  const rows = h0>0 ?
+    frow('飛行時間 T','(v₀sinθ + √(v₀²sin²θ + 2gh₀)) / g',`(${v0}·sin${th}° + √(${v0}²·sin²${th}° + 2·${g}·${h0})) / ${g}`, Th.toFixed(2)+' s')+
+    frow('水平射程 R','v₀·cosθ·T',`${v0}·cos${th}°·${Th.toFixed(2)}`, Rh.toFixed(1)+' m')+
+    frow('最高點 H','h₀ + v₀²·sin²θ / 2g',`${h0} + ${v0}²·sin²${th}° / ${(2*g).toFixed(1)}`, Hh.toFixed(1)+' m')
+  :
     frow('水平射程 R','v₀²·sin2θ / g',`${v0}²·sin${Math.round(2*th)}° / ${g}`, Rid.toFixed(1)+' m')+
     frow('最高點 H','v₀²·sin²θ / 2g',`${v0}²·sin²${th}° / ${(2*g).toFixed(1)}`, Hid.toFixed(1)+' m')+
-    frow('飛行時間 T','2·v₀·sinθ / g',`2·${v0}·sin${th}° / ${g}`, Tid.toFixed(2)+' s')+
-    `<div class="frel">📈 <b>R ∝ v₀²</b>：初速加倍 → 射程變 4 倍　·　<b>θ=45° 射程最大</b>（sin2θ=1）　·　重力 g 只改鉛直運動、水平方向恆等速。`+
-    (ideal?'':` <span style="color:var(--accent2)">目前${dragOn?'有空氣阻力':''}${st.h0>0?'、非平地發射':''}，上式為理想值；實測射程 <b style="color:var(--accent2)">${STATS.R.toFixed(1)} m</b>。</span>`)+
+    frow('飛行時間 T','2·v₀·sinθ / g',`2·${v0}·sin${th}° / ${g}`, Tid.toFixed(2)+' s');
+  document.getElementById('formula').innerHTML=
+    `<h4>📐 計算公式（即時代入　理想：無空氣阻力・${h0>0?'從高 h₀ 處發射、落到地面':'平地'}）</h4>`+
+    rows+
+    `<div class="frel">📈 <b>R ∝ v₀²</b>：初速加倍 → 射程變 4 倍　·　<b>θ=45° 射程最大</b>（sin2θ=1，限平地發射）　·　重力 g 只改鉛直運動、水平方向恆等速。`+
+    (dragOn?` <span style="color:var(--accent2)">目前有空氣阻力，上式為理想值；實測射程 <b style="color:var(--accent2)">${STATS.R.toFixed(1)} m</b>。</span>`:'')+
     `</div>`;
 }
 function render(cur){drawScene(cur);drawPlot(cur);}
