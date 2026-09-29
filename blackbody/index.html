@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>黑體輻射 ｜ 普朗克譜・維因位移・史特凡-波茲曼・星星顏色</title>
-<meta name="description" content="黑體輻射互動模擬：溫度越高，輻射譜的峰值往短波長移動（維因位移 λ_max=b/T），總輻射功率以 T⁴ 暴增（史特凡-波茲曼）。看燈泡、太陽、天狼星為何呈現不同顏色。">
+<meta name="description" content="黑體輻射互動模擬：溫度越高，輻射譜的峰值往短波長移動（維因位移 λ_max=b/T），單位面積的總輻射功率以 T⁴ 暴增（史特凡-波茲曼）。看燈泡、太陽、天狼星為何呈現不同顏色。">
 <link rel="icon" href="../assets/favicon.svg" type="image/svg+xml">
 <link rel="stylesheet" href="../assets/site.css">
 <script src="../assets/sim.js"></script>
@@ -46,8 +46,8 @@
   <header>
     <span class="badge">近代物理・熱輻射</span>
     <h1>黑體輻射（普朗克譜・星星顏色）</h1>
-    <p>任何有溫度的物體都會放出<b>連續光譜</b>。溫度越高：①輻射峰值往<b>短波長（藍）移動</b>——維因位移 <b>λ_max = b/T</b>；
-       ②<b>總輻射功率以 T⁴ 暴增</b>——史特凡-波茲曼 <b>P = σT⁴</b>。這就是為什麼燈絲偏紅、太陽偏白、天狼星偏藍。</p>
+    <p>任何有溫度的物體都會放出熱輻射；黑體（以及高溫的固體、液體等緻密物體）的熱輻射是<b>連續光譜</b>（稀薄氣體則是明線光譜，見波耳模型頁）。溫度越高：①輻射峰值往<b>短波長（藍）移動</b>——維因位移 <b>λ_max = b/T</b>；
+       ②<b>單位面積的總輻射功率以 T⁴ 暴增</b>——史特凡-波茲曼 <b>P/A = σT⁴</b>。這就是為什麼燈絲偏紅、太陽偏白、天狼星偏藍。</p>
   </header>
 
   <div class="scene-wrap">
@@ -72,7 +72,7 @@
   <div class="note">
     <b>物理重點：</b>普朗克輻射定律 <code>B(λ,T)=2hc²/λ⁵ · 1/(e^(hc/λkT)−1)</code> 描述黑體在各波長的輻射強度。
     峰值波長 <code>λ_max = b/T</code>（維因位移定律，b=2.898×10⁻³ m·K）：T 加倍 → λ_max 減半（更藍）。
-    曲線下總面積（總輻射功率；畫面曲線每次自動縮放到同一高度，所以要看右上角數值才看得出 T⁴ 的差距）<code>P = σT⁴</code>（史特凡-波茲曼，σ=5.67×10⁻⁸ W/(m²·K⁴)）：T 加倍 → 功率變 <b>16 倍</b>。
+    曲線下總面積（每平方公尺表面的總輻射功率；整顆星的功率還要乘上表面積 A；畫面曲線每次自動縮放到同一高度，所以要看右上角數值才看得出 T⁴ 的差距）<code>P/A = σT⁴</code>（史特凡-波茲曼，σ=5.67×10⁻⁸ W/(m²·K⁴)）：T 加倍 → 功率變 <b>16 倍</b>。
     可見光只占 380–750 nm 一小段；低溫物體峰值在<b>紅外</b>（看不見、只覺得熱），高溫才進入可見甚至<b>紫外</b>。
     古典理論在短波長發散（「紫外災變」），普朗克引入<b>能量量子化</b> E=hf 才解決——量子力學的開端。
   </div>
@@ -129,7 +129,7 @@ function updateFormula(){const lm=lamMax(),P=power(),Psun=sigma*Math.pow(5800,4)
   document.getElementById('formula').innerHTML=
     `<h4>📐 計算公式（即時代入　b=2.898×10⁻³、σ=5.67×10⁻⁸）</h4>`
     + frow('維因峰值 λ_max','b / T',`2.898e-3 / ${state.T}`, lm.toFixed(0)+' nm（'+region+'）')
-    + frow('總輻射功率 P','σ·T⁴',`5.67e-8·${state.T}⁴`, sig3(P/1e6)+' MW/m²')
+    + frow('單位面積輻射功率 P/A','σ·T⁴',`5.67e-8·${state.T}⁴`, sig3(P/1e6)+' MW/m²')
     + frow('相對太陽','P / P☉',`${sig3(P/1e6)} / ${sig3(Psun/1e6)}`, sig3(P/Psun)+' 倍')
     + `<div class="frel">📈 <b>λ_max = b/T</b>：T 加倍 → 峰值波長減半(更藍)　·　<b>P = σT⁴</b>：T 加倍 → 總功率變 16 倍　·　可見光僅 380–750 nm，低溫峰值落在看不見的紅外。</div>`;
 }
@@ -205,7 +205,7 @@ function updateHud(col){const lm=lamMax(),P=power();
   document.getElementById('hud').innerHTML=
    `<div class="chip amber">溫度 T<b>${state.T} K</b></div>`+
    `<div class="chip cyan">峰值 λmax<b>${lm.toFixed(0)} nm · ${region}</b></div>`+
-   `<div class="chip green">總功率 σT⁴<b>${sig3(P/1e6)} MW/m²</b></div>`;
+   `<div class="chip green">單位面積功率 σT⁴<b>${sig3(P/1e6)} MW/m²</b></div>`;
 }
 
 document.getElementById('tint').onclick=function(){tintOn=!tintOn;this.classList.toggle('on',tintOn);this.textContent='譜線著色：'+(tintOn?'開':'關');draw();};
