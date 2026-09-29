@@ -144,7 +144,7 @@ function draw(){setupReady();layout();const W=sc._w,H=sc._h;
   // 光線① 平行→焦點
   const O={x:-p,y:h};
   ray(O.x,O.y,0,h,'#e8453c');
-  {const slope=(0-h)/(F-0),yR=h+slope*(xR-0);ray(0,h,xR,yR,'#e8453c');if(q<0)ray(0,h,q,ih,'#e8453c',[4,4]);}
+  {const slope=(0-h)/(F-0),yR=h+slope*(xR-0);ray(0,h,xR,yR,'#e8453c');if(q<0){const xe=Math.min(q,F);ray(0,h,xe,h+slope*xe,'#e8453c',[4,4]);}}  // 凹透鏡的虛像在 F 與鏡之間：延長線畫到 F，看得出「反向延長線通過焦點」
   // 光線② 過中心
   ray(O.x,O.y,0,0,'#d68a00');
   {const slope=-h/p;ray(0,0,xR,slope*xR,'#d68a00');if(q<0)ray(0,0,q,ih,'#d68a00',[4,4]);}
