@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>物質波（德布羅意）｜ λ=h/p・波粒二象性</title>
-<meta name="description" content="德布羅意物質波互動模擬：任何運動粒子都有波長 λ=h/p=h/mv。比較電子、質子、塵埃、棒球——只有極輕極慢的粒子(如電子)波長才接近原子尺度、波動性才觀測得到，這就是波粒二象性與電子顯微鏡的原理。">
+<meta name="description" content="德布羅意物質波互動模擬：任何運動粒子都有波長 λ=h/p=h/mv。比較電子、質子、塵埃、棒球——只有極輕的粒子(如電子)波長才可能接近或小於原子尺度、波動性才觀測得到，這就是波粒二象性；電子顯微鏡則用高速電子得到極短波長的原理。">
 <link rel="icon" href="../assets/favicon.svg" type="image/svg+xml">
 <link rel="stylesheet" href="../assets/site.css">
 <script src="../assets/sim.js"></script>
@@ -44,7 +44,7 @@
     <span class="badge">近代物理・量子</span>
     <h1>物質波（德布羅意）</h1>
     <p>德布羅意：<b>任何運動的粒子都伴隨一個波</b>，波長 <b>λ = h/p = h/(mv)</b>。質量越大、速度越快 → 波長越短。
-       只有<b>極輕、極慢</b>的粒子（如<b>電子</b>）波長才接近<b>原子尺度</b>，波動性（干涉、繞射）才觀測得到——這就是<b>波粒二象性</b>與電子顯微鏡的原理。</p>
+       只有<b>極輕</b>的粒子（如<b>電子</b>）波長才可能接近<b>原子尺度</b>，波動性（干涉、繞射）才觀測得到——這就是<b>波粒二象性</b>（例：慢速電子打在晶體上會繞射）。<b>電子顯微鏡</b>則反過來用<b>高速</b>電子，讓波長遠比可見光短，才看得清更小的東西。</p>
   </header>
 
   <div class="scene-wrap">
@@ -115,7 +115,7 @@ function updateFormula(){const L=lam(),p=m()*v(),atom=2e-10,obs=L>=3e-11;
 }
 
 // ---- 視圖 ----
-let sc, ph=0;
+let sc, ph=0, pos=0;   // pos：粒子在畫面上走過的像素
 const QSPACE={skyTop:'#120a24',skyBottom:'#080514',vignette:'rgba(0,0,0,.45)'};
 function setupCanvases(){sc=S.fit(document.getElementById('scene'),2.0);}
 function draw(){const W=sc._w,H=sc._h;
@@ -126,13 +126,14 @@ function draw(){const W=sc._w,H=sc._h;
   const logL=Math.log10(L);                       // -35 ~ -9
   const visLam=Math.max(10,Math.min(120,(logL+35)/26*110+8)); // 短λ→密、長λ→疏
   const amp=18;
+  ph=2*Math.PI*pos/visLam;   // 粒子畫面速度只隨 v 增加（原本 = 波形相速度 ∝ 視覺波長，v 越大 λ 越短、粒子反而越慢）
   sc.strokeStyle='#8b9cff';sc.lineWidth=2.5;sc.beginPath();
   for(let x=0;x<=W;x+=2){const y=midY-amp*Math.sin((x/visLam)*2*Math.PI - ph);x?sc.lineTo(x,y):sc.moveTo(x,y);}sc.stroke();
   // 粒子(沿波移動)
-  const px=(ph*visLam/(2*Math.PI))%W;
+  const px=pos%W;
   S.sphere(sc,px,midY,11,[233,100,74]);
   sc.fillStyle='#bcd0ff';sc.font='12px system-ui';sc.fillText(PARTS[pi].n,px-12,midY-26);
-  sc.fillStyle='#8b9cff';sc.fillText('物質波 λ='+sci(L)+' m',12,midY+44);
+  sc.fillStyle='#8b9cff';sc.fillText('物質波 λ='+sci(L)+' m',12,midY+44);sc.fillStyle='#6b5c80';sc.font='10px system-ui';sc.fillText('（波形疏密依 log λ、粒子畫面速度依 log v 示意，未按比例）',12,midY+60);
   // 下半：對數尺標(10⁻³⁵ ~ 10⁻⁶ m)
   const baseY=H*0.82,mL=20,mR=20,axW=W-mL-mR;
   const lo=-35,hi=-6,X=lg=>mL+(lg-lo)/(hi-lo)*axW;
@@ -160,7 +161,7 @@ function updateHud(L){const obs=L>=3e-11;
    `<div class="chip ${obs?'green':''}">λ<b>${sci(L)} m</b></div>`;
 }
 let last=0;
-function loop(ts){const dt=last?Math.min((ts-last)/1000,0.05):0;last=ts;ph+=dt*2.4;draw();requestAnimationFrame(loop);}
+function loop(ts){const dt=last?Math.min((ts-last)/1000,0.05):0;last=ts;pos+=dt*(25+state.ve*20);draw();requestAnimationFrame(loop);}
 
 document.querySelectorAll('[data-p]').forEach(b=>b.onclick=()=>{pi=+b.dataset.p;
   document.querySelectorAll('[data-p]').forEach(x=>x.classList.remove('on'));b.classList.add('on');
