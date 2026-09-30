@@ -107,7 +107,7 @@ function MU(){return state.M*MU_PER_M;}
 function vcirc(){return Math.sqrt(MU()/D0);}
 let pos,vel,trace,wedges,simT,lastWedgeT,playing=true,escaped=false;
 let wedgePts=[];
-function launch(){pos={x:D0,y:0};vel={x:0,y:-state.ratio*vcirc()};trace=[{x:pos.x,y:pos.y}];wedges=[{x:pos.x,y:pos.y,pts:[]}];wedgePts=[];simT=0;lastWedgeT=0;escaped=false;if(typeof updateFormula==='function')updateFormula();}
+function launch(){fitView();pos={x:D0,y:0};vel={x:0,y:-state.ratio*vcirc()};trace=[{x:pos.x,y:pos.y}];wedges=[{x:pos.x,y:pos.y,pts:[]}];wedgePts=[];simT=0;lastWedgeT=0;escaped=false;if(typeof updateFormula==='function')updateFormula();}
 function accel(p){const r=Math.hypot(p.x,p.y),f=-MU()/(r*r*r);return {x:f*p.x,y:f*p.y};}
 // 楔形（克卜勒第二定律）：每 0.16 s 模擬時間切一塊。邊界在「子步」檢查、並保存沿途軌跡點，
 // 楔形畫成扇形（沿軌跡）而非三角形；原本用三角形弦、且以畫格為單位切時間，偏心率大時近日點楔形面積看起來差到 90%。
@@ -144,14 +144,26 @@ function updateFormula(){
 }
 
 let sc,stars=[];
+// 畫面縮放：依畫布大小與軌道外框決定（原本固定 0.62 px/單位，桌機上橢圓只佔畫布一小塊）。
+// 軌道形狀只由 q=(v/v_c)² 決定：r(φ) = D0·q / (1 + (q−1)·cosφ)（φ 從發射點方向起算）。
+// 取距恆星 4.2·D0（判定逃逸的距離）以內、行星真的會走到的部分當外框：逃逸軌道只走 y<0 那一支；
+// 大橢圓與逃逸時外框變大、畫面自動縮小。
+let VIEW={k:0.62,ox:0,oy:0};
+function fitView(){if(!sc)return;const q=state.ratio*state.ratio,RMAX=4.2*D0,P=D0*q,E=q-1,bound=q<2-1e-6;
+  let x0=0,x1=0,y0=0,y1=0;   // 含恆星
+  for(let i=0;i<=720;i++){const ph=-Math.PI+i*Math.PI/360;if(!bound&&ph>0)break;
+    const den=1+E*Math.cos(ph);if(den<=1e-9)continue;const r=P/den;if(r>RMAX)continue;
+    const x=r*Math.cos(ph),y=r*Math.sin(ph);x0=Math.min(x0,x);x1=Math.max(x1,x);y0=Math.min(y0,y);y1=Math.max(y1,y);}
+  const W=sc._w,H=sc._h,mx=Math.min(40,W*0.06),my=Math.min(70,H*0.14);
+  VIEW.k=Math.min(3,(W-2*mx)/(x1-x0),(H-2*my)/(y1-y0));VIEW.ox=-(x0+x1)/2;VIEW.oy=-(y0+y1)/2;}
 const SPACE={skyTop:'#0a1030',skyBottom:'#03040c',vignette:'rgba(0,0,0,.6)'};
-function setupCanvases(){sc=S.fit(document.getElementById('scene'),1.7);
+function setupCanvases(){sc=S.fit(document.getElementById('scene'),1.7);fitView();
   stars=[];for(let i=0;i<140;i++)stars.push({x:Math.random()*sc._w,y:Math.random()*sc._h,r:Math.random()*1.3+0.3,a:Math.random()*0.7+0.3});}
 function draw(){const W=sc._w,H=sc._h,cx=W/2,cy=H/2;
   S.scene(sc,SPACE,{});
   // 星場
   for(const s of stars){sc.fillStyle=`rgba(255,255,255,${s.a})`;sc.beginPath();sc.arc(s.x,s.y,s.r,0,7);sc.fill();}
-  const X=x=>cx+x*0.62,Y=y=>cy+y*0.62;
+  const X=x=>cx+(x+VIEW.ox)*VIEW.k,Y=y=>cy+(y+VIEW.oy)*VIEW.k;
   // 等面積楔形
   for(let i=0;i<wedges.length-1;i++){sc.fillStyle=i%2?'rgba(108,208,255,.18)':'rgba(255,206,84,.18)';
     sc.beginPath();sc.moveTo(X(0),Y(0));sc.lineTo(X(wedges[i].x),Y(wedges[i].y));for(const q of wedges[i+1].pts)sc.lineTo(X(q.x),Y(q.y));sc.closePath();sc.fill();}
