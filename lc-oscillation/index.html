@@ -20,6 +20,8 @@
   .scene-wrap{position:relative;border-radius:16px;overflow:hidden;border:1px solid var(--line);box-shadow:0 18px 50px rgba(0,0,0,.45)}
   #scene{display:block;width:100%}
   .hud{position:absolute;top:12px;left:12px;display:flex;gap:8px;flex-wrap:wrap;pointer-events:none}
+  /* 手機畫布只有約 185px 高，讀數晶片會蓋住上方標籤：改排在畫布下方 */
+  @media(max-width:560px){.scene-wrap .hud{position:static;padding:8px 10px;background:rgba(8,14,22,.5);border-top:1px solid var(--line)}}
   .chip{background:rgba(10,16,24,.62);backdrop-filter:blur(6px);border:1px solid rgba(120,180,255,.16);border-radius:10px;padding:6px 11px;color:#dceaff;font-size:.8rem;line-height:1.25}
   .chip b{display:block;font-size:1.02rem;font-variant-numeric:tabular-nums;color:#fff}
   .chip.amber b{color:#ffd27a}.chip.cyan b{color:#6cd0ff}.chip.rose b{color:#ff8fb0}
@@ -153,7 +155,7 @@ function draw(){const W=sc._w,H=sc._h;S.scene(sc,SKY,{});
   // 標準電感符號：沿導線連續的半圓凸起（原本每圈從導線拉斜線到弧起點，畫成一排斷開的帽子形）
   for(let k=0;k<coilN;k++){const y=coilY0+k*dyc;sc.arc(rx,y+dyc/2,dyc/2,-Math.PI/2,Math.PI/2,false);}
   sc.lineTo(rx,by);sc.stroke();
-  sc.fillStyle='#ffd27a';sc.font='12px system-ui';sc.fillText('電感 L',rx-4,by+18);
+  sc.fillStyle='#ffd27a';sc.font='12px system-ui';{const nw=W<=560;if(nw)sc.textAlign='right';sc.fillText('電感 L',nw?rx+8:rx-4,by+18);sc.textAlign='left';}   // 手機：靠右對齊，避免和右側「電場能」相撞
   // 電流方向(沿迴路移動點,密度∝|I|,方向∝sign(I))
   // cur＝dQ/dt（Q 為上板電荷）：cur<0 時上板放電，電流從上板經上方導線往右流（loopPoint 的 +s 方向）。
   // 點的位置＝已流過的電荷量 ∝ (1−q)，所以點隨電流來回移動、速度 ∝ |I|。
@@ -179,7 +181,7 @@ function draw(){const W=sc._w,H=sc._h;S.scene(sc,SKY,{});
   sc.strokeStyle='#6cd0ff';sc.lineWidth=2;sc.beginPath();trail.forEach((p,k)=>{const x=gx+k,y=gy-p.q*gh;k?sc.lineTo(x,y):sc.moveTo(x,y);});sc.stroke();
   sc.strokeStyle='#7CFFB2';sc.lineWidth=2;sc.beginPath();trail.forEach((p,k)=>{const x=gx+k,y=gy-p.i*gh;k?sc.lineTo(x,y):sc.moveTo(x,y);});sc.stroke();
   sc.fillStyle='#6cd0ff';sc.font='11px system-ui';sc.fillText('Q',gx+gw-30,ty+10);sc.fillStyle='#7CFFB2';sc.fillText('I',gx+gw-14,ty+10);
-  sc.fillStyle='rgba(150,170,210,.7)';sc.textAlign='right';sc.fillText('時間 t →',gx+gw,by+16);sc.textAlign='left';
+  sc.fillStyle='rgba(150,170,210,.7)';sc.textAlign='right';sc.fillText('時間 t →',gx+gw,by+(W<=560?30:16));sc.textAlign='left';
   updateHud();
 }
 function loopPoint(s,lx,rx,ty,by){const w=rx-lx,h=by-ty,P=2*(w+h);let d=s*P;

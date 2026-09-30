@@ -141,7 +141,7 @@ function updateFormula(){const f=freq(),lam=lambda(),E=photonE(),bd=band()[0];
 // ---- 視圖：E⊥B 立體波 ----
 let sc;
 const SKY={skyTop:'#0a1322',skyBottom:'#070d16',vignette:'rgba(0,0,0,.42)'};
-function setupCanvases(){sc=S.fit(document.getElementById('scene'),1.95);}
+function setupCanvases(){sc=S.fit(document.getElementById('scene'),window.innerWidth<=560?1.35:1.95);}
 let phase=0, running=true, showB=true;
 // 深度方向(z 軸，朝向讀者)投影到螢幕：往左下。E 沿 +y、B 沿 +z 同相，E×B＝(+y)×(+z)＝+x＝傳播方向
 const DZ={x:-0.52,y:0.40};
@@ -155,7 +155,7 @@ function drawAxes(W,H){const len=Math.max(16,Math.min(26,H*0.07)),ox=14+len*0.52
   else ax(DZ.x,DZ.y,'rgba(108,168,255,.7)','z',-4,12);
   if(W>=600){sc.fillStyle='rgba(190,205,235,.75)';sc.font='10px system-ui';sc.fillText('（z 軸朝向讀者）',ox+8,oy-8);}}
 function draw(){const W=sc._w,H=sc._h;S.scene(sc,SKY,{});
-  const x0=58, y0=H*0.52, L=W-150, A=Math.min(58,H*0.20);
+  const x0=58, y0=H*0.52, L=W-150, A=Math.min(58,H*(W<=560?0.16:0.20));
   const col=waveColor();
   // 螢幕波數(示意)：隨 logf 由疏到密(1.3~5.5 個週期)，clamp 保持可讀
   const cycles=Math.max(1.3,Math.min(5.5,1.3+(state.logf-6)*0.30));
@@ -164,7 +164,8 @@ function draw(){const W=sc._w,H=sc._h;S.scene(sc,SKY,{});
   sc.strokeStyle='rgba(150,170,210,.55)';sc.lineWidth=1.4;
   sc.beginPath();sc.moveTo(x0,y0);sc.lineTo(x0+L,y0);sc.stroke();
   S.arrow(sc,x0+L-30,y0,x0+L+6,y0,{color:'rgba(180,200,235,.8)',width:2});
-  sc.fillStyle='rgba(190,205,235,.8)';sc.font='12px system-ui';sc.fillText('傳播方向（光速 c）',x0+L-122,y0+22);
+  sc.fillStyle='rgba(190,205,235,.8)';sc.font='12px system-ui';if(W<=560){sc.textAlign='right';sc.fillText('傳播方向（光速 c）',x0+L+6,y0+A+22);sc.textAlign='left';}   // 手機：移到波形下方，不壓在波上
+  else sc.fillText('傳播方向（光速 c）',x0+L-122,y0+22);
   // B 場(藍,深度平面) 先畫(在後)
   if(showB){
     sc.strokeStyle='rgba(108,168,255,.9)';sc.lineWidth=2;sc.beginPath();
@@ -184,10 +185,10 @@ function draw(){const W=sc._w,H=sc._h;S.scene(sc,SKY,{});
   sc.fillStyle=`rgb(${col[0]},${col[1]},${col[2]})`;sc.font='bold 13px system-ui';sc.fillText('E（電場）',x0+8,y0-A-6);
   if(showB){const ew=sc.measureText('E（電場）').width;sc.fillStyle='#6ca8ff';sc.fillText('B（磁場）',x0+8+ew+14,y0-A-6);}
   // 一個波長標註(示意)
-  const lamPx=2*Math.PI/k;
+  const lamPx=2*Math.PI/k, lamDy=W<=560?8:18;   // 手機畫布矮，λ 標示要貼近波形底部，否則壓到下方波譜色帶的波段文字
   sc.strokeStyle='rgba(255,210,122,.7)';sc.setLineDash([4,3]);sc.lineWidth=1.2;
-  sc.beginPath();sc.moveTo(x0,y0+A+18);sc.lineTo(x0+lamPx,y0+A+18);sc.stroke();sc.setLineDash([]);
-  sc.fillStyle='#ffd27a';sc.font='11px system-ui';sc.fillText('λ',x0+lamPx/2-3,y0+A+33);
+  sc.beginPath();sc.moveTo(x0,y0+A+lamDy);sc.lineTo(x0+lamPx,y0+A+lamDy);sc.stroke();sc.setLineDash([]);
+  sc.fillStyle='#ffd27a';sc.font='11px system-ui';sc.fillText('λ',x0+lamPx/2-3,y0+A+lamDy+15);
   drawAxes(W,H);
   // 電磁波譜帶
   drawSpectrum(W,H);

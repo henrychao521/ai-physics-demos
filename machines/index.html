@@ -124,7 +124,8 @@ function setSlider(id,val,obj){obj[id]=val;const r=document.getElementById('r_'+
 // 槓桿物理（已驗證）
 let angle=0,targetAngle=null;
 function leverTorques(){return {L:lever.w1*lever.d1,R:lever.w2*lever.d2};}
-function setupCanvases(){sc=S.fit(document.getElementById('scene'),2.05);}
+// 手機滑輪組情境要畫到約 285px 高（原比例只剩約 170px，下方兩行說明被切掉）：窄螢幕改用較高的畫布
+function setupCanvases(){const narrow=window.innerWidth<=560;sc=S.fit(document.getElementById('scene'),narrow&&mode==='pulley'?document.getElementById('scene').parentElement.clientWidth/300:2.05);}
 function drawWeightBox(px,py,w,hsl,lab){const sz=18+w*0.45,[h,s,l]=hsl;
   sc.strokeStyle=`hsl(${h},${s}%,${l}%)`;sc.lineWidth=2;sc.beginPath();sc.moveTo(px,py);sc.lineTo(px,py+24);sc.stroke();
   const g=sc.createLinearGradient(0,py+24,0,py+24+sz);g.addColorStop(0,`hsl(${h},${s}%,${l+16}%)`);g.addColorStop(1,`hsl(${h},${s}%,${l-14}%)`);
@@ -195,7 +196,7 @@ function setNote(){document.getElementById('note').innerHTML= mode==='lever'?
   :'<b>物理重點：</b>滑輪組用 <code>N</code> 條繩共同吊住載重，每條分擔 <code>W/N</code>，施力 <code>F = W/N</code>，<b>機械利益 = N</b>（理想情況：忽略動滑輪重量與摩擦，實際施力會再大一些）。但要把載重升高 h，必須拉繩 <code>N·h</code>。功 <code>W×h = F×(N·h)</code> 守恆——機械只能<b>省力</b>或<b>省距離</b>，不能省功。';}
 const mL=document.getElementById('mLever'),mP=document.getElementById('mPulley');
 function switchMode(m){mode=m;mL.classList.toggle('on',m==='lever');mP.classList.toggle('on',m==='pulley');
-  document.getElementById('leverPresets').style.display=m==='lever'?'flex':'none';targetAngle=null;angle=0;buildControls();setNote();draw();}
+  document.getElementById('leverPresets').style.display=m==='lever'?'flex':'none';targetAngle=null;angle=0;setupCanvases();buildControls();setNote();draw();}
 mL.onclick=()=>switchMode('lever');mP.onclick=()=>switchMode('pulley');
 const PRE={bal:{w1:20,d1:3,w2:30,d2:2},adv:{w1:10,d1:5,w2:50,d2:1}};
 document.querySelectorAll('[data-preset]').forEach(b=>b.onclick=()=>{const p=PRE[b.dataset.preset];if(!p)return;Object.assign(lever,p);targetAngle=null;buildControls();draw();});
