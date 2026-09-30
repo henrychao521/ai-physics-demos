@@ -52,8 +52,8 @@
   </div>
 
   <div class="stage">
-    <canvas id="cv" width="1000" height="560"></canvas>
-    <div class="legend">side view：上方弧形為燈具（多光源），中央圓為遮擋物，底部為手術檯面（顏色＝照度，下方曲線為檯面照度分佈）。</div>
+    <canvas id="cv" width="1000" height="640"></canvas>
+    <div class="legend">side view：上方弧形為燈具（多光源），中央圓為遮擋物，底部為手術檯面（顏色＝照度）；下方曲線為檯面各處的<b>相對照度</b>（1＝所有光源都沒被擋時檯面正中央的照度）。</div>
   </div>
 
   <div class="grid" id="controls"></div>
@@ -87,9 +87,11 @@ sliders.forEach(s=>{state[s.id]=s.val;
 });
 
 function _hd(c,w,h){var d=window.devicePixelRatio||1;c.width=w*d;c.height=h*d;var x=c.getContext('2d');x.setTransform(d,0,0,d,0,0);return x;}
-const cv=document.getElementById('cv'), g=_hd(cv,1000,560);
-const W=1000,H=560;
-const tableY=H-70;            // 檯面 y
+const cv=document.getElementById('cv'), g=_hd(cv,1000,640);
+// 畫布加高 80 px（560→640）給下方照度圖；檯面位置不變
+const W=1000,H=640;
+const tableY=490;             // 檯面 y
+const IMAX=1.4;               // 照度圖縱軸上限（相對照度）；最大約 1.34（2 顆、張角 160° 時光源正下方），不會被截
 const lampCx=W/2, lampCy=70, lampR=300; // 燈具弧中心與半徑
 
 function lights(){
@@ -160,9 +162,18 @@ function draw(){
   g.strokeStyle='#3a4756';g.lineWidth=2;g.strokeRect(0,tableY,W,th);
 
   // illumination curve (below table)
-  g.beginPath();
-  for(let i=0;i<cols;i++){const y=H-2-(Math.min(1.15,I[i]/norm))*(H-tableY-th-6);
-    if(i===0)g.moveTo(i,y);else g.lineTo(i,y);}
+  // 縱軸＝相對照度：1＝所有光源都未被遮擋時檯面正中央的照度（norm），橫軸與檯面位置對齊
+  const pTop=tableY+th+22, pBot=H-8, yOf=v=>pBot-Math.min(IMAX,v)/IMAX*(pBot-pTop);
+  g.font='16px sans-serif';g.textAlign='right';g.lineWidth=1;
+  for(const v of [0,0.5,1]){const y=yOf(v);
+    g.strokeStyle=v===0?'#4a5868':'rgba(120,140,160,.35)';g.setLineDash(v===0?[]:[4,5]);
+    g.beginPath();g.moveTo(40,y);g.lineTo(W,y);g.stroke();
+    g.fillStyle='#8a97a6';g.fillText(v===0?'0':String(v),34,y+5);}
+  g.setLineDash([]);g.strokeStyle='#4a5868';g.beginPath();g.moveTo(40,pTop-4);g.lineTo(40,pBot);g.stroke();
+  g.textAlign='left';g.fillStyle='#8a97a6';g.fillText('相對照度',46,pTop-6);
+  g.beginPath();   // 曲線從縱軸（x=40）右側開始畫，不壓到刻度文字；橫座標仍與檯面逐點對齊
+  for(let i=41;i<cols;i++){const y=yOf(I[i]/norm);
+    if(i===41)g.moveTo(i,y);else g.lineTo(i,y);}
   g.strokeStyle='#7CFFB2';g.lineWidth=2;g.stroke();
 
   // rays from each light to a few table points (visual), dim if blocked
@@ -207,7 +218,7 @@ function draw(){
 let dragMode=false, dragging=false;
 document.getElementById('drag').onclick=()=>{dragMode=!dragMode;
   document.getElementById('drag').textContent=dragMode?'✋ 拖曳中（再按關閉）':'🟠 點此切換：拖曳遮擋物';};
-function pos(e){const r=cv.getBoundingClientRect();const sx=1000/r.width,sy=560/r.height;
+function pos(e){const r=cv.getBoundingClientRect();const sx=W/r.width,sy=H/r.height;
   const cx=(e.touches?e.touches[0].clientX:e.clientX), cy=(e.touches?e.touches[0].clientY:e.clientY);
   return {x:(cx-r.left)*sx,y:(cy-r.top)*sy};}
 cv.addEventListener('pointerdown',e=>{const p=pos(e);const ob=obstacle();
