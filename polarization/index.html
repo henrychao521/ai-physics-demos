@@ -175,8 +175,8 @@ function draw(){const W=sc._w,H=sc._h;S.scene(sc,SKY,{});
 }
 function drawScreen(x,cy,r,frac){ // 亮度屏
   const g=sc.createRadialGradient(x,cy,2,x,cy,r*1.6);
-  const b=Math.round(40+frac*215);
-  g.addColorStop(0,`rgba(${b},${b},${Math.min(255,b+10)},${0.4+frac*0.6})`);g.addColorStop(1,'rgba(0,0,0,0)');
+  const b=Math.round(frac*255);   // I=0 時全黑（原本 b=40、α=0.4 仍有微光）
+  g.addColorStop(0,`rgba(${b},${b},${Math.min(255,b+10)},${frac})`);g.addColorStop(1,'rgba(0,0,0,0)');
   sc.fillStyle=g;sc.beginPath();sc.arc(x,cy,r*1.6,0,7);sc.fill();
   sc.strokeStyle='rgba(150,170,210,.4)';sc.lineWidth=1.5;sc.beginPath();sc.arc(x,cy,r*0.7,0,7);sc.stroke();
   sc.fillStyle='rgba(200,215,240,.8)';sc.font='12px system-ui';sc.textAlign='center';sc.fillText('亮度 '+(frac*100).toFixed(0)+'%',x,cy+r+18);sc.textAlign='left';
