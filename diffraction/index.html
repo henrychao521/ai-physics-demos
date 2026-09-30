@@ -45,7 +45,7 @@
     <span class="badge">波動光學</span>
     <h1>繞射成像互動模擬</h1>
     <p>雙狹縫 / 單狹縫的干涉與繞射，並可調整 <b>左右光相位差</b> 與 <b>兩側前後距離差 ΔL</b>，
-       即時觀察成像峰值偏移與<b>非對稱條紋</b>。模型以惠更斯子波（孔徑離散點源）疊加實際光程計算。</p>
+       比較兩者的效果：相位差讓整組條紋平移，ΔL 只讓<b>離軸較遠處</b>的條紋輕微不對稱。模型以惠更斯子波（孔徑離散點源）疊加實際光程計算，入射光為平面波。</p>
   </header>
 
   <div class="modes">
@@ -58,7 +58,7 @@
     <span style="color:var(--muted);font-size:.8rem;align-self:center">教學情境：</span>
     <button class="btn" data-preset="std">標準雙縫</button>
     <button class="btn" data-preset="phase">相位偏移 Δφ</button>
-    <button class="btn" data-preset="asym">縱向非對稱 ΔL</button>
+    <button class="btn" data-preset="asym">前後錯開 ΔL</button>
     <button class="btn" data-preset="single">單縫繞射</button>
   </div>
 
@@ -75,10 +75,12 @@
   <div class="grid" id="controls"></div>
 
   <div class="note">
-    <b>物理重點：</b>標準雙狹縫條紋左右對稱。當你加入<b>相位差 Δφ</b>，整組條紋會平移（中央亮紋不再在正中央）。
-    當左右狹縫存在<b>前後縱向距離差 ΔL</b>（縱向分離狹縫），兩側到螢幕各點的光程差出現非線性畸變，
-    條紋寬度與強度在左右兩側不再對稱，形成<b>非對稱繞射干涉圖樣</b>。單狹縫模式下，把單一狹縫的左右擋板做出前後差，
-    其單縫繞射包絡線也會傾斜變形。這就是縱向非對稱狹縫繞射的典型現象。
+    <b>物理重點：</b>標準雙狹縫條紋左右對稱。加入<b>相位差 Δφ</b>，整組條紋會平移（中央亮紋不再在正中央）。
+    把狹縫2<b>往後錯開 ΔL</b> 並<b>不會</b>造成同樣的平移：入射平面波到狹縫2 時已多走了 ΔL，
+    後段又少走約 ΔL，兩者在光軸上抵消，中央亮紋仍在正中央。只剩一個很小的二次項：額外光程差約 <code>ΔL·θ²/2</code>（θ≈y/L 為偏離光軸的角度），
+    所以只有<b>離軸較遠處</b>的條紋會輕微不對稱；ΔL 要夠大、θ 也要夠大，讓 ΔL·θ²/2 接近 λ 的幾分之一才看得出來
+    （例：d=120 µm、ΔL=300 µm 時左右光強只差約 5%；「前後錯開 ΔL」情境用 d=40 µm、ΔL=400 µm，畫面外側可到 ±0.1 rad，差別才明顯）。
+    單狹縫模式把左右擋板做出前後差，主峰同樣留在中央，只有外側次亮紋輕微變形。
   </div>
 
   <footer>
@@ -125,7 +127,7 @@ document.getElementById('reset').onclick=()=>{
 const PRESETS={
   std:   {mode:'double',lambda:530,d:120,a:30,L:1000,phi:0,  dz:0},
   phase: {mode:'double',lambda:530,d:120,a:30,L:1000,phi:120,dz:0},
-  asym:  {mode:'double',lambda:530,d:120,a:30,L:1000,phi:0,  dz:300},
+  asym:  {mode:'double',lambda:530,d:40, a:10,L:1000,phi:0,  dz:400},
   single:{mode:'single',lambda:530,d:120,a:60,L:1000,phi:0,  dz:0}
 };
 document.querySelectorAll('[data-preset]').forEach(b=>b.addEventListener('click',()=>{
@@ -197,7 +199,8 @@ function draw(){
       const dx=Y-p.x, dzz=L-p.z;
       const r=Math.sqrt(dx*dx+dzz*dzz);
       const r0=Math.sqrt(Y*Y+L*L);
-      const ph=2*Math.PI*(r-r0)/lam + p.phi;
+      // 入射平面波沿 +z：子波源在 z 處的相位已是 k·z（平面波先走了 z），總光程＝z + r
+      const ph=2*Math.PI*(p.z+r-r0)/lam + p.phi;
       re+=p.amp*Math.cos(ph); im+=p.amp*Math.sin(ph);
     }
     const v=re*re+im*im; I[i]=v; if(v>Imax)Imax=v;
