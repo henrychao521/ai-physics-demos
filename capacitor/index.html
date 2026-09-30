@@ -26,6 +26,8 @@
   .toolbar{position:absolute;bottom:12px;right:12px;display:flex;gap:7px;flex-wrap:wrap;justify-content:flex-end}
   .toolbar button{background:rgba(10,16,24,.62);backdrop-filter:blur(6px);color:#dceaff;border:1px solid rgba(120,180,255,.2);border-radius:9px;padding:7px 11px;font-size:.82rem;cursor:pointer;font-family:inherit}
   .toolbar button.on{background:var(--accent);color:#04121c;border-color:var(--accent);font-weight:700}
+  .capnote{position:absolute;bottom:12px;left:12px;max-width:52%;background:rgba(10,16,24,.62);border:1px solid rgba(120,180,255,.16);border-radius:8px;padding:4px 9px;color:#9fb4d4;font-size:.74rem;line-height:1.35;pointer-events:none}
+  @media(max-width:560px){.capnote{position:static;max-width:none;border-radius:0;border-width:1px 0 0;text-align:center}}
   @media(max-width:560px){.toolbar{position:static;justify-content:center;padding:8px 10px;background:rgba(8,14,22,.5);border-top:1px solid var(--line)}}
   .bar{display:flex;gap:14px;flex-wrap:wrap;align-items:flex-end;background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:14px 16px;margin-top:14px}
   .sld{flex:1;min-width:160px}
@@ -53,6 +55,7 @@
   <div class="scene-wrap">
     <canvas id="scene"></canvas>
     <div class="hud" id="hud"></div>
+    <div class="capnote">場線為示意，密度不代表強弱（E 看讀數）</div>
     <div class="toolbar"><button id="diel">插入介電質（εr=4）</button></div>
   </div>
 
@@ -68,7 +71,7 @@
 
   <div class="note">
     <b>物理重點：</b>平行板電容 <code>C = ε₀·εr·A/d</code>（ε₀=8.85×10⁻¹² F/m）：<b>板面積 A 越大、間距 d 越小，電容越大</b>。
-    接上電壓後 <code>Q = CV</code>（電容決定同電壓下能存多少電荷）；板間是<b>均勻電場</b> <code>E = V/d</code>；儲存的電能 <code>U = ½CV² = ½QV = Q²/2C</code>。
+    接上電壓後 <code>Q = CV</code>（電容決定同電壓下能存多少電荷）；板間是<b>均勻電場</b> <code>E = V/d</code>（畫面場線為示意，條數與疏密不代表 E 的大小，請看讀數）；儲存的電能 <code>U = ½CV² = ½QV = Q²/2C</code>。
     插入<b>介電質</b>（εr>1）使電容變 εr 倍。本模擬電池全程接著（電壓 V 固定），所以板間電場 <code>E = V/d</code> 不變，改變的是電荷 Q 變 εr 倍、能存更多電荷；若是先充電再斷開電源（Q 固定），插入介電質才會讓板間電場減弱為 1/εr。電容器用於濾波、計時(配合電阻)、閃光燈儲能、觸控螢幕感測。
   </div>
 
