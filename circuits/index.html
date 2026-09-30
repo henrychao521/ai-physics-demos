@@ -73,7 +73,7 @@
   <div class="note">
     <b>物理重點：</b>歐姆定律 <code>V = IR</code>。<b>串聯</b>等效電阻 <code>R總 = R₁+R₂+…</code>（越串越大），電流 <code>I = V/R總</code> 每顆燈相同，電壓按電阻比例分配。
     <b>並聯</b>等效電阻 <code>1/R總 = 1/R₁+…</code>（越並越小），每顆燈兩端都是電源電壓、亮度不變，總電流變大。
-    亮度由功率 <code>P = VI = I²R</code> 決定——這就是家裡電器都<b>並聯</b>的原因：各自獨立、都拿到 110V。
+    亮度由功率 <code>P = VI = I²R</code> 決定（畫面燈泡發光依每燈實際功率，電壓越高越亮）——這就是家裡電器都<b>並聯</b>的原因：各自獨立、都拿到 110V。
   </div>
 
   <footer>純前端 HTML / Canvas（SIM 工具庫）。理想電池與電阻（燈泡視為定值電阻）。</footer>
@@ -103,7 +103,8 @@ function setSlider(id,val){state[id]=val;const r=document.getElementById('r_'+id
   const s=sliders.find(z=>z.id===id);if(s)document.getElementById('v_'+id).textContent=`${fmt(val)} ${s.unit}`;}
 function calc(){const V=state.V,R=state.R,N=state.N;let Rtot,Itot,Vb,Ib,Pb;
   if(series){Rtot=N*R;Itot=V/Rtot;Ib=Itot;Vb=Ib*R;Pb=Ib*Ib*R;}else{Rtot=R/N;Itot=V/Rtot;Vb=V;Ib=V/R;Pb=Vb*Ib;}
-  return {Rtot,Itot,Vb,Ib,Pb,bright:Math.min(1,Pb/(V*V/R))};}
+  // bright＝相對同電壓單燈（統計卡）；glow＝畫面發光，依每燈絕對功率 √(P/72 W) 映射（72 W＝12 V 接 2 Ω 單燈的最大值），電壓高低也看得出差別
+  return {Rtot,Itot,Vb,Ib,Pb,bright:Math.min(1,Pb/(V*V/R)),glow:Math.min(1,Math.sqrt(Pb/(12*12/2)))};}
 
 function frow(n,sym,sub,val){return `<div class="frow"><span class="fname">${n}</span><span class="fsym">${sym}</span><span class="fsub">= ${sub}</span><span class="fval">${val}</span></div>`;}
 function updateFormula(){
@@ -149,7 +150,7 @@ function draw(){const W=sc._w,H=sc._h,c=calc(),N=state.N,I=c.Itot;
   if(series){const top=80,bot=H-66,left=80,right=W-80;
     wire(left,top,right,top,I);wire(right,top,right,bot,I);wire(right,bot,left,bot,I);wire(left,bot,left,top,I);
     battery(left,(top+bot)/2);
-    for(let i=0;i<N;i++)bulb(left+(right-left)*(i+1)/(N+1),top,18,c.bright);
+    for(let i=0;i<N;i++)bulb(left+(right-left)*(i+1)/(N+1),top,18,c.glow);
     sc.fillStyle='rgba(150,200,190,.7)';sc.font='12px system-ui';sc.fillText('串聯：同一條路，電流處處相等',left,H-26);
   }else{const top=72,bot=H-56,railL=180,railR=W-110;
     battery(120,(top+bot)/2);
@@ -158,9 +159,9 @@ function draw(){const W=sc._w,H=sc._h,c=calc(),N=state.N,I=c.Itot;
     wire(120,(top+bot)/2-18,120,top,I);wire(120,bot,120,(top+bot)/2+18,I);wire(120,top,railL,top,I);wire(railR,bot,120,bot,I);
     wire(railL,top,railL,ys[0],I);for(let i=0;i<N-1;i++)wire(railL,ys[i],railL,ys[i+1],(N-1-i)*c.Ib);
     for(let i=0;i<N-1;i++)wire(railR,ys[i],railR,ys[i+1],(i+1)*c.Ib);wire(railR,ys[N-1],railR,bot,I);
-    for(let i=0;i<N;i++){const y=ys[i];wire(railL,y,railR,y,c.Ib);bulb((railL+railR)/2,y,16,c.bright);}
+    for(let i=0;i<N;i++){const y=ys[i];wire(railL,y,railR,y,c.Ib);bulb((railL+railR)/2,y,16,c.glow);}
     sc.fillStyle='rgba(150,200,190,.7)';sc.font='12px system-ui';sc.fillText('並聯：各走各的支路，每顆都拿到全電壓',railL,H-22);}
-  document.getElementById('hud').innerHTML=chip('總電阻',c.Rtot.toFixed(2)+' Ω')+chip('總電流',f3(c.Itot)+' A')+chip('每燈亮度',(c.bright*100).toFixed(0)+'%');
+  document.getElementById('hud').innerHTML=chip('總電阻',c.Rtot.toFixed(2)+' Ω')+chip('總電流',f3(c.Itot)+' A')+chip('每燈功率',f3(c.Pb)+' W');
   drawStats(c);}
 function chip(k,v){return `<div class="chip">${k}<b>${v}</b></div>`;}
 function drawStats(c){
