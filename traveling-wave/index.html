@@ -56,6 +56,7 @@
     <div class="toolbar">
       <button id="play" class="on">⏸ 暫停</button>
       <button id="dir" class="on">向右 →</button>
+      <button id="ampBtn" class="on" aria-pressed="true">振幅：放大顯示</button>
     </div>
   </div>
 
@@ -75,12 +76,12 @@
     波速由<b>介質決定</b>（繩的張力 F 與線密度 μ：v=√(F/μ)）：改頻率時波長跟著變、但波速不變。振幅 A 只影響能量（∝A²），不影響波速。
   </div>
 
-  <footer>純前端 HTML / Canvas（SIM 工具庫）。理想無色散橫波；空間自適應顯示約 2.6 個波長。</footer>
+  <footer>純前端 HTML / Canvas（SIM 工具庫）。理想無色散橫波；空間自適應顯示約 2.6 個波長；振幅預設放大顯示，可切換為實際比例。</footer>
 </div>
 
 <script>
 const S=SIM;
-let dir=1;
+let dir=1, ampZoom=true;   // ampZoom：振幅方向放大顯示（預設）／實際比例（水平、垂直同一比例尺）
 const sliders=[
   {id:'A',name:'振幅 A',min:5,max:50,step:1,val:30,unit:'cm'},
   {id:'f',name:'頻率 f',min:.3,max:2.5,step:.1,val:1,unit:'Hz'},
@@ -127,10 +128,12 @@ function updateHud(){
 let sc, ph=0;
 const SEA={skyTop:'#08201c',skyBottom:'#04100e',vignette:'rgba(0,0,0,.45)'};
 function setupCanvases(){sc=S.fit(document.getElementById('scene'),2.6);}
-function drawScene(){const W=sc._w,H=sc._h,mid=H/2,A=state.A* (H*0.34/50), L=lam();
+function drawScene(){const W=sc._w,H=sc._h,mid=H/2, L=lam();
   S.scene(sc,SEA,{});
   const Xspan=Math.max(2.6*L,6);        // 顯示寬度(m)，約 2.6 個波長
   const px=x=>x/Xspan*W;                 // m→px
+  // 振幅像素：放大時 50 cm 對應 0.34H；實際比例時與水平同一比例尺（A 公分→公尺 × W/Xspan）
+  const Azoom=state.A*(H*0.34/50), Areal=state.A/100*W/Xspan, A=ampZoom?Azoom:Areal;
   const k=2*Math.PI/L, w=2*Math.PI*state.f;
   const yOf=x=>mid - A*Math.sin(k*x - dir*ph);
   // 中線
@@ -157,6 +160,14 @@ function drawScene(){const W=sc._w,H=sc._h,mid=H/2,A=state.A* (H*0.34/50), L=lam
     sc.fillStyle='#6cd0ff';sc.font='bold 12px system-ui';sc.fillText('λ = '+L.toFixed(2)+' m',(px(c1)+px(c1+L))/2-26,y-7);}
   // 波前進方向箭頭
   sc.fillStyle='rgba(124,255,178,.8)';sc.font='12px system-ui';sc.fillText('波前進 '+(dir>0?'→':'←'),W-90,24);   // 向左時原本畫在 (10,24)，被左上數值卡片蓋住
+  // 比例尺註記
+  // 桌機寫在左下角；手機畫面矮、左下會壓到 λ 標記，改寫在右上「波前進」下方
+  const narrow=W<560, zr=(Azoom/Areal).toFixed(1);
+  sc.font=narrow?'600 11px system-ui':'600 12px system-ui';sc.textAlign=narrow?'right':'left';
+  const tx=narrow?W-10:10, ty=narrow?42:H-10;
+  if(ampZoom){sc.fillStyle='#ffce54';sc.fillText(narrow?`振幅已放大 ×${zr}`:`振幅方向已放大 ×${zr}`,tx,ty);}
+  else{sc.fillStyle='rgba(200,230,220,.75)';sc.fillText(narrow?'實際比例':'實際比例（水平、垂直同比例尺）',tx,ty);}
+  sc.textAlign='left';
   updateHud();
 }
 function render(){drawScene();}
@@ -167,6 +178,8 @@ const pb=document.getElementById('play');
 pb.onclick=()=>{playing=!playing;pb.classList.toggle('on',playing);pb.textContent=playing?'⏸ 暫停':'▶ 播放';};
 const db=document.getElementById('dir');
 db.onclick=()=>{dir*=-1;db.textContent=dir>0?'向右 →':'向左 ←';db.classList.add('on');};
+const ab=document.getElementById('ampBtn');
+ab.onclick=()=>{ampZoom=!ampZoom;ab.classList.toggle('on',ampZoom);ab.setAttribute('aria-pressed',ampZoom);ab.textContent=ampZoom?'振幅：放大顯示':'振幅：實際比例';render();};
 const PRE={slow:{A:30,f:0.5,v:6},fast:{A:22,f:2.2,v:6},big:{A:48,f:1,v:6}};
 document.querySelectorAll('[data-preset]').forEach(b=>b.onclick=()=>{const pr=PRE[b.dataset.preset];if(!pr)return;
   ['A','f','v'].forEach(k=>setSlider(k,pr[k]));recompute();});
