@@ -106,23 +106,34 @@ function fmt(x){return (Math.round(x*100)/100).toString();}
 function setSlider(id,val){state[id]=val;const r=document.getElementById('r_'+id);if(r)r.value=val;
   const s=sliders.find(z=>z.id===id);if(s)document.getElementById('v_'+id).textContent=`${fmt(val)} ${s.unit}`;updateFormula();}
 
-let sc,fronts=[],sx=80,simT=0,lastEmit=-EMIT,playing=true,SY=150,OBSX=820,OBSY=300;
+let sc,fronts=[],sx=80,sx0=80,simT=0,lastEmit=-EMIT,playing=true,SY=150,OBSX=820,OBSY=300;
 const NIGHT={skyTop:'#0a1230',skyBottom:'#060818',vignette:'rgba(0,0,0,.5)'};
 function setupCanvases(){sc=S.fit(document.getElementById('scene'),2.6);SY=sc._h*0.4;OBSX=sc._w*0.78;OBSY=sc._h*0.78;if(sx>sc._w)sx=80;}
-function reset(){fronts=[];sx=sc?sc._w*0.06:80;simT=0;lastEmit=-EMIT;}
+let passT=-1;
+function reset(){fronts=[];sx=sx0=sc?sc._w*0.06:80;simT=0;lastEmit=-EMIT;passT=-1;}
 function step(dt){const vsrc=state.M*VSND;sx+=vsrc*dt;simT+=dt;
   if(simT-lastEmit>=EMIT){fronts.push({x:sx,y:SY,t:simT});lastEmit=simT;}
-  fronts=fronts.filter(f=>VSND*(simT-f.t)<2000);if(sx>sc._w+60)reset();}
+  fronts=fronts.filter(f=>VSND*(simT-f.t)<2000);
+  // 超音速時音源飛出畫面，錐面可能還沒掃到觀察者：等錐面掃過、再停 1 秒讓人看到「音爆已通過」才重來
+  if(sx>sc._w+60){if(state.M<1||sx>sc._w*4)reset();
+    else if(boomPassed()){if(passT<0)passT=simT;else if(simT-passT>1)reset();}}}
 // 觀察者「此刻聽到」的是較早發出、剛好傳到的那個波前：用發出當時（推遲時間）的音源位置算 cosθ。
 // 原本用「音源現在的位置」，音源經過觀察者正上方時 HUD 立刻變低音，但畫面上傳到耳朵的波前還是密的。
 // (V·τ)² = (dx + v_源·τ)² + dy² 解 τ（M<1 時唯一正根）；τ 超過本輪起跑後的時間 → 聲音還沒傳到。
 function heard(){const vs=state.M*VSND,V=VSND,dx=OBSX-sx,dy=OBSY-SY;
-  if(state.M>=1)return {f:null,cos:1,arrived:true};
+  if(state.M>=1)return {f:null,cos:1,arrived:boomPassed(),boom:true};
   const A=V*V-vs*vs,B=-2*dx*vs,C=-(dx*dx+dy*dy),tau=(-B+Math.sqrt(B*B-4*A*C))/(2*A);
   if(tau>simT)return {f:null,cos:0,arrived:false};
   const xe=sx-vs*tau,de=Math.hypot(OBSX-xe,dy)||1,cos=(OBSX-xe)/de;
   return {f:state.f0/(1-state.M*cos),cos,arrived:true};}
 function fHeard(){return heard().f;}
+// M≥1：馬赫錐是否已掃過觀察者。t_e 時發出的聲音到達時間 t_a = t_e + |觀察者 − 音源(t_e)|/V，
+// 其最小值（最早聽到的聲音＝錐面）發生在發出方向與路徑夾角 cosθ = 1/M，即 x_e = OBSX − |dy|/√(M²−1)；
+// 本輪從 t=0 起跑，t_e 夾在 [0, simT]。最早到達時間 ≤ simT 即錐面已掃過。
+function boomPassed(){const vs=state.M*VSND,V=VSND,dy=OBSY-SY;
+  const k=Math.sqrt(state.M*state.M-1), xe=k>1e-9?OBSX-Math.abs(dy)/k:-Infinity;
+  const te=Math.min(Math.max((xe-sx0)/vs,0),simT), x=sx0+vs*te;
+  return te+Math.hypot(OBSX-x,dy)/V<=simT;}
 function draw(){const W=sc._w,H=sc._h;
   S.scene(sc,NIGHT,{});
   for(let i=0;i<60;i++){sc.fillStyle='rgba(255,255,255,.3)';sc.fillRect((i*137)%W,(i*89)%H,1,1);}
@@ -145,13 +156,14 @@ function draw(){const W=sc._w,H=sc._h;
   S.sphere(sc,OBSX,OBSY,9,[210,40,70]);sc.fillStyle='rgba(200,210,240,.7)';sc.fillText('觀察者',OBSX-18,OBSY+24);
   updateHud();
 }
-function updateHud(){const h=heard(),f=h.f,approaching=h.cos>0&&state.M>0,none=state.M<1?'（尚未傳到）':'(音爆)';
+function updateHud(){const h=heard(),f=h.f,approaching=h.cos>0&&state.M>0,none=state.M<1?'（尚未傳到）':(h.arrived?'音爆已通過':'尚未聽到');
   document.getElementById('hud').innerHTML=chip('馬赫數 M',state.M.toFixed(2),'')+chip('音源 f₀',state.f0+' Hz','')+
     chip('聽到 f′',f?f.toFixed(0)+' Hz':none,f?(f>state.f0?'up':'down'):'up');
   const rows=[['馬赫數 M',state.M.toFixed(2),'#ffce54'],['聽到頻率 f′',f?f.toFixed(0)+' Hz':none,f?(f>state.f0?'#ff6b9d':'#4cc2ff'):'#ff6b9d'],['f′/f₀',f?(f/state.f0).toFixed(2):'—','#e8eef6']];
   document.getElementById('stats').innerHTML=rows.map(r=>`<div class="box"><div class="k">${r[0]}</div><div class="v" style="color:${r[2]}">${r[1]}</div></div>`).join('');
   const sb=document.getElementById('stateBar');
-  if(state.M>=1){sb.textContent='💥 超音速！波前疊成馬赫錐 → 錐面掃過耳朵即「音爆」';sb.style.background='rgba(255,107,157,.16)';sb.style.color='#ff6b9d';}
+  if(state.M>=1&&!h.arrived){sb.textContent='💥 超音速！波前疊成馬赫錐：錐面尚未掃到觀察者，還聽不到';sb.style.background='rgba(255,206,84,.12)';sb.style.color='#ffce54';}
+  else if(state.M>=1){sb.textContent='💥 馬赫錐已掃過觀察者 → 聽到「音爆」';sb.style.background='rgba(255,107,157,.16)';sb.style.color='#ff6b9d';}
   else if(!h.arrived){sb.textContent='⏳ 聲波還在路上：第一個波前尚未傳到觀察者';sb.style.background='rgba(255,206,84,.12)';sb.style.color='#ffce54';}
   else if(approaching){sb.textContent='🔴 音源接近中：波前壓縮 → 聽到頻率升高（音調變高）';sb.style.background='rgba(255,107,157,.13)';sb.style.color='#ff6b9d';}
   else{sb.textContent='🔵 音源遠離中：波前拉長 → 聽到頻率降低（音調變低）';sb.style.background='rgba(76,194,255,.12)';sb.style.color='#4cc2ff';}}
