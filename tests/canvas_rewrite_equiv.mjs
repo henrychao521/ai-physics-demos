@@ -24,8 +24,10 @@ const eq = (a, b, what) => { checks++;
     fSideTxt: P.fSide.toFixed(0), batteryPct: ((s.battery.weight / P.totalMass) * 100).toFixed(1) });
   const { HW, hoverPhysics } = new Function(phys(newSrc('hovercraft/index.html')) + '; return { HW, hoverPhysics };')();
   eq(JSON.stringify(HW), JSON.stringify(oldDB), '硬體資料庫');
+  // 2026-09-30 P09：推力電壓修正由線性 V/14.8 改為 (V/14.8)²（物理修正，非改寫誤差）。
+  // 只有 4S（14.8 V）兩種公式都等於 1，等價對帳限定 4S；3S 的新公式另由 fixes/physics_decisions_1 對帳。
   let n = 0; const rows = [];
-  for (const lm of oldDB.motors) for (const tm of oldDB.motors) for (const tc of [1, 2]) for (const bat of oldDB.batteries)
+  for (const lm of oldDB.motors) for (const tm of oldDB.motors) for (const tc of [1, 2]) for (const bat of oldDB.batteries.filter(b => b.voltage === 14.8))
   for (const mat of oldDB.materials) for (const lift of [0, 20, 45, 73, 100]) for (const thr of [0, 37, 100]) for (const vane of [-30, -5, 0, 15, 30]) {
     const s = { liftMotor: lm, thrustMotor: tm, thrustCount: tc, battery: bat, material: mat, throttle: { lift, thrust: thr }, vaneAngle: vane };
     const A = oldPhys(lm, tm, tc, bat, mat, s.throttle, vane), An = oldNotes(s, A);
