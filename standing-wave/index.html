@@ -65,7 +65,7 @@
 
   <div class="note">
     <b>物理重點：</b>弦上波速 <code>v = √(張力 T / 線密度 μ)</code>。兩端固定 → 弦長必是<b>半波長整數倍</b> <code>L = n·λ/2</code>，
-    得諧波頻率 <code>f_n = n·v/2L</code>。驅動頻率落在 f_n 才共振、振幅放大；偏離就互相抵消、幾乎不動。
+    得諧波頻率 <code>f_n = n·v/2L</code>。驅動頻率落在 f_n 才共振、振幅放大；偏離共振時振幅很小（畫面以「共振程度」示意，振幅隨偏離量遞減）。
     <b>張力越大波速越快、共振頻率越高</b>；弦越長頻率越低——這就是弦樂器調音原理。第 n 諧波有 <b>n 個腹點、n+1 個節點</b>。
   </div>
 
@@ -135,7 +135,7 @@ function updateHud(n,af){const fn=n*f1(),lam=2*state.L/n;
   const r=document.getElementById('reson');
   if(af>0.85){r.textContent='✓ 共振！驅動 ≈ 第 '+n+' 諧波 ('+(n*f1()).toFixed(0)+' Hz) — 形成清晰駐波';r.style.background='rgba(124,255,178,.16)';r.style.color='#7CFFB2';}
   else if(af>0.3){r.textContent='接近第 '+n+' 諧波，再微調到 '+(n*f1()).toFixed(0)+' Hz 達最大共振';r.style.background='rgba(255,206,84,.12)';r.style.color='#ffce54';}
-  else{r.textContent='非共振：波互相抵消、振幅很小（試試 '+Math.round(f1())+'、'+Math.round(2*f1())+'、'+Math.round(3*f1())+' Hz）';r.style.background='rgba(138,153,173,.1)';r.style.color='#8a99ad';}}
+  else{r.textContent='非共振：振幅很小（試試 '+Math.round(f1())+'、'+Math.round(2*f1())+'、'+Math.round(3*f1())+' Hz）';r.style.background='rgba(138,153,173,.1)';r.style.color='#8a99ad';}}
 function chip(k,v2){return `<div class="chip">${k}<b>${v2}</b></div>`;}
 
 function frow(n,sym,sub,val){return `<div class="frow"><span class="fname">${n}</span><span class="fsym">${sym}</span><span class="fsub">= ${sub}</span><span class="fval">${val}</span></div>`;}
