@@ -76,7 +76,7 @@
 
   <div class="note">
     <b>物理重點：</b>馬克士威方程組預測電磁波，並算出其速度恰為光速 <code>c = 1/√(ε₀μ₀) ≈ 3×10⁸ m/s</code>，證明光是電磁波。
-    真空中所有電磁波都以 c 行進：<code>c = λf</code>，所以<b>頻率越高、波長越短</b>。電場與磁場振幅比固定：<code>E₀ = c·B₀</code>。
+    真空中所有電磁波都以 c 行進：<code>c = λf</code>，所以<b>頻率越高、波長越短</b>。電場與磁場振幅比固定：<code>E₀ = c·B₀</code>，兩者同相、互相垂直，且 <b>E×B 的方向就是傳播方向</b>（左下角座標：x 傳播、y＝E、z＝B，z 軸朝向讀者；用右手定則驗證 y×z＝x）。
     把電磁波看成光子時，能量 <code>E = h·f</code>（頻率越高、光子能量越大，這就是 X 射線、γ 射線具穿透/游離能力的原因）。
     電磁波譜：無線電 → 微波 → 紅外 → <b>可見光（380–750 nm）</b> → 紫外 → X 射線 → γ 射線，本質相同、只差頻率。
   </div>
@@ -143,8 +143,17 @@ let sc;
 const SKY={skyTop:'#0a1322',skyBottom:'#070d16',vignette:'rgba(0,0,0,.42)'};
 function setupCanvases(){sc=S.fit(document.getElementById('scene'),1.95);}
 let phase=0, running=true, showB=true;
-// 深度方向(z 軸)投影到螢幕：往右上
-const DZ={x:0.52,y:-0.40};
+// 深度方向(z 軸，朝向讀者)投影到螢幕：往左下。E 沿 +y、B 沿 +z 同相，E×B＝(+y)×(+z)＝+x＝傳播方向
+const DZ={x:-0.52,y:0.40};
+// 左下角小座標三軸：x 傳播、y＝E、z＝B（朝向讀者）
+function drawAxes(W,H){const len=Math.max(16,Math.min(26,H*0.07)),ox=14+len*0.52,oy=H-40-len*0.4;
+  const ax=(dx,dy,c,t,tx,ty)=>{S.arrow(sc,ox,oy,ox+dx*len,oy+dy*len,{color:c,width:1.6});sc.fillStyle=c;sc.fillText(t,ox+dx*len+tx,oy+dy*len+ty);};
+  sc.font='bold 10px system-ui';
+  ax(1,0,'rgba(190,205,235,.9)','x',3,4);
+  const col=waveColor();ax(0,-1,`rgb(${col[0]},${col[1]},${col[2]})`,'y＝E',-6,-4);
+  if(showB)ax(DZ.x,DZ.y,'#6ca8ff','z＝B',-4,12);
+  else ax(DZ.x,DZ.y,'rgba(108,168,255,.7)','z',-4,12);
+  if(W>=600){sc.fillStyle='rgba(190,205,235,.75)';sc.font='10px system-ui';sc.fillText('（z 軸朝向讀者）',ox+8,oy-8);}}
 function draw(){const W=sc._w,H=sc._h;S.scene(sc,SKY,{});
   const x0=58, y0=H*0.52, L=W-150, A=Math.min(58,H*0.20);
   const col=waveColor();
@@ -164,7 +173,6 @@ function draw(){const W=sc._w,H=sc._h;S.scene(sc,SKY,{});
     sc.strokeStyle='rgba(108,168,255,.45)';sc.lineWidth=1.4;
     for(let i=0;i<=L;i+=Math.max(18,L/26)){const s=A*Math.sin(k*i-phase);const px=x0+i+s*DZ.x, py=y0+s*DZ.y;
       sc.beginPath();sc.moveTo(x0+i,y0);sc.lineTo(px,py);sc.stroke();}
-    sc.fillStyle='#6ca8ff';sc.font='bold 13px system-ui';sc.fillText('B（磁場）',x0+86,y0-6);
   }
   // E 場(紅,垂直平面) 後畫(在前)
   sc.strokeStyle=`rgb(${col[0]},${col[1]},${col[2]})`;sc.lineWidth=2.6;sc.beginPath();
@@ -174,11 +182,13 @@ function draw(){const W=sc._w,H=sc._h;S.scene(sc,SKY,{});
   for(let i=0;i<=L;i+=Math.max(16,L/30)){const e=A*Math.sin(k*i-phase);
     sc.beginPath();sc.moveTo(x0+i,y0);sc.lineTo(x0+i,y0-e);sc.stroke();}
   sc.fillStyle=`rgb(${col[0]},${col[1]},${col[2]})`;sc.font='bold 13px system-ui';sc.fillText('E（電場）',x0+8,y0-A-6);
+  if(showB){const ew=sc.measureText('E（電場）').width;sc.fillStyle='#6ca8ff';sc.fillText('B（磁場）',x0+8+ew+14,y0-A-6);}
   // 一個波長標註(示意)
   const lamPx=2*Math.PI/k;
   sc.strokeStyle='rgba(255,210,122,.7)';sc.setLineDash([4,3]);sc.lineWidth=1.2;
   sc.beginPath();sc.moveTo(x0,y0+A+18);sc.lineTo(x0+lamPx,y0+A+18);sc.stroke();sc.setLineDash([]);
   sc.fillStyle='#ffd27a';sc.font='11px system-ui';sc.fillText('λ',x0+lamPx/2-3,y0+A+33);
+  drawAxes(W,H);
   // 電磁波譜帶
   drawSpectrum(W,H);
   updateHud();
