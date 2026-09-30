@@ -125,9 +125,15 @@ function updateHud(){const vs=Vs(),is=Is();
 let sc,wc,ph=0;
 const ELEC={skyTop:'#0e1626',skyBottom:'#070b14',vignette:'rgba(0,0,0,.45)'};
 function setupCanvases(){sc=S.fit(document.getElementById('scene'),2.0);wc=S.fit(document.getElementById('wave'),3.0);}
-function coil(x,topY,botY,turns,col,amp){const n=Math.max(3,Math.min(11,Math.round(turns/45)));
-  const step=(botY-topY)/n;sc.strokeStyle=col;sc.lineWidth=3;
-  for(let i=0;i<n;i++){const y=topY+i*step+step/2;sc.beginPath();sc.ellipse(x,y,16,step*0.46,0,-Math.PI*0.5,Math.PI*0.5,amp<0);sc.stroke();}
+// 圈數示意：50–500 匝以對數對應 3–11 圈（不是實際匝數比）；繞向固定不翻面
+function coilTurns(turns){return Math.round(3+8*Math.log(turns/50)/Math.log(10));}
+// cur：線圈電流（−1～1），顏色深淺＝電流大小；線圈外側箭頭＝電流方向（上／下）
+function coil(x,topY,botY,turns,rgb,cur,side){const n=coilTurns(turns);
+  const step=(botY-topY)/n;sc.strokeStyle=`rgba(${rgb},${(0.35+0.65*Math.abs(cur)).toFixed(2)})`;sc.lineWidth=3;
+  for(let i=0;i<n;i++){const y=topY+i*step+step/2;sc.beginPath();sc.ellipse(x,y,16,step*0.46,0,-Math.PI*0.5,Math.PI*0.5,false);sc.stroke();}
+  if(Math.abs(cur)>0.08){const ax=x+side*26,y0=botY-34,y1=botY-4,up=cur>0;   // 放在線圈下段：手機上方被 HUD 蓋住
+    S.arrow(sc,ax,up?y1:y0,ax,up?y0:y1,{color:`rgb(${rgb})`,width:2.2,alpha:0.4+0.6*Math.abs(cur)});
+    sc.fillStyle=`rgb(${rgb})`;sc.font='bold 11px system-ui';sc.textAlign='center';sc.fillText('I',ax+side*10,botY-15);sc.textAlign='left';}
 }
 function drawScene(){const W=sc._w,H=sc._h,cy=H/2;
   S.scene(sc,ELEC,{});
@@ -140,10 +146,12 @@ function drawScene(){const W=sc._w,H=sc._h,cy=H/2;
   const flux=Math.sin(ph), fa=Math.abs(flux);
   sc.strokeStyle=`rgba(124,200,255,${0.25+fa*0.5})`;sc.lineWidth=2+fa*2;
   sc.strokeRect(coreL,coreT,coreR-coreL,coreB-coreT);
-  // 主線圈(左腿)
-  coil(coreL,coreT+10,coreB-10,state.Np,'#ff6b9d',flux);
-  // 次線圈(右腿)
-  coil(coreR,coreT+10,coreB-10,state.Ns,'#6cd0ff',flux);
+  // 線圈電流：磁通 Φ∝sin，感應電壓 V∝dΦ/dt∝cos；電阻負載時 Is 與 Vs 同相，理想變壓器 Np·Ip＝Ns·Is，
+  // 兩線圈同繞向時主、次電流繞鐵芯的方向相反（次線圈電流的磁效應抵抗主線圈，冷次定律）
+  const cur=Math.cos(ph);
+  coil(coreL,coreT+10,coreB-10,state.Np,'255,107,157',cur,-1);   // 主線圈(左腿)
+  coil(coreR,coreT+10,coreB-10,state.Ns,'108,208,255',-cur,1);   // 次線圈(右腿)
+  sc.fillStyle='rgba(160,175,200,.75)';sc.font='11px system-ui';sc.textAlign='center';sc.fillText('線圈圈數為示意（非實際匝數比）',(coreL+coreR)/2,coreB+th/2+16);sc.textAlign='left';
   // 交流電源(左)
   sc.strokeStyle='#ff8fb0';sc.lineWidth=2;sc.beginPath();sc.arc(W*0.12,cy,20,0,7);sc.stroke();
   sc.beginPath();for(let i=-14;i<=14;i++){const xx=W*0.12+i,yy=cy-Math.sin(i/14*Math.PI*2)*8;i===-14?sc.moveTo(xx,yy):sc.lineTo(xx,yy);}sc.stroke();
