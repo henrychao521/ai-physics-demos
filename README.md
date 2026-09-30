@@ -87,7 +87,7 @@
 
 ### 🔬 波動光學・幾何光學（既有作品 / 精選）（5）
 - `superposition/` — 干涉與摩爾紋：同一種疊加（一維拍頻，概念整合 hub，連到細部模擬）。
-- `spectral-lab/` — 光譜干涉實驗室（歐幾里得視角）：3D 三原色建設性干涉，可調頻率/晶格夾角/色散（Plotly）。
+- `spectral-lab/` — 光譜干涉實驗室（歐幾里得視角）：3D 三原色建設性干涉，可調頻率/晶格夾角/三色波長差（示意），純 Canvas。
 - `diffraction/` — 繞射成像：雙/單狹縫干涉繞射，相位差與前後距離差 ΔL。
 - `moire/` — 摩爾紋（Moiré）：兩組光柵疊加，微小差異被放大。
 - `shadowless-lamp/` — 外科無影燈（2D 概念版）：多光源消影示意；3D 專業版見 [shadowless-lamp-sim](https://henrychao521.github.io/shadowless-lamp-sim/)（Three.js + IES 光錐）。
