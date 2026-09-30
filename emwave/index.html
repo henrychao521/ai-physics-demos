@@ -164,7 +164,8 @@ function draw(){const W=sc._w,H=sc._h;S.scene(sc,SKY,{});
   sc.strokeStyle='rgba(150,170,210,.55)';sc.lineWidth=1.4;
   sc.beginPath();sc.moveTo(x0,y0);sc.lineTo(x0+L,y0);sc.stroke();
   S.arrow(sc,x0+L-30,y0,x0+L+6,y0,{color:'rgba(180,200,235,.8)',width:2});
-  sc.fillStyle='rgba(190,205,235,.8)';sc.font='12px system-ui';sc.fillText('傳播方向（光速 c）',x0+L-122,y0+22);
+  sc.fillStyle='rgba(190,205,235,.8)';sc.font='12px system-ui';if(W<=560){sc.textAlign='right';sc.fillText('傳播方向（光速 c）',x0+L+6,y0+A+22);sc.textAlign='left';}   // 手機：移到波形下方，不壓在波上
+  else sc.fillText('傳播方向（光速 c）',x0+L-122,y0+22);
   // B 場(藍,深度平面) 先畫(在後)
   if(showB){
     sc.strokeStyle='rgba(108,168,255,.9)';sc.lineWidth=2;sc.beginPath();
