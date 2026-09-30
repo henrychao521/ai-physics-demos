@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>質能等效與結合能 ｜ E=Δmc²・每核子結合能曲線・分裂與融合</title>
-<meta name="description" content="質能等效與核結合能互動模擬：每核子結合能曲線在鐵-56 最高。核分裂(重核→中核)與核融合(輕核→中核)都往曲線高峰移動而釋放能量，能量來自質量虧損 E=Δmc²。">
+<meta name="description" content="質能等效與核結合能互動模擬：每核子結合能曲線在鐵、鎳附近（Fe-56 一帶）最高。核分裂(重核→中核)與核融合(輕核→中核)都往曲線高峰移動而釋放能量，能量來自質量虧損 E=Δmc²。">
 <link rel="icon" href="../assets/favicon.svg" type="image/svg+xml">
 <link rel="stylesheet" href="../assets/site.css">
 <script src="../assets/sim.js"></script>
@@ -43,7 +43,7 @@
     <span class="badge">近代物理・核物理</span>
     <h1>質能等效與結合能（E=Δmc²）</h1>
     <p>把核子綁在一起會釋放<b>結合能</b>，使原子核的質量比組成它的核子總質量<b>少一點</b>（質量虧損 Δm），<b>E = Δm·c²</b>。
-       <b>每核子結合能</b>越大代表越穩定——曲線在<b>鐵-56</b> 最高。<b>核分裂</b>（重核→中核）與<b>核融合</b>（輕核→中核）都往這個高峰移動，所以<b>放出能量</b>。</p>
+       <b>每核子結合能</b>越大代表越穩定——曲線在<b>鐵、鎳附近（Fe-56 一帶）</b>最高。<b>核分裂</b>（重核→中核）與<b>核融合</b>（輕核→中核）都往這個高峰移動，所以<b>放出能量</b>。</p>
   </header>
 
   <div class="scene-wrap">
@@ -64,7 +64,7 @@
 
   <div class="note">
     <b>物理重點：</b>原子核的質量 < 組成核子的總質量，差額 Δm 即<b>質量虧損</b>，對應的能量 <code>E_b = Δm·c²</code> 就是<b>結合能</b>（要拆散核子需投入的能量）。
-    <b>每核子結合能 E_b/A</b> 衡量穩定度：曲線從輕核急升、在 <b>Fe-56（約 8.8 MeV）</b> 達頂、再緩降。重核<b>分裂</b>成兩個中核、輕核<b>融合</b>成中核，都讓 E_b/A 上升 → 多出的結合能以動能/輻射<b>釋放</b>。
+    <b>每核子結合能 E_b/A</b> 衡量穩定度：曲線從輕核急升、在<b>鐵、鎳附近（Fe-56 一帶，約 8.8 MeV）</b>達頂、再緩降。重核<b>分裂</b>成兩個中核、輕核<b>融合</b>成中核，都讓 E_b/A 上升 → 多出的結合能以動能/輻射<b>釋放</b>。
     <code>c²</code> 巨大（9×10¹⁶），所以一點點 Δm 就是龐大能量——這就是核能、太陽發光（融合）與原子彈（分裂）的本質。
   </div>
 
@@ -105,7 +105,7 @@ function updateFormula(){const A=state.A,b=beA(A),tot=totalBE(A);
     + frow('總結合能 E_b','(E_b/A)·A',`${b.toFixed(2)}·${A}`, tot.toFixed(0)+' MeV')
     + frow('質量虧損 Δm','E_b / c² = E_b/931.5 u',`${tot.toFixed(0)}/931.5`, (tot/931.5).toFixed(3)+' u');
   if(reaction){html+=frow('反應釋放能 ΔE','Σ生成物 E_b − Σ反應物 E_b',reaction.detail, reaction.dE.toFixed(0)+' MeV ✦放出');}
-  html+=`<div class="frel">📈 <b>E_b/A 在 Fe-56 最高(最穩定)</b>　·　<b>重核分裂、輕核融合都往高峰移動 → E_b/A↑ → 放能</b>　·　能量來自質量虧損 <b>E=Δmc²</b>，c² 巨大故微小 Δm＝龐大能量　·　太陽靠融合、核電靠分裂。</div>`;
+  html+=`<div class="frel">📈 <b>E_b/A 在鐵、鎳附近（Fe-56 一帶）最高(最穩定)</b>　·　<b>重核分裂、輕核融合都往高峰移動 → E_b/A↑ → 放能</b>　·　能量來自質量虧損 <b>E=Δmc²</b>，c² 巨大故微小 Δm＝龐大能量　·　太陽靠融合、核電靠分裂。</div>`;
   document.getElementById('formula').innerHTML=html;
 }
 
@@ -127,7 +127,7 @@ function draw(){const W=cc._w,H=cc._h,mL=42,mR=16,mT=72,mB=30;   // mT：讓出�
   for(let a=1;a<=238;a++){const x=X(a),y=Y(beA(a));a===1?cc.moveTo(x,y):cc.lineTo(x,y);}cc.stroke();
   // Fe-56 峰
   cc.strokeStyle='rgba(124,255,178,.5)';cc.setLineDash([4,4]);cc.beginPath();cc.moveTo(X(56),mT);cc.lineTo(X(56),H-mB);cc.stroke();cc.setLineDash([]);
-  cc.fillStyle='#7CFFB2';cc.font='11px system-ui';cc.fillText('Fe-56 最穩定',X(56)+4,mT+12);
+  cc.fillStyle='#7CFFB2';cc.font='11px system-ui';cc.fillText('Fe、Ni 附近最穩定',X(56)+4,H-mB-8);   // 標在虛線下端，避開游標讀數標籤
   // 反應箭頭(分裂/融合)
   if(reaction){const a1=reaction.from,a2=reaction.to;
     cc.strokeStyle='#ff8fb0';cc.lineWidth=2;cc.beginPath();cc.moveTo(X(a1),Y(beA(a1)));cc.lineTo(X(a2),Y(beA(a2)));cc.stroke();
