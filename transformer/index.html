@@ -20,6 +20,8 @@
   .scene-wrap{position:relative;border-radius:16px;overflow:hidden;border:1px solid var(--line);box-shadow:0 18px 50px rgba(0,0,0,.45)}
   #scene,#wave{display:block;width:100%}
   .hud{position:absolute;top:12px;left:12px;display:flex;gap:8px;flex-wrap:wrap;pointer-events:none}
+  /* 手機畫布只有約 185px 高，讀數晶片會蓋住上方標籤：改排在畫布下方 */
+  @media(max-width:560px){.scene-wrap .hud{position:static;padding:8px 10px;background:rgba(8,14,22,.5);border-top:1px solid var(--line)}}
   .chip{background:rgba(8,14,24,.62);backdrop-filter:blur(6px);border:1px solid rgba(255,255,255,.12);border-radius:10px;padding:6px 11px;color:#eaf2ff;font-size:.8rem;line-height:1.25}
   .chip b{display:block;font-size:1.02rem;font-variant-numeric:tabular-nums;color:#fff}
   .chip.rose b{color:#ff8fb0}.chip.cyan b{color:#6cd0ff}.chip.green b{color:#7CFFB2}
