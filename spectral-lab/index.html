@@ -75,7 +75,7 @@
   <header>
     <span class="badge">光學・干涉</span><span class="badge">3D 點雲</span>
     <h1>光譜干涉實驗室（歐幾里得視角）</h1>
-    <p>兩組 3D 駐波「晶格」互相轉一個小角度疊加，紅、綠、藍三色的波數不同（<b>色散</b>），各自產生不同的干涉圖樣。
+    <p>兩組 3D 駐波「晶格」互相轉一個小角度疊加，紅、綠、藍三色的波長不同（波數 k = 2π/λ 也不同），各自產生不同的干涉圖樣。
        只保留<b>建設性干涉</b>的亮點畫成 3D 點雲：三色都亮的地方混成<b>白色</b>，只有部分顏色亮的地方就出現<b>彩色邊緣</b>。
        拖曳畫面可旋轉視角，滾輪可縮放。</p>
   </header>
@@ -101,7 +101,7 @@
     <div class="side">
       <div class="panel">
         <h3>👁 歐幾里得視角（有理數視線）</h3>
-        <p>當視線斜率 tan θ = p/q 為簡單有理數時，視線與晶格排列共振，形成最強烈的「視覺走廊」與色散效應。</p>
+        <p>當視線斜率 tan θ = p/q 為簡單有理數時，視線與晶格排列共振，形成最強烈的「視覺走廊」與紅藍分離。</p>
         <div class="views">
           <button data-view="1,1"><b>1:1（45°）</b><span>主對角線</span></button>
           <button data-view="1,2"><b>1:2（26.6°）</b><span>次級走廊</span></button>
@@ -116,9 +116,9 @@
         <div class="sld"><label><span>晶格夾角（Rotation）</span><span class="v" id="val-rot">5°</span></label>
           <input type="range" id="slider-rot" min="0" max="45" step="0.5" value="5">
           <div class="sub"><span>微小角度差異產生大尺度波形</span></div></div>
-        <div class="sld"><label><span>色散係數（Dispersion）</span><span class="v" id="val-disp" style="color:var(--accent2)">1.2x</span></label>
+        <div class="sld"><label><span>三色波長差（示意）</span><span class="v" id="val-disp" style="color:var(--accent2)">1.2x</span></label>
           <input type="range" id="slider-disp" min="1.0" max="2.0" step="0.1" value="1.2">
-          <div class="sub"><span>無色差</span><span>強色散</span></div></div>
+          <div class="sub"><span>三色相同</span><span>差異大</span></div></div>
         <div class="sld" style="margin-bottom:0"><label><span>光子取樣數（Particles）</span></label>
           <select id="select-res">
             <option value="15000">快速預覽（15k）</option>
@@ -143,7 +143,7 @@
       <div class="lab">觀察指南 <span class="dots"><i style="background:#ef4444"></i><i style="background:#22c55e"></i><i style="background:#3b82f6"></i></span></div>
       <p class="guide"><b>白色中心</b>：三原色都發生建設性干涉的區域。<br>
         <b>彩色邊緣</b>：切換到<b style="color:var(--indigo)">有理數比例</b>視角時，觀察「視覺走廊」兩側的紅藍分離現象。<br>
-        <b>色散 = 1.0</b> 時三色波數相同，點雲只剩黑白灰；把色散調大，紅（波數小）與藍（波數大）的亮紋位置錯開，彩色邊緣就變寬。
+        <b>三色波長差 D = 1.0</b> 時三色波數相同，點雲只剩黑白灰；把 D 調大，紅（波數小）與藍（波數大）的亮紋位置錯開，彩色邊緣就變寬。
         左圖剖面裡三條曲線的峰值位置錯開多少，就是彩色邊緣有多寬。</p>
     </div>
   </div>
@@ -151,7 +151,7 @@
   <div class="note">
     <b>物理重點：</b>每一色都是兩組 3D 駐波的疊加：<code>A = cos(kx)cos(ky)cos(kz)</code>、晶格 B 是把座標繞 z 軸轉 θ 後的同一個波，
     強度 <code>I = (A + B)² / 4</code>（振幅相加後平方——干涉的本質是<b>振幅</b>相加、不是強度相加）。
-    三色波數 <code>k_R = K/√D、k_G = K、k_B = K·√D</code>：紅光波長長、波數小；藍光波長短、波數大。
+    三色波數 <code>k_R = K/√D、k_G = K、k_B = K·√D</code>：紅光波長長、波數小；藍光波長短、波數大。D 是本頁拉開三色波長的示意參數（λ_R／λ_B = D）。
     兩組晶格只差一點角度，就像疊紗的<b>疊紋（莫列波紋）</b>，會拍出比原本週期大得多的圖樣。
     點雲用<b>蒙地卡羅取樣</b>：隨機撒點，平均亮度 &gt; 0.25 才有機會留下、越亮越容易留下，所以點越密的地方越亮。
   </div>
@@ -161,7 +161,7 @@
 
 <script>
 /*PHYS:BEGIN*/
-// 三色波數（色散）：紅 = K/√D、綠 = K、藍 = K·√D
+// 三色波數（D＝「三色波長差」示意參數，λ_R／λ_B = D）：紅 = K/√D、綠 = K、藍 = K·√D
 function waveNumbers(baseK, dispersion){
   return { k_R: baseK / Math.sqrt(dispersion), k_G: baseK, k_B: baseK * Math.sqrt(dispersion) };
 }
