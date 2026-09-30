@@ -134,7 +134,7 @@ function hoverPhysics(s){
   const fixedW = 95;                                   // 機架、接收機、線材等固定重量 (g)
   const escW = 12 * (1 + s.thrustCount);               // 每顆馬達一個電變 12 g
   const totalMass = s.liftMotor.weight + (s.thrustMotor.weight * s.thrustCount) + s.battery.weight + s.material.baseWeight + escW + fixedW;
-  const voltFactor = s.battery.voltage / 14.8;          // 以 4S (14.8 V) 為基準的電壓修正
+  const voltFactor = (s.battery.voltage / 14.8) ** 2;   // 以 4S (14.8 V) 為基準的電壓修正：同一螺旋槳靜推力 ∝ 轉速² ∝ V²
   const totalLiftF = s.liftMotor.thrust * (s.throttle.lift / 100) * voltFactor;
   const isHovering = totalLiftF > (totalMass * HOVER_K);
   const hoverH = isHovering ? Math.min(10, (totalLiftF - (totalMass * HOVER_K)) / 25) : 0;
@@ -194,7 +194,7 @@ function update(){
   const n = sel.thrustCount, lt = sel.throttle.lift, th = sel.throttle.thrust, v = P.voltFactor.toFixed(3);
   $('formula').innerHTML = `<h4>📐 計算公式（即時代入）</h4>` +
     frow('系統總重 W', '升力馬達 + 推力馬達×n + 電池 + 船體 + 電變 + 固定', `${m.weight} + ${sel.thrustMotor.weight}×${n} + ${b.weight} + ${mt.baseWeight} + ${P.escW} + ${P.fixedW}`, P.totalMass + ' g') +
-    frow('電壓修正', 'V / 14.8', `${b.voltage} / 14.8`, v) +
+    frow('電壓修正', '(V / 14.8)²', `(${b.voltage} / 14.8)²`, v) +
     frow('升力 F_L', 'F_max × 油門 × 電壓修正', `${m.thrust} × ${lt}% × ${v}`, f0(P.totalLiftF) + ' g') +
     frow('懸浮條件', 'F_L > 0.76 W', `${f0(P.totalLiftF)} ${P.isHovering ? '>' : '≤'} ${f0(P.totalMass * HOVER_K)}`, P.isHovering ? '浮起' : '貼地') +
     frow('懸浮高度', 'min(10, (F_L − 0.76W) / 25)', P.isHovering ? `(${f0(P.totalLiftF)} − ${f0(P.totalMass * HOVER_K)}) / 25` : '未浮起', P.hoverH.toFixed(2)) +
@@ -202,7 +202,7 @@ function update(){
     frow('前進力', 'F_T · cos θ', `${f0(P.rawThrust)} · cos ${sel.vaneAngle}°`, f0(P.fForward) + ' g') +
     frow('側向轉向力', 'F_T · sin θ', `${f0(P.rawThrust)} · sin ${sel.vaneAngle}°`, f0(P.fSide) + ' g') +
     frow('推重比 TWR', '前進力 / W', `${f0(P.fForward)} / ${P.totalMass}`, P.twr) +
-    `<div class="frel">📈 <b>升力只要略大於 0.76 W 就浮得起來</b>，再加大升力只是讓船浮高一點（本模型上限 10）　·　<b>導風板偏 θ</b>：前進力乘 cos θ、轉向力乘 sin θ，偏 30° 只損失約 13% 前進力卻換到一半推力的轉向力　·　換 <b>3S 電池</b>（11.1 V）時所有馬達輸出按 11.1/14.8 ≈ 0.75 打折。</div>`;
+    `<div class="frel">📈 <b>升力只要略大於 0.76 W 就浮得起來</b>，再加大升力只是讓船浮高一點（本模型上限 10）　·　<b>導風板偏 θ</b>：前進力乘 cos θ、轉向力乘 sin θ，偏 30° 只損失約 13% 前進力卻換到一半推力的轉向力　·　換 <b>3S 電池</b>（11.1 V）時所有馬達推力按 (11.1/14.8)² ≈ 0.56 打折（靜推力 ∝ 轉速²，轉速 ∝ 電壓）。</div>`;
   $('notes').innerHTML = `<b>工程設計建議（Research Notes）：</b><ul>` +
     `<li><b>轉向向量分析：</b>導風板偏轉 <span class="hl">${sel.vaneAngle}°</span> 時，有效推力將損失約 <span class="hl">${P.vaneLoss}%</span>，並轉化為側向轉向力 <span class="hl">${P.fSideTxt}g</span>。</li>` +
     `<li><b>結構冗餘設計：</b>選用 <span class="hl">${mt.name}</span> 時，建議在推力馬達座（Thrust Mount）加入額外的支撐肋，以應對 <span class="hl">${n > 1 ? '雙馬達' : '單馬達'}</span> 帶來的振動頻率。</li>` +
