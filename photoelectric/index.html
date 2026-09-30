@@ -76,7 +76,7 @@
 
   <div class="note">
     <b>物理重點：</b>古典波動說預測「光越強總能打出電子」，但實驗發現：低於<b>臨界頻率</b> <code>f₀ = W/h</code> 時無論多強都<b>沒有</b>光電子；
-    高於 f₀ 才有，且最大動能 <code>KE = hf − W</code>。<b>光強度只決定電子數量（電流），不影響每顆能量</b>。愛因斯坦用「光由能量 hf 的<b>光子</b>組成、一顆打一顆」解釋，獲 1921 諾貝爾獎。
+    高於 f₀ 才有，光電子動能介於 0～<code>KEₘₐₓ = hf − W</code>（最快的電子才有 KEₘₐₓ，其他電子在逸出前已損失部分能量）。<b>光強度只決定電子數量（電流），不影響 KEₘₐₓ</b>。愛因斯坦用「光由能量 hf 的<b>光子</b>組成、一顆打一顆」解釋，獲 1921 諾貝爾獎。
   </div>
 
   <footer>純前端 HTML / Canvas（SIM 工具庫）。能量以 eV 計，h=4.136×10⁻¹⁵ eV·s。</footer>
@@ -123,10 +123,11 @@ function _hd(c,w,h){var d=window.devicePixelRatio||1;c.width=w*d;c.height=h*d;va
 const cv=document.getElementById('cv'),cc=_hd(cv,640,380);
 const plot=document.getElementById('plot'),pc=_hd(plot,470,200);
 const MX=380;
+// 光電子動能分布在 0～KEₘₐₓ（電子在金屬內深淺不同、逸出時損失不同），只有最快的電子達 KEₘₐₓ
 let photons=[],electrons=[];
 function spawn(){if(Math.random()<state.I/100*0.8)photons.push({x:0,y:110+Math.random()*180});}
 function step(dt){spawn();photons.forEach(p=>p.x+=320*dt);
-  for(let i=photons.length-1;i>=0;i--){if(photons[i].x>=MX){if(emits()&&Math.random()<0.9)electrons.push({x:MX-2,y:photons[i].y,vy:(Math.random()-0.5)*60,ke:KEmax()});photons.splice(i,1);}}
+  for(let i=photons.length-1;i>=0;i--){if(photons[i].x>=MX){if(emits()&&Math.random()<0.9)electrons.push({x:MX-2,y:photons[i].y,vy:(Math.random()-0.5)*60,ke:Math.random()*KEmax()});photons.splice(i,1);}}
   // 速度 ∝ √KE（½mv²=KE）；原本 ∝ KE 會誇大高頻時的速度差
   // 光電子從受光的左表面逸出、往左飛回真空（原本往右穿過整塊金屬板）
   electrons.forEach(e=>{e.x-=(40+100*Math.sqrt(e.ke))*dt;e.y+=e.vy*dt;});electrons=electrons.filter(e=>e.x>-20);if(photons.length>200)photons.splice(0,photons.length-200);}
@@ -150,11 +151,11 @@ function draw(){const W=640,H=380;
   drawStats();drawPlot();}
 function drawStats(){
   const rows=[['光子能量 hf',Ephoton().toFixed(2)+' eV','#ffce54'],['功函數 W',state.W.toFixed(1)+' eV','#8b9cff'],
-    ['臨界頻率 f₀',f0().toFixed(1)+'×10¹⁴','#ff6b9d'],['最大動能 KE',KEmax().toFixed(2)+' eV','#7CFFB2'],
+    ['臨界頻率 f₀',f0().toFixed(1)+'×10¹⁴','#ff6b9d'],['最大動能 KEₘₐₓ',KEmax().toFixed(2)+' eV','#7CFFB2'],
     ['遏止電壓 V_s',KEmax().toFixed(2)+' V','#4cc2ff'],['光電流',emits()?state.I+' %':'0','#e8eef6']];
   document.getElementById('stats').innerHTML=rows.map(r=>`<div class="box"><div class="k">${r[0]}</div><div class="v" style="color:${r[2]}">${r[1]}</div></div>`).join('');
   const sb=document.getElementById('stateBar');
-  if(emits()){sb.textContent='✓ hf > W：發射光電子，KE='+KEmax().toFixed(2)+'eV（加強度只增數量、不增能量）';sb.style.background='rgba(124,255,178,.15)';sb.style.color='#7CFFB2';}
+  if(emits()){sb.textContent='✓ hf > W：發射光電子，動能介於 0～KEₘₐₓ，最快的電子＝KEₘₐₓ＝'+KEmax().toFixed(2)+'eV（加強度只增數量、不增能量）';sb.style.background='rgba(124,255,178,.15)';sb.style.color='#7CFFB2';}
   else{sb.textContent='✗ hf < W：頻率不足，光再強也打不出電子（古典物理無法解釋！）';sb.style.background='rgba(255,107,157,.13)';sb.style.color='#ff6b9d';}}
 // 縱軸固定 0–6 eV（資料最大 5.1 eV，不貼頂），加刻度與單位
 function drawPlot(){const W=470,H=200,mL=34,mR=12,mT=12,mB=22;pc.fillStyle='#0a1018';pc.fillRect(0,0,W,H);
