@@ -22,6 +22,8 @@
   .toolbar button{background:rgba(8,10,24,.6);backdrop-filter:blur(6px);color:#dce6ff;border:1px solid rgba(160,180,255,.2);border-radius:9px;padding:7px 11px;font-size:.82rem;cursor:pointer;font-family:inherit}
   .toolbar button:hover{border-color:var(--accent)}
   .sub{position:absolute;bottom:12px;left:12px;background:rgba(8,10,24,.6);border:1px solid rgba(160,180,255,.18);border-radius:10px;padding:6px 11px;color:#dce6ff;font-size:.82rem}
+  .probe{position:absolute;bottom:12px;right:12px;background:rgba(8,10,24,.7);border:1px solid rgba(255,206,84,.35);border-radius:10px;padding:6px 11px;color:#ffe7a8;font-size:.82rem;font-variant-numeric:tabular-nums;pointer-events:none}
+  @media(max-width:700px){.probe,.sub{position:static;border-radius:0;border-width:1px 0 0;text-align:center}.sub{font-size:.74rem;color:#b8c4e0}}
   .modes{display:flex;gap:7px;flex-wrap:wrap;align-items:center;margin-top:14px}
   .modes span{color:var(--muted);font-size:.8rem}
   .pbtn{background:var(--panel2);color:var(--txt);border:1px solid var(--line);padding:7px 12px;border-radius:9px;cursor:pointer;font-size:.83rem;font-family:inherit}
@@ -42,7 +44,7 @@
     <span class="badge">電磁・靜電學</span>
     <h1>電場與電位</h1>
     <p>電荷在周圍空間建立<b>電場</b>。<b>白色場線</b>從正電荷出發、終止於負電荷（箭頭＝正電荷受力方向）；
-       底色<b>色帶邊界</b>就是<b>等位面</b>。拖曳電荷觀察電場重組。庫侖定律 <b>F = kq₁q₂/r²</b>。</p>
+       底色<b>色帶邊界</b>就是<b>等位面</b>。拖曳電荷觀察電場重組；游標所在處（手機點一下）就是量測點 P，下方面板顯示該點的 E、V。庫侖定律 <b>F = kq₁q₂/r²</b>。</p>
   </header>
 
   <div class="scene-wrap">
@@ -53,6 +55,7 @@
       <button id="clear">清除</button>
     </div>
     <div class="sub" id="sub"></div>
+    <div class="probe" id="probe"></div>
   </div>
 
   <div class="modes">
@@ -81,18 +84,32 @@ const state={mag:4};
 function frow(n,sym,sub,val){return `<div class="frow"><span class="fname">${n}</span><span class="fsym">${sym}</span><span class="fsub">= ${sub}</span><span class="fval">${val}</span></div>`;}
 // 三位有效數字的科學記號（原本 toFixed(4) 在 q=1 時只剩 0.0001 一位有效數字）
 function sci3(x){const sup=n=>String(n).replace(/-/g,'⁻').replace(/\d/g,d=>'⁰¹²³⁴⁵⁶⁷⁸⁹'[d]);let e=Math.floor(Math.log10(x)),a=x/10**e;if(+a.toFixed(2)>=10){a/=10;e++;}return a.toFixed(2)+'×10'+sup(e);}
+// 帶正負號的三位有效數字科學記號
+function sgn3(x){return Math.abs(x)<1e-9?'0':(x<0?'−':'')+sci3(Math.abs(x));}
+function num(x){return String(+x.toFixed(1)).replace('-','−');}
+// 量測點 P：桌機＝游標所在點；觸控＝點一下（或按住拖曳）的位置
+let probe={x:450,y:110};
+function probeData(){const k=1,rows=[];let ex=0,ey=0,V=0,clamped=false;
+  for(const c of charges){const dx=probe.x-c.x,dy=probe.y-c.y,r0=Math.hypot(dx,dy),r=Math.max(r0,9);if(r0<9)clamped=true;
+    const e=k*c.q/(r*r*r);ex+=e*dx;ey+=e*dy;V+=k*c.q/r;rows.push({q:c.q,r});}
+  return {ex,ey,E:Math.hypot(ex,ey),V,rows,clamped};}
 function updateFormula(){
-  const q=state.mag, k=1, r=100;               // k=1 相對單位；r=參考距離 100（相對單位）
-  const E=k*q/(r*r);                            // 電場 E = kq/r²
-  const V=k*q/r;                                // 電位 V = kq/r
-  const F=k*q*q/(r*r);                          // 兩個同量電荷相距 r 的庫侖力 F = kq₁q₂/r²
-  document.getElementById('formula').innerHTML=
-    `<h4>📐 計算公式（即時代入　k=1 相對單位・參考距離 r=${r}）</h4>`+
-    frow('電場 E','kq / r²',`1·${q} / ${r}²`, sci3(E)+' (相對)')+
-    frow('電位 V','kq / r',`1·${q} / ${r}`, sci3(V)+' (相對)')+
-    frow('庫侖力 F','kq₁q₂ / r²',`1·${q}·${q} / ${r}²`, sci3(F)+' (相對)')+
-    `<div class="frel">📈 <b>E、F ∝ 1/r²</b>：距離加倍 → 電場與作用力剩 ¼　·　<b>V ∝ 1/r</b>：電位衰減較慢　·　<b>E、V ∝ q</b>：電荷量加倍 → 兩者皆加倍。</div>`;
+  const d=probeData(), q=state.mag, F=q*d.E;
+  const list=d.rows.slice(0,3), more=d.rows.length>3?' + …':'';
+  const qs=x=>x<0?'('+String(x).replace('-','−')+')':String(x);
+  let html=`<h4>📐 計算公式（量測點 P＝游標所在處；觸控點一下　k=1、距離以畫面像素為相對單位、y 向上為正）</h4>`;
+  if(!d.rows.length){html+=`<div class="frow"><span class="fname">量測點 P</span><span class="fsub">畫面上沒有電荷，E＝0、V＝0</span></div>`;}
+  else{
+    html+=frow('量測點 P','(x, y)',`(${num(probe.x)}, ${num(470-probe.y)})　各電荷距離 r：${d.rows.map(o=>num(o.r)).join('、')}`,d.clamped?'太靠近電荷，r 以 9 計':'');
+    html+=frow('電位 V','Σ kqᵢ / rᵢ',list.map(o=>`1·${qs(o.q)}/${num(o.r)}`).join(' + ')+more, sgn3(d.V)+' (相對)');
+    html+=frow('電場 E','|Σ kqᵢ/rᵢ² 向量和|',`√(Eₓ²+E_y²)，Eₓ=${sgn3(d.ex)}、E_y=${sgn3(-d.ey)}`, sci3OrZero(d.E)+' (相對)');
+    html+=frow('試探電荷受力 F','q·E',`${q} × ${sci3OrZero(d.E)}（在 P 放 +${q}）`, sci3OrZero(F)+' (相對)');
+  }
+  html+=`<div class="frel">📈 <b>單一電荷 E ∝ 1/r²、V ∝ 1/r</b>：距離加倍 → 電場剩 ¼、電位剩 ½　·　<b>多個電荷</b>：V 直接相加（純量），E 要向量相加　·　<b>F = qE</b>：同一點放的電荷量加倍，受力加倍。</div>`;
+  document.getElementById('formula').innerHTML=html;
+  document.getElementById('probe').textContent=d.rows.length?`P 點　E = ${sci3OrZero(d.E)}　V = ${sgn3(d.V)}（相對）`:'P 點　E = 0　V = 0';
 }
+function sci3OrZero(x){return x<1e-12?'0':sci3(x);}
 const sBar=document.getElementById('sliders');
 {const d=document.createElement('div');d.className='sld';
  d.innerHTML=`<label><span>新增電荷量 |q|</span><span class="v" id="v_mag">4</span></label><input type="range" id="r_mag" min="1" max="8" step="1" value="4">`;
@@ -135,18 +152,42 @@ function draw(){const W=900,H=470;
     g.addColorStop(0,pos?'#ffb0b0':'#b0c8ff');g.addColorStop(1,pos?'#c01818':'#1840c0');cc.fillStyle=g;cc.beginPath();cc.arc(c.x,c.y,r,0,7);cc.fill();
     cc.strokeStyle='#fff';cc.lineWidth=2;cc.stroke();cc.fillStyle='#fff';cc.font='bold 16px system-ui';cc.textAlign='center';cc.fillText(pos?'+':'−',c.x,c.y+6);cc.textAlign='left';}
   document.getElementById('sub').textContent=charges.length+' 個電荷　白線＝電場線（條數∝電荷量），色帶邊界＝等位面';
+  draw._base=cc.getImageData(0,0,cv.width,cv.height);
+  drawProbe();
 }
-let drag=-1;
+// 量測點標記：黃色準星＋該點電場方向箭頭（長度固定，只示方向）
+function drawProbe(){
+  if(draw._base)cc.putImageData(draw._base,0,0);
+  const {x,y}=probe,d=probeData();
+  cc.save();cc.strokeStyle='#ffce54';cc.fillStyle='#ffce54';cc.lineWidth=2;
+  cc.beginPath();cc.arc(x,y,7,0,7);cc.stroke();
+  cc.beginPath();cc.moveTo(x-12,y);cc.lineTo(x-4,y);cc.moveTo(x+4,y);cc.lineTo(x+12,y);cc.moveTo(x,y-12);cc.lineTo(x,y-4);cc.moveTo(x,y+4);cc.lineTo(x,y+12);cc.stroke();
+  if(d.E>1e-12){const ux=d.ex/d.E,uy=d.ey/d.E,x1=x+ux*9,y1=y+uy*9,x2=x+ux*38,y2=y+uy*38,a=Math.atan2(uy,ux);
+    cc.lineWidth=2.5;cc.beginPath();cc.moveTo(x1,y1);cc.lineTo(x2,y2);cc.stroke();
+    cc.beginPath();cc.moveTo(x2+3*Math.cos(a),y2+3*Math.sin(a));cc.lineTo(x2-8*Math.cos(a-.45),y2-8*Math.sin(a-.45));cc.lineTo(x2-8*Math.cos(a+.45),y2-8*Math.sin(a+.45));cc.closePath();cc.fill();}
+  cc.font='bold 15px system-ui';cc.fillText('P',x+10,y-10);cc.restore();
+  updateFormula();
+}
+function setProbe(p){probe={x:Math.max(0,Math.min(900,p.x)),y:Math.max(0,Math.min(470,p.y))};drawProbe();}
+let drag=-1,probing=false;
 function pos(e){const r=cv.getBoundingClientRect();return {x:(e.clientX-r.left)*900/r.width,y:(e.clientY-r.top)*470/r.height};}
-cv.addEventListener('pointerdown',e=>{const p=pos(e);const hit=Math.max(18,16*900/cv.getBoundingClientRect().width);for(let i=0;i<charges.length;i++)if(Math.hypot(p.x-charges[i].x,p.y-charges[i].y)<hit){drag=i;cv.setPointerCapture(e.pointerId);cv.style.cursor='grabbing';return;}});
-cv.addEventListener('pointermove',e=>{if(drag<0)return;const p=pos(e);charges[drag].x=p.x;charges[drag].y=p.y;draw();});
-window.addEventListener('pointerup',()=>{drag=-1;cv.style.cursor='grab';});
+function hitCharge(p){const hit=Math.max(18,16*900/cv.getBoundingClientRect().width);for(let i=0;i<charges.length;i++)if(Math.hypot(p.x-charges[i].x,p.y-charges[i].y)<hit)return i;return -1;}
+// 按在電荷上＝拖曳電荷；按在空白處＝把量測點 P 移到該處（觸控點一下即可，按住可拖曳）
+cv.addEventListener('pointerdown',e=>{const p=pos(e),i=hitCharge(p);cv.setPointerCapture(e.pointerId);
+  if(i>=0){drag=i;cv.style.cursor='grabbing';return;}
+  probing=true;setProbe(p);});
+// 滑鼠移動（未按鍵）時 P 跟著游標；觸控則只在按住拖曳時移動
+cv.addEventListener('pointermove',e=>{const p=pos(e);
+  if(drag>=0){charges[drag].x=p.x;charges[drag].y=p.y;draw();return;}
+  if(probing||e.pointerType==='mouse'){setProbe(p);}
+  if(e.pointerType==='mouse')cv.style.cursor=hitCharge(p)>=0?'grab':'crosshair';});
+window.addEventListener('pointerup',()=>{drag=-1;probing=false;});
 document.getElementById('addPos').onclick=()=>{charges.push({x:450,y:235,q:state.mag});draw();};
 document.getElementById('addNeg').onclick=()=>{charges.push({x:450,y:235,q:-state.mag});draw();};
 document.getElementById('clear').onclick=()=>{charges=[];draw();};
 const PRE={single:[{x:450,y:235,q:6}],dipole:[{x:300,y:235,q:5},{x:600,y:235,q:-5}],two:[{x:300,y:235,q:5},{x:600,y:235,q:5}]};
 document.querySelectorAll('[data-preset]').forEach(b=>b.onclick=()=>{const p=PRE[b.dataset.preset];if(!p)return;charges=p.map(c=>({...c}));draw();});
-window.addEventListener('load',()=>{draw();updateFormula();});
+window.addEventListener('load',()=>{draw();});
 </script>
 </body>
 </html>
