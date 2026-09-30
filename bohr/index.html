@@ -69,7 +69,7 @@
 
   <div class="note">
     <b>物理重點：</b>能階能量 <code>E_n = −13.6/n²</code> eV（負號＝束縛態，n=1 最低最穩）。躍遷放出光子能量 <code>ΔE = 13.6(1/n_f² − 1/n_i²)</code>，波長 <code>λ = 1240/ΔE</code> nm。
-    落到 <b>n=1</b> 是<b>來曼系</b>（紫外）、<b>n=2</b> 是<b>巴耳末系</b>（可見光：Hα 紅、Hβ 青、Hγ 藍紫）、<b>n=3</b> 是帕申系（紅外）。光譜線是每種元素的<b>指紋</b>，天文學家靠它判斷遙遠恆星成分。
+    落到 <b>n=1</b> 是<b>來曼系</b>（紫外）、<b>n=2</b> 是<b>巴耳末系</b>（可見光：Hα 紅、Hβ 青、Hγ 藍紫）、<b>n=3</b> 是帕申系（紅外）。光譜線是每種元素的<b>指紋</b>，天文學家靠它判斷遙遠恆星成分。畫面上光子的波形週期只分紫外短、可見中、紅外長三檔示意，未按比例。
   </div>
 
   <footer>純前端 HTML / Canvas（SIM 工具庫）。氫原子，hc=1240 eV·nm。</footer>
@@ -78,6 +78,8 @@
 <script>
 const S=SIM; let ni=3,nf=2,anim=1;
 function En(n){return -13.6/(n*n);} function dE(){return En(ni)-En(nf);} function lambda(){return 1240/dE();}
+// 畫面上的光子週期（px）：三檔示意，λ 越長週期越長
+function photonBand(lam){return lam<380?{name:'紫外',px:22}:lam<=720?{name:'可見光',px:38}:{name:'紅外',px:62};}
 function series(){return nf===1?'來曼系 (紫外)':nf===2?'巴耳末系 (可見光)':nf===3?'帕申系 (紅外)':'n_f='+nf;}
 function fE(v){return v.toFixed(3);} function fdE(v){return v>=1?v.toFixed(3):v.toPrecision(4);}
 function frow(n,sym,sub,val){return `<div class="frow"><span class="fname">${n}</span><span class="fsym">${sym}</span><span class="fsub">= ${sub}</span><span class="fval">${val}</span></div>`;}
@@ -113,8 +115,10 @@ function drawAtom(){const W=430,H=360,cx=W/2,cy=H/2;
   const rI=18+ni*26,rF=18+nf*26,r=rI+(rF-rI)*anim,ang=anim*Math.PI*2,ex=cx+Math.cos(ang)*r,ey=cy+Math.sin(ang)*r;
   S.bulb(ac,ex,ey,5,'108,208,255',1);
   // 光子(發射後)
-  if(anim>=1){const[R,G,B]=wl2rgb(lambda());ac.strokeStyle=`rgb(${R},${G},${B})`;ac.lineWidth=2.5;ac.save();ac.shadowColor=`rgb(${R},${G},${B})`;ac.shadowBlur=8;ac.beginPath();
-    for(let i=0;i<40;i++){const x=cx+18+ni*26+i*4,y=cy-Math.sin(i*0.6)*8;i?ac.lineTo(x,y):ac.moveTo(x,y);}ac.stroke();ac.restore();}
+  // 光子波形週期依 λ 分三檔（log λ 跨 94–7460 nm 近 80 倍，照比例畫不下）：紫外短、可見中、紅外長；從電子落定處（末態軌道）射出
+  if(anim>=1){const lam=lambda(),bd=photonBand(lam),[R,G,B]=wl2rgb(lam),x0=cx+rF;ac.strokeStyle=`rgb(${R},${G},${B})`;ac.lineWidth=2.5;ac.save();ac.shadowColor=`rgb(${R},${G},${B})`;ac.shadowBlur=8;ac.beginPath();
+    for(let x=0;x0+x<=W;x+=2){const y=cy-Math.sin(2*Math.PI*x/bd.px)*8;x?ac.lineTo(x0+x,y):ac.moveTo(x0,y);}ac.stroke();ac.restore();
+    ac.fillStyle=`rgb(${R},${G},${B})`;ac.font='11px system-ui';ac.textAlign='right';ac.fillText(bd.name+'光子（波形示意）',W-6,cy+24);ac.textAlign='left';}
   document.getElementById('sub').textContent=ni+' → '+nf+' 躍遷';}
 function drawLevels(){const W=430,H=360,mL=40,mR=80,mT=20,mB=20;lc.fillStyle='#0a0818';lc.fillRect(0,0,W,H);
   const Y=E=>mT+(-E)/13.6*(H-mT-mB);
