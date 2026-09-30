@@ -25,6 +25,7 @@
   .chip.amber b{color:#ffd27a}.chip.cyan b{color:#6cd0ff}.chip.rose b{color:#ff8fb0}
   .toolbar{position:absolute;bottom:12px;right:12px;display:flex;gap:7px;flex-wrap:wrap;justify-content:flex-end}
   .toolbar button{background:rgba(10,16,24,.62);backdrop-filter:blur(6px);color:#dceaff;border:1px solid rgba(120,180,255,.2);border-radius:9px;padding:7px 11px;font-size:.82rem;cursor:pointer;font-family:inherit}
+  .toolbar .tnote{align-self:center;font-size:.76rem;color:#9fb0c8;background:rgba(10,16,24,.62);border-radius:8px;padding:4px 8px}
   .toolbar button.on{background:var(--accent);color:#04121c;border-color:var(--accent);font-weight:700}
   @media(max-width:560px){.toolbar{position:static;justify-content:center;padding:8px 10px;background:rgba(8,14,22,.5);border-top:1px solid var(--line)}}
   .bar{display:flex;gap:14px;flex-wrap:wrap;align-items:flex-end;background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:14px 16px;margin-top:14px}
@@ -54,6 +55,7 @@
     <canvas id="scene"></canvas>
     <div class="hud" id="hud"></div>
     <div class="toolbar">
+      <span class="tnote">動畫速度未按比例</span>
       <button id="run" class="on">⏸ 暫停</button>
     </div>
   </div>
@@ -75,7 +77,7 @@
     這與<b>彈簧簡諧運動完全類比</b>：Q↔位移 x、I↔速度 v、1/C↔彈性係數 k、L↔質量 m。真實電路有電阻會逐漸衰減（阻尼振盪）；收音機選台就是調 LC 共振頻率。
   </div>
 
-  <footer>純前端 HTML / Canvas（SIM 工具庫）。理想無阻尼 LC；動畫放慢顯示（速度與 ω 成正比）；電荷／電流以 cos／sin 同步振盪、能量條總和守恆，頻率依 ω=1/√(LC) 計算。</footer>
+  <footer>純前端 HTML / Canvas（SIM 工具庫）。理想無阻尼 LC；動畫放慢且速度未按比例（以 (LC)^(−1/4) 壓縮，ω 越大仍轉得越快）；電荷／電流以 cos／sin 同步振盪、能量條總和守恆，頻率依 ω=1/√(LC) 計算。</footer>
 </div>
 
 <script>
@@ -182,6 +184,7 @@ function draw(){const W=sc._w,H=sc._h;S.scene(sc,SKY,{});
 }
 function loopPoint(s,lx,rx,ty,by){const w=rx-lx,h=by-ty,P=2*(w+h);let d=s*P;
   if(d<w)return {x:lx+d,y:ty}; d-=w; if(d<h)return {x:rx,y:ty+d}; d-=h; if(d<w)return {x:rx-d,y:by}; d-=w; return {x:lx,y:by-d};}
+function animRate(){return 2.6*Math.pow(state.L*state.C,-0.25);}
 function updateHud(){const f=freq(),T=period();
   document.getElementById('hud').innerHTML=
    `<div class="chip amber">頻率 f<b>${fmtF(f)}</b></div>`+
@@ -191,8 +194,8 @@ function updateHud(){const f=freq(),T=period();
 
 let last=0;
 function loop(ts){const dt=last?Math.min((ts-last)/1000,0.05):0;last=ts;
-  // 畫面放慢顯示，但速度與實際 ω 成正比（L=C=1 時 2.6 rad/s）：加大 L 或 C 看得出變慢
-  if(running)phase+=dt*2.6/Math.sqrt(state.L*state.C);
+  // 畫面放慢顯示，速度未按比例：以 2.6·(LC)^(−1/4) 壓縮映射（仍隨 ω 單調，L=C=1 時 2.6 rad/s；最慢 L=C=20 約 10.8 s 一週，不會看似停住）
+  if(running)phase+=dt*animRate();
   draw();requestAnimationFrame(loop);}
 
 const rb=document.getElementById('run');
