@@ -19,7 +19,7 @@
   .grid2{display:grid;grid-template-columns:1fr .82fr;gap:14px}
   @media(max-width:740px){.grid2{grid-template-columns:1fr}}
   .scene-wrap{position:relative;border-radius:16px;overflow:hidden;border:1px solid var(--line);box-shadow:0 18px 50px rgba(0,0,0,.45)}
-  #scene{display:block;width:100%}
+  #scene{display:block;width:100%;aspect-ratio:1.05}  /* 先佔好高度，避免載入時畫布撐高造成版面位移 */
   .hud{position:absolute;top:12px;left:12px;display:flex;gap:8px;flex-wrap:wrap;pointer-events:none}
   .chip{background:rgba(24,10,10,.6);backdrop-filter:blur(6px);border:1px solid rgba(255,180,150,.18);border-radius:10px;padding:6px 11px;color:#ffe6db;font-size:.8rem;line-height:1.25}
   .chip b{display:block;font-size:1.0rem;font-variant-numeric:tabular-nums;color:#fff}
@@ -84,10 +84,11 @@
   <div class="note">
     <b>物理重點：</b>單一分子撞牆一次把動量 2m·v⊥ 傳給牆；每秒大量碰撞累積成穩定的力，除以面積就是<b>壓力</b>。
     由動力論可導出 <code>P·V = N·k·T</code>（即 PV=nRT）。溫度正比於分子平均動能 <code>½m·v_rms² ∝ T</code>——溫度就是「分子運動劇烈程度」。
+    同一溫度下各分子速率並不相同：本模擬初速依<b>馬克士威速率分布</b>（2D 為 Rayleigh 分布）抽樣，所以顏色有冷有熱；壓力只和平均動能有關，仍是 <code>P = NkT/V</code>。
     固定其他量：<b>T↑→P↑</b>、<b>V↓→P↑</b>、<b>N↑→P↑</b>。右方「實測/理論 ≈ 1」即驗證了這條微觀導出的巨觀定律。
   </div>
 
-  <footer>純前端 HTML / Canvas（SIM 工具庫）。彈性器壁碰撞 + 衝量法實測壓力（2D，k_B=1、m=1）。</footer>
+  <footer>純前端 HTML / Canvas（SIM 工具庫）。彈性器壁碰撞 + 衝量法實測壓力（2D，k_B=1、m=1）；分子間不碰撞，初速依 2D 馬克士威分布抽樣。</footer>
 </div>
 
 <script>
@@ -114,10 +115,14 @@ function setSlider(id,val){const old=state[id];state[id]=val;const r=document.ge
 // ---- 物理（已驗證）----
 let P=[],box=6,impAccum=0,tAccum=0,Pmeas=0,playing=true;
 function vrms(){return Math.sqrt(2*state.T);}
-function spawn(n){for(let i=0;i<n;i++){const a=Math.random()*2*Math.PI,v=vrms();P.push({x:Math.random()*state.box,y:Math.random()*state.box,vx:Math.cos(a)*v,vy:Math.sin(a)*v});}}
+// 初速採 2D 馬克士威分布：vx、vy 各為平均 0、變異數 kT/m＝T 的常態分布 → 速率 |v| 為 Rayleigh 分布（有快有慢）
+function gauss(){let u=0;while(u===0)u=Math.random();return Math.sqrt(-2*Math.log(u))*Math.cos(2*Math.PI*Math.random());}
+function spawn(n){const sd=Math.sqrt(state.T);for(let i=0;i<n;i++)P.push({x:Math.random()*state.box,y:Math.random()*state.box,vx:sd*gauss(),vy:sd*gauss()});thermalize();}
+// 有限個分子抽樣的平均動能會偏離 kT 幾個百分點；整體等比例縮放速度使 ⟨v²⟩＝2kT/m（分布形狀不變），溫度 T 才與畫面分子一致
+function thermalize(){if(!P.length)return;const v2=P.reduce((a,p)=>a+p.vx*p.vx+p.vy*p.vy,0)/P.length,f=Math.sqrt(2*state.T/v2);P.forEach(p=>{p.vx*=f;p.vy*=f;});}
 function init(){P=[];box=state.box;spawn(state.N);impAccum=0;tAccum=0;Pmeas=state.N*state.T/(box*box);}
 function onChange(id,old,nw){if(id==='T'){const f=Math.sqrt(nw/old);P.forEach(p=>{p.vx*=f;p.vy*=f;});}
-  if(id==='box'){const f=nw/box;P.forEach(p=>{p.x*=f;p.y*=f;});box=nw;}if(id==='N'){if(nw>P.length)spawn(nw-P.length);else P.length=nw;}
+  if(id==='box'){const f=nw/box;P.forEach(p=>{p.x*=f;p.y*=f;});box=nw;}if(id==='N'){if(nw>P.length)spawn(nw-P.length);else{P.length=nw;thermalize();}}
   updateFormula();}
 function step(dt){let imp=0;const b=state.box;
   for(const p of P){p.x+=p.vx*dt;p.y+=p.vy*dt;
