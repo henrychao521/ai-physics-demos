@@ -122,6 +122,10 @@ function updateHud(){
 
 // ---- 視圖 ----
 let sc, ang=0, spinning=true;
+// 動畫角速度上限：刻度間距 π/4，每幀轉角須小於半格（π/8），否則會看起來倒轉（車輪效應）；
+// 20 rad/s 在 60 fps 時每幀 0.33 rad。超過時畫面放慢，HUD 標示，讀數與公式仍用實際 ω
+const W_ANIM=20;
+function omegaAnim(){return Math.min(omega(),W_ANIM);}
 const RINK={skyTop:'#0e1828',skyBottom:'#070d18',vignette:'rgba(0,0,0,.45)'};
 function setupCanvases(){sc=S.fit(document.getElementById('scene'),1.7);}
 function draw(){const W=sc._w,H=sc._h,cx=W/2,cy=H/2;
@@ -144,10 +148,12 @@ function draw(){const W=sc._w,H=sc._h,cx=W/2,cy=H/2;
   const ea=ang+1.2,ex=cx+Math.cos(ea)*Rmax*1.08,ey=cy+Math.sin(ea)*Rmax*1.08;
   sc.fillStyle='#6cd0ff';sc.beginPath();sc.moveTo(ex,ey);sc.lineTo(ex-Math.cos(ea-0.5)*9,ey-Math.sin(ea-0.5)*9);sc.lineTo(ex-Math.cos(ea+0.3)*9,ey-Math.sin(ea+0.3)*9);sc.closePath();sc.fill();
   sc.fillStyle='#6cd0ff';sc.font='12px system-ui';sc.fillText('ω',ex+6,ey);
+  if(omega()>W_ANIM){sc.fillStyle='#ffce54';sc.font='600 12px system-ui';sc.textAlign='left';
+    sc.fillText(`畫面已放慢（以 ${W_ANIM} rad/s 顯示）`,10,H-10);}
   updateHud();
 }
 let last=0;
-function loop(ts){const dt=last?Math.min((ts-last)/1000,0.05):0;last=ts;if(spinning)ang+=omega()*dt;draw();requestAnimationFrame(loop);}
+function loop(ts){const dt=last?Math.min((ts-last)/1000,0.05):0;last=ts;if(spinning)ang+=omegaAnim()*dt;draw();requestAnimationFrame(loop);}
 
 const sb=document.getElementById('spin');
 sb.onclick=()=>{spinning=!spinning;sb.classList.toggle('on',spinning);sb.textContent=spinning?'⏸ 暫停旋轉':'▶ 旋轉';};
