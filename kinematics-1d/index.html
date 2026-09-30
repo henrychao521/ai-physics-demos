@@ -35,6 +35,8 @@
   .sld label{display:flex;justify-content:space-between;font-size:.82rem;color:var(--muted);margin-bottom:5px}
   .sld label .v{color:var(--accent);font-variant-numeric:tabular-nums;font-weight:700}
   .sld input{width:100%;accent-color:var(--accent)}
+  .sld.over input{opacity:.35}
+  .sld.over label .v{color:var(--accent2)}
   .presets{display:flex;gap:7px;flex-wrap:wrap;align-items:center;margin-top:12px}
   .presets span{color:var(--muted);font-size:.8rem}
   .pbtn{background:var(--panel2);color:var(--txt);border:1px solid var(--line);padding:7px 12px;border-radius:9px;cursor:pointer;font-size:.83rem;font-family:inherit}
@@ -80,7 +82,7 @@
   <div class="note">
     <b>物理重點：</b>等加速度運動三公式：<code>v = v₀ + at</code>、<code>x = v₀t + ½at²</code>、<code>v² = v₀² + 2as</code>。
     圖形意義：<b>v-t 圖斜率 = 加速度 a</b>、<b>v-t 圖面積 = 位移</b>；<b>x-t 圖斜率 = 速度 v</b>。
-    a=0 → 等速（x-t 直線）；a&gt;0 → 加速（x-t 上凹拋物線）；a&lt;0 → 減速，速度歸零後停止（如煞車）。「a＝g 對照」讓水平小車用與自由落體相同的加速度 a=g≈9.8 m/s² 運動，方便和自由落體比較。
+    a=0 → 等速（x-t 直線）；a&gt;0 → 加速（x-t 上凹拋物線）；a&lt;0 → 減速，速度歸零後停止（如煞車）。「a＝g 對照」讓水平小車用與自由落體相同的加速度 a=g≈9.8 m/s² 運動，方便和自由落體比較；9.8 超出滑桿上限 8，此時滑桿變淡、數值標註「超出滑桿範圍」，拖動滑桿即回到滑桿範圍。
   </div>
 
   <footer>純前端 HTML / Canvas（SIM 工具庫）。等加速度解析解；a&lt;0 時於 v=0 停止（模擬煞車）。</footer>
@@ -99,12 +101,16 @@ sliders.forEach(s=>{ state[s.id]=s.val;
   d.innerHTML=`<label><span>${s.name}</span><span class="v" id="v_${s.id}">${fmt(s.val)} ${s.unit}</span></label>
     <input type="range" id="r_${s.id}" min="${s.min}" max="${s.max}" step="${s.step}" value="${s.val}">`;
   sBar.appendChild(d);
-  d.querySelector('input').addEventListener('input',e=>{state[s.id]=parseFloat(e.target.value);
+  d.querySelector('input').addEventListener('input',e=>{state[s.id]=parseFloat(e.target.value);d.classList.remove('over');
     document.getElementById('v_'+s.id).textContent=`${fmt(state[s.id])} ${s.unit}`; recompute(); });
 });
 function fmt(x){return (Math.round(x*100)/100).toString();}
-function setSlider(id,val){state[id]=val;const r=document.getElementById('r_'+id);if(r)r.value=val;
+function setSlider(id,val){state[id]=val;const r=document.getElementById('r_'+id);if(r){r.value=val;r.closest('.sld').classList.remove('over');}
   const s=sliders.find(z=>z.id===id);if(s)document.getElementById('v_'+id).textContent=`${fmt(val)} ${s.unit}`;}
+// 超出滑桿範圍的值（a＝g 對照）：把手停在端點並變淡，數值標籤註明超出範圍，兩者不互相矛盾
+function setOver(id,val){state[id]=val;const s=sliders.find(z=>z.id===id),r=document.getElementById('r_'+id);
+  r.value=Math.min(s.max,Math.max(s.min,val));r.closest('.sld').classList.add('over');
+  document.getElementById('v_'+id).textContent=`${fmt(val)} ${s.unit}（超出滑桿範圍）`;}
 
 // ---- 物理 ----
 let tStop=1e9, Tw=6, xMax=1, vMax=1, t=0, playing=true;
@@ -254,8 +260,8 @@ document.getElementById('reset').onclick=()=>{t=0;playing=true;pb.classList.add(
 const PRE={const:{u:12,a:0},accel:{u:0,a:3},brake:{u:18,a:-4},fall:{u:0,a:9.8}};
 document.querySelectorAll('[data-preset]').forEach(b=>b.onclick=()=>{const pr=PRE[b.dataset.preset];if(!pr)return;
   setSlider('u',pr.u);
-  if(pr.a>8){state.a=pr.a;}else setSlider('a',pr.a);   // a＝g 對照（與自由落體同加速度）超出滑桿上限，直接設值
-  document.getElementById('v_a').textContent=`${fmt(state.a)} m/s²`;
+  const sa=sliders.find(z=>z.id==='a');
+  if(pr.a>sa.max||pr.a<sa.min)setOver('a',pr.a);else setSlider('a',pr.a);   // a＝g 對照用 a=9.8，超出滑桿上限 8
   t=0;playing=true;pb.classList.add('on');pb.textContent='⏸ 暫停';recompute();});
 
 window.addEventListener('load',()=>{setupCanvases();recompute();requestAnimationFrame(loop);});
