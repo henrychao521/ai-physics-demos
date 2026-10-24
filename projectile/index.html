@@ -28,22 +28,31 @@
   .chip.amber b{color:#ffce54}.chip.green b{color:#7CFFB2}.chip.cyan b{color:#6cd0ff}
   .toolbar{position:absolute;bottom:12px;right:12px;display:flex;gap:7px;flex-wrap:wrap;justify-content:flex-end}
   .toolbar button{background:rgba(8,14,24,.62);backdrop-filter:blur(6px);color:#eaf2ff;
-    border:1px solid rgba(255,255,255,.14);border-radius:9px;padding:7px 11px;font-size:.82rem;cursor:pointer;font-family:inherit}
+    border:1px solid rgba(255,255,255,.14);border-radius:9px;padding:8px 12px;font-size:.82rem;cursor:pointer;font-family:inherit;
+    min-height:38px;display:inline-flex;align-items:center;justify-content:center}
   .toolbar button.on{background:var(--accent);color:#04121c;border-color:var(--accent);font-weight:700}
   .toolbar button:hover{border-color:var(--accent)}
-  @media(max-width:560px){.toolbar{position:static;justify-content:center;padding:8px 10px;background:rgba(8,12,22,.5);border-top:1px solid var(--line)}}
   .bar{display:flex;gap:14px;flex-wrap:wrap;align-items:flex-end;background:var(--panel);border:1px solid var(--line);
     border-radius:14px;padding:14px 16px;margin-top:14px}
   .sld{flex:1;min-width:150px}
   .sld label{display:flex;justify-content:space-between;font-size:.82rem;color:var(--muted);margin-bottom:5px}
   .sld label .v{color:var(--accent);font-variant-numeric:tabular-nums;font-weight:700}
-  .sld input{width:100%;accent-color:var(--accent)}
+  .sld input{width:100%;accent-color:var(--accent);min-height:28px}
   .presets{display:flex;gap:7px;flex-wrap:wrap;align-items:center;margin-top:12px}
   .presets span{color:var(--muted);font-size:.8rem}
   .presets button,.pbtn{background:var(--panel2);color:var(--txt);border:1px solid var(--line);
-    padding:7px 12px;border-radius:9px;cursor:pointer;font-size:.83rem;font-family:inherit}
+    padding:8px 13px;border-radius:9px;cursor:pointer;font-size:.83rem;font-family:inherit;min-height:40px;
+    display:inline-flex;align-items:center;justify-content:center}
   .presets button:hover,.pbtn:hover{border-color:var(--accent)}
   .pbtn.on{background:var(--accent);color:#04121c;border-color:var(--accent);font-weight:700}
+  .formula{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:14px 16px;margin-top:14px}
+  .formula h4{margin:0 0 10px;font-size:.95rem;color:var(--txt)}
+  .frow{display:flex;gap:10px;flex-wrap:wrap;font-size:.82rem;padding:6px 0;border-bottom:1px solid rgba(255,255,255,.06);align-items:center}
+  .fname{font-weight:700;color:var(--txt);min-width:90px}
+  .fsym{color:var(--muted);font-family:monospace;min-width:140px}
+  .fsub{color:var(--muted);flex:1}
+  .fval{color:var(--accent);font-weight:700;font-variant-numeric:tabular-nums}
+  .frel{margin-top:10px;font-size:.8rem;color:var(--muted);line-height:1.6}
   .lower{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-top:14px}
   @media(max-width:680px){.lower{grid-template-columns:1fr}}
   .panel{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:12px 14px}
@@ -55,6 +64,20 @@
   .legend{display:flex;gap:14px;flex-wrap:wrap;font-size:.78rem;color:var(--muted);margin-top:8px}
   .legend i{display:inline-block;width:18px;height:3px;border-radius:2px;vertical-align:middle;margin-right:5px}
   footer{color:var(--muted);font-size:.78rem;margin-top:24px;text-align:center;line-height:1.7}
+
+  /* 手機最佳化 (寬度 ≤ 600px)：HUD 與工具列改排在畫布上下，避免疊蓋，觸控元件高度 ≥ 44px */
+  @media(max-width:600px){
+    .wrap{padding:12px 10px 50px}
+    .scene-wrap{display:flex;flex-direction:column}
+    .hud{position:static;padding:10px 12px;background:rgba(8,14,24,.85);border-bottom:1px solid var(--line);
+      order:-1;pointer-events:auto;justify-content:space-between}
+    .hud .chip{flex:1;min-width:120px;text-align:center}
+    .toolbar{position:static;justify-content:center;padding:10px;background:rgba(8,12,22,.85);
+      border-top:1px solid var(--line);order:1}
+    .toolbar button{flex:1;min-height:44px;min-width:calc(50% - 6px);font-size:.85rem}
+    .presets button,.pbtn{min-height:44px;padding:10px 14px;font-size:.85rem}
+    .sld input{min-height:36px}
+  }
 </style>
 </head>
 <body data-demo="拋體運動實驗室">
@@ -62,7 +85,7 @@
   <header>
     <span class="badge">力學・運動學</span>
     <h1>拋體運動實驗室</h1>
-    <p>調整大砲的<b>初速</b>與<b>仰角</b>發射砲彈。水平方向<b>等速度</b>、鉛直方向<b>等加速度（重力）</b>，
+    <p>調整斜坡發射架的<b>初速</b>與<b>仰角</b>發射砲彈。水平方向<b>等速度</b>、鉛直方向<b>等加速度（重力）</b>，
        兩者互不影響，合成出拋物線。箭頭錨定在砲彈質心：<span style="color:#43d17a">綠＝速度</span>（含水平/鉛直分量），
        <span style="color:#ffb02e">橙＝重力加速度</span>。</p>
   </header>
@@ -136,7 +159,6 @@ function simulate(){
   const v0=st.v0,th=st.ang*Math.PI/180,g=st.g,h0=st.h0,k=dragOn?st.k:0;
   let x=0,y=h0,vx=v0*Math.cos(th),vy=v0*Math.sin(th),t=0;
   const dt=0.004,path=[{t,x,y,vx,vy}];let guard=0;
-  // RK4：原本的半隱式 Euler 每步有 O(dt) 誤差，無阻力 45° 時射程算成 79.9 m、公式面板卻是 80.0 m
   const acc=(vx,vy)=>{const sp=Math.hypot(vx,vy);return [-k*sp*vx,-g-k*sp*vy];};
   while(guard++<300000){
     const a1=acc(vx,vy), a2=acc(vx+a1[0]*dt/2,vy+a1[1]*dt/2), a3=acc(vx+a2[0]*dt/2,vy+a2[1]*dt/2), a4=acc(vx+a3[0]*dt,vy+a3[1]*dt);
@@ -160,8 +182,9 @@ function setupCanvases(){ const cv=document.getElementById('scene');
   sc=S.fit(cv, 2.15); // 場景畫布寬高比
   pc=S.fit(document.getElementById('plot'), 2.4); }
 function bounds(){ const xmax=Math.max(STATS.R,5)*1.08, ymax=Math.max(STATS.H,st.h0,3)*1.18; return {xmax,ymax}; }
+
 function drawScene(cur){
-  const W=sc._w,H=sc._h,mL=24,mR=24,mT=18,mB=46;
+  const W=sc._w,H=sc._h,mL=48,mR=24,mT=18,mB=46;
   const {xmax,ymax}=bounds(); const s=Math.min((W-mL-mR)/xmax,(H-mT-mB)/ymax);
   const gY=H-mB; const X=x=>mL+x*s, Y=y=>gY-y*s;
   S.scene(sc, S.PALETTES.sky, {ground:gY, perspective:true});
@@ -177,15 +200,19 @@ function drawScene(cur){
   for(let i=0;i<PATH.length;i+=7){sc.beginPath();sc.arc(X(PATH[i].x),Y(PATH[i].y),1.3,0,7);sc.fill();}
   // 已走拖尾
   trail.draw(sc,'120,200,255',6);
-  // 大砲（發射點 x=0,y=h0）
-  drawCannon(X(0),Y(st.h0),st.ang,s);
+
+  // 斜坡發射架（發射出口位於 x=0, y=h0 處，不含任何圓形，全由直線與多邊形構成）
+  drawLauncher(X(0),Y(st.h0),st.ang,s);
+
   // 最高點標記
   if(STATS.H>0.5){const p=at(STATS.tH);sc.fillStyle='#ff6b9d';sc.beginPath();sc.arc(X(p.x),Y(p.y),3,0,7);sc.fill();
     sc.fillStyle='rgba(255,255,255,.85)';sc.font='11px system-ui';sc.fillText('最高點 '+STATS.H.toFixed(1)+'m',X(p.x)+6,Y(p.y)-5);}
-  // 砲彈 + 接觸陰影
+
+  // 砲彈（球）：發射前坐落在軌道上端出口 (X(0), Y(h0))，發射後沿軌跡飛行
   const bx=X(cur.x),by=Y(cur.y), ballR=8;
   S.shadow(sc,bx,gY,ballR,cur.y*s);
   S.sphere(sc,bx,by,ballR,[16,12,86]); // 近白鐵球
+
   // 向量（錨定質心）
   if(showVec){ const vs=s*0.42;
     if(showComp){ // 分量：vx 水平、vy 鉛直（虛線直角）
@@ -199,25 +226,164 @@ function drawScene(cur){
   }
   updateHud(cur);
 }
+
 function niceStep(span){const raw=span/7,p=Math.pow(10,Math.floor(Math.log10(raw))),n=raw/p;return (n<1.5?1:n<3?2:n<7?5:10)*p;}
-function drawCannon(px,py,angDeg,s){
-  const a=angDeg*Math.PI/180, L=46, w=15;
-  // 砲座輪
-  sc.save();
-  for(const dx of [-12,12]){S.sphere(sc,px+dx,py+16,9,[210,12,45]);}
-  // 砲身（金屬，旋轉）
-  sc.translate(px,py); sc.rotate(-a);
-  const g=sc.createLinearGradient(0,-w/2,0,w/2);
-  g.addColorStop(0,'#aeb6c0');g.addColorStop(.3,'#eef2f5');g.addColorStop(.55,'#5b636e');g.addColorStop(1,'#3a4048');
-  sc.fillStyle=g; roundRect(sc,-6,-w/2,L,w,6); sc.fill();
-  sc.fillStyle='#2a2f36'; sc.beginPath(); sc.arc(L-6,0,w/2-1.5,0,7); sc.fill(); // 砲口
-  sc.restore();
-  // 砲座底
-  S.sphere(sc,px,py+10,11,[212,15,38]);
+
+/**
+ * 斜坡發射架獨立繪圖函式：
+ * 包含：一條扁平長方形發射軌（角度＝仰角 θ）、三角形支架（A 字架）、底部方形底板。
+ * 發射器造型完全不使用圓形、弧線與球體（無 arc、S.sphere、ellipse），純用直線與多邊形繪製。
+ * 出口端剛好對齊 (px, py)，使砲彈在發射前自然坐落於軌道上端出口。
+ */
+function drawLauncher(a1, a2, a3, a4, a5) {
+  let ctx = sc, px, py, angDeg, s;
+  if (a1 && a1.canvas) { ctx = a1; px = a2; py = a3; angDeg = a4; s = a5; }
+  else { px = a1; py = a2; angDeg = a3; s = a4; }
+
+  const rad = angDeg * Math.PI / 180;
+  const railLen = 44;       // 發射軌長度
+  const railThick = 8;      // 軌道厚度
+  const pivDist = railLen * 0.52; // A 字架支撐點距離上端出口的長度
+  const mountOffset = 9;    // 軌道腹部固定座偏移量
+
+  // 支架鉸鏈頂部在世界座標的位置
+  const mountX = px - pivDist * Math.cos(rad) + mountOffset * Math.sin(rad);
+  const mountY = py + pivDist * Math.sin(rad) + mountOffset * Math.cos(rad);
+
+  // 方形底板位置與尺寸
+  const standH = 26;
+  const baseY = mountY + standH;
+  const baseX = mountX;
+  const baseW = 38;
+  const baseH = 6;
+
+  ctx.save();
+  ctx.lineJoin = 'miter';
+  ctx.lineCap = 'butt';
+
+  // 1. 若處於懸崖或高處發射 (h0 > 0)，向下繪製直立式發射鋼架立柱至地面
+  const W = ctx._w, H = ctx._h, mB = 46, gY = H - mB;
+  if (baseY + baseH < gY) {
+    const colW = baseW - 6;
+    const colX = baseX - colW / 2;
+    const colY = baseY + baseH;
+    const colH = gY - colY;
+    const cg = ctx.createLinearGradient(colX, 0, colX + colW, 0);
+    cg.addColorStop(0, '#1c2430');
+    cg.addColorStop(0.35, '#2e3a4b');
+    cg.addColorStop(0.7, '#242e3d');
+    cg.addColorStop(1, '#151c24');
+    ctx.fillStyle = cg;
+    ctx.fillRect(colX, colY, colW, colH);
+
+    ctx.fillStyle = '#4c5c74';
+    ctx.fillRect(colX, colY, 2, colH);
+
+    ctx.fillStyle = 'rgba(255,255,255,0.08)';
+    for (let gy = colY + 12; gy < gY - 4; gy += 14) {
+      ctx.fillRect(colX + 2, gy, colW - 4, 2);
+    }
+  }
+
+  // 2. 底下方形底板
+  // 接地陰影 (純直線多邊形)
+  ctx.fillStyle = 'rgba(0,0,0,0.32)';
+  ctx.fillRect(baseX - baseW / 2 - 3, baseY + baseH, baseW + 6, 3);
+
+  // 底板主體 (方形矩形)
+  const bg = ctx.createLinearGradient(0, baseY, 0, baseY + baseH);
+  bg.addColorStop(0, '#536175');
+  bg.addColorStop(0.3, '#3c4756');
+  bg.addColorStop(1, '#1f252f');
+  ctx.fillStyle = bg;
+  ctx.fillRect(baseX - baseW / 2, baseY, baseW, baseH);
+
+  // 底板頂部亮邊
+  ctx.fillStyle = '#7d8e9f';
+  ctx.fillRect(baseX - baseW / 2, baseY, baseW, 1.5);
+
+  // 底部固定栓扣
+  ctx.fillStyle = '#171c24';
+  ctx.fillRect(baseX - 13, baseY - 3, 5, 3);
+  ctx.fillRect(baseX + 8, baseY - 3, 5, 3);
+
+  // 3. 三角形支架（A 字架）
+  // 左斜支柱 (直線)
+  ctx.strokeStyle = '#394452';
+  ctx.lineWidth = 3.5;
+  ctx.beginPath();
+  ctx.moveTo(baseX - 11, baseY - 3);
+  ctx.lineTo(mountX - 1.5, mountY);
+  ctx.stroke();
+
+  // 右斜支柱 (直線)
+  ctx.beginPath();
+  ctx.moveTo(baseX + 11, baseY - 3);
+  ctx.lineTo(mountX + 1.5, mountY);
+  ctx.stroke();
+
+  // 支架亮部邊線 (直線)
+  ctx.strokeStyle = '#6d7d92';
+  ctx.lineWidth = 1.2;
+  ctx.beginPath();
+  ctx.moveTo(baseX - 11, baseY - 3);
+  ctx.lineTo(mountX - 1.5, mountY);
+  ctx.moveTo(baseX + 11, baseY - 3);
+  ctx.lineTo(mountX + 1.5, mountY);
+  ctx.stroke();
+
+  // A 字架水平橫樑 (Crossbar，構成鮮明 A 字結構)
+  const barY = baseY + (mountY - baseY) * 0.52;
+  ctx.fillStyle = '#2d3642';
+  ctx.fillRect(baseX - 7, barY - 2, 14, 4);
+  ctx.fillStyle = '#738399';
+  ctx.fillRect(baseX - 7, barY - 2, 14, 1.2);
+
+  // 鉸鏈連接滑座塊 (純矩形)
+  ctx.fillStyle = '#222933';
+  ctx.fillRect(mountX - 4.5, mountY - 2, 9, 5);
+  ctx.fillStyle = '#5c6c80';
+  ctx.fillRect(mountX - 4.5, mountY - 2, 9, 1.5);
+
+  // 4. 扁平的長方形發射軌（以仰角 θ 旋轉）
+  ctx.translate(px, py);
+  ctx.rotate(-rad);
+
+  // 發射軌主體（扁平長方形，上端出口剛好在 x=0）
+  const rg = ctx.createLinearGradient(0, 1, 0, 1 + railThick);
+  rg.addColorStop(0, '#8898aa');
+  rg.addColorStop(0.25, '#b8c5d3');
+  rg.addColorStop(0.65, '#4b5767');
+  rg.addColorStop(1, '#252e39');
+  ctx.fillStyle = rg;
+  ctx.fillRect(-railLen, 1, railLen, railThick);
+
+  // 軌道頂部高光滑軌
+  ctx.fillStyle = '#e4edf7';
+  ctx.fillRect(-railLen, 1, railLen, 1.5);
+
+  // 軌道底部陰影槽線
+  ctx.fillStyle = '#171d24';
+  ctx.fillRect(-railLen, 1 + railThick - 1.5, railLen, 1.5);
+
+  // 軌道刻度線 (直線多邊形)
+  ctx.fillStyle = 'rgba(255,255,255,0.45)';
+  for (let d = 7; d < railLen - 4; d += 7) {
+    ctx.fillRect(-d, 2.5, 1, 3);
+  }
+
+  // 軌道尾部方形擋片
+  ctx.fillStyle = '#343e4c';
+  ctx.fillRect(-railLen - 3, -1.5, 3, railThick + 4);
+  ctx.fillStyle = '#718093';
+  ctx.fillRect(-railLen - 3, -1.5, 3, 1.5);
+
+  ctx.restore();
 }
-function roundRect(c,x,y,w,h,r){c.beginPath();c.moveTo(x+r,y);c.arcTo(x+w,y,x+w,y+h,r);c.arcTo(x+w,y+h,x,y+h,r);c.arcTo(x,y+h,x,y,r);c.arcTo(x,y,x+w,y,r);c.closePath();}
+const drawCannon = drawLauncher; // 保留相容別名
+
 function drawPlot(cur){
-  const W=pc._w,H=pc._h,mL=44,mR=40,mT=14,mB=22; pc.clearRect(0,0,W,H);   // 左軸速度、右軸高度、下方時間，各自標刻度與單位
+  const W=pc._w,H=pc._h,mL=44,mR=40,mT=14,mB=22; pc.clearRect(0,0,W,H);
   const T=Math.max(STATS.T,0.1); let vmax=0,ymax=Math.max(STATS.H,st.h0,1)*1.1;
   PATH.forEach(p=>vmax=Math.max(vmax,Math.abs(p.vx),Math.abs(p.vy)));vmax=Math.max(vmax,1)*1.1;
   const X=t=>mL+t/T*(W-mL-mR), midY=mT+(H-mT-mB)/2;
@@ -241,6 +407,7 @@ function drawPlot(cur){
   const cx=X(cur.t);pc.strokeStyle='rgba(255,255,255,.6)';pc.lineWidth=1;pc.beginPath();pc.moveTo(cx,mT);pc.lineTo(cx,H-mB);pc.stroke();
   pc.fillStyle='#fff';[Yv(cur.vx),Yv(cur.vy),Yy(cur.y)].forEach(y=>{pc.beginPath();pc.arc(cx,y,3,0,7);pc.fill();});
 }
+
 function updateHud(cur){
   document.getElementById('hud').innerHTML=
    chip('飛行時間',STATS.T.toFixed(2)+' s','')+chip('水平射程',STATS.R.toFixed(1)+' m','amber')+
@@ -248,10 +415,10 @@ function updateHud(cur){
 }
 function chip(k,v,cls){return `<div class="chip ${cls}">${k}<b>${v}</b></div>`;}
 function frow(n,sym,sub,val){return `<div class="frow"><span class="fname">${n}</span><span class="fsym">${sym}</span><span class="fsub">= ${sub}</span><span class="fval">${val}</span></div>`;}
+
 function updateFormula(){
   const v0=st.v0,th=st.ang,g=st.g,rad=th*Math.PI/180,h0=st.h0;
   const Rid=v0*v0*Math.sin(2*rad)/g, Hid=Math.pow(v0*Math.sin(rad),2)/(2*g), Tid=2*v0*Math.sin(rad)/g;
-  // 高處發射（h0>0）改用含 h₀ 的落地時間式；原本一律用平地公式，懸崖平拋（θ=0）時 R、H、T 全算成 0
   const vy0=v0*Math.sin(rad), Th=(vy0+Math.sqrt(vy0*vy0+2*g*h0))/g, Rh=v0*Math.cos(rad)*Th, Hh=h0+vy0*vy0/(2*g);
   const rows = h0>0 ?
     frow('飛行時間 T','(v₀sinθ + √(v₀²sin²θ + 2gh₀)) / g',`(${v0}·sin${th}° + √(${v0}²·sin²${th}° + 2·${g}·${h0})) / ${g}`, Th.toFixed(2)+' s')+
@@ -268,6 +435,7 @@ function updateFormula(){
     (dragOn?` <span style="color:var(--accent2)">目前有空氣阻力，上式為理想值；實測射程 <b style="color:var(--accent2)">${STATS.R.toFixed(1)} m</b>。</span>`:'')+
     `</div>`;
 }
+
 function render(cur){drawScene(cur);drawPlot(cur);}
 function rebuild(){simulate();playT=Math.min(playT,STATS.T);trail.clear();render(at(playT));updateFormula();}
 
@@ -277,12 +445,13 @@ function loop(ts){ const dt=lastTs?Math.min((ts-lastTs)/1000,0.05):0; lastTs=ts;
   if(playing){ playT+=dt;
     if(playT>=STATS.T){playT=STATS.T;playing=false;pb.classList.remove('on');pb.textContent='▶ 重新播放';}
     const cur=at(playT);
-    const W=sc._w,H=sc._h,mL=24,mR=24,mT=18,mB=46,b=bounds(),s=Math.min((W-mL-mR)/b.xmax,(H-mT-mB)/b.ymax),gY=H-mB;
+    const W=sc._w,H=sc._h,mL=48,mR=24,mT=18,mB=46,b=bounds(),s=Math.min((W-mL-mR)/b.xmax,(H-mT-mB)/b.ymax),gY=H-mB;
     trail.push(mL+cur.x*s, gY-cur.y*s);
   }
   render(at(playT));
   requestAnimationFrame(loop);
 }
+
 const pb=document.getElementById('play');
 pb.onclick=()=>{ if(playT>=STATS.T){playT=0;trail.clear();} playing=!playing;
   pb.classList.toggle('on',playing); pb.textContent=playing?'⏸ 暫停':'▶ 播放'; };
@@ -291,6 +460,7 @@ document.getElementById('vecBtn').onclick=function(){showVec=!showVec;this.class
 document.getElementById('compBtn').onclick=function(){showComp=!showComp;this.classList.toggle('on',showComp);this.textContent='分量：'+(showComp?'開':'關');};
 const dragBtn=document.getElementById('dragBtn');
 dragBtn.onclick=function(){dragOn=!dragOn;this.classList.toggle('on',dragOn);this.textContent='空氣阻力：'+(dragOn?'開':'關');rebuild();};
+
 const PRESETS={'45':{v0:28,ang:45,g:9.8,h0:0,drag:false},steep:{v0:28,ang:75,g:9.8,h0:0,drag:false},
   cliff:{v0:22,ang:0,g:9.8,h0:38,drag:false},moon:{v0:28,ang:45,g:1.6,h0:0,drag:false}};
 document.querySelectorAll('[data-preset]').forEach(b=>b.onclick=()=>{const p=PRESETS[b.dataset.preset];if(!p)return;

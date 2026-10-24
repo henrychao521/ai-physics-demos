@@ -18,8 +18,8 @@
   .badge{display:inline-block;background:var(--panel2);border:1px solid var(--line);color:var(--muted);font-size:.72rem;padding:2px 8px;border-radius:99px;margin-right:6px}
   .scene-wrap{position:relative;border-radius:16px;overflow:hidden;border:1px solid var(--line);box-shadow:0 18px 50px rgba(0,0,0,.45)}
   #scene{display:block;width:100%}
-  .toolbar{position:absolute;top:12px;left:12px;display:flex;gap:7px;flex-wrap:wrap}
-  .toolbar button{background:rgba(12,16,28,.6);backdrop-filter:blur(6px);color:#eaf2ff;border:1px solid rgba(255,255,255,.14);border-radius:9px;padding:7px 11px;font-size:.82rem;cursor:pointer;font-family:inherit}
+  .toolbar{position:absolute;top:12px;left:12px;display:flex;gap:7px;flex-wrap:wrap;z-index:2}
+  .toolbar button{background:rgba(12,16,28,.65);backdrop-filter:blur(6px);color:#eaf2ff;border:1px solid rgba(255,255,255,.14);border-radius:9px;padding:7px 12px;font-size:.84rem;cursor:pointer;font-family:inherit;min-height:36px;display:inline-flex;align-items:center;justify-content:center}
   .toolbar button.on{background:var(--accent);color:#04121c;border-color:var(--accent);font-weight:700}
   .statgrid{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px;margin-top:14px}
   .box{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:10px 12px}
@@ -36,9 +36,26 @@
   .presets span{color:var(--muted);font-size:.8rem}
   .pbtn{background:var(--panel2);color:var(--txt);border:1px solid var(--line);padding:7px 12px;border-radius:9px;cursor:pointer;font-size:.83rem;font-family:inherit}
   .pbtn:hover{border-color:var(--accent)}
+  .formula{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:14px 16px;margin-top:14px}
+  .formula h4{margin:0 0 10px;font-size:.95rem;color:var(--txt)}
+  .frow{display:flex;justify-content:space-between;align-items:center;padding:6px 0;border-bottom:1px solid rgba(255,255,255,.06);font-size:.85rem;gap:8px;flex-wrap:wrap}
+  .fname{color:var(--muted);min-width:110px}
+  .fsym{color:var(--accent);font-family:monospace}
+  .fsub{color:var(--muted);font-size:.82rem}
+  .fval{font-weight:700;font-variant-numeric:tabular-nums;color:var(--txt)}
+  .frel{margin-top:10px;font-size:.82rem;color:var(--muted);line-height:1.6}
+  .frel b{color:var(--accent)}
   .note{background:var(--panel);border-left:3px solid var(--accent2);border-radius:8px;padding:12px 14px;color:var(--muted);font-size:.86rem;line-height:1.7;margin-top:14px}
   .note b{color:var(--txt)}.note code{background:var(--bg2);padding:1px 6px;border-radius:5px;color:var(--green);font-size:.85em}
   footer{color:var(--muted);font-size:.78rem;margin-top:24px;text-align:center;line-height:1.7}
+
+  @media (max-width:600px){
+    .scene-wrap{display:flex;flex-direction:column;overflow:visible}
+    .toolbar{position:static;top:auto;left:auto;padding:10px 12px;background:var(--panel);border-bottom:1px solid var(--line);width:100%;border-radius:14px 14px 0 0}
+    .toolbar button,.pbtn{min-height:44px;padding:10px 14px;font-size:.88rem}
+    .sld input[type="range"]{min-height:44px}
+    .statgrid{grid-template-columns:1fr 1fr}
+  }
 </style>
 </head>
 <body data-demo="槓桿與滑輪">
@@ -51,11 +68,13 @@
   </header>
 
   <div class="scene-wrap">
-    <canvas id="scene"></canvas>
     <div class="toolbar">
-      <button id="mLever" class="on">槓桿（力矩）</button>
+      <button id="mLever" class="on">槓桿</button>
+      <button id="mFixed">定滑輪</button>
+      <button id="mMovable">動滑輪</button>
       <button id="mPulley">滑輪組</button>
     </div>
+    <canvas id="scene"></canvas>
   </div>
 
   <div class="statgrid" id="stats"></div>
@@ -75,12 +94,34 @@
 </div>
 
 <script>
-const S=SIM; let mode='lever';
-const lever={w1:20,d1:3,w2:30,d2:2}, pulley={W:120,N:2};
+const S=SIM;
+let mode='lever';
+const lever={w1:20,d1:3,w2:30,d2:2};
+const pulley={W:120,N:2,d:1};
 let sc;
 const LAB={skyTop:'#18223a',skyBottom:'#0b1120',ground:'#222c44',groundDark:'#121829',grid:'rgba(120,150,210,.22)',horizon:'rgba(150,180,230,.3)',vignette:'rgba(0,0,0,.45)'};
+
 function fmt(x){return (Math.round(x*100)/100).toString();}
 function frow(n,sym,sub,val){return `<div class="frow"><span class="fname">${n}</span><span class="fsym">${sym}</span><span class="fsub">= ${sub}</span><span class="fval">${val}</span></div>`;}
+
+function pulleyIdeal(kind, W, n, d){
+  const dist = (d !== undefined && d !== null) ? Number(d) : ((typeof pulley !== 'undefined' && pulley.d) ? pulley.d : 1);
+  const weight = Number(W);
+  let MA = 1;
+  if(kind === 'fixed'){
+    MA = 1;
+  }else if(kind === 'movable'){
+    MA = 2;
+  }else if(kind === 'pulley'){
+    MA = (n !== undefined && n !== null) ? Number(n) : ((typeof pulley !== 'undefined' && pulley.N) ? pulley.N : 2);
+  }
+  const F = weight / MA;
+  const rope = MA * dist;
+  const workIn = F * rope;
+  const workOut = weight * dist;
+  return { MA, F, rope, workIn, workOut };
+}
+
 function updateFormula(){
   const el=document.getElementById('formula');if(!el)return;
   if(mode==='lever'){
@@ -92,117 +133,554 @@ function updateFormula(){
       frow('力矩差 Δτ','τ₂−τ₁',`${R.toFixed(1)}−${L.toFixed(1)}`, (R-L).toFixed(1)+' N·m')+
       `<div class="frel">📈 <b>平衡條件 W₁·d₁ = W₂·d₂</b>：兩側力矩相等才水平　·　<b>τ ∝ d</b>：力臂加倍 → 力矩加倍，故小力配長力臂可撬大重量配短力臂　·　Δτ≠0 → 往力矩較大那側傾倒。</div>`;
   }else{
-    const N=pulley.N,F=pulley.W/N;
+    const dVal = (pulley.d || 1);
+    const res = pulleyIdeal(mode, pulley.W, pulley.N, dVal);
+    const modeName = mode==='fixed' ? '定滑輪' : (mode==='movable' ? '動滑輪' : '滑輪組');
     el.innerHTML=
-      `<h4>📐 計算公式（即時代入　滑輪組・功守恆）</h4>`+
-      frow('施力 F','W / N',`${pulley.W} / ${N}`, F.toFixed(1)+' N')+
-      frow('機械利益 MA','W / F = N',`${pulley.W} / ${F.toFixed(1)}`, ''+N)+
-      frow('拉繩長 s','N · h',`${N} · h`, N+'·h')+
-      `<div class="frel">📈 <b>F ∝ 1/N</b>：支撐繩數加倍 → 施力減半（更省力）　·　<b>機械利益 = N</b>　·　<b>功守恆 W·h = F·(N·h)</b>：省 N 倍力就費 N 倍距離，機械不能省功。</div>`;
+      `<h4>📐 計算公式（即時代入　${modeName}・功守恆）</h4>`+
+      frow('機械利益 MA', mode==='pulley'?'n (支撐繩數)':(mode==='fixed'?'1':'2'), ''+res.MA, ''+res.MA)+
+      frow('施力 F','W / MA',`${pulley.W} / ${res.MA}`, res.F.toFixed(1)+' N')+
+      frow('拉繩距離 s','MA · d',`${res.MA} · ${dVal}`, res.rope.toFixed(1)+' m')+
+      frow('輸入功 W_in','F · s',`${res.F.toFixed(1)} · ${res.rope.toFixed(1)}`, res.workIn.toFixed(1)+' J')+
+      frow('輸出功 W_out','W · d',`${pulley.W} · ${dVal}`, res.workOut.toFixed(1)+' J')+
+      `<div class="frel">📈 <b>功守恆 W_in = F·s ＝ W_out = W·d</b>：${res.F.toFixed(1)} N × ${res.rope.toFixed(1)} m = ${pulley.W} N × ${dVal} m = ${res.workIn.toFixed(1)} J（功不變，代入數字）。${
+        mode==='fixed' ? '<b>定滑輪</b>：MA = 1，不省力也不費距離，改變施力方向。' :
+        mode==='movable' ? '<b>動滑輪</b>：MA = 2，省一半力，繩需拉 2 倍長。' :
+        `<b>滑輪組</b>：MA = ${res.MA}，省力 ${res.MA} 倍，繩需拉 ${res.MA} 倍長。`
+      }</div>`;
   }
 }
+
 const sBar=document.getElementById('sliders');
-function buildControls(){ sBar.innerHTML='';
-  const specs= mode==='lever' ? [
-    {obj:lever,id:'w1',name:'左重 W₁',min:5,max:60,step:1,val:lever.w1,unit:'N',cls:'l'},
-    {obj:lever,id:'d1',name:'左力臂 d₁',min:.5,max:5,step:.1,val:lever.d1,unit:'m',cls:'l'},
-    {obj:lever,id:'w2',name:'右重 W₂',min:5,max:60,step:1,val:lever.w2,unit:'N',cls:'r'},
-    {obj:lever,id:'d2',name:'右力臂 d₂',min:.5,max:5,step:.1,val:lever.d2,unit:'m',cls:'r'},
-  ] : [
-    {obj:pulley,id:'W',name:'載重 W',min:20,max:300,step:10,val:pulley.W,unit:'N'},
-    {obj:pulley,id:'N',name:'支撐繩數 N',min:1,max:5,step:1,val:pulley.N,unit:'條'},
-  ];
-  specs.forEach(s=>{const d=document.createElement('div');d.className='sld '+(s.cls||'');
+function buildControls(){
+  sBar.innerHTML='';
+  let specs;
+  if(mode==='lever'){
+    specs=[
+      {obj:lever,id:'w1',name:'左重 W₁',min:5,max:60,step:1,val:lever.w1,unit:'N',cls:'l'},
+      {obj:lever,id:'d1',name:'左力臂 d₁',min:.5,max:5,step:.1,val:lever.d1,unit:'m',cls:'l'},
+      {obj:lever,id:'w2',name:'右重 W₂',min:5,max:60,step:1,val:lever.w2,unit:'N',cls:'r'},
+      {obj:lever,id:'d2',name:'右力臂 d₂',min:.5,max:5,step:.1,val:lever.d2,unit:'m',cls:'r'},
+    ];
+  }else if(mode==='fixed'){
+    specs=[
+      {obj:pulley,id:'W',name:'載重 W',min:20,max:300,step:10,val:pulley.W,unit:'N'},
+      {obj:pulley,id:'d',name:'上升高度 d',min:0.5,max:3,step:0.5,val:pulley.d||1,unit:'m'},
+    ];
+  }else if(mode==='movable'){
+    specs=[
+      {obj:pulley,id:'W',name:'載重 W',min:20,max:300,step:10,val:pulley.W,unit:'N'},
+      {obj:pulley,id:'d',name:'上升高度 d',min:0.5,max:3,step:0.5,val:pulley.d||1,unit:'m'},
+    ];
+  }else{
+    if(pulley.N < 2) pulley.N = 2;
+    if(pulley.N > 6) pulley.N = 6;
+    specs=[
+      {obj:pulley,id:'W',name:'載重 W',min:20,max:300,step:10,val:pulley.W,unit:'N'},
+      {obj:pulley,id:'N',name:'支撐繩數 n',min:2,max:6,step:1,val:pulley.N,unit:'條'},
+      {obj:pulley,id:'d',name:'上升高度 d',min:0.5,max:3,step:0.5,val:pulley.d||1,unit:'m'},
+    ];
+  }
+
+  specs.forEach(s=>{
+    const d=document.createElement('div');
+    d.className='sld '+(s.cls||'');
     d.innerHTML=`<label><span>${s.name}</span><span class="v" id="v_${s.id}">${fmt(s.val)} ${s.unit}</span></label>
       <input type="range" id="r_${s.id}" min="${s.min}" max="${s.max}" step="${s.step}" value="${s.val}">`;
     sBar.appendChild(d);
-    d.querySelector('input').addEventListener('input',e=>{s.obj[s.id]=parseFloat(e.target.value);
-      document.getElementById('v_'+s.id).textContent=`${fmt(s.obj[s.id])} ${s.unit}`;if(mode==='lever')targetAngle=null;draw();});});
+    d.querySelector('input').addEventListener('input',e=>{
+      s.obj[s.id]=parseFloat(e.target.value);
+      const vEl=document.getElementById('v_'+s.id);
+      if(vEl) vEl.textContent=`${fmt(s.obj[s.id])} ${s.unit}`;
+      if(mode==='lever')targetAngle=null;
+      draw();
+    });
+  });
 }
-function setSlider(id,val,obj){obj[id]=val;const r=document.getElementById('r_'+id);if(r)r.value=val;const el=document.getElementById('v_'+id);if(el)el.textContent=fmt(val)+' '+(el.textContent.split(' ')[1]||'');}
 
-// 槓桿物理（已驗證）
+function setSlider(id,val,obj){
+  obj[id]=val;
+  const r=document.getElementById('r_'+id);
+  if(r)r.value=val;
+  const el=document.getElementById('v_'+id);
+  if(el)el.textContent=fmt(val)+' '+(el.textContent.split(' ')[1]||'');
+}
+
 let angle=0,targetAngle=null;
 function leverTorques(){return {L:lever.w1*lever.d1,R:lever.w2*lever.d2};}
-// 手機滑輪組情境要畫到約 285px 高（原比例只剩約 170px，下方兩行說明被切掉）：窄螢幕改用較高的畫布
-function setupCanvases(){const narrow=window.innerWidth<=560;sc=S.fit(document.getElementById('scene'),narrow&&mode==='pulley'?document.getElementById('scene').parentElement.clientWidth/300:2.05);}
-function drawWeightBox(px,py,w,hsl,lab){const sz=18+w*0.45,[h,s,l]=hsl;
+
+function setupCanvases(){
+  const narrow=window.innerWidth<=600;
+  const aspect=narrow?(mode==='lever'?1.7:1.15):2.05;
+  sc=S.fit(document.getElementById('scene'),aspect);
+}
+
+function drawWeightBox(px,py,w,hsl,lab){
+  const sz=18+w*0.45,[h,s,l]=hsl;
   sc.strokeStyle=`hsl(${h},${s}%,${l}%)`;sc.lineWidth=2;sc.beginPath();sc.moveTo(px,py);sc.lineTo(px,py+24);sc.stroke();
   const g=sc.createLinearGradient(0,py+24,0,py+24+sz);g.addColorStop(0,`hsl(${h},${s}%,${l+16}%)`);g.addColorStop(1,`hsl(${h},${s}%,${l-14}%)`);
   sc.fillStyle=g;rr(px-sz/2,py+24,sz,sz,4);sc.fill();sc.fillStyle='rgba(255,255,255,.22)';rr(px-sz/2+3,py+27,sz-6,4,2);sc.fill();
-  sc.fillStyle='#fff';sc.font='600 11px system-ui';sc.textAlign='center';sc.fillText(lab,px,py+24+sz/2+4);sc.textAlign='left';}
-function rr(x,y,w,h,r){sc.beginPath();sc.moveTo(x+r,y);sc.arcTo(x+w,y,x+w,y+h,r);sc.arcTo(x+w,y+h,x,y+h,r);sc.arcTo(x,y+h,x,y,r);sc.arcTo(x,y,x+w,y,r);sc.closePath();}
-function drawLever(){// 桿半長 5.2 m：力臂滑桿最大 5 m，原本 4.6 m 時重物會掛在桿子外面（「小力撬大物」d₁=5 m 即是）
+  sc.fillStyle='#fff';sc.font='600 11px system-ui';sc.textAlign='center';sc.fillText(lab,px,py+24+sz/2+4);sc.textAlign='left';
+}
+
+function rr(x,y,w,h,r){
+  sc.beginPath();sc.moveTo(x+r,y);sc.arcTo(x+w,y,x+w,y+h,r);sc.arcTo(x+w,y+h,x,y+h,r);sc.arcTo(x,y+h,x,y,r);sc.arcTo(x,y,x+w,y,r);sc.closePath();
+}
+
+function drawLever(){
   const W=sc._w,H=sc._h,px=W/2,py=H*0.46,Lm=5.2,PM=Math.min(46,(W*0.4)/Lm);
   S.scene(sc,LAB,{ground:py+54,perspective:true});
   const {L,R}=leverTorques(),bal=Math.abs(L-R)<0.5,goal=bal?0:Math.sign(R-L)*0.3;
   if(targetAngle===null)targetAngle=goal;const th=angle;
-  // 支點(著色楔)
   const fg=sc.createLinearGradient(px-26,0,px+26,0);fg.addColorStop(0,'#8a96ac');fg.addColorStop(.5,'#cfd8e6');fg.addColorStop(1,'#5e6878');
   sc.fillStyle=fg;sc.beginPath();sc.moveTo(px,py);sc.lineTo(px-26,py+52);sc.lineTo(px+26,py+52);sc.closePath();sc.fill();
-  // 橫桿(金屬，旋轉)
   const pt=s=>({x:px+s*PM*Math.cos(th),y:py+s*PM*Math.sin(th)});
-  const a=pt(-Lm),b=pt(Lm);
   sc.save();sc.translate(px,py);sc.rotate(th);S.metal(sc,-Lm*PM,-5,2*Lm*PM,10);sc.restore();
   for(let s=-5;s<=5;s++){if(!s)continue;const p=pt(s);sc.fillStyle='rgba(255,255,255,.35)';sc.beginPath();sc.arc(p.x,p.y,2,0,7);sc.fill();}
-  // 配重(垂直懸掛)
   const p1=pt(-lever.d1),p2=pt(lever.d2);
   drawWeightBox(p1.x,p1.y,lever.w1,[205,75,55],lever.w1+'N');
   drawWeightBox(p2.x,p2.y,lever.w2,[340,75,60],lever.w2+'N');
   sc.fillStyle='#6cd0ff';sc.font='11px system-ui';sc.fillText('d₁='+lever.d1+'m',p1.x-18,py-14);
   sc.fillStyle='#ff8fb0';sc.fillText('d₂='+lever.d2+'m',p2.x-18,py-14);
 }
-function drawPulley(){const W=sc._w,H=sc._h,N=pulley.N,load=pulley.W,F=load/N,bx=W/2,topY=44,botY=topY+H*0.42;
+
+function drawFixedPulley(){
+  const W=sc._w,H=sc._h,bx=W/2;
+  const res=pulleyIdeal('fixed',pulley.W,pulley.N,pulley.d||1);
   S.scene(sc,LAB,{});
-  S.metal(sc,bx-160,topY-12,320,12); // 頂梁
-  // 支撐繩
-  sc.strokeStyle='#7CFFB2';sc.lineWidth=2.5;
-  // N=1 時唯一那條繩放在右側、接到定滑輪（原本放在 bx−60，和施力端沒有連在一起）
-  for(let i=0;i<N;i++){const x=bx-60+(N>1?i*(120/(N-1)):120);sc.beginPath();sc.moveTo(x,topY);sc.lineTo(x,botY);sc.stroke();}
-  // 動滑輪塊
-  S.metal(sc,bx-72,botY,144,18);
-  for(const dx of [-72,72])S.sphere(sc,bx+dx,botY+9,9,[210,12,55]);
-  // 載重
-  const lsz=46+load*0.12;const g=sc.createLinearGradient(0,botY+30,0,botY+30+lsz*0.7);g.addColorStop(0,'#ff8fa3');g.addColorStop(1,'#c83a55');
-  S.shadow(sc,bx,botY+30+lsz*0.7+4,lsz*0.5,0);sc.fillStyle=g;rr(bx-lsz/2,botY+30,lsz,lsz*0.7,6);sc.fill();
-  sc.strokeStyle='#5a7bb0';sc.lineWidth=2;sc.beginPath();sc.moveTo(bx,botY+18);sc.lineTo(bx,botY+30);sc.stroke();
-  sc.fillStyle='#fff';sc.font='600 13px system-ui';sc.textAlign='center';sc.fillText(load+' N',bx,botY+30+lsz*0.35+4);sc.textAlign='left';
-  // 施力端
-  // 施力端：從頂梁定滑輪另一側垂下（原本畫在 bx+60，和第 N 條支撐繩重疊、還穿過動滑輪，N=3 時看起來只有 2 條綠繩）
-  const ex=bx+104;sc.strokeStyle='#4cc2ff';sc.lineWidth=2.5;sc.beginPath();sc.moveTo(ex,topY+14);sc.lineTo(ex,botY+70);sc.stroke();
-  sc.strokeStyle='#cfd8e6';sc.lineWidth=3;sc.beginPath();sc.arc(bx+82,topY+14,22,0,Math.PI*2);sc.stroke();
-  sc.fillStyle='#8a96ac';sc.beginPath();sc.arc(bx+82,topY+14,4,0,7);sc.fill();
-  sc.strokeStyle='#4cc2ff';sc.lineWidth=2.5;sc.beginPath();sc.arc(bx+82,topY+14,22,Math.PI,0);sc.stroke();
-  S.arrow(sc,ex,botY+50,ex,botY+76,{color:'#4cc2ff',width:3.5,label:'F='+F.toFixed(1)+'N'});
-  sc.fillStyle='rgba(124,255,178,.8)';sc.font='12px system-ui';sc.fillText(N+' 條繩分擔載重',bx-150,botY+96);
-  // 示意圖沒有畫出繩子繞過的各個輪子（實際是一條繩上下來回繞過定滑輪與動滑輪）
-  {const t='示意：只畫出拉住動滑輪的繩段',tw=sc.measureText(t).width;sc.fillStyle='rgba(8,14,24,.78)';sc.fillRect(bx-154,topY+17,tw+8,18);
-   sc.fillStyle='rgba(255,206,84,.95)';sc.fillText(t,bx-150,topY+30);}
-  sc.fillStyle='rgba(160,180,220,.6)';sc.fillText('載重升高 1，需拉繩 '+N+(N>1?'（省力但費距離）':'（不省力，只改變施力方向）'),bx-150,botY+114);
+
+  const topY=38;
+  S.metal(sc,bx-150,topY-12,300,12);
+
+  const py=topY+46;
+  const pr=32;
+  sc.fillStyle='#657285';
+  sc.fillRect(bx-5,topY,10,46);
+
+  sc.strokeStyle='#cfd8e6';
+  sc.lineWidth=3.5;
+  sc.beginPath();
+  sc.arc(bx,py,pr,0,Math.PI*2);
+  sc.stroke();
+  S.sphere(sc,bx,py,pr-2,[215,14,48]);
+
+  sc.fillStyle='#ffce54';
+  sc.beginPath();
+  sc.arc(bx,py,5,0,Math.PI*2);
+  sc.fill();
+
+  const ropeLeftX=bx-pr;
+  const ropeRightX=bx+pr;
+  const botY=py+H*0.42;
+
+  sc.strokeStyle='#7CFFB2';
+  sc.lineWidth=2.8;
+  sc.beginPath();
+  sc.arc(bx,py,pr,Math.PI,0);
+  sc.stroke();
+
+  sc.beginPath();
+  sc.moveTo(ropeLeftX,py);
+  sc.lineTo(ropeLeftX,botY);
+  sc.stroke();
+
+  const load=pulley.W;
+  const lsz=44+load*0.12;
+  const g=sc.createLinearGradient(0,botY,0,botY+lsz*0.7);
+  g.addColorStop(0,'#ff8fa3');
+  g.addColorStop(1,'#c83a55');
+  S.shadow(sc,ropeLeftX,botY+lsz*0.7+5,lsz*0.5,0);
+  sc.fillStyle=g;
+  rr(ropeLeftX-lsz/2,botY,lsz,lsz*0.7,6);
+  sc.fill();
+  sc.fillStyle='#fff';
+  sc.font='600 13px system-ui';
+  sc.textAlign='center';
+  sc.fillText(load+' N',ropeLeftX,botY+lsz*0.35+4);
+
+  S.arrow(sc,ropeLeftX,botY+lsz*0.7,ropeLeftX,botY+lsz*0.7+26,{
+    color:'#ff5470',width:2.5,label:'W='+load+'N'
+  });
+
+  const pullY=botY+14;
+  sc.strokeStyle='#4cc2ff';
+  sc.lineWidth=2.8;
+  sc.beginPath();
+  sc.moveTo(ropeRightX,py);
+  sc.lineTo(ropeRightX,pullY);
+  sc.stroke();
+
+  S.arrow(sc,ropeRightX,pullY-20,ropeRightX,pullY+34,{
+    color:'#4cc2ff',width:3.5,label:'F = '+res.F.toFixed(1)+' N'
+  });
+
+  sc.fillStyle='#7CFFB2';
+  sc.font='12px system-ui';
+  sc.textAlign='right';
+  sc.fillText('張力 T = '+load+' N',ropeLeftX-10,py+32);
+  sc.textAlign='left';
+  sc.fillStyle='#4cc2ff';
+  sc.fillText('施力 F = '+res.F.toFixed(1)+' N',ropeRightX+12,py+32);
+
+  const badgeY=Math.min(H-20,botY+lsz*0.7+40);
+  const badgeW=Math.min(380,W-20);
+  const badgeX=bx-badgeW/2;
+  sc.fillStyle='rgba(8,14,26,.88)';
+  rr(badgeX,badgeY-20,badgeW,28,7);
+  sc.fill();
+  sc.strokeStyle='#ffce54';
+  sc.lineWidth=1.5;
+  sc.stroke();
+
+  sc.fillStyle='#ffce54';
+  sc.font='bold 12.5px system-ui';
+  sc.textAlign='center';
+  sc.fillText('💡 定滑輪特性：改變施力方向（MA = 1，不省力也不費距離）',bx,badgeY-2);
+  sc.textAlign='left';
 }
-function draw(){if(mode==='lever')drawLever();else drawPulley();drawStats();updateFormula();}
-function drawStats(){let rows,eqt,eqc,eqbg;
-  if(mode==='lever'){const {L,R}=leverTorques(),bal=Math.abs(L-R)<0.5;
-    rows=[['左力矩 W₁·d₁',L.toFixed(1)+' N·m','#4cc2ff'],['右力矩 W₂·d₂',R.toFixed(1)+' N·m','#ff6b9d'],['力矩差',(R-L).toFixed(1)+' N·m','#ffce54']];
-    if(bal){eqt='✓ 力矩相等 → 槓桿水平平衡';eqc='#7CFFB2';eqbg='rgba(124,255,178,.15)';}
-    else{eqt='力矩不等 → 向'+(R>L?'右':'左')+'傾倒（該側力矩較大）';eqc='#ffce54';eqbg='rgba(255,206,84,.12)';}
-  }else{const N=pulley.N,F=pulley.W/N;
-    rows=[['機械利益 MA',''+N,'#7CFFB2'],['施力 F=W/N',F.toFixed(1)+' N','#4cc2ff'],['省力倍數',N+' 倍','#ffce54'],['需拉繩長',N+' 倍','#ff6b9d']];
-    eqt='功守恆：F×(N·h) = W×h → 省力 '+N+' 倍、費距離 '+N+' 倍';eqc='#8a99ad';eqbg='rgba(138,153,173,.12)';}
-  document.getElementById('stats').innerHTML=rows.map(r=>`<div class="box"><div class="k">${r[0]}</div><div class="v" style="color:${r[2]}">${r[1]}</div></div>`).join('');
-  const eq=document.getElementById('eq');eq.textContent=eqt;eq.style.color=eqc;eq.style.background=eqbg;}
-function setNote(){document.getElementById('note').innerHTML= mode==='lever'?
-  '<b>物理重點：</b>力矩 = 力 × 力臂 <code>τ = F·d</code>。槓桿在 <code>W₁·d₁ = W₂·d₂</code> 時平衡。所以<b>小力配長力臂</b>可以撬動<b>大重量配短力臂</b>。力臂是支點到力作用線的<b>垂直距離</b>。'
-  :'<b>物理重點：</b>滑輪組用 <code>N</code> 條繩共同吊住載重，每條分擔 <code>W/N</code>，施力 <code>F = W/N</code>，<b>機械利益 = N</b>（理想情況：忽略動滑輪重量與摩擦，實際施力會再大一些）。但要把載重升高 h，必須拉繩 <code>N·h</code>。功 <code>W×h = F×(N·h)</code> 守恆——機械只能<b>省力</b>或<b>省距離</b>，不能省功。';}
-const mL=document.getElementById('mLever'),mP=document.getElementById('mPulley');
-function switchMode(m){mode=m;mL.classList.toggle('on',m==='lever');mP.classList.toggle('on',m==='pulley');
-  document.getElementById('leverPresets').style.display=m==='lever'?'flex':'none';targetAngle=null;angle=0;setupCanvases();buildControls();setNote();draw();}
-mL.onclick=()=>switchMode('lever');mP.onclick=()=>switchMode('pulley');
+
+function drawMovablePulley(){
+  const W=sc._w,H=sc._h,bx=W/2;
+  const res=pulleyIdeal('movable',pulley.W,pulley.N,pulley.d||1);
+  S.scene(sc,LAB,{});
+
+  const topY=38;
+  S.metal(sc,bx-150,topY-12,300,12);
+
+  const pr=32;
+  const ropeLeftX=bx-pr;
+  const ropeRightX=bx+pr;
+
+  sc.fillStyle='#8a96ac';
+  sc.beginPath();
+  sc.arc(ropeLeftX,topY,5,0,Math.PI*2);
+  sc.fill();
+  sc.strokeStyle='#cfd8e6';
+  sc.lineWidth=2;
+  sc.stroke();
+
+  const py=topY+H*0.38;
+
+  sc.strokeStyle='#7CFFB2';
+  sc.lineWidth=2.8;
+  sc.beginPath();
+  sc.moveTo(ropeLeftX,topY);
+  sc.lineTo(ropeLeftX,py);
+  sc.stroke();
+
+  sc.beginPath();
+  sc.arc(bx,py,pr,Math.PI,0,true);
+  sc.stroke();
+
+  const pullY=topY+18;
+  sc.strokeStyle='#4cc2ff';
+  sc.beginPath();
+  sc.moveTo(ropeRightX,py);
+  sc.lineTo(ropeRightX,pullY);
+  sc.stroke();
+
+  S.arrow(sc,ropeRightX,pullY+34,ropeRightX,pullY-10,{
+    color:'#4cc2ff',width:3.5,label:'F = '+res.F.toFixed(1)+' N (向上)'
+  });
+
+  sc.strokeStyle='#cfd8e6';
+  sc.lineWidth=3.5;
+  sc.beginPath();
+  sc.arc(bx,py,pr,0,Math.PI*2);
+  sc.stroke();
+  S.sphere(sc,bx,py,pr-2,[215,14,48]);
+
+  sc.fillStyle='#ffce54';
+  sc.beginPath();
+  sc.arc(bx,py,5,0,Math.PI*2);
+  sc.fill();
+
+  const botY=py+30;
+  sc.strokeStyle='#8a96ac';
+  sc.lineWidth=2.5;
+  sc.beginPath();
+  sc.moveTo(bx,py+5);
+  sc.lineTo(bx,botY);
+  sc.stroke();
+
+  const load=pulley.W;
+  const lsz=44+load*0.12;
+  const g=sc.createLinearGradient(0,botY,0,botY+lsz*0.7);
+  g.addColorStop(0,'#ff8fa3');
+  g.addColorStop(1,'#c83a55');
+  S.shadow(sc,bx,botY+lsz*0.7+5,lsz*0.5,0);
+  sc.fillStyle=g;
+  rr(bx-lsz/2,botY,lsz,lsz*0.7,6);
+  sc.fill();
+  sc.fillStyle='#fff';
+  sc.font='600 13px system-ui';
+  sc.textAlign='center';
+  sc.fillText(load+' N',bx,botY+lsz*0.35+4);
+
+  S.arrow(sc,bx,botY+lsz*0.7,bx,botY+lsz*0.7+26,{
+    color:'#ff5470',width:2.5,label:'W='+load+'N'
+  });
+
+  sc.fillStyle='#7CFFB2';
+  sc.font='12px system-ui';
+  sc.textAlign='right';
+  sc.fillText('繩段 ①: '+res.F.toFixed(1)+' N',ropeLeftX-10,py-14);
+  sc.textAlign='left';
+  sc.fillStyle='#4cc2ff';
+  sc.fillText('繩段 ②: '+res.F.toFixed(1)+' N',ropeRightX+12,py-14);
+
+  const badgeY=Math.min(H-20,botY+lsz*0.7+40);
+  const badgeW=Math.min(380,W-20);
+  const badgeX=bx-badgeW/2;
+  sc.fillStyle='rgba(8,14,26,.88)';
+  rr(badgeX,badgeY-20,badgeW,28,7);
+  sc.fill();
+  sc.strokeStyle='#7CFFB2';
+  sc.lineWidth=1.5;
+  sc.stroke();
+
+  sc.fillStyle='#7CFFB2';
+  sc.font='bold 12.5px system-ui';
+  sc.textAlign='center';
+  sc.fillText('💡 動滑輪特性：省一半力、繩拉兩倍長（MA = 2）',bx,badgeY-2);
+  sc.textAlign='left';
+}
+
+function drawPulley(){
+  const W=sc._w,H=sc._h,bx=W/2;
+  const N=pulley.N,load=pulley.W;
+  const res=pulleyIdeal('pulley',load,N,pulley.d||1);
+  const F=res.F;
+  S.scene(sc,LAB,{});
+
+  const topY=38;
+  S.metal(sc,bx-160,topY-12,320,12);
+
+  const fixedBlockY=topY+14;
+  S.metal(sc,bx-65,fixedBlockY,130,16);
+
+  const botBlockY=topY+H*0.40;
+  S.metal(sc,bx-65,botBlockY,130,16);
+
+  const numWheels=Math.max(2,Math.ceil(N/2));
+  const wheelSpan=84;
+  for(let i=0;i<numWheels;i++){
+    const wx=bx-wheelSpan/2+(numWheels>1?i*(wheelSpan/(numWheels-1)):wheelSpan/2);
+    sc.strokeStyle='#cfd8e6';sc.lineWidth=2;
+    sc.beginPath();sc.arc(wx,fixedBlockY+8,13,0,Math.PI*2);sc.stroke();
+    sc.fillStyle='#657285';sc.beginPath();sc.arc(wx,fixedBlockY+8,3.5,0,Math.PI*2);sc.fill();
+
+    sc.beginPath();sc.arc(wx,botBlockY+8,13,0,Math.PI*2);sc.stroke();
+    sc.fillStyle='#657285';sc.beginPath();sc.arc(wx,botBlockY+8,3.5,0,Math.PI*2);sc.fill();
+  }
+
+  sc.strokeStyle='#7CFFB2';
+  sc.lineWidth=2.5;
+  const ropeLeft=bx-50;
+  const ropeWidth=100;
+  for(let i=0;i<N;i++){
+    const rx=ropeLeft+(N>1?i*(ropeWidth/(N-1)):ropeWidth/2);
+    sc.beginPath();
+    sc.moveTo(rx,fixedBlockY+16);
+    sc.lineTo(rx,botBlockY);
+    sc.stroke();
+
+    sc.fillStyle='rgba(124,255,178,.8)';
+    sc.font='10px system-ui';
+    sc.textAlign='center';
+    sc.fillText('T'+(i+1),rx,(fixedBlockY+16+botBlockY)/2);
+  }
+
+  const ex=bx+80;
+  sc.strokeStyle='#4cc2ff';
+  sc.lineWidth=2.5;
+  sc.beginPath();
+  sc.moveTo(bx+42,fixedBlockY+8);
+  sc.lineTo(ex,fixedBlockY+8);
+  sc.lineTo(ex,botBlockY+42);
+  sc.stroke();
+
+  S.arrow(sc,ex,botBlockY+16,ex,botBlockY+54,{
+    color:'#4cc2ff',width:3.5,label:'F='+F.toFixed(1)+'N'
+  });
+
+  const lsz=44+load*0.12;
+  const g=sc.createLinearGradient(0,botBlockY+20,0,botBlockY+20+lsz*0.7);
+  g.addColorStop(0,'#ff8fa3');
+  g.addColorStop(1,'#c83a55');
+  S.shadow(sc,bx,botBlockY+20+lsz*0.7+4,lsz*0.5,0);
+  sc.fillStyle=g;
+  rr(bx-lsz/2,botBlockY+20,lsz,lsz*0.7,6);
+  sc.fill();
+  sc.strokeStyle='#8a96ac';
+  sc.lineWidth=2.5;
+  sc.beginPath();
+  sc.moveTo(bx,botBlockY+16);
+  sc.lineTo(bx,botBlockY+20);
+  sc.stroke();
+  sc.fillStyle='#fff';
+  sc.font='600 13px system-ui';
+  sc.textAlign='center';
+  sc.fillText(load+' N',bx,botBlockY+20+lsz*0.35+4);
+
+  const badgeY=Math.min(H-20,botBlockY+20+lsz*0.7+40);
+  const badgeW=Math.min(420,W-20);
+  const badgeX=bx-badgeW/2;
+  sc.fillStyle='rgba(8,14,26,.88)';
+  rr(badgeX,badgeY-20,badgeW,28,7);
+  sc.fill();
+  sc.strokeStyle='#4cc2ff';
+  sc.lineWidth=1.5;
+  sc.stroke();
+
+  sc.fillStyle='#4cc2ff';
+  sc.font='bold 12.5px system-ui';
+  sc.textAlign='center';
+  sc.fillText(`💡 滑輪組特性：省力 ${N} 倍、繩拉 ${N} 倍長（省力 n 倍、繩拉 n 倍長，MA = ${N}）`,bx,badgeY-2);
+  sc.textAlign='left';
+}
+
+const drawFixed=drawFixedPulley;
+const drawMovable=drawMovablePulley;
+
+function draw(){
+  if(mode==='lever')drawLever();
+  else if(mode==='fixed')drawFixedPulley();
+  else if(mode==='movable')drawMovablePulley();
+  else drawPulley();
+  drawStats();
+  updateFormula();
+}
+
+function drawStats(){
+  let rows,eqt,eqc,eqbg;
+  if(mode==='lever'){
+    const {L,R}=leverTorques(),bal=Math.abs(L-R)<0.5;
+    rows=[
+      ['左力矩 W₁·d₁',L.toFixed(1)+' N·m','#4cc2ff'],
+      ['右力矩 W₂·d₂',R.toFixed(1)+' N·m','#ff6b9d'],
+      ['力矩差',(R-L).toFixed(1)+' N·m','#ffce54']
+    ];
+    if(bal){
+      eqt='✓ 力矩相等 → 槓桿水平平衡';eqc='#7CFFB2';eqbg='rgba(124,255,178,.15)';
+    }else{
+      eqt='力矩不等 → 向'+(R>L?'右':'左')+'傾倒（該側力矩較大）';eqc='#ffce54';eqbg='rgba(255,206,84,.12)';
+    }
+  }else{
+    const res=pulleyIdeal(mode,pulley.W,pulley.N,pulley.d||1);
+    const MA=res.MA;
+    const Fstr=res.F.toFixed(1)+' N';
+    if(mode==='fixed'){
+      rows=[
+        ['機械利益 MA',''+MA,'#7CFFB2'],
+        ['施力 F',Fstr,'#4cc2ff'],
+        ['省力倍數','1 倍（不省力）','#ffce54'],
+        ['需拉繩長',res.rope.toFixed(1)+' m','#ff6b9d']
+      ];
+      eqt='功守恆：F·s = W·d → 不省力也不費距離，改變施力方向';
+    }else if(mode==='movable'){
+      rows=[
+        ['機械利益 MA',''+MA,'#7CFFB2'],
+        ['施力 F',Fstr,'#4cc2ff'],
+        ['省力倍數','2 倍（省一半力）','#ffce54'],
+        ['需拉繩長',res.rope.toFixed(1)+' m','#ff6b9d']
+      ];
+      eqt='功守恆：F·(2d) = W·d → 省一半力、繩拉兩倍長';
+    }else{
+      rows=[
+        ['機械利益 MA',''+MA,'#7CFFB2'],
+        ['施力 F',Fstr,'#4cc2ff'],
+        ['省力倍數',MA+' 倍','#ffce54'],
+        ['需拉繩長',res.rope.toFixed(1)+' m','#ff6b9d']
+      ];
+      eqt='功守恆：F×('+MA+'·d) = W·d → 省力 '+MA+' 倍、繩拉 '+MA+' 倍長';
+    }
+    eqc='#8a99ad';
+    eqbg='rgba(138,153,173,.12)';
+  }
+
+  document.getElementById('stats').innerHTML=rows.map(r=>
+    `<div class="box"><div class="k">${r[0]}</div><div class="v" style="color:${r[2]}">${r[1]}</div></div>`
+  ).join('');
+
+  const eq=document.getElementById('eq');
+  eq.textContent=eqt;
+  eq.style.color=eqc;
+  eq.style.background=eqbg;
+}
+
+function setNote(){
+  const el=document.getElementById('note');
+  if(mode==='lever'){
+    el.innerHTML='<b>物理重點：</b>力矩 = 力 × 力臂 <code>τ = F·d</code>。槓桿在 <code>W₁·d₁ = W₂·d₂</code> 時平衡。所以<b>小力配長力臂</b>可以撬動<b>大重量配短力臂</b>。力臂是支點到力作用線的<b>垂直距離</b>。';
+  }else if(mode==='fixed'){
+    el.innerHTML='<b>物理重點：定滑輪</b>軸心固定於支架或天花板。實質是等臂槓桿（力臂等於滑輪半徑 r），機械利益 <code>MA = 1</code>。<b>不省力、不省距離，但可改變施力方向</b>（由向上提改為向下拉，方便利用體重施力）。功 <code>W·d = F·s</code> 守恆。';
+  }else if(mode==='movable'){
+    el.innerHTML='<b>物理重點：動滑輪</b>軸心隨重物一起移動。實質是動力臂為阻力臂 2 倍的省力槓桿（支點在固定繩與輪接觸點，力臂為直徑 2r，重物在中心力臂為 r），機械利益 <code>MA = 2</code>。<b>省一半力（F = W/2），但需拉 2 倍繩長（s = 2d）</b>。功 <code>W·d = F·s</code> 守恆。';
+  }else{
+    el.innerHTML='<b>物理重點：滑輪組</b>結合定滑輪與動滑輪，由 <code>n</code> 段繩子共同支撐動滑輪與重物。每段繩分擔 <code>W/n</code>，理想施力 <code>F = W/n</code>，機械利益 <code>MA = n</code>。<b>省力 n 倍，但繩需拉 n 倍長</b>。功 <code>W·d = F·s</code> 守恆——機械只能<b>省力</b>或<b>省距離</b>，不能省功。';
+  }
+}
+
+const mL=document.getElementById('mLever');
+const mF=document.getElementById('mFixed');
+const mM=document.getElementById('mMovable');
+const mP=document.getElementById('mPulley');
+
+function switchMode(m){
+  mode=m;
+  const modes=['lever','fixed','movable','pulley'];
+  const btnMap={lever:'mLever',fixed:'mFixed',movable:'mMovable',pulley:'mPulley'};
+  modes.forEach(k=>{
+    const b=document.getElementById(btnMap[k]);
+    if(b) b.classList.toggle('on',m===k);
+  });
+  const lp=document.getElementById('leverPresets');
+  if(lp) lp.style.display=m==='lever'?'flex':'none';
+  targetAngle=null;
+  angle=0;
+  setupCanvases();
+  buildControls();
+  setNote();
+  draw();
+}
+
+mL.onclick=()=>switchMode('lever');
+mF.onclick=()=>switchMode('fixed');
+mM.onclick=()=>switchMode('movable');
+mP.onclick=()=>switchMode('pulley');
+
 const PRE={bal:{w1:20,d1:3,w2:30,d2:2},adv:{w1:10,d1:5,w2:50,d2:1}};
-document.querySelectorAll('[data-preset]').forEach(b=>b.onclick=()=>{const p=PRE[b.dataset.preset];if(!p)return;Object.assign(lever,p);targetAngle=null;buildControls();draw();});
-function loop(){if(mode==='lever'&&targetAngle!==null){angle+=(targetAngle-angle)*0.12;drawLever();drawStats();}requestAnimationFrame(loop);}
-window.addEventListener('load',()=>{setupCanvases();buildControls();setNote();draw();requestAnimationFrame(loop);});
-window.addEventListener('resize',()=>{setupCanvases();draw();});
+document.querySelectorAll('[data-preset]').forEach(b=>b.onclick=()=>{
+  const p=PRE[b.dataset.preset];
+  if(!p)return;
+  Object.assign(lever,p);
+  targetAngle=null;
+  buildControls();
+  draw();
+});
+
+function loop(){
+  if(mode==='lever'&&targetAngle!==null){
+    angle+=(targetAngle-angle)*0.12;
+    drawLever();
+    drawStats();
+  }
+  requestAnimationFrame(loop);
+}
+
+window.addEventListener('load',()=>{
+  setupCanvases();
+  buildControls();
+  setNote();
+  draw();
+  requestAnimationFrame(loop);
+});
+
+window.addEventListener('resize',()=>{
+  setupCanvases();
+  draw();
+});
 </script>
 </body>
 </html>

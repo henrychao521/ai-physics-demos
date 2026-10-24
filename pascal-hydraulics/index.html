@@ -17,28 +17,34 @@
   header h1{font-size:1.5rem;margin:.2em 0}
   header p{color:var(--muted);margin:.2em 0 1em;line-height:1.6}
   .badge{display:inline-block;background:var(--panel2);border:1px solid var(--line);color:var(--muted);font-size:.72rem;padding:2px 8px;border-radius:99px;margin-right:6px}
-  .scene-wrap{position:relative;border-radius:16px;overflow:hidden;border:1px solid var(--line);box-shadow:0 18px 50px rgba(0,0,0,.45)}
+  .scene-wrap{position:relative;border-radius:16px;overflow:hidden;border:1px solid var(--line);box-shadow:0 18px 50px rgba(0,0,0,.45);background:#070d18}
   #scene{display:block;width:100%}
-  .hud{position:absolute;top:12px;left:12px;display:flex;gap:8px;flex-wrap:wrap;pointer-events:none}
-  .chip{background:rgba(8,16,24,.62);backdrop-filter:blur(6px);border:1px solid rgba(120,180,255,.18);border-radius:10px;padding:6px 11px;color:#dceaff;font-size:.8rem;line-height:1.25}
+  .hud{position:absolute;top:10px;left:10px;right:10px;display:flex;gap:8px;flex-wrap:wrap;pointer-events:none;z-index:2}
+  .chip{background:rgba(8,16,24,.75);backdrop-filter:blur(6px);border:1px solid rgba(120,180,255,.2);border-radius:10px;padding:6px 11px;color:#dceaff;font-size:.78rem;line-height:1.25}
   .chip b{display:block;font-size:1.02rem;font-variant-numeric:tabular-nums;color:#fff}
-  .chip.cyan b{color:#6cd0ff}.chip.amber b{color:#ffce54}.chip.green b{color:#7CFFB2}
-  .toolbar{position:absolute;bottom:12px;right:12px;display:flex;gap:7px;flex-wrap:wrap;justify-content:flex-end}
-  .toolbar button{background:rgba(8,16,24,.62);backdrop-filter:blur(6px);color:#dceaff;border:1px solid rgba(120,180,255,.2);border-radius:9px;padding:7px 11px;font-size:.82rem;cursor:pointer;font-family:inherit}
+  .chip.cyan b{color:#6cd0ff}.chip.amber b{color:#ffce54}.chip.green b{color:#7CFFB2}.chip.blue b{color:#64b5f6}.chip.purple b{color:#d69eff}
+  .toolbar{position:absolute;bottom:12px;right:12px;display:flex;gap:7px;flex-wrap:wrap;justify-content:flex-end;z-index:2}
+  .toolbar button{background:rgba(8,16,24,.75);backdrop-filter:blur(6px);color:#dceaff;border:1px solid rgba(120,180,255,.25);border-radius:9px;padding:9px 14px;font-size:.84rem;cursor:pointer;font-family:inherit;min-height:44px;display:inline-flex;align-items:center;justify-content:center}
   .toolbar button.on{background:var(--accent);color:#04121c;border-color:var(--accent);font-weight:700}
-  @media(max-width:560px){.toolbar{position:static;justify-content:center;padding:8px 10px;background:rgba(8,14,22,.5);border-top:1px solid var(--line)}}
   .bar{display:flex;gap:14px;flex-wrap:wrap;align-items:flex-end;background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:14px 16px;margin-top:14px}
   .sld{flex:1;min-width:160px}
   .sld label{display:flex;justify-content:space-between;font-size:.82rem;color:var(--muted);margin-bottom:5px}
   .sld label .v{color:var(--accent);font-variant-numeric:tabular-nums;font-weight:700}
-  .sld input{width:100%;accent-color:var(--accent)}
-  .presets{display:flex;gap:7px;flex-wrap:wrap;align-items:center;margin-top:12px}
-  .presets span{color:var(--muted);font-size:.8rem}
-  .pbtn{background:var(--panel2);color:var(--txt);border:1px solid var(--line);padding:7px 12px;border-radius:9px;cursor:pointer;font-size:.83rem;font-family:inherit}
+  .sld input{width:100%;accent-color:var(--accent);min-height:36px;cursor:pointer}
+  .presets{display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-top:12px}
+  .presets span{color:var(--muted);font-size:.82rem}
+  .pbtn{background:var(--panel2);color:var(--txt);border:1px solid var(--line);padding:9px 14px;border-radius:9px;cursor:pointer;font-size:.84rem;font-family:inherit;min-height:44px;display:inline-flex;align-items:center;justify-content:center}
   .pbtn:hover{border-color:var(--accent)}
   .note{background:var(--panel);border-left:3px solid var(--accent2);border-radius:8px;padding:12px 14px;color:var(--muted);font-size:.86rem;line-height:1.7;margin-top:14px}
   .note b{color:var(--txt)}.note code{background:var(--bg2);padding:1px 6px;border-radius:5px;color:var(--green);font-size:.85em}
   footer{color:var(--muted);font-size:.78rem;margin-top:24px;text-align:center;line-height:1.7}
+  @media(max-width:600px){
+    .hud{position:static;background:var(--panel);border-bottom:1px solid var(--line);padding:10px;pointer-events:auto;justify-content:flex-start}
+    .toolbar{position:static;justify-content:center;padding:10px;background:rgba(8,14,22,.6);border-top:1px solid var(--line)}
+    .toolbar button,.pbtn{width:100%;min-height:44px}
+    .presets{flex-direction:column;align-items:stretch}
+    .sld input{min-height:44px}
+  }
 </style>
 </head>
 <body data-demo="帕斯卡原理與液壓機">
@@ -51,8 +57,8 @@
   </header>
 
   <div class="scene-wrap">
-    <canvas id="scene"></canvas>
     <div class="hud" id="hud"></div>
+    <canvas id="scene"></canvas>
     <div class="toolbar"><button id="push" class="on">⏸ 暫停推送</button></div>
   </div>
 
@@ -76,112 +82,430 @@
 </div>
 
 <script>
-const S=SIM;
-const sliders=[
-  {id:'F1',name:'施力 F₁',min:10,max:200,step:5,val:80,unit:'N'},
-  {id:'A1',name:'小活塞面積 A₁',min:2,max:12,step:1,val:5,unit:'cm²'},
-  {id:'A2',name:'大活塞面積 A₂',min:10,max:120,step:5,val:50,unit:'cm²'},
+const S = SIM;
+const VIS_GAIN = 4; // 視覺位移放大倍率
+
+const sliders = [
+  {id:'F1', name:'施力 F₁', min:10, max:200, step:5, val:80, unit:'N'},
+  {id:'A1', name:'小活塞面積 A₁', min:2, max:12, step:1, val:5, unit:'cm²'},
+  {id:'A2', name:'大活塞面積 A₂', min:10, max:120, step:5, val:50, unit:'cm²'},
 ];
-const state={};
-const sBar=document.getElementById('sliders');
-sliders.forEach(s=>{ state[s.id]=s.val;
-  const d=document.createElement('div');d.className='sld';
-  d.innerHTML=`<label><span>${s.name}</span><span class="v" id="v_${s.id}">${fmt(s.val)} ${s.unit}</span></label>
+const state = {};
+const sBar = document.getElementById('sliders');
+sliders.forEach(s => {
+  state[s.id] = s.val;
+  const d = document.createElement('div'); d.className = 'sld';
+  d.innerHTML = `<label><span>${s.name}</span><span class="v" id="v_${s.id}">${fmt(s.val)} ${s.unit}</span></label>
     <input type="range" id="r_${s.id}" min="${s.min}" max="${s.max}" step="${s.step}" value="${s.val}">`;
   sBar.appendChild(d);
-  d.querySelector('input').addEventListener('input',e=>{state[s.id]=parseFloat(e.target.value);
-    document.getElementById('v_'+s.id).textContent=`${fmt(state[s.id])} ${s.unit}`; recompute(); });
+  d.querySelector('input').addEventListener('input', e => {
+    state[s.id] = parseFloat(e.target.value);
+    document.getElementById('v_' + s.id).textContent = `${fmt(state[s.id])} ${s.unit}`;
+    recompute();
+  });
 });
-function fmt(x){return (Math.round(x*100)/100).toString();}
-function setSlider(id,val){state[id]=val;const r=document.getElementById('r_'+id);if(r)r.value=val;
-  const s=sliders.find(z=>z.id===id);if(s)document.getElementById('v_'+id).textContent=`${fmt(val)} ${s.unit}`;}
 
-// ---- 物理 ----
-function P(){return state.F1/state.A1;}        // N/cm²
-function F2(){return P()*state.A2;}            // N
-function recompute(){updateFormula();updateHud();}
+function fmt(x) { return (Math.round(x * 100) / 100).toString(); }
+function setSlider(id, val) {
+  state[id] = val;
+  const r = document.getElementById('r_' + id); if (r) r.value = val;
+  const s = sliders.find(z => z.id === id);
+  if (s) document.getElementById('v_' + id).textContent = `${fmt(val)} ${s.unit}`;
+}
 
-// ---- 公式面板 ----
+// ---- 物理核心函式 ----
+function P() { return state.F1 / state.A1; }          // N/cm²
+function F2() { return P() * state.A2; }              // N
+function d2For(d1) { return (state.A1 * d1) / state.A2; } // cm（體積守恆 A1·d1 = A2·d2）
+
+function recompute() { updateFormula(); updateHud(); }
+
 // 1 N/cm² = 10⁴ Pa，換成 SI 帕的科學記號
-function toPa(p){const x=p*1e4;let e=Math.floor(Math.log10(x)),a=x/10**e;if(+a.toFixed(2)>=10){a/=10;e++;}return a.toFixed(2)+'×10'+String(e).replace(/\d/g,d=>'⁰¹²³⁴⁵⁶⁷⁸⁹'[d]);}
-function frow(n,sym,sub,val){return `<div class="frow"><span class="fname">${n}</span><span class="fsym">${sym}</span><span class="fsub">= ${sub}</span><span class="fval">${val}</span></div>`;}
-function updateFormula(){const p=P(),f2=F2(),ratio=state.A2/state.A1,d1=8,d2=d1*state.A1/state.A2;
-  document.getElementById('formula').innerHTML=
-    `<h4>📐 計算公式（即時代入　帕斯卡原理）</h4>`
-    + frow('壓力 P','F₁ / A₁',`${state.F1} N / ${state.A1} cm²`, p.toFixed(1)+' N/cm² = '+toPa(p)+' Pa')
-    + frow('輸出力 F₂','P·A₂ = F₁·A₂/A₁',`${state.F1}·${state.A2}/${state.A1}`, f2.toFixed(0)+' N')
-    + frow('力放大倍率','A₂ / A₁',`${state.A2} / ${state.A1}`, ratio.toFixed(1)+' 倍')
-    + frow('位移比（體積守恆）','d₂/d₁ = A₁/A₂',`${state.A1}/${state.A2}`, (state.A1/state.A2).toFixed(3)+'（大活塞升得少）')
-    + frow('功（守恆）','F₁d₁ = F₂d₂',`${state.F1}·${d1} = ${f2.toFixed(0)}·${d2.toFixed(2)}`, (state.F1*d1).toFixed(0)+' N·cm')
-    + `<div class="frel">📈 <b>F₂ = F₁·(A₂/A₁)</b>：面積比＝力放大倍率　·　<b>省力不省功</b>：力放大幾倍、位移就縮小幾倍(A₁d₁=A₂d₂)，功 F·d 不變　·　壓力在密閉流體中均勻傳遞、不因距離衰減。</div>`;
+function toPa(p) {
+  const x = p * 1e4;
+  let e = Math.floor(Math.log10(x)), a = x / (10 ** e);
+  if (+a.toFixed(2) >= 10) { a /= 10; e++; }
+  return a.toFixed(2) + '×10' + String(e).replace(/\d/g, d => '⁰¹²³⁴⁵⁶⁷⁸⁹'[d]);
 }
-function updateHud(){
-  document.getElementById('hud').innerHTML=
-   `<div class="chip cyan">壓力 P<b>${P().toFixed(1)} N/cm²</b></div>`+
-   `<div class="chip amber">輸出力 F₂<b>${F2().toFixed(0)} N</b></div>`+
-   `<div class="chip green">放大倍率<b>×${(state.A2/state.A1).toFixed(1)}</b></div>`;
+function frow(n, sym, sub, val) {
+  return `<div class="frow"><span class="fname">${n}</span><span class="fsym">${sym}</span><span class="fsub">= ${sub}</span><span class="fval">${val}</span></div>`;
 }
 
-// ---- 視圖 ----
-let sc, t=0, pushing=true;
-const HYD={skyTop:'#0e1626',skyBottom:'#070d18',vignette:'rgba(0,0,0,.4)'};
-function setupCanvases(){sc=S.fit(document.getElementById('scene'),1.9);}
-function draw(){const W=sc._w,H=sc._h;
-  S.scene(sc,HYD,{});
-  const baseY=H*0.86, fluidTop0=H*0.5;
-  const w1=Math.max(26,Math.sqrt(state.A1)*16), w2=Math.max(40,Math.sqrt(state.A2)*16);
-  const x1=W*0.26, x2=W*0.72;
-  const stroke=Math.sin(t)*0.5+0.5;                 // 0~1 推送行程
-  const d1px=stroke*46;                              // 小活塞下壓像素
-  const d2px=d1px*state.A1/state.A2;                 // 大活塞上升(體積守恆)
-  // 連通容器(U形)
-  sc.fillStyle='#101826';sc.strokeStyle='#3a4660';sc.lineWidth=2;
-  // 左管
-  sc.fillRect(x1-w1/2,fluidTop0-60,w1,baseY-(fluidTop0-60));sc.strokeRect(x1-w1/2,fluidTop0-60,w1,baseY-(fluidTop0-60));
-  // 右管
-  sc.fillRect(x2-w2/2,fluidTop0-90,w2,baseY-(fluidTop0-90));sc.strokeRect(x2-w2/2,fluidTop0-90,w2,baseY-(fluidTop0-90));
-  // 底部連通管
-  sc.fillRect(x1-w1/2,baseY-22,x2-x1+w2/2-(-w1/2),22);
-  // 流體
-  sc.fillStyle='rgba(70,150,230,.5)';
-  sc.fillRect(x1-w1/2+2,fluidTop0-60+d1px+10,w1-4,baseY-(fluidTop0-60+d1px+10)-2);
-  sc.fillRect(x2-w2/2+2,fluidTop0-90-d2px+10,w2-4,baseY-(fluidTop0-90-d2px+10)-2);
-  sc.fillRect(x1-w1/2+2,baseY-20,x2-x1+w2/2+w1/2-4,18);
-  // 小活塞
-  const py1=fluidTop0-60+d1px;
-  sc.fillStyle='#aab6c8';sc.fillRect(x1-w1/2-3,py1,w1+6,12);
-  // F1 箭頭(下)
-  // 施力向下壓小活塞（原本箭頭頭朝上）
-  {const L1=Math.min(56,state.F1*0.32);S.arrow(sc,x1,py1-6-L1,x1,py1-2,{color:'#ff8fb0',width:3});
-   sc.fillStyle='#ff8fb0';sc.font='600 13px system-ui';sc.fillText('F₁='+state.F1+' N',x1+w1/2+8,py1-6-L1+10);}
-  // 大活塞
-  const py2=fluidTop0-90-d2px;
-  sc.fillStyle='#c9d6ea';sc.fillRect(x2-w2/2-4,py2,w2+8,14);
-  // 負載(方塊/車)壓在大活塞上 + F2 箭頭(上)
-  sc.fillStyle='#5a6f93';roundRect(sc,x2-w2*0.38,py2-30,w2*0.76,26,5);sc.fill();
-  sc.fillStyle='#dfe8f5';sc.font='12px system-ui';sc.textAlign='center';sc.fillText('負載',x2,py2-13);sc.textAlign='left';
-  // 兩箭頭比例不同（F₂ 可達 F₁ 的 60 倍），長度只示意方向，數值直接標在旁邊
-  S.arrow(sc,x2,py2-2,x2,py2-2-Math.min(70,F2()*0.05),{color:'#6cd0ff',width:3});
-  sc.fillStyle='#6cd0ff';sc.font='600 13px system-ui';sc.fillText('F₂='+F2().toFixed(0)+' N',x2+w2*0.38+6,py2-2-Math.min(70,F2()*0.05)+10);
-  // 標示面積
-  sc.fillStyle='#ff8fb0';sc.font='12px system-ui';sc.fillText('A₁='+state.A1+'cm²',x1-26,baseY+16);
-  sc.fillStyle='#6cd0ff';sc.fillText('A₂='+state.A2+'cm²',x2-26,baseY+16);
-  // 壓力標示(流體中)
-  sc.fillStyle='rgba(124,255,178,.85)';sc.font='bold 12px system-ui';sc.fillText('P='+P().toFixed(0)+' N/cm² 均勻傳遞',W/2-70,baseY-2);
-  updateHud();
+function updateFormula() {
+  const p = P();
+  const f2 = F2();
+  const ratio = state.A2 / state.A1;
+  const d1 = 10; // 基準推進行程 10 cm
+  const d2 = d2For(d1);
+  const v1 = state.A1 * d1;
+  const v2 = state.A2 * d2;
+  const w1 = state.F1 * (d1 / 100); // 焦耳 J
+  const w2 = f2 * (d2 / 100);       // 焦耳 J
+  const wNcm = state.F1 * d1;
+
+  document.getElementById('formula').innerHTML =
+    `<h4>📐 計算公式（即時代入　帕斯卡原理與功守恆）</h4>` +
+    frow('壓力 P', 'P = F₁ / A₁', `${state.F1} N / ${state.A1} cm²`, `${p.toFixed(1)} N/cm² = ${toPa(p)} Pa`) +
+    frow('輸出力 F₂', 'F₂ = F₁·A₂/A₁', `${state.F1} N · ${state.A2} / ${state.A1}`, `${f2.toFixed(0)} N`) +
+    frow('力放大倍率', 'A₂ / A₁', `${state.A2} / ${state.A1}`, `${ratio.toFixed(1)} 倍`) +
+    frow('大活塞位移 d₂', 'd₂ = A₁d₁/A₂', `${state.A1} · ${d1} / ${state.A2}`, `${d2.toFixed(2)} cm（設 d₁=${d1} cm）`) +
+    frow('體積守恆', 'A₁d₁ = A₂d₂', `${state.A1} · ${d1} ＝ ${state.A2} · ${d2.toFixed(2)}`, `${v1.toFixed(1)} cm³ ＝ ${v2.toFixed(1)} cm³`) +
+    frow('功守恆（省力不省功）', 'W₁ = F₁d₁ ＝ W₂ = F₂d₂', `${state.F1}·${d1} ＝ ${f2.toFixed(0)}·${d2.toFixed(2)} N·cm`, `${wNcm.toFixed(0)} N·cm ＝ ${w1.toFixed(2)} J`) +
+    `<div class="frel">📈 <b>帕斯卡原理</b>：密閉流體中壓力均勻傳遞（P = F₁/A₁ = F₂/A₂）。面積比 A₂/A₁ 即為力放大倍率。體積守恆 <b>A₁d₁ = A₂d₂</b> 使大活塞位移依相同比例縮小（d₂ = A₁d₁/A₂）。輸出功與輸入功完全相等 <b>W₁ = W₂</b>——<b>省力不省功</b>！</div>`;
 }
-function roundRect(c,x,y,w,h,r){c.beginPath();c.moveTo(x+r,y);c.arcTo(x+w,y,x+w,y+h,r);c.arcTo(x+w,y+h,x,y+h,r);c.arcTo(x,y+h,x,y,r);c.arcTo(x,y,x+w,y,r);c.closePath();}
-let last=0;
-function loop(ts){const dt=last?Math.min((ts-last)/1000,0.05):0;last=ts;if(pushing)t+=dt*1.6;draw();requestAnimationFrame(loop);}
 
-const pbtn=document.getElementById('push');
-pbtn.onclick=()=>{pushing=!pushing;pbtn.classList.toggle('on',pushing);pbtn.textContent=pushing?'⏸ 暫停推送':'▶ 開始推送';};
-const PRE={car:{F1:60,A1:3,A2:90},equal:{F1:80,A1:10,A2:10}   /* 原本 A₁=20 超出滑桿上限 12 */,big:{F1:50,A1:5,A2:100}};
-document.querySelectorAll('[data-preset]').forEach(b=>b.onclick=()=>{const pr=PRE[b.dataset.preset];if(!pr)return;
-  ['F1','A1','A2'].forEach(k=>setSlider(k,pr[k]));recompute();});
+function updateHud() {
+  const p = P();
+  const f2 = F2();
+  const ratio = state.A2 / state.A1;
+  const d1 = 10;
+  const d2 = d2For(d1);
+  const v = state.A1 * d1;
+  const w = (state.F1 * d1) / 100;
 
-window.addEventListener('load',()=>{setupCanvases();recompute();requestAnimationFrame(loop);});
-window.addEventListener('resize',()=>{setupCanvases();draw();});
+  document.getElementById('hud').innerHTML =
+    `<div class="chip cyan">壓力 P = F₁/A₁<b>${p.toFixed(1)} N/cm²</b></div>` +
+    `<div class="chip amber">輸出力 F₂ = F₁·A₂/A₁<b>${f2.toFixed(0)} N (×${ratio.toFixed(1)})</b></div>` +
+    `<div class="chip green">位移 d₂ = A₁d₁/A₂<b>${d2.toFixed(2)} cm (d₁=${d1}cm)</b></div>` +
+    `<div class="chip blue">排開體積 A₁d₁ = A₂d₂<b>${v.toFixed(0)} cm³</b></div>` +
+    `<div class="chip purple">功 W₁ = W₂<b>${w.toFixed(2)} J (省力不省功)</b></div>`;
+}
+
+// ---- 視圖與畫布繪製 ----
+let sc, t = 0, pushing = true;
+const HYD = {skyTop:'#0e1626', skyBottom:'#070d18', vignette:'rgba(0,0,0,.4)'};
+
+function setupCanvases() {
+  const aspect = window.innerWidth <= 600 ? 1.45 : 1.8;
+  sc = S.fit(document.getElementById('scene'), aspect);
+}
+
+function draw() {
+  const W = sc._w, H = sc._h;
+  S.scene(sc, HYD, {});
+
+  const baseY = H * 0.84;
+  const pipeH = Math.max(32, Math.min(48, H * 0.095));
+  const pipeTopY = baseY - pipeH;
+  const topY = H * 0.22;
+  const y0 = H * 0.52; // 基準液面（未受力靜止高度）
+
+  // 圓筒寬度：以面積為基準按比例縮放
+  const w1 = Math.max(32, Math.min(W * 0.16, 20 + Math.sqrt(state.A1) * 16));
+  const w2 = Math.max(32, Math.min(W * 0.32, 20 + Math.sqrt(state.A2) * 16));
+  const x1 = W * 0.28;
+  const x2 = W * 0.72;
+
+  const x1L = x1 - w1 / 2, x1R = x1 + w1 / 2;
+  const x2L = x2 - w2 / 2, x2R = x2 + w2 / 2;
+
+  // 動態推進行程 (0 ~ 1)
+  const stroke = Math.sin(t) * 0.5 + 0.5;
+  const d1_actual = stroke * 10;          // 實際小活塞下壓 cm (0 ~ 10cm)
+  const d2_actual = d2For(d1_actual);     // 實際大活塞上升 cm
+
+  // 畫面放大顯示：VIS_GAIN 放大倍率
+  const baseScale = Math.min(2.5, H * 0.0052); // px/cm 基礎尺標
+  const d1_vis = d1_actual * baseScale * VIS_GAIN;
+  const d2_vis = d2_actual * baseScale * VIS_GAIN;
+
+  const yFluid1 = y0 + d1_vis; // 小活塞與液面下降
+  const yFluid2 = y0 - d2_vis; // 大活塞與液面上升
+
+  // 1. 容器內壁底色
+  sc.fillStyle = '#0a1220';
+  sc.fillRect(x1L, topY, w1, baseY - topY);
+  sc.fillRect(x2L, topY, w2, baseY - topY);
+  sc.fillRect(x1R, pipeTopY, x2L - x1R, pipeH);
+
+  // 2. 整體連通液體：管內和兩筒內是同一片連續液體，無接縫、同色
+  sc.save();
+  sc.beginPath();
+  sc.moveTo(x1L, yFluid1);
+  sc.lineTo(x1R, yFluid1);
+  sc.lineTo(x1R, pipeTopY);
+  sc.lineTo(x2L, pipeTopY);
+  sc.lineTo(x2L, yFluid2);
+  sc.lineTo(x2R, yFluid2);
+  sc.lineTo(x2R, baseY);
+  sc.lineTo(x1L, baseY);
+  sc.closePath();
+
+  const fGrad = sc.createLinearGradient(0, topY, 0, baseY);
+  fGrad.addColorStop(0, '#1c74d4');
+  fGrad.addColorStop(0.5, '#155eb0');
+  fGrad.addColorStop(1, '#0e4588');
+  sc.fillStyle = fGrad;
+  sc.fill();
+
+  // 液面邊線高光
+  sc.strokeStyle = '#7ad2ff';
+  sc.lineWidth = 2.5;
+  sc.beginPath();
+  sc.moveTo(x1L, yFluid1); sc.lineTo(x1R, yFluid1);
+  sc.moveTo(x2L, yFluid2); sc.lineTo(x2R, yFluid2);
+  sc.stroke();
+  sc.restore();
+
+  // 3. 筒內被推過的體積高光帶（同色帶，同為金色）
+  const sweptColor = 'rgba(255, 196, 60, 0.32)';
+  const sweptBorder = '#ffc43c';
+  if (d1_vis > 1) {
+    sc.fillStyle = sweptColor;
+    sc.fillRect(x1L, y0, w1, d1_vis);
+  }
+  if (d2_vis > 0.5) {
+    sc.fillStyle = sweptColor;
+    sc.fillRect(x2L, yFluid2, w2, d2_vis);
+  }
+
+  // 4. 兩筒旁標出被推過的液體體積 A₁d₁ 與 A₂d₂（同色指示帶）
+  const barW = 8;
+  const leftBarX = x1L - 14;
+  const rightBarX = x2R + 14;
+  const vol1 = state.A1 * d1_actual;
+  const vol2 = state.A2 * d2_actual;
+
+  if (d1_vis > 1) {
+    // 左側體積指示色帶
+    sc.fillStyle = sweptColor;
+    sc.fillRect(leftBarX - barW, y0, barW, d1_vis);
+    sc.strokeStyle = sweptBorder;
+    sc.lineWidth = 1.5;
+    sc.strokeRect(leftBarX - barW, y0, barW, d1_vis);
+
+    // 上下界線
+    sc.beginPath();
+    sc.moveTo(leftBarX - barW - 4, y0); sc.lineTo(leftBarX + 2, y0);
+    sc.moveTo(leftBarX - barW - 4, yFluid1); sc.lineTo(leftBarX + 2, yFluid1);
+    sc.stroke();
+
+    // 標籤
+    sc.font = '600 11px system-ui';
+    sc.fillStyle = '#ffce54';
+    sc.textAlign = 'right';
+    sc.fillText(`體積 A₁d₁ = ${vol1.toFixed(1)} cm³`, leftBarX - barW - 8, y0 + Math.max(14, d1_vis / 2));
+    sc.fillText(`(位移 d₁ = ${d1_actual.toFixed(1)} cm)`, leftBarX - barW - 8, y0 + Math.max(14, d1_vis / 2) + 14);
+  }
+
+  if (d2_vis > 0.5) {
+    // 右側體積指示色帶
+    sc.fillStyle = sweptColor;
+    sc.fillRect(rightBarX, yFluid2, barW, d2_vis);
+    sc.strokeStyle = sweptBorder;
+    sc.lineWidth = 1.5;
+    sc.strokeRect(rightBarX, yFluid2, barW, d2_vis);
+
+    // 上下界線
+    sc.beginPath();
+    sc.moveTo(rightBarX - 2, y0); sc.lineTo(rightBarX + barW + 4, y0);
+    sc.moveTo(rightBarX - 2, yFluid2); sc.lineTo(rightBarX + barW + 4, yFluid2);
+    sc.stroke();
+
+    // 標籤
+    sc.font = '600 11px system-ui';
+    sc.fillStyle = '#ffce54';
+    sc.textAlign = 'left';
+    sc.fillText(`體積 A₂d₂ = ${vol2.toFixed(1)} cm³`, rightBarX + barW + 8, y0 - Math.max(6, d2_vis / 2));
+    sc.fillText(`(位移 d₂ = ${d2_actual.toFixed(2)} cm)`, rightBarX + barW + 8, y0 - Math.max(6, d2_vis / 2) + 14);
+  }
+
+  // 5. 基準液面參考虛線（未受力靜止線）
+  sc.strokeStyle = 'rgba(255, 255, 255, 0.28)';
+  sc.lineWidth = 1;
+  sc.setLineDash([4, 4]);
+  sc.beginPath();
+  sc.moveTo(x1L - 25, y0);
+  sc.lineTo(x2R + 25, y0);
+  sc.stroke();
+  sc.setLineDash([]);
+
+  sc.fillStyle = 'rgba(255, 255, 255, 0.45)';
+  sc.font = '11px system-ui';
+  sc.textAlign = 'center';
+  sc.fillText('--- 基準液面（未施力時等高）---', (x1 + x2) / 2, y0 - 6);
+
+  // 6. 容器外壁與水平連通管管壁（清楚無中斷的連通外殼）
+  sc.strokeStyle = '#4e6785';
+  sc.lineWidth = 3;
+  sc.lineCap = 'round';
+  sc.lineJoin = 'round';
+
+  // 外圍管壁輪廓（左外壁 -> 底部連通管底面 -> 右外壁）
+  sc.beginPath();
+  sc.moveTo(x1L, topY);
+  sc.lineTo(x1L, baseY);
+  sc.lineTo(x2R, baseY);
+  sc.lineTo(x2R, topY);
+  sc.stroke();
+
+  // 內側管壁輪廓（左內壁 -> 連通管頂部天花板 -> 右內壁）
+  sc.beginPath();
+  sc.moveTo(x1R, topY);
+  sc.lineTo(x1R, pipeTopY);
+  sc.lineTo(x2L, pipeTopY);
+  sc.lineTo(x2L, topY);
+  sc.stroke();
+
+  // 筒頂金屬邊框
+  sc.fillStyle = '#6f8ba8';
+  sc.fillRect(x1L - 4, topY - 3, w1 + 8, 4);
+  sc.fillRect(x2L - 4, topY - 3, w2 + 8, 4);
+
+  // 圓筒刻度飾線
+  sc.strokeStyle = 'rgba(255, 255, 255, 0.15)';
+  sc.lineWidth = 1;
+  for (let y = topY + 16; y < baseY - 10; y += 16) {
+    sc.beginPath();
+    sc.moveTo(x1L, y); sc.lineTo(x1L + 4, y);
+    sc.moveTo(x2R, y); sc.lineTo(x2R - 4, y);
+    sc.stroke();
+  }
+
+  // 7. 水平連通管內部流動與壓力傳遞提示
+  const midX = (x1 + x2) / 2;
+  const midPipeY = baseY - pipeH / 2;
+  if (stroke > 0.05) {
+    const arrowA = Math.min(1, stroke * 1.4);
+    S.arrow(sc, midX - 32, midPipeY, midX + 32, midPipeY, {
+      color: `rgba(124, 255, 178, ${arrowA})`,
+      width: 2.5
+    });
+  }
+  sc.fillStyle = '#7cffb2';
+  sc.font = 'bold 12px system-ui';
+  sc.textAlign = 'center';
+  sc.fillText(`水平連通管　壓力 P = ${P().toFixed(1)} N/cm² 均勻傳遞`, midX, midPipeY + (stroke > 0.05 ? 16 : 4));
+
+  // 8. 小活塞（左）
+  const ph1 = 12;
+  const py1 = yFluid1 - ph1;
+  sc.fillStyle = '#9fb3cb';
+  sc.fillRect(x1L - 2, py1, w1 + 4, ph1);
+  sc.strokeStyle = '#2d3b4e';
+  sc.lineWidth = 1.5;
+  sc.strokeRect(x1L - 2, py1, w1 + 4, ph1);
+
+  // 小活塞連桿
+  const rodW = Math.max(6, w1 * 0.22);
+  const rodTop1 = py1 - 45;
+  sc.fillStyle = '#7b8d9f';
+  sc.fillRect(x1 - rodW / 2, rodTop1, rodW, 45);
+
+  // F1 向下施力箭頭
+  const L1 = Math.min(65, 24 + state.F1 * 0.26);
+  S.arrow(sc, x1, rodTop1 - L1, x1, rodTop1, { color: '#ff6b8b', width: 3.5 });
+  sc.fillStyle = '#ff8fb0';
+  sc.font = 'bold 13px system-ui';
+  sc.textAlign = 'center';
+  sc.fillText(`F₁ = ${state.F1} N`, x1, rodTop1 - L1 - 7);
+
+  // 9. 大活塞（右）
+  const ph2 = 14;
+  const py2 = yFluid2 - ph2;
+  sc.fillStyle = '#b4c9e2';
+  sc.fillRect(x2L - 3, py2, w2 + 6, ph2);
+  sc.strokeStyle = '#2d3b4e';
+  sc.lineWidth = 1.5;
+  sc.strokeRect(x2L - 3, py2, w2 + 6, ph2);
+
+  // 頂部負載物體
+  const loadW = Math.min(w2 * 0.88, w2 - 6);
+  const loadH = Math.min(34, Math.max(22, H * 0.065));
+  const loadY = py2 - loadH;
+  sc.fillStyle = '#3a4e69';
+  roundRect(sc, x2 - loadW / 2, loadY, loadW, loadH, 5);
+  sc.fill();
+  sc.strokeStyle = '#5a7799';
+  sc.lineWidth = 1.5;
+  sc.stroke();
+
+  sc.fillStyle = '#e5effc';
+  sc.font = 'bold 12px system-ui';
+  sc.textAlign = 'center';
+  sc.fillText(`負載 ${F2().toFixed(0)} N`, x2, loadY + loadH / 2 + 4);
+
+  // F2 向上輸出力箭頭
+  const L2 = Math.min(75, 26 + Math.sqrt(F2()) * 1.8);
+  S.arrow(sc, x2, loadY, x2, loadY - L2, { color: '#4cc2ff', width: 4 });
+  sc.fillStyle = '#6cd0ff';
+  sc.font = 'bold 13px system-ui';
+  sc.textAlign = 'center';
+  sc.fillText(`F₂ = ${F2().toFixed(0)} N`, x2, loadY - L2 - 7);
+
+  // 10. 底部標示面積
+  sc.fillStyle = '#ff8fb0';
+  sc.font = 'bold 13px system-ui';
+  sc.textAlign = 'center';
+  sc.fillText(`A₁ = ${state.A1} cm²`, x1, baseY + 20);
+
+  sc.fillStyle = '#6cd0ff';
+  sc.fillText(`A₂ = ${state.A2} cm²`, x2, baseY + 20);
+
+  // 11. 畫面註明位移放大倍率
+  sc.fillStyle = '#ffce54';
+  sc.font = 'bold 12px system-ui';
+  sc.textAlign = 'center';
+  sc.fillText(`🔍 位移放大 ×${VIS_GAIN} 顯示，數值為實際值`, W / 2, topY - 12);
+}
+
+function roundRect(c, x, y, w, h, r) {
+  c.beginPath();
+  c.moveTo(x + r, y);
+  c.arcTo(x + w, y, x + w, y + h, r);
+  c.arcTo(x + w, y + h, x, y + h, r);
+  c.arcTo(x, y + h, x, y, r);
+  c.arcTo(x, y, x + w, y, r);
+  c.closePath();
+}
+
+let last = 0;
+function loop(ts) {
+  const dt = last ? Math.min((ts - last) / 1000, 0.05) : 0;
+  last = ts;
+  if (pushing) t += dt * 1.6;
+  draw();
+  requestAnimationFrame(loop);
+}
+
+const pbtn = document.getElementById('push');
+pbtn.onclick = () => {
+  pushing = !pushing;
+  pbtn.classList.toggle('on', pushing);
+  pbtn.textContent = pushing ? '⏸ 暫停推送' : '▶ 開始推送';
+};
+
+const PRE = {
+  car: {F1: 60, A1: 3, A2: 90},
+  equal: {F1: 80, A1: 10, A2: 10},
+  big: {F1: 50, A1: 5, A2: 100}
+};
+
+document.querySelectorAll('[data-preset]').forEach(b => {
+  b.onclick = () => {
+    const pr = PRE[b.dataset.preset];
+    if (!pr) return;
+    ['F1', 'A1', 'A2'].forEach(k => setSlider(k, pr[k]));
+    recompute();
+  };
+});
+
+window.addEventListener('load', () => {
+  setupCanvases();
+  recompute();
+  requestAnimationFrame(loop);
+});
+window.addEventListener('resize', () => {
+  setupCanvases();
+  draw();
+});
+
+// 暴露全域函式供自動化測試直接呼叫
+window.state = state;
+window.P = P;
+window.F2 = F2;
+window.d2For = d2For;
+window.VIS_GAIN = VIS_GAIN;
 </script>
 </body>
 </html>

@@ -1,0 +1,957 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>潛水艇的浮沉 ｜ 壓艙水艙・浮沉子</title>
+<link rel="icon" href="../assets/favicon.svg" type="image/svg+xml">
+<link rel="stylesheet" href="../assets/site.css">
+<script src="../assets/sim.js"></script>
+<script defer src="../assets/nav.js"></script>
+<style>
+  *{box-sizing:border-box}
+  html,body{margin:0;padding:0;background:var(--bg,#0d131a);color:var(--txt,#e6edf3);font-family:"Noto Sans TC","PingFang TC","Microsoft JhengHei",system-ui,sans-serif}
+  a{color:var(--accent,#4cc2ff)}
+  .wrap{max-width:1120px;margin:0 auto;padding:18px 16px 60px}
+  header h1{font-size:1.5rem;margin:.2em 0}
+  header p{color:var(--muted,#8b949e);margin:.2em 0 1em;line-height:1.6}
+  .badge{display:inline-block;background:var(--panel2,#1c2430);border:1px solid var(--line,#30363d);color:var(--muted,#8b949e);font-size:.72rem;padding:2px 8px;border-radius:99px;margin-right:6px}
+  .grid2{display:grid;grid-template-columns:1fr .88fr;gap:14px}
+  @media(max-width:740px){.grid2{grid-template-columns:1fr}}
+  .scene-wrap{position:relative;border-radius:16px;overflow:hidden;border:1px solid var(--line,#30363d);box-shadow:0 18px 50px rgba(0,0,0,.45);background:#051321}
+  #scene{display:block;width:100%}
+  .side{display:flex;flex-direction:column;gap:12px}
+  .mode-nav{display:flex;gap:8px}
+  .mbtn{flex:1;min-height:44px;background:var(--panel,#161b22);border:1px solid var(--line,#30363d);color:var(--muted,#8b949e);border-radius:10px;font-weight:700;font-size:.88rem;cursor:pointer;display:flex;align-items:center;justify-content:center;font-family:inherit;transition:all .15s}
+  .mbtn:hover{border-color:var(--accent,#4cc2ff);color:var(--txt,#e6edf3)}
+  .mbtn.active{background:var(--panel2,#21262d);border-color:var(--accent,#4cc2ff);color:var(--accent,#4cc2ff);box-shadow:0 0 12px rgba(76,194,255,.2)}
+  .statgrid{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+  .box{background:var(--panel,#161b22);border:1px solid var(--line,#30363d);border-radius:12px;padding:10px 12px}
+  .box .k{font-size:.72rem;color:var(--muted,#8b949e)}
+  .box .v{font-size:1.08rem;font-variant-numeric:tabular-nums;font-weight:700}
+  .eqbar{padding:10px 12px;border-radius:12px;text-align:center;font-weight:700;min-height:44px;display:flex;align-items:center;justify-content:center;font-size:.9rem}
+  .btn-row{display:flex;gap:8px;flex-wrap:wrap}
+  .btn-row .pbtn{flex:1;min-width:130px;font-weight:700}
+  .presets{display:flex;gap:7px;flex-wrap:wrap;align-items:center}
+  .presets span{color:var(--muted,#8b949e);font-size:.8rem}
+  .pbtn{background:var(--panel2,#21262d);color:var(--txt,#c9d1d9);border:1px solid var(--line,#30363d);padding:8px 12px;border-radius:9px;cursor:pointer;font-size:.83rem;font-family:inherit;min-height:44px;display:inline-flex;align-items:center;justify-content:center;user-select:none;touch-action:manipulation;transition:all .15s}
+  .pbtn:hover{border-color:var(--accent,#4cc2ff);color:#fff}
+  .pbtn.primary{background:#1f6feb;border-color:#388bfd;color:#fff}
+  .pbtn.primary:hover{background:#388bfd}
+  .pbtn.danger{background:#8e1519;border-color:#f85149;color:#fff}
+  .pbtn.danger:hover{background:#b62324}
+  .bar{display:flex;gap:14px;flex-wrap:wrap;align-items:flex-end;background:var(--panel,#161b22);border:1px solid var(--line,#30363d);border-radius:14px;padding:14px 16px;margin-top:14px}
+  .sld{flex:1;min-width:180px}
+  .sld label{display:flex;justify-content:space-between;font-size:.82rem;color:var(--muted,#8b949e);margin-bottom:5px}
+  .sld label .v{color:var(--accent,#4cc2ff);font-variant-numeric:tabular-nums;font-weight:700}
+  .sld input{width:100%;accent-color:var(--accent,#4cc2ff);min-height:36px;cursor:pointer}
+  .density-group{display:flex;gap:6px;align-items:center}
+  .dbtn{background:var(--panel2,#21262d);border:1px solid var(--line,#30363d);color:var(--muted,#8b949e);padding:6px 10px;border-radius:8px;font-size:.78rem;cursor:pointer;min-height:44px}
+  .dbtn.active{border-color:var(--accent,#4cc2ff);color:var(--accent,#4cc2ff);background:rgba(76,194,255,.12);font-weight:700}
+  .formula{background:var(--panel,#161b22);border:1px solid var(--line,#30363d);border-radius:14px;padding:14px 16px;margin-top:14px}
+  .formula h4{margin:0 0 10px;font-size:.95rem;color:var(--txt,#e6edf3)}
+  .frow{display:flex;gap:10px;font-size:.84rem;padding:5px 0;border-bottom:1px solid rgba(255,255,255,.05);align-items:baseline;flex-wrap:wrap}
+  .fname{width:140px;font-weight:600;color:var(--muted,#8b949e)}
+  .fsym{width:150px;font-family:monospace;color:#ff7b72}
+  .fsub{flex:1;min-width:200px;font-family:monospace;color:#79c0ff}
+  .fval{font-weight:700;font-variant-numeric:tabular-nums;color:#7ee787;text-align:right}
+  .frel{margin-top:10px;padding:9px 12px;background:var(--bg2,#0d1117);border-radius:8px;font-size:.82rem;line-height:1.6;color:var(--muted,#8b949e)}
+  .frel b{color:var(--txt,#e6edf3)}
+  .note{background:var(--panel,#161b22);border-left:3px solid var(--accent2,#f778ba);border-radius:8px;padding:12px 14px;color:var(--muted,#8b949e);font-size:.86rem;line-height:1.7;margin-top:14px}
+  .note b{color:var(--txt,#e6edf3)}
+  .note code{background:var(--bg2,#0d1117);padding:1px 6px;border-radius:5px;color:#7ee787;font-size:.85em;font-family:monospace}
+  footer{color:var(--muted,#8b949e);font-size:.78rem;margin-top:24px;text-align:center;line-height:1.7}
+</style>
+</head>
+<body data-demo="潛水艇的浮沉">
+<div class="wrap">
+  <header>
+    <span class="badge">壓力・浮力</span>
+    <h1>潛水艇的浮沉</h1>
+    <p>真正的潛艇<b>船殼體積不變</b>，靠壓艙水艙注水或排出高壓空氣改變<b>總重量</b>；完全沒入時浮力 <code>B ＝ ρ·g·V_殼</code> 不變。浮沉子（笛卡兒潛水員）則藉由水壓依波以耳定律壓縮內部空氣，改變<b>排開液體的體積</b>。</p>
+  </header>
+
+  <div class="grid2">
+    <div class="scene-wrap"><canvas id="scene" style="width:100%;aspect-ratio:1.2"></canvas></div>
+    <div class="side">
+      <div class="mode-nav">
+        <button id="modeSub" class="mbtn active" onclick="switchMode('sub')">⚓ 潛水艇模式（改變重量）</button>
+        <button id="modeDiver" class="mbtn" onclick="switchMode('diver')">🧪 浮沉子模式（改變體積）</button>
+      </div>
+
+      <div class="statgrid" id="stats"></div>
+      <div class="eqbar" id="eq"></div>
+
+      <div id="subActions" class="btn-row">
+        <button id="btnPumpIn" class="pbtn primary">💧 注水（下潛）</button>
+        <button id="btnPumpOut" class="pbtn primary">💨 排水（上浮）</button>
+      </div>
+
+      <div id="subPresets" class="presets">
+        <span>情境：</span>
+        <button class="pbtn" onclick="applyPreset('surface')">水面漂浮</button>
+        <button class="pbtn" onclick="applyPreset('neutral')">中性浮力懸停</button>
+        <button class="pbtn danger" onclick="applyPreset('blow')">緊急上浮 (吹除)</button>
+        <button class="pbtn" onclick="applyPreset('bottom')">坐底海底</button>
+      </div>
+
+      <div id="diverPresets" class="presets" style="display:none">
+        <span>情境：</span>
+        <button class="pbtn" onclick="applyDiverPreset('float')">放鬆漂浮 (0 kPa)</button>
+        <button class="pbtn" onclick="applyDiverPreset('hover')">微調懸浮 (9.2 kPa)</button>
+        <button class="pbtn danger" onclick="applyDiverPreset('sink')">捏緊下沉 (25 kPa)</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="bar" id="sliders"></div>
+
+  <div class="formula" id="formula"></div>
+
+  <div class="note">
+    <b>物理重點（兩種控制浮沉的機制）：</b><br>
+    1. <b>潛水艇（改變總重量）：</b>真正的潛水艇為剛性耐壓艇體，<b>船殼體積 V_殼 固定不變</b>，因此完全沒入水中時所受浮力 <code>B = ρ·g·V_殼</code> 恆定不變。潛艇下潛是藉由「壓艙水艙（Ballast Tank）」注水增加<b>總重量 W</b>，使 <code>W &gt; B</code> 而下沉；欲上浮時，則以高壓空氣將艙內海水吹除排出，減輕總重量，使 <code>W &lt; B</code> 而浮起。中性浮力懸停時剛好 <code>W = B</code>，注水率 <code>x = (ρ·V_殼 − m_艇) / (ρ·V_艙)</code>。<br>
+    2. <b>浮沉子／笛卡兒潛水員（改變排開體積）：</b>浮沉子系統內的物質（玻璃小瓶、水與受困空氣）<b>總質量固定不變（重量 W 固定）</b>。當用力捏寶特瓶時，瓶內液壓增大，依據<b>波以耳定律（P·V = 常數）</b>，受困在小瓶內的空氣體積被壓縮變小，導致<b>整體排開水的體積變小</b>。由阿基米德原理 <code>B = ρ·g·V_排開</code>，浮力隨之縮小而小於重力，浮沉子因而下沉；鬆開手後壓力釋放，空氣重新膨脹，浮力大於重力而上浮。<br>
+    3. <b>生物界的對應——魚鰾：</b>多數硬骨魚類調節升降是藉由血液向魚鰾充氣或吸氣，改變魚鰾內氣體體積，進而改變魚身<b>排開水的總體積與浮力</b>，其物理機制與浮沉子相同，而與潛水艇不同。
+  </div>
+
+  <footer>純前端 HTML / Canvas（SIM 工具庫）。流體阻力與動力學即時模擬。</footer>
+</div>
+
+<script>
+/*PHYS:BEGIN*/
+function subModel(p) {
+  var g = p.g !== undefined ? p.g : 9.8;
+  var rho = p.rho !== undefined ? p.rho : 1025;
+  var fill = p.fill !== undefined ? Math.min(1, Math.max(0, p.fill)) : 0;
+  var mass = p.hullMass + rho * p.tankV * fill;
+  var W = mass * g;
+  var B = rho * g * p.hullV;
+  var net = B - W;
+  var neutralFill = (rho * p.hullV - p.hullMass) / (rho * p.tankV);
+  return {
+    mass: mass,
+    W: W,
+    B: B,
+    net: net,
+    neutralFill: neutralFill
+  };
+}
+
+function diverModel(p) {
+  var g = p.g !== undefined ? p.g : 9.8;
+  var rho = p.rho !== undefined ? p.rho : 1000;
+  var P0 = p.P0 !== undefined ? p.P0 : 101325;
+  var depth = p.depth !== undefined ? Math.max(0, p.depth) : 0;
+  var squeeze = p.squeeze !== undefined ? Math.max(0, p.squeeze) : 0;
+  var airV = p.airV0 * P0 / (P0 + rho * g * depth + squeeze);
+  var V = p.glassV + airV;
+  var B = rho * g * V;
+  var W = p.mass * g;
+  var net = B - W;
+  return {
+    airV: airV,
+    V: V,
+    B: B,
+    W: W,
+    net: net
+  };
+}
+/*PHYS:END*/
+
+const S = SIM;
+const g = 9.8;
+let currentMode = 'sub'; // 'sub' | 'diver'
+
+// 潛水艇預設物理量 (依照題目規格)
+const subState = {
+  hullV: 6000,       // m³
+  hullMass: 5.6e6,   // kg
+  tankV: 600,        // m³
+  fill: 0.50,        // 0 - 1
+  rho: 1025,         // kg/m³
+  g: 9.8
+};
+let subDepth = 15;   // m (艇身中心深度，0 為水面，海底為 80m)
+let subVy = 0;       // m/s (向下為正)
+let blowEffect = 0;  // 緊急上浮吹除氣泡特效倒數
+
+// 浮沉子預設物理量
+const diverState = {
+  glassV: 4.0e-6,    // 4.0 mL 玻璃體積
+  airV0: 6.0e-6,     // 6.0 mL 水面初始空氣體積
+  mass: 0.0095,      // 9.5 g 總質量
+  depth: 0.0,        // 0 - 0.24 m
+  squeeze: 0,        // 0 - 30000 Pa
+  rho: 1000,         // 淡水 1000 kg/m³
+  g: 9.8,
+  P0: 101325         // 大氣壓 101325 Pa
+};
+let diverDepth = 0.0;
+let diverVy = 0;
+
+function fmt(x) { return (Math.round(x * 100) / 100).toString(); }
+function sig(x) { return String(+x.toPrecision(4)); }
+function frow(n, sym, sub, val) {
+  return `<div class="frow"><span class="fname">${n}</span><span class="fsym">${sym}</span><span class="fsub">= ${sub}</span><span class="fval">${val}</span></div>`;
+}
+
+// 建立滑桿介面
+const sBar = document.getElementById('sliders');
+function buildSliders() {
+  sBar.innerHTML = '';
+  if (currentMode === 'sub') {
+    // 壓艙水量滑桿
+    const d1 = document.createElement('div');
+    d1.className = 'sld';
+    d1.innerHTML = `<label><span>壓艙水量比例 (fill)</span><span class="v" id="v_fill">${(subState.fill * 100).toFixed(1)} % (${(subState.tankV * subState.fill).toFixed(0)} m³)</span></label>
+      <input type="range" id="r_fill" min="0" max="100" step="0.5" value="${subState.fill * 100}">`;
+    sBar.appendChild(d1);
+    d1.querySelector('input').addEventListener('input', e => {
+      subState.fill = parseFloat(e.target.value) / 100;
+      document.getElementById('v_fill').textContent = `${(subState.fill * 100).toFixed(1)} % (${(subState.tankV * subState.fill).toFixed(0)} m³)`;
+      updateFormula();
+    });
+
+    // 液體密度選擇與微調
+    const d2 = document.createElement('div');
+    d2.className = 'sld';
+    d2.innerHTML = `<label><span>海/淡水密度 (ρ)</span><span class="v" id="v_rho">${subState.rho} kg/m³</span></label>
+      <div class="density-group">
+        <button class="dbtn ${subState.rho===1025?'active':''}" id="btn_sea" onclick="setLiquidRho(1025)">海水 (1025)</button>
+        <button class="dbtn ${subState.rho===1000?'active':''}" id="btn_fresh" onclick="setLiquidRho(1000)">淡水 (1000)</button>
+        <input type="range" id="r_rho" min="980" max="1040" step="5" value="${subState.rho}" style="flex:1">
+      </div>`;
+    sBar.appendChild(d2);
+    d2.querySelector('#r_rho').addEventListener('input', e => {
+      setLiquidRho(parseFloat(e.target.value));
+    });
+  } else {
+    // 浮沉子：捏瓶子壓力滑桿
+    const d = document.createElement('div');
+    d.className = 'sld';
+    d.innerHTML = `<label><span>捏瓶子加壓 (ΔP)</span><span class="v" id="v_squeeze">${(diverState.squeeze/1000).toFixed(1)} kPa (${diverState.squeeze} Pa)</span></label>
+      <input type="range" id="r_squeeze" min="0" max="30000" step="200" value="${diverState.squeeze}">`;
+    sBar.appendChild(d);
+    d.querySelector('input').addEventListener('input', e => {
+      diverState.squeeze = parseFloat(e.target.value);
+      document.getElementById('v_squeeze').textContent = `${(diverState.squeeze/1000).toFixed(1)} kPa (${diverState.squeeze} Pa)`;
+      updateFormula();
+    });
+  }
+}
+
+function setLiquidRho(r) {
+  subState.rho = r;
+  const s = document.getElementById('r_rho'); if (s) s.value = r;
+  const v = document.getElementById('v_rho'); if (v) v.textContent = `${r} kg/m³`;
+  const bS = document.getElementById('btn_sea'); if (bS) bS.className = 'dbtn ' + (r === 1025 ? 'active' : '');
+  const bF = document.getElementById('btn_fresh'); if (bF) bF.className = 'dbtn ' + (r === 1000 ? 'active' : '');
+  updateFormula();
+}
+
+function setSlider(id, val) {
+  if (currentMode === 'sub') {
+    if (id === 'fill') {
+      subState.fill = Math.max(0, Math.min(1, val > 1 ? val / 100 : val));
+      const r = document.getElementById('r_fill'); if (r) r.value = subState.fill * 100;
+      const v = document.getElementById('v_fill'); if (v) v.textContent = `${(subState.fill * 100).toFixed(1)} % (${(subState.tankV * subState.fill).toFixed(0)} m³)`;
+    } else if (id === 'rho') {
+      setLiquidRho(val);
+    }
+  } else {
+    if (id === 'squeeze') {
+      diverState.squeeze = val;
+      const r = document.getElementById('r_squeeze'); if (r) r.value = val;
+      const v = document.getElementById('v_squeeze'); if (v) v.textContent = `${(val/1000).toFixed(1)} kPa (${val} Pa)`;
+    }
+  }
+  updateFormula();
+}
+
+function updateFormula() {
+  const fEl = document.getElementById('formula');
+  if (currentMode === 'sub') {
+    const res = subModel(subState);
+    const B_MN = res.B / 1e6;
+    const W_MN = res.W / 1e6;
+    const net_MN = res.net / 1e6;
+    const neutFrac = res.neutralFill;
+    const neutPct = (neutFrac * 100).toFixed(1);
+    const neutV = (subState.tankV * neutFrac).toFixed(1);
+
+    fEl.innerHTML =
+      `<h4>📐 計算公式（即時代入　潛水艇・耐壓船殼體積固定・改變重量）</h4>` +
+      frow('全浸浮力 B', 'ρ·g·V_殼', `${subState.rho} × ${subState.g} × ${subState.hullV}`, B_MN.toFixed(2) + ' MN') +
+      frow('總重量 W', '(m_艇 + ρ·V_艙·x)·g', `(${sig(subState.hullMass)} + ${subState.rho}×${subState.tankV}×${subState.fill.toFixed(3)}) × ${subState.g}`, W_MN.toFixed(2) + ' MN') +
+      frow('合淨力 (B − W)', 'B − W', `${B_MN.toFixed(2)} − ${W_MN.toFixed(2)}`, (net_MN >= 0 ? '+' : '') + net_MN.toFixed(2) + ' MN') +
+      frow('中性浮力需水 x', '(ρV_殼 − m_艇) / (ρV_艙)', `(${subState.rho}×${subState.hullV} − ${sig(subState.hullMass)}) / (${subState.rho}×${subState.tankV})`, `${neutPct} % (${neutV} m³)`) +
+      `<div class="frel">⚓ <b>物理重點：</b>潛艇完全沒入水中時，<b>船殼體積不變，浮力 B 固定為 ${B_MN.toFixed(2)} MN</b>。注水（x 增加）總重 W 增加，當 <code>W &gt; B</code> 時下沉；高壓空氣排水（x 減少）總重減輕，當 <code>W &lt; B</code> 時上浮。懸停懸浮時剛好 <code>W = B</code>（需注入 <b>${neutPct}%</b> 壓艙水）。</div>`;
+  } else {
+    const res = diverModel({ ...diverState, depth: diverDepth });
+    const airV_mL = res.airV * 1e6;
+    const totV_mL = res.V * 1e6;
+    const B_mN = res.B * 1000;
+    const W_mN = res.W * 1000;
+    const net_mN = res.net * 1000;
+    const P_tot = diverState.P0 + diverState.rho * diverState.g * diverDepth + diverState.squeeze;
+
+    fEl.innerHTML =
+      `<h4>📐 計算公式（即時代入　浮沉子・總質量固定・改變排開體積）</h4>` +
+      frow('氣室體積 V_氣', 'V₀·P₀ / (P₀ + ρgh + ΔP)', `6.0 mL × ${diverState.P0} / ${Math.round(P_tot)}`, airV_mL.toFixed(2) + ' mL') +
+      frow('總排開體積 V', 'V_玻 + V_氣', `4.0 mL + ${airV_mL.toFixed(2)} mL`, totV_mL.toFixed(2) + ' mL') +
+      frow('浮力 B', 'ρ·g·V', `${diverState.rho} × ${diverState.g} × ${sig(res.V)}`, B_mN.toFixed(1) + ' mN') +
+      frow('總重 W', 'm·g', `${sig(diverState.mass)} × ${diverState.g}`, W_mN.toFixed(1) + ' mN') +
+      frow('合淨力 (B − W)', 'B − W', `${B_mN.toFixed(1)} − ${W_mN.toFixed(1)}`, (net_mN >= 0 ? '+' : '') + net_mN.toFixed(1) + ' mN') +
+      `<div class="frel">🧪 <b>物理重點：</b>浮沉子玻璃瓶與氣體<b>總質量固定（重力 W 恆定）</b>。手捏寶特瓶產生附加壓力 ΔP，使瓶內壓強升高，依<b>波以耳定律</b>將氣體壓縮，<b>排開體積縮小導致浮力變小</b>，B &lt; W 遂下沉；放手後壓力恢復，氣體膨脹，浮力回升而上浮。</div>`;
+  }
+}
+
+// 模式切換
+function switchMode(m) {
+  currentMode = m;
+  document.getElementById('modeSub').className = 'mbtn ' + (m === 'sub' ? 'active' : '');
+  document.getElementById('modeDiver').className = 'mbtn ' + (m === 'diver' ? 'active' : '');
+  document.getElementById('subActions').style.display = m === 'sub' ? 'flex' : 'none';
+  document.getElementById('subPresets').style.display = m === 'sub' ? 'flex' : 'none';
+  document.getElementById('diverPresets').style.display = m === 'diver' ? 'flex' : 'none';
+  buildSliders();
+  updateFormula();
+}
+
+// 潛水艇情境按鈕
+function applyPreset(p) {
+  if (p === 'surface') {
+    setSlider('fill', 0);
+  } else if (p === 'neutral') {
+    const res = subModel(subState);
+    setSlider('fill', res.neutralFill * 100);
+    if (subDepth < 10) subDepth = 25;
+  } else if (p === 'blow') {
+    setSlider('fill', 0);
+    blowEffect = 3.5;
+    subVy = -2.5;
+  } else if (p === 'bottom') {
+    setSlider('fill', 100);
+  }
+}
+
+// 浮沉子情境按鈕
+function applyDiverPreset(p) {
+  if (p === 'float') {
+    setSlider('squeeze', 0);
+  } else if (p === 'hover') {
+    setSlider('squeeze', 9200);
+  } else if (p === 'sink') {
+    setSlider('squeeze', 25000);
+  }
+}
+
+// 注水／排水按鈕（支援點按與按住）
+let pumpDir = 0;
+function bindPumpBtn(btn, dir) {
+  const start = (e) => { e.preventDefault(); pumpDir = dir; };
+  const stop = () => { if (pumpDir === dir) pumpDir = 0; };
+  btn.addEventListener('mousedown', start);
+  window.addEventListener('mouseup', stop);
+  btn.addEventListener('touchstart', start, { passive: false });
+  window.addEventListener('touchend', stop);
+  window.addEventListener('touchcancel', stop);
+  btn.addEventListener('click', () => {
+    setSlider('fill', (subState.fill + dir * 0.05) * 100);
+  });
+}
+bindPumpBtn(document.getElementById('btnPumpIn'), 1);
+bindPumpBtn(document.getElementById('btnPumpOut'), -1);
+
+// ---- 物理動力學模擬（依題目規格整合）----
+const SEABED_DEPTH = 80; // 海底深度 80m
+const SUB_HEIGHT = 10;   // 艇身高 10m
+
+function physics(dt) {
+  if (currentMode === 'sub') {
+    // 艇的垂直運動 a = (B_沒入部分 − W − 阻力) / mass
+    // 艇中心深度 subDepth (m)，水面為 0，海底為 SEABED_DEPTH
+    if (pumpDir !== 0) {
+      const nFill = Math.max(0, Math.min(1, subState.fill + pumpDir * 0.15 * dt));
+      setSlider('fill', nFill * 100);
+    }
+    if (blowEffect > 0) blowEffect = Math.max(0, blowEffect - dt);
+
+    const mRes = subModel(subState);
+    // 沒入部分比例：艇頂 subDepth - 5, 艇底 subDepth + 5
+    const topY = subDepth - SUB_HEIGHT / 2;
+    const botY = subDepth + SUB_HEIGHT / 2;
+    let submergedH = Math.max(0, Math.min(botY, SEABED_DEPTH) - Math.max(topY, 0));
+    let frac = Math.max(0, Math.min(1, submergedH / SUB_HEIGHT));
+    if (topY >= 0 && botY <= SEABED_DEPTH) frac = 1.0;
+
+    const B_sub = frac * mRes.B;
+    const W = mRes.W;
+
+    // 向上為負 y 軸（向下速度為正 subVy）
+    // 下向淨力 = W - B_sub - 阻力
+    // 阻力與速度成正比，阻尼讓其平緩升降
+    const dragCoeff = 2.4e5; // N·s/m
+    const dragForce = dragCoeff * subVy;
+    const netDownForce = W - B_sub - dragForce;
+    const a = netDownForce / mRes.mass;
+
+    subVy += a * dt;
+    subDepth += subVy * dt;
+
+    // 海底碰撞（停在海底）
+    let normalForce = 0;
+    if (subDepth >= SEABED_DEPTH - SUB_HEIGHT / 2) {
+      subDepth = SEABED_DEPTH - SUB_HEIGHT / 2;
+      if (subVy > 0) subVy = 0;
+      normalForce = Math.max(0, W - B_sub);
+    }
+    // 水面漂浮（不可飛到空中）
+    if (subDepth < 0.5) {
+      if (subVy < 0 && subDepth <= -1.5) {
+        subDepth = -1.5;
+        subVy = 0;
+      }
+    }
+
+    return { mode: 'sub', mRes, B_sub, frac, normalForce, depth: subDepth, vy: subVy };
+  } else {
+    // 浮沉子動力學
+    // 瓶深 0 到 0.22 m
+    const dRes = diverModel({ ...diverState, depth: diverDepth });
+    const mass = diverState.mass;
+    const B = dRes.B;
+    const W = dRes.W;
+    // 下向運動 (diverDepth: 0 為頂部，0.22 為瓶底)
+    const dragDiver = 0.08 * diverVy;
+    const netDown = W - B - dragDiver;
+    const a = netDown / mass;
+
+    diverVy += a * dt;
+    diverDepth += diverVy * dt;
+
+    if (diverDepth < 0) {
+      diverDepth = 0;
+      if (diverVy < 0) diverVy = 0;
+    }
+    if (diverDepth > 0.22) {
+      diverDepth = 0.22;
+      if (diverVy > 0) diverVy = 0;
+    }
+
+    return { mode: 'diver', dRes, depth: diverDepth, vy: diverVy };
+  }
+}
+
+// ---- Canvas 高解析度繪圖 ----
+let sc, tt = 0;
+function setupCanvases() {
+  sc = S.fit(document.getElementById('scene'), 1.25);
+}
+
+function draw(info) {
+  const W = sc._w, H = sc._h;
+  if (info.mode === 'sub') {
+    drawSubmarineScene(W, H, info);
+  } else {
+    drawDiverScene(W, H, info);
+  }
+  drawStats(info);
+}
+
+// 繪製潛水艇畫面
+function drawSubmarineScene(W, H, info) {
+  const yWaterSurface = 62;
+  const ySeabed = H - 32;
+
+  // 天空與深海漸層背景
+  const skyG = sc.createLinearGradient(0, 0, 0, yWaterSurface);
+  skyG.addColorStop(0, '#122538');
+  skyG.addColorStop(1, '#234460');
+  sc.fillStyle = skyG;
+  sc.fillRect(0, 0, W, yWaterSurface);
+
+  // 海水漸層（由淺至深海）
+  const seaG = sc.createLinearGradient(0, yWaterSurface, 0, ySeabed);
+  seaG.addColorStop(0, subState.rho === 1025 ? '#0c4868' : '#0e5270');
+  seaG.addColorStop(0.35, '#072e48');
+  seaG.addColorStop(1, '#021220');
+  sc.fillStyle = seaG;
+  sc.fillRect(0, yWaterSurface, W, ySeabed - yWaterSurface);
+
+  // 水面波浪
+  sc.strokeStyle = 'rgba(150, 220, 255, 0.7)';
+  sc.lineWidth = 2.5;
+  sc.beginPath();
+  for (let x = 0; x <= W; x += 12) {
+    const wy = yWaterSurface + Math.sin(x * 0.03 + tt * 2.2) * 2.5;
+    if (x === 0) sc.moveTo(x, wy); else sc.lineTo(x, wy);
+  }
+  sc.stroke();
+  sc.fillStyle = 'rgba(180, 230, 255, 0.85)';
+  sc.font = '600 11px system-ui';
+  sc.fillText('海平面 0 m', W - 78, yWaterSurface - 8);
+
+  // 海底地貌（沙質岩層）
+  const bedG = sc.createLinearGradient(0, ySeabed, 0, H);
+  bedG.addColorStop(0, '#1c221e');
+  bedG.addColorStop(1, '#090d0b');
+  sc.fillStyle = bedG;
+  sc.beginPath();
+  sc.moveTo(0, ySeabed);
+  for (let x = 0; x <= W; x += 25) {
+    const by = ySeabed + Math.sin(x * 0.02) * 3 + Math.cos(x * 0.05) * 2;
+    sc.lineTo(x, by);
+  }
+  sc.lineTo(W, H); sc.lineTo(0, H);
+  sc.closePath(); sc.fill();
+  sc.fillStyle = 'rgba(190, 180, 150, 0.7)';
+  sc.fillText('海床 80 m', W - 68, H - 10);
+
+  // 深度尺規標記
+  const pxPerM = (ySeabed - yWaterSurface) / SEABED_DEPTH;
+  sc.strokeStyle = 'rgba(255,255,255,0.18)';
+  sc.lineWidth = 1;
+  [0, 20, 40, 60, 80].forEach(d => {
+    const dy = yWaterSurface + d * pxPerM;
+    sc.beginPath(); sc.moveTo(18, dy); sc.lineTo(28, dy); sc.stroke();
+    sc.fillStyle = 'rgba(255,255,255,0.45)';
+    sc.font = '10px system-ui';
+    sc.fillText(d + 'm', 32, dy + 3.5);
+  });
+
+  // 艇體坐標
+  const subCenterY = yWaterSurface + info.depth * pxPerM;
+  const subCenterX = W * 0.52;
+  const subL = Math.min(260, Math.max(180, W * 0.50));
+  const subH = subL * 0.22;
+  const hx = subCenterX, hy = subCenterY;
+  const hw = subL / 2, hh = subH / 2;
+
+  // 緊急吹除氣泡特效
+  if (blowEffect > 0) {
+    sc.fillStyle = 'rgba(180, 240, 255, 0.6)';
+    for (let i = 0; i < 18; i++) {
+      const bx = hx - hw * 0.6 + Math.sin(i * 1.5 + tt * 8) * (hw * 0.8);
+      const by = hy + hh + 6 - ((tt * 60 + i * 16) % 55);
+      sc.beginPath();
+      sc.arc(bx, by, 2 + (i % 3.5), 0, Math.PI * 2);
+      sc.fill();
+    }
+  }
+
+  // 艇體陰影
+  if (subCenterY > ySeabed - 40) {
+    S.shadow(sc, hx, ySeabed, hw * 0.85, Math.max(0, ySeabed - (hy + hh)));
+  }
+
+  // ==== 繪製潛水艇外觀（艇身圓角矩形流線＋指揮塔，絕非雙球串接）====
+  sc.save();
+
+  // 1. 尾舵 (Rudder & Propeller)
+  sc.fillStyle = '#1b2a38';
+  sc.strokeStyle = '#32475c';
+  sc.lineWidth = 1.5;
+  // 垂直尾舵
+  sc.beginPath();
+  sc.moveTo(hx - hw * 0.82, hy - hh * 1.3);
+  sc.lineTo(hx - hw * 0.95, hy - hh * 1.3);
+  sc.lineTo(hx - hw * 0.85, hy + hh * 1.3);
+  sc.lineTo(hx - hw * 0.75, hy + hh * 1.3);
+  sc.closePath(); sc.fill(); sc.stroke();
+
+  // 螺旋槳
+  const propX = hx - hw - 8;
+  sc.fillStyle = '#b59242';
+  sc.beginPath();
+  sc.arc(propX + 5, hy, 4, 0, Math.PI * 2);
+  sc.fill();
+  const bladeAngle = tt * (Math.abs(info.vy) > 0.1 ? info.vy * 8 : 2.5);
+  for (let b = 0; b < 3; b++) {
+    const ang = bladeAngle + (b * Math.PI * 2) / 3;
+    sc.beginPath();
+    sc.ellipse(propX + 4 + Math.cos(ang) * 9, hy + Math.sin(ang) * 9, 7, 3, ang, 0, Math.PI * 2);
+    sc.fill();
+  }
+
+  // 2. 主艇體（流線圓角雪茄型／圓角矩形）
+  sc.beginPath();
+  // 艦首 (朝右，圓弧流線 nose)
+  sc.moveTo(hx - hw * 0.75, hy - hh);
+  sc.lineTo(hx + hw * 0.65, hy - hh);
+  sc.bezierCurveTo(hx + hw * 0.95, hy - hh, hx + hw, hy - hh * 0.45, hx + hw, hy);
+  sc.bezierCurveTo(hx + hw, hy + hh * 0.45, hx + hw * 0.95, hy + hh, hx + hw * 0.65, hy + hh);
+  // 艇底
+  sc.lineTo(hx - hw * 0.75, hy + hh);
+  // 艦尾收細
+  sc.bezierCurveTo(hx - hw * 0.92, hy + hh, hx - hw, hy + hh * 0.45, hx - hw, hy);
+  sc.bezierCurveTo(hx - hw, hy - hh * 0.45, hx - hw * 0.92, hy - hh, hx - hw * 0.75, hy - hh);
+  sc.closePath();
+
+  // 艇身金屬漸層
+  const hullG = sc.createLinearGradient(0, hy - hh, 0, hy + hh);
+  hullG.addColorStop(0, '#2b3b4a');
+  hullG.addColorStop(0.48, '#1e2934');
+  hullG.addColorStop(0.52, '#141c24');
+  hullG.addColorStop(1, '#0e141a');
+  sc.fillStyle = hullG;
+  sc.fill();
+  sc.strokeStyle = '#475d73';
+  sc.lineWidth = 2;
+  sc.stroke();
+
+  // 3. 指揮塔 (Conning Tower / 帆罩)
+  const towerW = hw * 0.36;
+  const towerH = hh * 0.95;
+  const towerX = hx + hw * 0.08 - towerW / 2;
+  const towerY = hy - hh - towerH;
+  sc.fillStyle = '#243240';
+  sc.beginPath();
+  sc.roundRect(towerX, towerY, towerW, towerH + 2, [7, 7, 0, 0]);
+  sc.fill(); sc.stroke();
+
+  // 潛望鏡與天線
+  sc.strokeStyle = '#7c9bb8';
+  sc.lineWidth = 2;
+  sc.beginPath();
+  sc.moveTo(towerX + towerW * 0.4, towerY);
+  sc.lineTo(towerX + towerW * 0.4, towerY - 10);
+  sc.moveTo(towerX + towerW * 0.7, towerY);
+  sc.lineTo(towerX + towerW * 0.7, towerY - 14);
+  sc.lineTo(towerX + towerW * 0.7 + 4, towerY - 14);
+  sc.stroke();
+
+  // 4. 前水平舵 (Bow Dive Plane)
+  sc.fillStyle = '#3a4e61';
+  sc.fillRect(hx + hw * 0.45, hy - 2, 18, 4);
+
+  // ==== 壓艙水艙剖面（明確展示注水水位與空氣空間）====
+  drawBallastTanks(hx, hy, hw, hh, subState.fill);
+
+  sc.restore();
+
+  // 水面以上部分若露出水面，加強分界反射
+  if (hy - hh < yWaterSurface) {
+    sc.fillStyle = 'rgba(255, 255, 255, 0.12)';
+    sc.fillRect(hx - hw, hy - hh, subL + 10, Math.max(0, yWaterSurface - (hy - hh)));
+  }
+
+  // ==== 力向量箭頭（比例尺適中、標示明確）====
+  const scaleF = (subH * 1.45) / (subState.rho * subState.g * subState.hullV);
+  const arrowBuoy = info.B_sub * scaleF;
+  const arrowWeight = info.mRes.W * scaleF;
+
+  // 浮力向上（青藍色）
+  if (arrowBuoy > 2) {
+    S.arrow(sc, hx, hy, hx, hy - arrowBuoy, {
+      color: S.C.normal, width: 3.5, label: `B 浮力 (${(info.B_sub / 1e6).toFixed(2)} MN)`
+    });
+  }
+  // 重力向下（紫色）
+  S.arrow(sc, hx, hy, hx, hy + arrowWeight, {
+    color: S.C.gravity, width: 3.5, label: `W 重力 (${(info.mRes.W / 1e6).toFixed(2)} MN)`
+  });
+  // 海底正向力（海底支撐時補足差額）
+  if (info.normalForce > 1e4) {
+    const arrowN = info.normalForce * scaleF;
+    S.arrow(sc, hx + 36, hy + hh, hx + 36, hy + hh - arrowN, {
+      color: S.C.tension, width: 3, label: `N 底 (${(info.normalForce / 1e6).toFixed(2)} MN)`
+    });
+  }
+
+  // 深度標籤徽章
+  sc.fillStyle = 'rgba(8, 20, 32, 0.85)';
+  sc.roundRect(hx - 65, hy + hh + 12, 130, 22, 6);
+  sc.fill();
+  sc.strokeStyle = 'rgba(76, 194, 255, 0.4)';
+  sc.lineWidth = 1;
+  sc.stroke();
+  sc.fillStyle = '#4cc2ff';
+  sc.font = '700 11px system-ui';
+  sc.textAlign = 'center';
+  sc.fillText(`深度: ${info.depth.toFixed(1)} m · ${info.vy > 0.08 ? '下潛中 ↓' : info.vy < -0.08 ? '上浮中 ↑' : '懸浮平衡 ='}`, hx, hy + hh + 27);
+  sc.textAlign = 'left';
+}
+
+// 繪製艇內前／後壓艙水艙與水位
+function drawBallastTanks(hx, hy, hw, hh, fill) {
+  const tankW = hw * 0.32;
+  const tankH = hh * 1.05;
+  const aftX = hx - hw * 0.62;
+  const fwdX = hx + hw * 0.16;
+  const tankY = hy - tankH / 2;
+
+  [aftX, fwdX].forEach((tx, idx) => {
+    // 水艙艙壁
+    sc.fillStyle = '#0f171f';
+    sc.strokeStyle = 'rgba(100, 150, 190, 0.5)';
+    sc.lineWidth = 1.2;
+    sc.beginPath();
+    sc.roundRect(tx, tankY, tankW, tankH, 4);
+    sc.fill(); sc.stroke();
+
+    // 艙內水（藍色由下往上注滿）
+    const waterH = tankH * fill;
+    if (waterH > 1) {
+      const waterG = sc.createLinearGradient(0, tankY + tankH - waterH, 0, tankY + tankH);
+      waterG.addColorStop(0, '#2ea5e6');
+      waterG.addColorStop(1, '#135c91');
+      sc.fillStyle = waterG;
+      sc.beginPath();
+      sc.roundRect(tx + 1, tankY + tankH - waterH, tankW - 2, waterH - 1, [0, 0, 3, 3]);
+      sc.fill();
+
+      // 水位線微光
+      sc.strokeStyle = 'rgba(200, 240, 255, 0.8)';
+      sc.lineWidth = 1;
+      sc.beginPath();
+      sc.moveTo(tx + 2, tankY + tankH - waterH);
+      sc.lineTo(tx + tankW - 2, tankY + tankH - waterH);
+      sc.stroke();
+    }
+
+    // 艙內空氣標示
+    sc.fillStyle = 'rgba(255,255,255,0.7)';
+    sc.font = '600 8.5px system-ui';
+    sc.textAlign = 'center';
+    if (fill < 0.88) {
+      sc.fillText('高壓空氣', tx + tankW / 2, tankY + 9);
+    }
+    if (fill > 0.18) {
+      sc.fillStyle = '#e0f4ff';
+      sc.fillText(`壓艙水 ${(fill*100).toFixed(0)}%`, tx + tankW / 2, tankY + tankH - 4);
+    }
+  });
+
+  // 中間指揮隔艙標籤
+  sc.fillStyle = 'rgba(150, 180, 210, 0.65)';
+  sc.font = '500 9px system-ui';
+  sc.textAlign = 'center';
+  sc.fillText('耐壓指揮艙', hx - hw * 0.05, hy + 3);
+  sc.textAlign = 'left';
+}
+
+// 繪製浮沉子（笛卡兒潛水員）畫面
+function drawDiverScene(W, H, info) {
+  // 背景柔和漸層
+  const bgG = sc.createLinearGradient(0, 0, 0, H);
+  bgG.addColorStop(0, '#0a1622');
+  bgG.addColorStop(1, '#050c14');
+  sc.fillStyle = bgG;
+  sc.fillRect(0, 0, W, H);
+
+  // 寶特瓶尺寸
+  const bW = Math.min(180, W * 0.42);
+  const bH = H - 50;
+  const bX = (W - bW) / 2;
+  const bY = 25;
+  const squeezePx = (diverState.squeeze / 30000) * 9; // 捏瓶子凹陷量
+
+  // 手捏壓力箭頭提示
+  if (diverState.squeeze > 500) {
+    sc.fillStyle = '#ff5470';
+    sc.font = '700 11px system-ui';
+    sc.textAlign = 'right';
+    sc.fillText(`手捏加壓 ▶`, bX - 8, bY + bH * 0.52);
+    sc.textAlign = 'left';
+    sc.fillText(`◀ ΔP = ${(diverState.squeeze/1000).toFixed(1)} kPa`, bX + bW + 8, bY + bH * 0.52);
+  }
+
+  // 1. 瓶蓋與瓶頸
+  const neckW = bW * 0.32;
+  const neckH = 22;
+  const neckX = bX + (bW - neckW) / 2;
+  sc.fillStyle = '#238636';
+  sc.fillRect(neckX, bY - neckH, neckW, neckH);
+  sc.fillStyle = '#1a6328';
+  sc.fillRect(neckX - 2, bY - neckH - 10, neckW + 4, 10); // 瓶蓋
+
+  // 2. 寶特瓶本體（捏瓶子時兩側內凹）
+  sc.save();
+  sc.beginPath();
+  sc.moveTo(neckX, bY);
+  sc.quadraticCurveTo(bX, bY + 25, bX + squeezePx, bY + bH * 0.45);
+  sc.quadraticCurveTo(bX + squeezePx, bY + bH * 0.65, bX, bY + bH - 15);
+  sc.quadraticCurveTo(bX, bY + bH, bX + 25, bY + bH);
+  sc.lineTo(bX + bW - 25, bY + bH);
+  sc.quadraticCurveTo(bX + bW, bY + bH, bX + bW, bY + bH - 15);
+  sc.quadraticCurveTo(bX + bW - squeezePx, bY + bH * 0.65, bX + bW - squeezePx, bY + bH * 0.45);
+  sc.quadraticCurveTo(bX + bW, bY + 25, neckX + neckW, bY);
+  sc.closePath();
+
+  // 瓶內水漸層
+  const waterG = sc.createLinearGradient(bX, bY, bX, bY + bH);
+  waterG.addColorStop(0, '#12547e');
+  waterG.addColorStop(0.7, '#0b3956');
+  waterG.addColorStop(1, '#072437');
+  sc.fillStyle = waterG;
+  sc.fill();
+  sc.strokeStyle = 'rgba(160, 220, 255, 0.65)';
+  sc.lineWidth = 2.5;
+  sc.stroke();
+  sc.restore();
+
+  // 3. 浮沉子（倒放的小玻璃滴管/試管）
+  const diverRange = bH - 75;
+  const diverY = bY + 30 + (info.depth / 0.22) * diverRange;
+  const diverX = W / 2;
+  const diverW = 28;
+  const diverH = 68;
+
+  // 玻璃管身（倒放，圓頭在上，開口在下）
+  const airRatio = info.dRes.airV / diverState.airV0; // 空氣壓縮比 (0.5 ~ 1.0)
+  const airH = Math.max(8, (diverH - 14) * airRatio);
+
+  sc.save();
+  // 玻璃管外壁 (透明反光)
+  sc.fillStyle = 'rgba(230, 245, 255, 0.18)';
+  sc.strokeStyle = 'rgba(200, 235, 255, 0.85)';
+  sc.lineWidth = 1.8;
+  sc.beginPath();
+  sc.roundRect(diverX - diverW / 2, diverY - diverH / 2, diverW, diverH, [diverW / 2, diverW / 2, 2, 2]);
+  sc.fill(); sc.stroke();
+
+  // 受困空氣氣室（頂部）
+  const airG = sc.createLinearGradient(0, diverY - diverH / 2, 0, diverY - diverH / 2 + airH);
+  airG.addColorStop(0, '#a5f3fc');
+  airG.addColorStop(1, '#38bdf8');
+  sc.fillStyle = airG;
+  sc.beginPath();
+  sc.roundRect(diverX - diverW / 2 + 2, diverY - diverH / 2 + 2, diverW - 4, airH, [diverW / 2 - 2, diverW / 2 - 2, 1, 1]);
+  sc.fill();
+
+  // 水進入小瓶底部
+  const inWaterH = diverH - airH - 4;
+  if (inWaterH > 2) {
+    sc.fillStyle = 'rgba(10, 50, 80, 0.7)';
+    sc.fillRect(diverX - diverW / 2 + 2, diverY - diverH / 2 + 2 + airH, diverW - 4, inWaterH);
+  }
+
+  // 倒放瓶口（底部開口與配重滴嘴）
+  sc.fillStyle = '#64748b';
+  sc.fillRect(diverX - 4, diverY + diverH / 2 - 4, 8, 8);
+  sc.restore();
+
+  // 浮沉子力向量箭頭
+  const sFDiver = 550; // 力放大比例
+  const aB = info.dRes.B * sFDiver;
+  const aW = info.dRes.W * sFDiver;
+  S.arrow(sc, diverX, diverY, diverX, diverY - aB, {
+    color: S.C.normal, width: 3, label: `B 浮力 (${(info.dRes.B * 1000).toFixed(1)} mN)`
+  });
+  S.arrow(sc, diverX, diverY, diverX, diverY + aW, {
+    color: S.C.gravity, width: 3, label: `W 重力 (${(info.dRes.W * 1000).toFixed(1)} mN)`
+  });
+
+  // 標籤提示
+  sc.fillStyle = '#fff';
+  sc.font = '600 11px system-ui';
+  sc.fillText(`空氣柱: ${(info.dRes.airV * 1e6).toFixed(2)} mL (${(airRatio * 100).toFixed(0)}%)`, diverX + diverW / 2 + 8, diverY - 8);
+  sc.fillStyle = '#79c0ff';
+  sc.fillText(`排開體積 V: ${(info.dRes.V * 1e6).toFixed(2)} mL`, diverX + diverW / 2 + 8, diverY + 10);
+}
+
+// 繪製狀態卡與即時判定
+function drawStats(info) {
+  const statsEl = document.getElementById('stats');
+  const eqEl = document.getElementById('eq');
+
+  if (info.mode === 'sub') {
+    const net = info.mRes.net;
+    const apparent = Math.max(0, info.mRes.W - info.B_sub);
+    const rows = [
+      ['全浸浮力 B', (info.mRes.B / 1e6).toFixed(2) + ' MN', '#4cc2ff'],
+      ['總重量 W', (info.mRes.W / 1e6).toFixed(2) + ' MN', '#c06bff'],
+      ['合淨力 (B − W)', ((net >= 0 ? '+' : '') + (net / 1e6).toFixed(2)) + ' MN', net >= 0 ? '#7CFFB2' : '#ff7a45'],
+      ['目前深度', info.depth.toFixed(1) + ' m', '#ffce54'],
+      ['壓艙水量', (subState.fill * 100).toFixed(1) + ' %', '#4cc2ff'],
+      ['中性需水率', (info.mRes.neutralFill * 100).toFixed(1) + ' %', '#a78bfa']
+    ];
+    statsEl.innerHTML = rows.map(r => `<div class="box"><div class="k">${r[0]}</div><div class="v" style="color:${r[2]}">${r[1]}</div></div>`).join('');
+
+    if (info.depth >= SEABED_DEPTH - SUB_HEIGHT / 2 - 0.05) {
+      eqEl.textContent = `⚓ 坐底：已停在海床（海底支撐正向力 N = ${(info.normalForce / 1e6).toFixed(2)} MN）`;
+      eqEl.style.background = 'rgba(255, 176, 46, 0.15)';
+      eqEl.style.color = '#ffb02e';
+    } else if (info.depth <= 0.6 && info.frac < 0.96) {
+      eqEl.textContent = `⛵ 水面漂浮：沒入比例 ${(info.frac * 100).toFixed(0)}%，部分艇身露出海面平衡`;
+      eqEl.style.background = 'rgba(124, 255, 178, 0.15)';
+      eqEl.style.color = '#7CFFB2';
+    } else if (Math.abs(net) < 6e4) {
+      eqEl.textContent = `≈ 中性浮力懸浮：B ≈ W，在深海中等深懸停漂移`;
+      eqEl.style.background = 'rgba(255, 206, 84, 0.15)';
+      eqEl.style.color = '#ffce54';
+    } else if (net > 0) {
+      eqEl.textContent = `↑ 上浮中：浮力 > 重力（淨向上力 +${(net / 1e6).toFixed(2)} MN）`;
+      eqEl.style.background = 'rgba(124, 255, 178, 0.15)';
+      eqEl.style.color = '#7CFFB2';
+    } else {
+      eqEl.textContent = `↓ 下潛中：重力 > 浮力（淨向下力 ${(Math.abs(net) / 1e6).toFixed(2)} MN）`;
+      eqEl.style.background = 'rgba(255, 107, 157, 0.15)';
+      eqEl.style.color = '#ff6b9d';
+    }
+  } else {
+    const net_mN = info.dRes.net * 1000;
+    const rows = [
+      ['浮力 B', (info.dRes.B * 1000).toFixed(1) + ' mN', '#4cc2ff'],
+      ['總重 W', (info.dRes.W * 1000).toFixed(1) + ' mN', '#c06bff'],
+      ['合淨力 (B − W)', ((net_mN >= 0 ? '+' : '') + net_mN.toFixed(1)) + ' mN', net_mN >= 0 ? '#7CFFB2' : '#ff7a45'],
+      ['目前深度', (info.depth * 100).toFixed(1) + ' cm', '#ffce54'],
+      ['空氣柱體積', (info.dRes.airV * 1e6).toFixed(2) + ' mL', '#79c0ff'],
+      ['手捏壓力 ΔP', (diverState.squeeze / 1000).toFixed(1) + ' kPa', '#f472b6']
+    ];
+    statsEl.innerHTML = rows.map(r => `<div class="box"><div class="k">${r[0]}</div><div class="v" style="color:${r[2]}">${r[1]}</div></div>`).join('');
+
+    if (info.depth >= 0.219) {
+      eqEl.textContent = `✗ 沉底：空氣受壓收縮，排開體積太小導致浮力不足`;
+      eqEl.style.background = 'rgba(255, 107, 157, 0.15)';
+      eqEl.style.color = '#ff6b9d';
+    } else if (info.depth <= 0.005) {
+      eqEl.textContent = `✓ 頂部漂浮：放鬆瓶身，空氣膨脹使浮力大於重力`;
+      eqEl.style.background = 'rgba(124, 255, 178, 0.15)';
+      eqEl.style.color = '#7CFFB2';
+    } else if (Math.abs(net_mN) < 0.6) {
+      eqEl.textContent = `≈ 懸浮：壓力微調至臨界點，浮力 ≈ 重力`;
+      eqEl.style.background = 'rgba(255, 206, 84, 0.15)';
+      eqEl.style.color = '#ffce54';
+    } else if (net_mN > 0) {
+      eqEl.textContent = `↑ 向上浮起：B > W`;
+      eqEl.style.background = 'rgba(124, 255, 178, 0.15)';
+      eqEl.style.color = '#7CFFB2';
+    } else {
+      eqEl.textContent = `↓ 向下沉降：B < W`;
+      eqEl.style.background = 'rgba(255, 107, 157, 0.15)';
+      eqEl.style.color = '#ff6b9d';
+    }
+  }
+}
+
+// 主動畫循環
+let lastTs = 0;
+function loop(ts) {
+  const dt = lastTs ? Math.min((ts - lastTs) / 1000, 0.04) : 0;
+  lastTs = ts;
+  tt += dt;
+
+  let info;
+  for (let i = 0; i < 3; i++) {
+    info = physics((dt || 0.016) / 3);
+  }
+  draw(info);
+  requestAnimationFrame(loop);
+}
+
+window.addEventListener('load', () => {
+  setupCanvases();
+  buildSliders();
+  updateFormula();
+  requestAnimationFrame(loop);
+});
+
+window.addEventListener('resize', () => {
+  setupCanvases();
+});
+</script>
+</body>
+</html>
