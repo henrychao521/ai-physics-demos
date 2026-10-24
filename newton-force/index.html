@@ -223,12 +223,16 @@ function setupCanvases(){
 
 function drawScene(t){
   const W=sc._w,H=sc._h,gy=H-52;
+  const isNarrow = W <= 640;
   S.scene(sc,WARM,{ground:gy,perspective:true});
+
   // 地面木紋線
   sc.strokeStyle='rgba(255,210,160,.08)';sc.lineWidth=1;
   for(let y=gy+8;y<H;y+=12){sc.beginPath();sc.moveTo(0,y);sc.lineTo(W,y);sc.stroke();}
+
   // 箱子位置（自動捲動）
   const span=Math.max(xAt(TTOT),2),boxX=90+(xAt(t)/span)*(W-280);
+
   // 地面公尺刻度
   {
     const pxm=(W-280)/span,st=[0.5,1,2,5,10,20,50,100,200,500].find(v=>v*pxm>=60)||1000;
@@ -239,53 +243,99 @@ function drawScene(t){
       sc.fillText(d+' m',x-6,gy+17);
     }
   }
+
   const bw=46+state.m*3.2,bh=bw,bx=boxX,by=gy-bh,cx=bx+bw/2,cyy=by+bh/2;
   // 接觸陰影
   S.shadow(sc,cx,gy,bw*0.55,0);
   // 木箱
   drawCrate(bx,by,bw,bh);
 
-  // ===== 自由體圖受力箭頭（按比例尺長度 ∝ 力，並標示數值）=====
+  // ===== 自由體圖受力箭頭（按比例長度 ∝ 力，並安排非重疊位置標示數值）=====
   const sF=forceScale();
   const Nval=state.m*state.g;
+  const tipN=gy-Nval*sF;
+  const tipMg=cyy+Nval*sF;
 
-  // 重力 mg：質心向下
-  S.arrow(sc,cx,cyy,cx,cyy+Nval*sF,{color:S.C.gravity,width:3,label:`mg = ${Nval.toFixed(1)} N`});
+  // 1. 重力 mg：質心向下，數值標在箭頭右側（不碰地面下方或右下比例尺）
+  S.arrow(sc,cx,cyy,cx,tipMg,{color:S.C.gravity,width:3});
+  sc.fillStyle=S.C.gravity;sc.font='600 11px system-ui';sc.textAlign='left';
+  sc.fillText(`mg = ${Nval.toFixed(1)} N`,cx+6,Math.min(tipMg-4,gy+18));
 
-  // 正向力 N：底部接觸點(中)，向上
-  S.arrow(sc,cx,gy,cx,gy-Nval*sF,{color:S.C.normal,width:3,label:`N = ${Nval.toFixed(1)} N`});
+  // 2. 正向力 N：地面接觸點向上，數值標在箭頭尾端外側／軸側（不與頂部合力文字重疊）
+  S.arrow(sc,cx,gy,cx,tipN,{color:S.C.normal,width:3});
+  sc.fillStyle=S.C.normal;sc.font='600 11px system-ui';sc.textAlign='left';
+  sc.fillText(`N = ${Nval.toFixed(1)} N`,cx+6,Math.min(by+14,tipN+16));
 
-  // 施力 F：被推的左側面(質心高度)，向右
+  // 3. 施力 F：向右推木箱，數值標在施力箭頭上方（尾端外側）
   if(state.F>0.1){
-    S.arrow(sc,bx-state.F*sF,cyy,bx,cyy,{color:'#4cc2ff',width:4,label:`F = ${fmt(state.F)} N`});
+    const fStartX=bx-state.F*sF;
+    S.arrow(sc,fStartX,cyy,bx,cyy,{color:'#4cc2ff',width:4});
     // 推手示意（手掌）
-    sc.fillStyle='#e8b98a';sc.beginPath();sc.arc(bx-state.F*sF-6,cyy,7,0,7);sc.fill();
+    sc.fillStyle='#e8b98a';sc.beginPath();sc.arc(fStartX-6,cyy,7,0,7);sc.fill();
+    // 施力數值標在箭頭中段上方
+    sc.fillStyle='#4cc2ff';sc.font='600 11px system-ui';sc.textAlign='center';
+    sc.fillText(`F = ${fmt(state.F)} N`,Math.max(26,bx-(state.F*sF)/2),cyy-7);
   }
 
-  // 摩擦力 f：底部接觸面，向左
+  // 4. 摩擦力 f：底部接觸面向左，數值標在箭頭左側尾端外
   if(FRIC>0.05){
-    const fTag = !fricOn?'':(MOVES?' (動)':' (靜)');
-    S.arrow(sc,cx,gy-3,cx-FRIC*sF,gy-3,{color:S.C.friction,width:3.5,label:`f = ${FRIC.toFixed(1)} N${fTag}`});
+    const fTipX=cx-FRIC*sF;
+    S.arrow(sc,cx,gy-3,fTipX,gy-3,{color:S.C.friction,width:3.5});
+    const fTag=!fricOn?'':(MOVES?'(動)':'(靜)');
+    sc.fillStyle=S.C.friction;sc.font='600 11px system-ui';
+    const textX=fTipX-6;
+    if(textX<80){
+      sc.textAlign='left';
+      sc.fillText(`f = ${FRIC.toFixed(1)} N ${fTag}`,Math.max(6,fTipX+4),gy+13);
+    }else{
+      sc.textAlign='right';
+      sc.fillText(`f = ${FRIC.toFixed(1)} N ${fTag}`,textX,gy-2);
+    }
   }
 
-  // 比例尺
+  // 5. 比例尺：移至左下角（避免箱子往右移時與重力 mg 標籤碰撞）
   {
-    const ref=[1,2,5,10,20,50,100,200,500].find(v=>v*sF>=36)||500;
-    sc.strokeStyle='rgba(255,233,200,.8)';sc.lineWidth=2;sc.beginPath();
-    sc.moveTo(W-20-ref*sF,gy+36);sc.lineTo(W-20,gy+36);
-    sc.moveTo(W-20-ref*sF,gy+31);sc.lineTo(W-20-ref*sF,gy+41);
-    sc.moveTo(W-20,gy+31);sc.lineTo(W-20,gy+41);sc.stroke();
-    sc.fillStyle='rgba(255,233,200,.85)';sc.font='11px system-ui';sc.textAlign='right';
-    sc.fillText('力箭頭比例 '+ref+' N',W-24-ref*sF,gy+40);sc.textAlign='left';
+    const ref=[1,2,5,10,20,50,100,200,500].find(v=>v*sF>=32)||500;
+    const scaleX=14;
+    const scaleY=H-12;
+    const barLen=ref*sF;
+    sc.strokeStyle='rgba(255,233,200,.85)';sc.lineWidth=2;
+    sc.beginPath();
+    sc.moveTo(scaleX,scaleY);sc.lineTo(scaleX+barLen,scaleY);
+    sc.moveTo(scaleX,scaleY-4);sc.lineTo(scaleX,scaleY+4);
+    sc.moveTo(scaleX+barLen,scaleY-4);sc.lineTo(scaleX+barLen,scaleY+4);
+    sc.stroke();
+    sc.fillStyle='rgba(255,233,200,.9)';sc.font='10px system-ui';sc.textAlign='left';
+    sc.fillText(`力箭頭比例 ${ref} N`,scaleX,scaleY-6);
   }
 
-  // 合力：箱子上方
+  // 6. 合力與加速度標示：窄畫布時放置於畫布上緣，任何寬度均與正向力 N 分離
+  const netY = isNarrow ? 22 : Math.min(by-24, tipN-18);
   if(Math.abs(FNET)>0.1){
-    S.arrow(sc,cx,by-16,cx+FNET*sF,by-16,{color:S.C.acc,width:4,label:`F合 = ${FNET.toFixed(1)} N → a = ${A.toFixed(2)} m/s²`});
+    const netLen=FNET*sF;
+    const labelTxt=`F合 = ${FNET.toFixed(1)} N → a = ${A.toFixed(2)} m/s²`;
+    sc.font='bold 12px system-ui';
+    const txtWidth=sc.measureText(labelTxt).width;
+    let netStartX=cx;
+    if(netStartX+netLen+txtWidth+16>W){
+      netStartX=Math.max(14,W-txtWidth-netLen-20);
+    }
+    const netEndX=netStartX+netLen;
+    S.arrow(sc,netStartX,netY,netEndX,netY,{color:S.C.acc,width:3.8});
+    sc.fillStyle='#ffce54';sc.textAlign='left';
+    sc.fillText(labelTxt,netEndX+8,netY+4);
   }else{
-    sc.fillStyle='#ff8fa3';sc.font='bold 13px system-ui';
-    sc.fillText('合力 F合 = 0 N → 推不動（靜摩擦平衡）',cx-95,by-14);
+    sc.fillStyle='#ff8fa3';sc.font='bold 12px system-ui';
+    const stopTxt='合力 F合 = 0 N → 推不動（靜摩擦平衡）';
+    if(isNarrow){
+      sc.textAlign='center';
+      sc.fillText(stopTxt,W/2,netY);
+    }else{
+      sc.textAlign='left';
+      sc.fillText(stopTxt,Math.max(12,cx-100),netY);
+    }
   }
+
   updateHud(t);
 }
 

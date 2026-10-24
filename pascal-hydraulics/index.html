@@ -39,7 +39,9 @@
   .note b{color:var(--txt)}.note code{background:var(--bg2);padding:1px 6px;border-radius:5px;color:var(--green);font-size:.85em}
   footer{color:var(--muted);font-size:.78rem;margin-top:24px;text-align:center;line-height:1.7}
   @media(max-width:600px){
-    .hud{position:static;background:var(--panel);border-bottom:1px solid var(--line);padding:10px;pointer-events:auto;justify-content:flex-start}
+    .hud{position:static;background:var(--panel);border-bottom:1px solid var(--line);padding:8px 10px;pointer-events:auto;justify-content:flex-start;gap:6px}
+    .chip{padding:5px 8px;font-size:.72rem}
+    .chip b{font-size:.88rem}
     .toolbar{position:static;justify-content:center;padding:10px;background:rgba(8,14,22,.6);border-top:1px solid var(--line)}
     .toolbar button,.pbtn{width:100%;min-height:44px}
     .presets{flex-direction:column;align-items:stretch}
@@ -176,7 +178,8 @@ let sc, t = 0, pushing = true;
 const HYD = {skyTop:'#0e1626', skyBottom:'#070d18', vignette:'rgba(0,0,0,.4)'};
 
 function setupCanvases() {
-  const aspect = window.innerWidth <= 600 ? 1.45 : 1.8;
+  const isNarrow = window.innerWidth <= 600;
+  const aspect = isNarrow ? 1.4 : 1.8;
   sc = S.fit(document.getElementById('scene'), aspect);
 }
 
@@ -184,17 +187,21 @@ function draw() {
   const W = sc._w, H = sc._h;
   S.scene(sc, HYD, {});
 
+  const isNarrow = W < 600;
   const baseY = H * 0.84;
-  const pipeH = Math.max(32, Math.min(48, H * 0.095));
+  const pipeH = Math.max(30, Math.min(46, H * 0.095));
   const pipeTopY = baseY - pipeH;
   const topY = H * 0.22;
-  const y0 = H * 0.52; // 基準液面（未受力靜止高度）
+  const y0 = H * 0.52; // 基準液面
 
-  // 圓筒寬度：以面積為基準按比例縮放
-  const w1 = Math.max(32, Math.min(W * 0.16, 20 + Math.sqrt(state.A1) * 16));
-  const w2 = Math.max(32, Math.min(W * 0.32, 20 + Math.sqrt(state.A2) * 16));
-  const x1 = W * 0.28;
-  const x2 = W * 0.72;
+  // 圓筒定位與寬度
+  const x1 = W * (isNarrow ? 0.25 : 0.28);
+  const x2 = W * (isNarrow ? 0.75 : 0.72);
+
+  const maxW1 = isNarrow ? W * 0.15 : W * 0.16;
+  const maxW2 = isNarrow ? W * 0.26 : W * 0.32;
+  const w1 = Math.max(28, Math.min(maxW1, 16 + Math.sqrt(state.A1) * (isNarrow ? 11 : 16)));
+  const w2 = Math.max(28, Math.min(maxW2, 16 + Math.sqrt(state.A2) * (isNarrow ? 11 : 16)));
 
   const x1L = x1 - w1 / 2, x1R = x1 + w1 / 2;
   const x2L = x2 - w2 / 2, x2R = x2 + w2 / 2;
@@ -205,12 +212,12 @@ function draw() {
   const d2_actual = d2For(d1_actual);     // 實際大活塞上升 cm
 
   // 畫面放大顯示：VIS_GAIN 放大倍率
-  const baseScale = Math.min(2.5, H * 0.0052); // px/cm 基礎尺標
+  const baseScale = Math.min(2.4, H * 0.005);
   const d1_vis = d1_actual * baseScale * VIS_GAIN;
   const d2_vis = d2_actual * baseScale * VIS_GAIN;
 
-  const yFluid1 = y0 + d1_vis; // 小活塞與液面下降
-  const yFluid2 = y0 - d2_vis; // 大活塞與液面上升
+  const yFluid1 = y0 + d1_vis;
+  const yFluid2 = y0 - d2_vis;
 
   // 1. 容器內壁底色
   sc.fillStyle = '#0a1220';
@@ -247,7 +254,7 @@ function draw() {
   sc.stroke();
   sc.restore();
 
-  // 3. 筒內被推過的體積高光帶（同色帶，同為金色）
+  // 3. 筒內被推過的體積高光帶（同色金色帶）
   const sweptColor = 'rgba(255, 196, 60, 0.32)';
   const sweptBorder = '#ffc43c';
   if (d1_vis > 1) {
@@ -259,50 +266,69 @@ function draw() {
     sc.fillRect(x2L, yFluid2, w2, d2_vis);
   }
 
-  // 4. 兩筒旁標出被推過的液體體積 A₁d₁ 與 A₂d₂（同色指示帶）
-  const barW = 8;
-  const leftBarX = x1L - 14;
-  const rightBarX = x2R + 14;
+  // 4. 體積標示指示帶與文字（窄畫面放在內側、分兩行，寬畫面放在外側）
   const vol1 = state.A1 * d1_actual;
   const vol2 = state.A2 * d2_actual;
+  const barW = isNarrow ? 5 : 7;
 
-  if (d1_vis > 1) {
-    // 左側體積指示色帶
-    sc.fillStyle = sweptColor;
-    sc.fillRect(leftBarX - barW, y0, barW, d1_vis);
-    sc.strokeStyle = sweptBorder;
-    sc.lineWidth = 1.5;
-    sc.strokeRect(leftBarX - barW, y0, barW, d1_vis);
+  if (isNarrow) {
+    // 窄螢幕：放兩筒內側，避開左右畫布邊緣切字
+    // 左筒 (A1·d1) 位於內側右方，在 y0 下方
+    const barX1 = x1R + 5;
+    if (d1_vis > 1) {
+      sc.fillStyle = sweptColor;
+      sc.fillRect(barX1, y0, barW, d1_vis);
+      sc.strokeStyle = sweptBorder;
+      sc.lineWidth = 1.2;
+      sc.strokeRect(barX1, y0, barW, d1_vis);
+    }
+    sc.font = 'bold 9.5px system-ui';
+    sc.fillStyle = '#ffce54';
+    sc.textAlign = 'left';
+    const textY1 = y0 + Math.max(12, d1_vis / 2);
+    sc.fillText(`A₁d₁=${vol1.toFixed(1)}cm³`, barX1 + barW + 4, textY1);
+    sc.fillText(`(d₁=${d1_actual.toFixed(1)}cm)`, barX1 + barW + 4, textY1 + 11);
 
-    // 上下界線
-    sc.beginPath();
-    sc.moveTo(leftBarX - barW - 4, y0); sc.lineTo(leftBarX + 2, y0);
-    sc.moveTo(leftBarX - barW - 4, yFluid1); sc.lineTo(leftBarX + 2, yFluid1);
-    sc.stroke();
+    // 右筒 (A2·d2) 位於內側左方，在 y0 上方
+    const barX2 = x2L - 5 - barW;
+    if (d2_vis > 0.5) {
+      sc.fillStyle = sweptColor;
+      sc.fillRect(barX2, yFluid2, barW, d2_vis);
+      sc.strokeStyle = sweptBorder;
+      sc.lineWidth = 1.2;
+      sc.strokeRect(barX2, yFluid2, barW, d2_vis);
+    }
+    sc.font = 'bold 9.5px system-ui';
+    sc.fillStyle = '#ffce54';
+    sc.textAlign = 'right';
+    const textY2 = y0 - Math.max(8, d2_vis / 2);
+    sc.fillText(`A₂d₂=${vol2.toFixed(1)}cm³`, barX2 - 4, textY2 - 11);
+    sc.fillText(`(d₂=${d2_actual.toFixed(2)}cm)`, barX2 - 4, textY2);
+  } else {
+    // 寬螢幕：放兩筒外側，空間充裕
+    const leftBarX = x1L - 14;
+    const rightBarX = x2R + 14;
 
-    // 標籤
+    if (d1_vis > 1) {
+      sc.fillStyle = sweptColor;
+      sc.fillRect(leftBarX - barW, y0, barW, d1_vis);
+      sc.strokeStyle = sweptBorder;
+      sc.lineWidth = 1.5;
+      sc.strokeRect(leftBarX - barW, y0, barW, d1_vis);
+    }
     sc.font = '600 11px system-ui';
     sc.fillStyle = '#ffce54';
     sc.textAlign = 'right';
     sc.fillText(`體積 A₁d₁ = ${vol1.toFixed(1)} cm³`, leftBarX - barW - 8, y0 + Math.max(14, d1_vis / 2));
     sc.fillText(`(位移 d₁ = ${d1_actual.toFixed(1)} cm)`, leftBarX - barW - 8, y0 + Math.max(14, d1_vis / 2) + 14);
-  }
 
-  if (d2_vis > 0.5) {
-    // 右側體積指示色帶
-    sc.fillStyle = sweptColor;
-    sc.fillRect(rightBarX, yFluid2, barW, d2_vis);
-    sc.strokeStyle = sweptBorder;
-    sc.lineWidth = 1.5;
-    sc.strokeRect(rightBarX, yFluid2, barW, d2_vis);
-
-    // 上下界線
-    sc.beginPath();
-    sc.moveTo(rightBarX - 2, y0); sc.lineTo(rightBarX + barW + 4, y0);
-    sc.moveTo(rightBarX - 2, yFluid2); sc.lineTo(rightBarX + barW + 4, yFluid2);
-    sc.stroke();
-
-    // 標籤
+    if (d2_vis > 0.5) {
+      sc.fillStyle = sweptColor;
+      sc.fillRect(rightBarX, yFluid2, barW, d2_vis);
+      sc.strokeStyle = sweptBorder;
+      sc.lineWidth = 1.5;
+      sc.strokeRect(rightBarX, yFluid2, barW, d2_vis);
+    }
     sc.font = '600 11px system-ui';
     sc.fillStyle = '#ffce54';
     sc.textAlign = 'left';
@@ -310,28 +336,41 @@ function draw() {
     sc.fillText(`(位移 d₂ = ${d2_actual.toFixed(2)} cm)`, rightBarX + barW + 8, y0 - Math.max(6, d2_vis / 2) + 14);
   }
 
-  // 5. 基準液面參考虛線（未受力靜止線）
+  // 5. 基準液面線與文字（只在兩筒間繪製，動態縮減長度避免撞上活塞）
+  const gap = x2L - x1R;
+  const midX = (x1 + x2) / 2;
+
+  sc.save();
   sc.strokeStyle = 'rgba(255, 255, 255, 0.28)';
   sc.lineWidth = 1;
   sc.setLineDash([4, 4]);
   sc.beginPath();
-  sc.moveTo(x1L - 25, y0);
-  sc.lineTo(x2R + 25, y0);
+  sc.moveTo(x1R + 2, y0);
+  sc.lineTo(x2L - 2, y0);
   sc.stroke();
-  sc.setLineDash([]);
+  sc.restore();
 
-  sc.fillStyle = 'rgba(255, 255, 255, 0.45)';
-  sc.font = '11px system-ui';
+  let baseLabel = '--- 基準液面（未施力平衡線）---';
+  sc.font = (isNarrow ? '9px' : '11px') + ' system-ui';
+  if (sc.measureText(baseLabel).width > gap - 16) {
+    baseLabel = '基準液面（未施力）';
+  }
+  if (sc.measureText(baseLabel).width > gap - 16) {
+    baseLabel = '基準液面';
+  }
+  if (sc.measureText(baseLabel).width > gap - 8) {
+    baseLabel = '基準線';
+  }
+  sc.fillStyle = 'rgba(255, 255, 255, 0.55)';
   sc.textAlign = 'center';
-  sc.fillText('--- 基準液面（未施力時等高）---', (x1 + x2) / 2, y0 - 6);
+  sc.fillText(baseLabel, midX, y0 - 4);
 
-  // 6. 容器外壁與水平連通管管壁（清楚無中斷的連通外殼）
+  // 6. 容器外壁與水平連通管管壁
   sc.strokeStyle = '#4e6785';
   sc.lineWidth = 3;
   sc.lineCap = 'round';
   sc.lineJoin = 'round';
 
-  // 外圍管壁輪廓（左外壁 -> 底部連通管底面 -> 右外壁）
   sc.beginPath();
   sc.moveTo(x1L, topY);
   sc.lineTo(x1L, baseY);
@@ -339,7 +378,6 @@ function draw() {
   sc.lineTo(x2R, topY);
   sc.stroke();
 
-  // 內側管壁輪廓（左內壁 -> 連通管頂部天花板 -> 右內壁）
   sc.beginPath();
   sc.moveTo(x1R, topY);
   sc.lineTo(x1R, pipeTopY);
@@ -349,10 +387,10 @@ function draw() {
 
   // 筒頂金屬邊框
   sc.fillStyle = '#6f8ba8';
-  sc.fillRect(x1L - 4, topY - 3, w1 + 8, 4);
-  sc.fillRect(x2L - 4, topY - 3, w2 + 8, 4);
+  sc.fillRect(x1L - 3, topY - 3, w1 + 6, 4);
+  sc.fillRect(x2L - 3, topY - 3, w2 + 6, 4);
 
-  // 圓筒刻度飾線
+  // 刻度線
   sc.strokeStyle = 'rgba(255, 255, 255, 0.15)';
   sc.lineWidth = 1;
   for (let y = topY + 16; y < baseY - 10; y += 16) {
@@ -362,20 +400,27 @@ function draw() {
     sc.stroke();
   }
 
-  // 7. 水平連通管內部流動與壓力傳遞提示
-  const midX = (x1 + x2) / 2;
+  // 7. 水平連通管內部流動與壓力傳遞
   const midPipeY = baseY - pipeH / 2;
   if (stroke > 0.05) {
     const arrowA = Math.min(1, stroke * 1.4);
-    S.arrow(sc, midX - 32, midPipeY, midX + 32, midPipeY, {
+    S.arrow(sc, midX - 25, midPipeY, midX + 25, midPipeY, {
       color: `rgba(124, 255, 178, ${arrowA})`,
-      width: 2.5
+      width: 2.2
     });
   }
+
+  let pipeText = `水平連通管　壓力 P = ${P().toFixed(1)} N/cm² 均勻傳遞`;
+  sc.font = (isNarrow ? 'bold 10px' : 'bold 12px') + ' system-ui';
+  if (sc.measureText(pipeText).width > gap - 12) {
+    pipeText = `連通管 P = ${P().toFixed(1)} N/cm²`;
+  }
+  if (sc.measureText(pipeText).width > gap - 12) {
+    pipeText = `P = ${P().toFixed(1)} N/cm²`;
+  }
   sc.fillStyle = '#7cffb2';
-  sc.font = 'bold 12px system-ui';
   sc.textAlign = 'center';
-  sc.fillText(`水平連通管　壓力 P = ${P().toFixed(1)} N/cm² 均勻傳遞`, midX, midPipeY + (stroke > 0.05 ? 16 : 4));
+  sc.fillText(pipeText, midX, midPipeY + (stroke > 0.05 ? 14 : 4));
 
   // 8. 小活塞（左）
   const ph1 = 12;
@@ -386,19 +431,18 @@ function draw() {
   sc.lineWidth = 1.5;
   sc.strokeRect(x1L - 2, py1, w1 + 4, ph1);
 
-  // 小活塞連桿
   const rodW = Math.max(6, w1 * 0.22);
-  const rodTop1 = py1 - 45;
+  const rodTop1 = py1 - 40;
   sc.fillStyle = '#7b8d9f';
-  sc.fillRect(x1 - rodW / 2, rodTop1, rodW, 45);
+  sc.fillRect(x1 - rodW / 2, rodTop1, rodW, 40);
 
   // F1 向下施力箭頭
-  const L1 = Math.min(65, 24 + state.F1 * 0.26);
-  S.arrow(sc, x1, rodTop1 - L1, x1, rodTop1, { color: '#ff6b8b', width: 3.5 });
+  const L1 = Math.min(55, 20 + state.F1 * 0.24);
+  S.arrow(sc, x1, rodTop1 - L1, x1, rodTop1, { color: '#ff6b8b', width: 3.2 });
   sc.fillStyle = '#ff8fb0';
-  sc.font = 'bold 13px system-ui';
+  sc.font = (isNarrow ? 'bold 11px' : 'bold 13px') + ' system-ui';
   sc.textAlign = 'center';
-  sc.fillText(`F₁ = ${state.F1} N`, x1, rodTop1 - L1 - 7);
+  sc.fillText(`F₁ = ${state.F1} N`, x1, rodTop1 - L1 - 6);
 
   // 9. 大活塞（右）
   const ph2 = 14;
@@ -409,9 +453,9 @@ function draw() {
   sc.lineWidth = 1.5;
   sc.strokeRect(x2L - 3, py2, w2 + 6, ph2);
 
-  // 頂部負載物體
-  const loadW = Math.min(w2 * 0.88, w2 - 6);
-  const loadH = Math.min(34, Math.max(22, H * 0.065));
+  // 頂部負載
+  const loadW = Math.min(w2 * 0.88, w2 - 4);
+  const loadH = Math.min(32, Math.max(20, H * 0.065));
   const loadY = py2 - loadH;
   sc.fillStyle = '#3a4e69';
   roundRect(sc, x2 - loadW / 2, loadY, loadW, loadH, 5);
@@ -420,33 +464,34 @@ function draw() {
   sc.lineWidth = 1.5;
   sc.stroke();
 
+  const loadText = loadW < 52 ? `${F2().toFixed(0)} N` : `負載 ${F2().toFixed(0)} N`;
   sc.fillStyle = '#e5effc';
-  sc.font = 'bold 12px system-ui';
+  sc.font = (isNarrow ? 'bold 10px' : 'bold 11px') + ' system-ui';
   sc.textAlign = 'center';
-  sc.fillText(`負載 ${F2().toFixed(0)} N`, x2, loadY + loadH / 2 + 4);
+  sc.fillText(loadText, x2, loadY + loadH / 2 + 3.5);
 
   // F2 向上輸出力箭頭
-  const L2 = Math.min(75, 26 + Math.sqrt(F2()) * 1.8);
-  S.arrow(sc, x2, loadY, x2, loadY - L2, { color: '#4cc2ff', width: 4 });
+  const L2 = Math.min(65, 22 + Math.sqrt(F2()) * 1.6);
+  S.arrow(sc, x2, loadY, x2, loadY - L2, { color: '#4cc2ff', width: 3.5 });
   sc.fillStyle = '#6cd0ff';
-  sc.font = 'bold 13px system-ui';
+  sc.font = (isNarrow ? 'bold 11px' : 'bold 13px') + ' system-ui';
   sc.textAlign = 'center';
-  sc.fillText(`F₂ = ${F2().toFixed(0)} N`, x2, loadY - L2 - 7);
+  sc.fillText(`F₂ = ${F2().toFixed(0)} N`, x2, loadY - L2 - 6);
 
   // 10. 底部標示面積
   sc.fillStyle = '#ff8fb0';
-  sc.font = 'bold 13px system-ui';
+  sc.font = (isNarrow ? 'bold 11px' : 'bold 13px') + ' system-ui';
   sc.textAlign = 'center';
-  sc.fillText(`A₁ = ${state.A1} cm²`, x1, baseY + 20);
+  sc.fillText(`A₁ = ${state.A1} cm²`, x1, baseY + 18);
 
   sc.fillStyle = '#6cd0ff';
-  sc.fillText(`A₂ = ${state.A2} cm²`, x2, baseY + 20);
+  sc.fillText(`A₂ = ${state.A2} cm²`, x2, baseY + 18);
 
   // 11. 畫面註明位移放大倍率
   sc.fillStyle = '#ffce54';
-  sc.font = 'bold 12px system-ui';
+  sc.font = (isNarrow ? 'bold 10px' : 'bold 12px') + ' system-ui';
   sc.textAlign = 'center';
-  sc.fillText(`🔍 位移放大 ×${VIS_GAIN} 顯示，數值為實際值`, W / 2, topY - 12);
+  sc.fillText(`🔍 位移放大 ×${VIS_GAIN} 顯示，數值為實際值`, W / 2, topY - 10);
 }
 
 function roundRect(c, x, y, w, h, r) {
