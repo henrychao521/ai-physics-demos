@@ -1,0 +1,957 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>都卜勒效應與等比級數 ｜ 波前等差數列・反射牆頻率等比數列</title>
+<meta name="description" content="都卜勒效應與數列（等差・等比級數）：波前發出與抵達的等差數列對照，以及雙牆反射都卜勒頻率等比數列、無窮等比級數收斂與時空圖。">
+<link rel="icon" href="../assets/favicon.svg" type="image/svg+xml">
+<link rel="stylesheet" href="../assets/site.css">
+<script src="../assets/sim.js"></script>
+<script defer src="../assets/nav.js"></script>
+<style>
+  *{box-sizing:border-box}
+  html,body{margin:0;padding:0;background:var(--bg);color:var(--txt);font-family:"Noto Sans TC","PingFang TC","Microsoft JhengHei",system-ui,sans-serif}
+  a{color:var(--accent);text-decoration:none}
+  a:hover{text-decoration:underline}
+  .wrap{max-width:1120px;margin:0 auto;padding:18px 16px 60px}
+  header h1{font-size:1.5rem;margin:.2em 0}
+  header p{color:var(--muted);margin:.2em 0 1em;line-height:1.6}
+  .badge{display:inline-block;background:var(--panel2);border:1px solid var(--line);color:var(--muted);font-size:.72rem;padding:2px 8px;border-radius:99px;margin-right:6px}
+  
+  .scene-wrap{border-radius:14px;overflow:hidden;border:1px solid var(--line);background:#070b18;margin-bottom:14px;box-shadow:0 12px 36px rgba(0,0,0,.35)}
+  .cv-title{padding:9px 14px;font-size:.84rem;font-weight:600;color:var(--txt);background:var(--panel2);border-bottom:1px solid var(--line);display:flex;justify-content:space-between;align-items:center}
+  .cv-title span{color:var(--muted);font-size:.78rem;font-weight:normal}
+  canvas{display:block;width:100%;touch-action:none}
+  
+  .modes{display:flex;gap:10px;flex-wrap:wrap;align-items:center;margin:16px 0 10px}
+  .modes span{color:var(--muted);font-size:.85rem;font-weight:600}
+  .pbtn{background:var(--panel2);color:var(--txt);border:1px solid var(--line);padding:8px 16px;min-height:44px;border-radius:9px;cursor:pointer;font-size:.88rem;font-family:inherit;display:inline-flex;align-items:center;justify-content:center}
+  .pbtn:hover{border-color:var(--accent)}
+  .pbtn.on{background:var(--accent);color:#04121c;border-color:var(--accent);font-weight:700}
+  
+  .bar{display:flex;gap:14px;flex-wrap:wrap;align-items:flex-end;background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:14px 16px;margin-top:14px}
+  .sld{flex:1;min-width:160px}
+  .sld label{display:flex;justify-content:space-between;font-size:.82rem;color:var(--muted);margin-bottom:5px}
+  .sld label .v{color:var(--accent);font-variant-numeric:tabular-nums;font-weight:700}
+  .sld input{width:100%;accent-color:var(--accent);min-height:24px}
+  
+  .formula{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:16px 18px;margin-top:14px}
+  .formula h4{margin:0 0 12px;font-size:1rem;color:var(--txt)}
+  .frow{display:flex;flex-wrap:wrap;align-items:baseline;padding:6px 0;border-bottom:1px solid rgba(255,255,255,.06);font-size:.86rem;gap:8px}
+  .fname{color:var(--muted);min-width:160px;font-weight:600}
+  .fsym{color:#ffd166;font-family:monospace;min-width:160px}
+  .fsub{color:var(--muted);flex:1;min-width:200px;font-family:monospace}
+  .fval{color:var(--accent);font-weight:700;font-variant-numeric:tabular-nums;font-size:.95rem}
+  .frel{margin-top:10px;padding-top:10px;color:var(--muted);font-size:.84rem;line-height:1.7}
+  
+  .tbl-wrap{overflow-x:auto;-webkit-overflow-scrolling:touch;border:1px solid var(--line);border-radius:12px;background:var(--panel);margin-top:14px}
+  table{width:100%;border-collapse:collapse;font-size:.84rem;text-align:right}
+  th,td{padding:8px 12px;border-bottom:1px solid var(--line)}
+  th{background:var(--panel2);color:var(--txt);font-weight:600;white-space:nowrap}
+  td:first-child,th:first-child{text-align:center}
+  tr:last-child td{border-bottom:none}
+  
+  .note{background:var(--panel);border-left:3px solid var(--accent2);border-radius:8px;padding:12px 16px;color:var(--muted);font-size:.86rem;line-height:1.7;margin-top:14px}
+  .note b{color:var(--txt)}
+  .note code{background:var(--bg2);padding:2px 6px;border-radius:5px;color:var(--green);font-size:.9em}
+  .note h3{margin:0 0 10px;font-size:1rem;color:var(--txt)}
+  .note ul{margin:0;padding-left:20px}
+  .note li{margin-bottom:6px}
+  
+  footer{color:var(--muted);font-size:.8rem;margin-top:30px;text-align:center;line-height:1.8}
+</style>
+</head>
+<body data-demo="都卜勒效應與等比級數">
+<div class="wrap">
+  <header>
+    <span class="badge">波動・都卜勒・數列</span>
+    <h1>都卜勒效應與等比級數（波前等差數列・反射牆頻率等比數列）</h1>
+    <p>都卜勒效應不只是頻率公式，更蘊含了數學數列之美：單向移動波源的發出與接收時刻形成<b>等差數列</b>；而在相對逼近的雙反射牆之間，聲波的頻率、波長、兩牆距離與來回時間則構成精巧的<b>等比數列</b>與收斂的<b>無窮等比級數</b>。</p>
+  </header>
+
+  <!-- 演示視圖區 -->
+  <div id="viewA">
+    <div class="scene-wrap">
+      <div class="cv-title">模式 A：一維波前傳播與時刻對照圖 <span>發出時刻 tᵢ 與抵達時刻 tᵢ' 皆為等差數列</span></div>
+      <canvas id="cvA" style="width:100%;aspect-ratio:1.6"></canvas>
+    </div>
+  </div>
+
+  <div id="viewB" style="display:none">
+    <div class="scene-wrap">
+      <div class="cv-title">時空圖（Spacetime Diagram） <span>橫軸 x、縱軸 t 往下；聲脈衝鋸齒世界線隨反射越變越密</span></div>
+      <canvas id="cvB_st" style="width:100%;aspect-ratio:1.6"></canvas>
+    </div>
+    <div class="scene-wrap">
+      <div class="cv-title">兩牆波形即時動畫 <span>左側固定牆 vs 右側移動牆（波長 λₙ = c/fₙ 隨反射不斷被壓縮）</span></div>
+      <canvas id="cvB_wv" style="width:100%;aspect-ratio:2.4"></canvas>
+    </div>
+    <div class="scene-wrap">
+      <div class="cv-title">頻率成長折線圖（半對數座標） <span>精確等比數列在對數圖上成直線 vs 線性近似</span></div>
+      <canvas id="cvB_ch" style="width:100%;aspect-ratio:2.2"></canvas>
+    </div>
+    <div class="tbl-wrap">
+      <table id="dataTable"></table>
+    </div>
+  </div>
+
+  <!-- 模式切換按鈕（放在畫布下方） -->
+  <div class="modes">
+    <span>演示模式：</span>
+    <button id="btnModeA" class="pbtn on" onclick="switchMode('A')">A 等差：波前</button>
+    <button id="btnModeB" class="pbtn" onclick="switchMode('B')">B 等比：反射牆</button>
+  </div>
+
+  <!-- 滑桿控制列 -->
+  <div class="bar" id="slidersA"></div>
+  <div class="bar" id="slidersB" style="display:none"></div>
+
+  <!-- 計算公式（即時代入） -->
+  <div class="formula" id="formula"></div>
+
+  <!-- 物理重點 -->
+  <div class="note">
+    <b>物理重點：</b>等差數列（每個波峰間隔被壓縮成同一個比例）與等比數列（每次反射乘同一個公比）的差別；無窮多次反射卻在有限時間內完成＝收斂的無窮等比級數。
+  </div>
+
+  <!-- 精確與近似 -->
+  <div class="note" style="border-left-color:var(--accent)">
+    <h3>⚖️ 精確與近似（誠實的物理模型）</h3>
+    <ul>
+      <li><b>精確（在「介質靜止、一維、牆等速、完全反射」的前提下）：</b>
+        <ul>
+          <li>模式 A：發出時刻 tᵢ 與抵達時刻 tᵢ' 兩組嚴格排成等差數列，觀察頻率 <code>f' = f / (1 − v/c)</code> 為精確解。</li>
+          <li>模式 B：每次反射後的頻率 <code>fₙ = f₀ · kⁿ</code>、兩牆距離 <code>Dₙ = D₀ / kⁿ</code>、每趟來回時間 <code>Δtₙ</code> 皆為嚴格等比數列。</li>
+          <li>無窮等比級數和 <code>Σ Δtₙ = D₀ / u</code> 嚴格等於移動牆走完初始距離 D₀ 的時間。</li>
+          <li><b>守恆不變量：</b>兩牆之間的總波數 <code>N_waves = Dₙ / λₙ = Dₙ · fₙ / c = D₀ · f₀ / c</code> 恆定不變（即 <code>Dₙ · fₙ</code> 守恆）。</li>
+        </ul>
+      </li>
+      <li><b>近似：</b>
+        <ul>
+          <li>當牆速遠小於聲速（u ≪ c）時，公比 <code>k = (c+u)/(c−u) = (1+u/c)/(1−u/c) ≈ 1 + 2u/c</code>。</li>
+          <li>因此頻率可線性近似為 <code>fₙ ≈ f₀(1 + 2nu/c)</code>。但此近似<b>只在 n·u/c ≪ 1 時準確</b>；隨著反射次數 n 增加，誤差會越來越大（可參見上方數據表格的相對誤差）。</li>
+          <li>真實世界中，牆壁不可能達成 100% 完全反射，聲波在空氣中傳播亦會發散與黏滯吸收衰減。</li>
+        </ul>
+      </li>
+      <li><b>對光的推廣：</b>
+        <ul>
+          <li>鏡子以 u 移動時，狹義相對論中光反射後的頻率公比為 <code>(1+β)/(1−β)</code>（其中 β = u/c），與此處聲波的 <code>(c+u)/(c−u)</code> 形式完全一樣。</li>
+        </ul>
+      </li>
+    </ul>
+  </div>
+
+  <!-- 生活中的應用 -->
+  <div class="note" style="border-left-color:var(--green)">
+    <h3>🚗 生活中的應用：一次反射的都卜勒技術</h3>
+    <p style="margin:0;line-height:1.7">
+      警用雷達測速槍與醫學都卜勒超音波（測量血管紅血球流速）在工程上只利用<b>「一次反射」（n = 1）</b>：
+      <br>
+      目標物反射後的訊號頻率為 <code>f₁ = f₀ (c+u) / (c−u)</code>。
+      <br>
+      在目標速率遠小於波速（u ≪ c）的前提下，接收器將回波與發射波混頻產生拍頻（Beat frequency）測量頻率差：
+      <br>
+      <code>Δf = f₁ − f₀ = f₀ · [ (c+u)/(c−u) − 1 ] = f₀ · 2u/(c−u) ≈ (2u/c) · f₀</code>
+      <br>
+      因此儀器只要測出頻率差 Δf，就能瞬間反推出目標移動速度 <code>u ≈ c · Δf / (2f₀)</code>。
+    </p>
+  </div>
+
+  <footer>
+    <div style="margin-bottom:12px">
+      <a href="../doppler/">← 回到「都卜勒效應與音爆」</a>
+    </div>
+    純前端 HTML / Canvas（SIM 工具庫）· 波動物理與等比級數解析
+  </footer>
+</div>
+
+<script>
+/*PHYS:BEGIN*/
+// 有效數字格式（公式面板、數值卡共用；驗收會用同一個函式比對畫面上的數字）
+function fmtSig(v, n) {
+  n = n || 3;
+  if (typeof v !== 'number' || !isFinite(v)) return String(v);
+  if (v === 0) return '0';
+  const a = Math.abs(v);
+  if (a >= 1e5 || a < 1e-3) {
+    let e = Math.floor(Math.log10(a)), m = v / Math.pow(10, e);
+    let ms = m.toFixed(n - 1);
+    if (Math.abs(parseFloat(ms)) >= 10) { e += 1; ms = (v / Math.pow(10, e)).toFixed(n - 1); }
+    const SUP = { '-': '⁻', '0': '⁰', '1': '¹', '2': '²', '3': '³', '4': '⁴', '5': '⁵', '6': '⁶', '7': '⁷', '8': '⁸', '9': '⁹' };
+    return ms + '×10' + String(e).split('').map(ch => SUP[ch]).join('');
+  }
+  const s = Number(v.toPrecision(n));
+  return a >= Math.pow(10, n - 1) ? String(Math.round(s)) : s.toPrecision(n);
+}
+
+// 都卜勒效應與數列（一維、介質靜止、等速、完全反射）
+// (A) 等差數列：波源以 v 朝靜止的觀察者前進，每隔週期 T 發出一個波峰。第 i 個波峰在 tᵢ = iT、xᵢ = v·iT 發出（等差），
+//     抵達距離 D 處觀察者的時間 tᵢ' = iT + (D − v·iT)/c = D/c + i·T(1 − v/c)（也是等差，公差 T' = T(1 − v/c)），所以 f' = f/(1 − v/c)。這是精確結果。
+// (B) 等比數列：x = 0 是固定的反射牆（聲源與接收器也在這裡），另一面牆從距離 D₀ 以 u 等速靠近。
+//     波每撞一次移動牆，頻率乘上 k = (c+u)/(c−u)（觀察者靠近 × 波源靠近，兩次都卜勒），fₙ = f₀·kⁿ ——公比 k 的等比數列（精確）。
+//     兩牆距離 Dₙ = D₀·rⁿ、每趟來回時間 Δtₙ = 2Dₙ/(c+u)，r = (c−u)/(c+u) = 1/k，也是等比；
+//     來回時間的無窮等比級數和 Σ Δtₙ = D₀/u ——正好是移動牆走完 D₀ 的時間（無限多次反射發生在有限時間內）。
+//     光（鏡子以 u 移動）的相對論公式也是 (1+β)/(1−β)，形式相同。
+function emitArrivals(n, f, v, c, D) {
+  const T = 1 / f, out = [];
+  for (let i = 0; i < n; i++) { const te = i * T, xe = v * te; out.push({ te, xe, ta: te + (D - xe) / c }); }
+  return out;
+}
+function apparentFreq(f, v, c) { return f / (1 - v / c); }
+function reflectFactor(u, c) { return (c + u) / (c - u); }
+function reflectSeq(N, f0, u, c, D0) {
+  const k = reflectFactor(u, c), r = (c - u) / (c + u), f = [], D = [], dt = [], t = [];
+  for (let n = 0; n <= N; n++) { f.push(f0 * Math.pow(k, n)); D.push(D0 * Math.pow(r, n)); }
+  let acc = 0;
+  for (let n = 0; n < N; n++) { const d = 2 * D[n] / (c + u); dt.push(d); acc += d; t.push(acc); }
+  return { k, r, f, D, dt, t, tLimit: D0 / u };
+}
+// 近似：u ≪ c 時 k ≈ 1 + 2u/c，fₙ ≈ f₀(1 + 2nu/c)（只在 n·u/c ≪ 1 時準）
+function linearApprox(n, f0, u, c) { return f0 * (1 + 2 * n * u / c); }
+function geomSum(a, r, n) { return r === 1 ? a * n : a * (1 - Math.pow(r, n)) / (1 - r); }
+// 動畫用：時間 t 時波包（脈衝前緣）的位置、已反射次數、移動牆位置
+function pulseState(t, u, c, D0) {
+  let s = 0, D = D0, n = 0;
+  for (; n < 200; n++) {
+    const go = D / (c + u), back = go, rt = go + back;
+    if (t < s + rt) {
+      const tau = t - s;
+      const x = tau < go ? c * tau : c * go - c * (tau - go);
+      return { x, bounces: n, wall: D0 - u * t, outward: tau < go };
+    }
+    s += rt; D = D * (c - u) / (c + u);
+  }
+  return { x: 0, bounces: n, wall: Math.max(0, D0 - u * t), outward: true };
+}
+/*PHYS:END*/
+
+// 全域狀態物件
+const state = {
+  mode: 'A',
+  // 模式 A
+  f: 500,
+  v: 34,
+  c: 340,
+  D: 680,
+  // 模式 B
+  u: 17,
+  f0: 500,
+  D0: 10,
+  N: 8
+};
+window.state = state;
+
+const S = SIM;
+let cvA_ctx, cvB_st_ctx, cvB_wv_ctx, cvB_ch_ctx;
+
+// 滑桿配置
+const slidersA_def = [
+  { id: 'f', name: '波源頻率 f', min: 100, max: 1000, step: 10, unit: 'Hz' },
+  { id: 'v', name: '波源速率 v', min: 0, max: 150, step: 1, unit: 'm/s' },
+  { id: 'c', name: '聲速 c (固定)', min: 340, max: 340, step: 0, unit: 'm/s', fixed: true },
+  { id: 'D', name: '觀察者距離 D (固定)', min: 680, max: 680, step: 0, unit: 'm', fixed: true },
+];
+
+const slidersB_def = [
+  { id: 'u', name: '移動牆速率 u', min: 0, max: 100, step: 1, unit: 'm/s' },
+  { id: 'f0', name: '初始頻率 f₀', min: 100, max: 1000, step: 10, unit: 'Hz' },
+  { id: 'D0', name: '初始距離 D₀', min: 1, max: 50, step: 1, unit: 'm' },
+  { id: 'N', name: '顯示反射次數 N', min: 1, max: 20, step: 1, unit: '次' },
+];
+
+function buildSliders(containerId, defs) {
+  const container = document.getElementById(containerId);
+  container.innerHTML = '';
+  defs.forEach(s => {
+    const d = document.createElement('div');
+    d.className = 'sld';
+    d.innerHTML = `
+      <label>
+        <span>${s.name}</span>
+        <span class="v" id="v_${s.id}">${fmtSig(state[s.id], 3)} ${s.unit}</span>
+      </label>
+      <input type="range" id="r_${s.id}" min="${s.min}" max="${s.max}" step="${s.step}" value="${state[s.id]}" ${s.fixed ? 'disabled' : ''}>
+    `;
+    container.appendChild(d);
+    if (!s.fixed) {
+      d.querySelector('input').addEventListener('input', e => {
+        state[s.id] = parseFloat(e.target.value);
+        document.getElementById('v_' + s.id).textContent = `${fmtSig(state[s.id], 3)} ${s.unit}`;
+        refresh();
+      });
+    }
+  });
+}
+
+function switchMode(m) {
+  state.mode = m;
+  refresh();
+}
+
+function frow(n, sym, sub, val) {
+  return `<div class="frow"><span class="fname">${n}</span><span class="fsym">${sym}</span><span class="fsub">= ${sub}</span><span class="fval">${val}</span></div>`;
+}
+
+function updateFormula() {
+  const el = document.getElementById('formula');
+  if (state.mode === 'A') {
+    const T = 1 / state.f;
+    const Tprime = T * (1 - state.v / state.c);
+    const fprime = apparentFreq(state.f, state.v, state.c);
+    let h = `<h4>📐 計算公式（即時代入　模式 A：波前等差數列）</h4>`;
+    h += frow('發出週期 T', '1 / f', `1 / ${fmtSig(state.f, 3)}`, fmtSig(T, 3) + ' s');
+    h += frow('接收週期 T\'', 'T(1 − v/c)', `${fmtSig(T, 3)} × (1 − ${fmtSig(state.v, 3)} / ${fmtSig(state.c, 3)})`, fmtSig(Tprime, 3) + ' s');
+    h += frow('觀察頻率 f\'', 'f / (1 − v/c)', `${fmtSig(state.f, 3)} / (1 − ${fmtSig(state.v, 3)} / ${fmtSig(state.c, 3)})`, fmtSig(fprime, 3) + ' Hz');
+    h += `<div class="frel">📈 <b>等差數列結構：</b>波源於 tᵢ = i·T 發出波峰，時間間隔公差為 T；抵達距離 D 處之時間為 tᵢ' = D/c + i·T(1 − v/c)，亦為等差數列，公差被等比例壓縮為 T' = T(1 − v/c)。觀察頻率 f' = 1/T' = f / (1 − v/c)。這是精確的物理結果。</div>`;
+    el.innerHTML = h;
+  } else {
+    const k = reflectFactor(state.u, state.c);
+    const r = (state.c - state.u) / (state.c + state.u);
+    const a = 2 * state.D0 / (state.c + state.u);
+    const fN = state.f0 * Math.pow(k, state.N);
+    const DN = state.D0 / Math.pow(k, state.N);
+    const tLimit = state.D0 / state.u;
+    let h = `<h4>📐 計算公式（即時代入　模式 B：反射牆頻率等比數列）</h4>`;
+    h += frow('頻率公比 k', '(c + u) / (c − u)', `(${fmtSig(state.c, 3)} + ${fmtSig(state.u, 3)}) / (${fmtSig(state.c, 3)} − ${fmtSig(state.u, 3)})`, fmtSig(k, 3));
+    h += frow(`第 N 次反射頻率 f_${state.N}`, 'f₀ · kᴺ', `${fmtSig(state.f0, 3)} × (${fmtSig(k, 3)})^${state.N}`, fmtSig(fN, 3) + ' Hz');
+    h += frow(`第 N 次反射兩牆距離 D_${state.N}`, 'D₀ / kᴺ', `${fmtSig(state.D0, 3)} / (${fmtSig(k, 3)})^${state.N}`, fmtSig(DN, 3) + ' m');
+    h += frow('首趟來回時間 a', '2D₀ / (c + u)', `2 × ${fmtSig(state.D0, 3)} / (${fmtSig(state.c, 3)} + ${fmtSig(state.u, 3)})`, fmtSig(a, 3) + ' s');
+    h += frow('時間公比 r', '(c − u) / (c + u)', `(${fmtSig(state.c, 3)} − ${fmtSig(state.u, 3)}) / (${fmtSig(state.c, 3)} + ${fmtSig(state.u, 3)})`, fmtSig(r, 3));
+    h += frow('無窮級數和 Σ Δtₙ', 'a / (1 − r) → D₀ / u', `${fmtSig(a, 3)} / (1 − ${fmtSig(r, 3)}) = ${fmtSig(state.D0, 3)} / ${fmtSig(state.u, 3)}`, fmtSig(tLimit, 3) + ' s');
+    h += `<div class="frel">📈 <b>無窮等比級數收斂：</b>每次反射頻率乘以公比 k > 1，距離乘以 r = 1/k < 1，來回時間 Δtₙ 亦為公比 r 的等比數列。代入無窮等比級數公式 a/(1−r) = [2D₀/(c+u)] / [2u/(c+u)] = D₀/u，精確等於移動牆貼上固定牆的相遇時間！無窮多次反射在有限時間內完成。</div>`;
+    el.innerHTML = h;
+  }
+}
+
+function updateTable() {
+  const seq = reflectSeq(9, state.f0, state.u, state.c, state.D0);
+  let html = `<thead><tr>
+    <th>n</th>
+    <th>精確 fₙ (Hz)</th>
+    <th>線性近似 f₀(1+2nu/c) (Hz)</th>
+    <th>相對誤差</th>
+    <th>兩牆距離 Dₙ (m)</th>
+    <th>第 n 趟時間 Δtₙ (s)</th>
+    <th>累計時間 (s)</th>
+  </tr></thead><tbody>`;
+  for (let n = 0; n <= 8; n++) {
+    const fe = seq.f[n];
+    const fa = linearApprox(n, state.f0, state.u, state.c);
+    const err = Math.abs(fa - fe) / fe * 100;
+    const dn = seq.D[n];
+    const dt = seq.dt[n];
+    const tAcc = seq.t[n];
+    html += `<tr>
+      <td><b>${n}</b></td>
+      <td style="color:var(--accent)">${fmtSig(fe, 3)}</td>
+      <td style="color:#ffb02e">${fmtSig(fa, 3)}</td>
+      <td style="color:${err > 10 ? '#ff5470' : (err > 2 ? '#ffb02e' : 'var(--green)')}">${fmtSig(err, 3)}%</td>
+      <td>${fmtSig(dn, 3)}</td>
+      <td>${fmtSig(dt, 3)}</td>
+      <td>${fmtSig(tAcc, 3)}</td>
+    </tr>`;
+  }
+  html += `</tbody>`;
+  document.getElementById('dataTable').innerHTML = html;
+}
+
+function setupCanvases() {
+  if (state.mode === 'A') {
+    cvA_ctx = S.fit(document.getElementById('cvA'), 1.6);
+  } else {
+    cvB_st_ctx = S.fit(document.getElementById('cvB_st'), 1.6);
+    cvB_wv_ctx = S.fit(document.getElementById('cvB_wv'), 2.4);
+    cvB_ch_ctx = S.fit(document.getElementById('cvB_ch'), 2.2);
+  }
+}
+
+let animTimeA = 0, animTimeB = 0, lastTimestamp = 0;
+
+function refresh() {
+  // 同步模式切換狀態
+  if (state.mode === 'A') {
+    document.getElementById('btnModeA').classList.add('on');
+    document.getElementById('btnModeB').classList.remove('on');
+    document.getElementById('viewA').style.display = 'block';
+    document.getElementById('viewB').style.display = 'none';
+    document.getElementById('slidersA').style.display = 'flex';
+    document.getElementById('slidersB').style.display = 'none';
+  } else {
+    document.getElementById('btnModeB').classList.add('on');
+    document.getElementById('btnModeA').classList.remove('on');
+    document.getElementById('viewB').style.display = 'block';
+    document.getElementById('viewA').style.display = 'none';
+    document.getElementById('slidersB').style.display = 'flex';
+    document.getElementById('slidersA').style.display = 'none';
+  }
+
+  // 同步滑桿 UI 數值
+  ['f', 'v', 'c', 'D'].forEach(id => {
+    const el = document.getElementById('r_' + id);
+    if (el) el.value = state[id];
+    const lbl = document.getElementById('v_' + id);
+    if (lbl) {
+      const u = id === 'f' ? 'Hz' : (id === 'D' ? 'm' : 'm/s');
+      lbl.textContent = `${fmtSig(state[id], 3)} ${u}`;
+    }
+  });
+  ['u', 'f0', 'D0', 'N'].forEach(id => {
+    const el = document.getElementById('r_' + id);
+    if (el) el.value = state[id];
+    const lbl = document.getElementById('v_' + id);
+    if (lbl) {
+      const u = id === 'f0' ? 'Hz' : (id === 'D0' ? 'm' : (id === 'N' ? '次' : 'm/s'));
+      lbl.textContent = `${fmtSig(state[id], 3)} ${u}`;
+    }
+  });
+
+  setupCanvases();
+  updateFormula();
+  if (state.mode === 'B') updateTable();
+  draw();
+}
+
+function draw() {
+  if (state.mode === 'A') {
+    drawModeA();
+  } else {
+    drawModeB_Spacetime();
+    drawModeB_Wave();
+    drawModeB_Chart();
+  }
+}
+
+// ---------------- 模式 A 繪圖 ----------------
+function drawModeA() {
+  if (!cvA_ctx) return;
+  const ctx = cvA_ctx, W = ctx._w, H = ctx._h;
+  ctx.clearRect(0, 0, W, H);
+
+  // 背景
+  const bg = ctx.createLinearGradient(0, 0, 0, H);
+  bg.addColorStop(0, '#0c1430');
+  bg.addColorStop(1, '#050814');
+  ctx.fillStyle = bg;
+  ctx.fillRect(0, 0, W, H);
+
+  // 分隔線
+  ctx.strokeStyle = 'rgba(255,255,255,.08)';
+  ctx.lineWidth = 1;
+  ctx.beginPath();
+  ctx.moveTo(20, H * 0.48);
+  ctx.lineTo(W - 20, H * 0.48);
+  ctx.stroke();
+
+  // 上方：一維空間波前傳播
+  const topMid = H * 0.22;
+  const xLeft = 60, xRight = W - 70;
+  const trackW = xRight - xLeft;
+
+  // 標題
+  ctx.fillStyle = '#c9d6ea';
+  ctx.font = 'bold 13px system-ui';
+  ctx.fillText('一維空間傳播：波源（以 v 向右）與觀察者（距離 D = 680 m）', 24, 26);
+
+  // 軌道基準線
+  ctx.strokeStyle = 'rgba(255,255,255,.25)';
+  ctx.lineWidth = 2;
+  ctx.beginPath();
+  ctx.moveTo(xLeft, topMid);
+  ctx.lineTo(xRight, topMid);
+  ctx.stroke();
+
+  // 觀察者位置（xRight）
+  ctx.fillStyle = '#ffb02e';
+  ctx.beginPath();
+  ctx.arc(xRight, topMid, 8, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.fillStyle = '#ffb02e';
+  ctx.font = 'bold 12px system-ui';
+  ctx.fillText('觀察者 D', xRight - 22, topMid - 16);
+
+  // 8 個波峰資料
+  const arrivals = emitArrivals(8, state.f, state.v, state.c, state.D);
+  const T = 1 / state.f;
+  const Tprime = T * (1 - state.v / state.c);
+
+  // 視覺化映射：讓 8 個發出位置均勻分布於發出區域（佔軌道左側 25%）
+  // 波峰以 c 向右傳播至觀察者
+  const animDur = 5.0; // 5 秒循環
+  const tNorm = (animTimeA % animDur) / animDur; // 0..1
+  const tSim = tNorm * (arrivals[7].ta + 0.05);
+
+  // 波源發出區域跨度
+  const emitSpan = trackW * 0.26;
+  const emitStep = emitSpan / 7;
+
+  // 畫每個波峰的發出記號與波前
+  for (let i = 0; i < 8; i++) {
+    const xe = xLeft + i * emitStep;
+
+    // 發出位置記號
+    ctx.fillStyle = '#4cc2ff';
+    ctx.beginPath();
+    ctx.arc(xe, topMid, 4, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.font = '11px system-ui';
+    ctx.fillText(`${i}`, xe - 3, topMid + 16);
+
+    // 波前傳播位置
+    const te = arrivals[i].te;
+    if (tSim >= te) {
+      const travelDist = (tSim - te) / (arrivals[i].ta - te); // 0..1 到達觀察者
+      const xWave = xe + travelDist * (xRight - xe);
+
+      if (xWave <= xRight + 2) {
+        ctx.strokeStyle = 'rgba(108, 208, 255, 0.85)';
+        ctx.lineWidth = 2;
+        ctx.beginPath();
+        ctx.arc(xWave, topMid, 18, -Math.PI * 0.35, Math.PI * 0.35);
+        ctx.stroke();
+
+        ctx.fillStyle = 'rgba(108, 208, 255, 0.6)';
+        ctx.beginPath();
+        ctx.arc(xWave, topMid, 3, 0, Math.PI * 2);
+        ctx.fill();
+      }
+    }
+  }
+
+  // 目前波源位置
+  const sourceIndex = Math.min(7, Math.floor(tSim / T));
+  const sourceX = xLeft + Math.min(emitSpan, (tSim / arrivals[7].te) * emitSpan);
+  ctx.fillStyle = '#ff5470';
+  ctx.beginPath();
+  ctx.arc(sourceX, topMid, 9, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.fillStyle = '#fff';
+  ctx.font = 'bold 11px system-ui';
+  ctx.fillText('波源 v', sourceX - 16, topMid - 16);
+
+  // 下方：發出時刻 tᵢ 與抵達時刻 tᵢ' 對照
+  ctx.fillStyle = '#c9d6ea';
+  ctx.font = 'bold 13px system-ui';
+  ctx.fillText('時刻對照：兩排刻度與公差壓縮（斜線連線表示聲脈衝傳播途徑）', 24, H * 0.53);
+
+  const t1Y = H * 0.65;
+  const t2Y = H * 0.86;
+  const timeW = W - 150;
+  const tStart = 80;
+
+  // 上排軸：發出時刻 tᵢ
+  ctx.strokeStyle = 'rgba(255,255,255,.3)';
+  ctx.lineWidth = 1.5;
+  ctx.beginPath();
+  ctx.moveTo(tStart - 10, t1Y);
+  ctx.lineTo(tStart + timeW, t1Y);
+  ctx.stroke();
+  ctx.fillStyle = '#4cc2ff';
+  ctx.font = 'bold 12px system-ui';
+  ctx.fillText('發出 tᵢ', 24, t1Y + 4);
+
+  // 下排軸：抵達時刻 tᵢ'
+  ctx.beginPath();
+  ctx.moveTo(tStart - 10, t2Y);
+  ctx.lineTo(tStart + timeW, t2Y);
+  ctx.stroke();
+  ctx.fillStyle = '#7CFFB2';
+  ctx.fillText('抵達 tᵢ\'', 24, t2Y + 4);
+
+  const dtEmitPix = (timeW - 120) / 7;
+  // 壓縮比為 (1 - v/c)
+  const dtArrPix = dtEmitPix * (1 - state.v / state.c);
+  const arrOffset = 70; // 因傳播延遲 D/c，抵達軸整體右移
+
+  // 繪製兩排刻度與斜線
+  for (let i = 0; i < 8; i++) {
+    const x1 = tStart + i * dtEmitPix;
+    const x2 = tStart + arrOffset + i * dtArrPix;
+
+    // 上刻度
+    ctx.strokeStyle = '#4cc2ff';
+    ctx.lineWidth = 2;
+    ctx.beginPath();
+    ctx.moveTo(x1, t1Y - 6);
+    ctx.lineTo(x1, t1Y + 6);
+    ctx.stroke();
+    ctx.fillStyle = '#dce6ff';
+    ctx.font = '11px system-ui';
+    ctx.fillText(`t${i}`, x1 - 5, t1Y - 10);
+
+    // 下刻度
+    ctx.strokeStyle = '#7CFFB2';
+    ctx.beginPath();
+    ctx.moveTo(x2, t2Y - 6);
+    ctx.lineTo(x2, t2Y + 6);
+    ctx.stroke();
+    ctx.fillStyle = '#dce6ff';
+    ctx.fillText(`t${i}'`, x2 - 5, t2Y + 18);
+
+    // 連接斜線
+    ctx.strokeStyle = 'rgba(124, 200, 255, 0.45)';
+    ctx.lineWidth = 1.2;
+    ctx.beginPath();
+    ctx.moveTo(x1, t1Y + 6);
+    ctx.lineTo(x2, t2Y - 6);
+    ctx.stroke();
+  }
+
+  // 標註公差 T 與 T'
+  const x1_0 = tStart, x1_1 = tStart + dtEmitPix;
+  ctx.strokeStyle = '#ffd166';
+  ctx.lineWidth = 2;
+  ctx.beginPath();
+  ctx.moveTo(x1_0, t1Y + 18);
+  ctx.lineTo(x1_1, t1Y + 18);
+  ctx.stroke();
+  ctx.fillStyle = '#ffd166';
+  ctx.font = '11px system-ui';
+  ctx.fillText(`公差 T = ${fmtSig(T, 3)} s`, x1_0 + 8, t1Y + 32);
+
+  const x2_0 = tStart + arrOffset, x2_1 = x2_0 + dtArrPix;
+  ctx.strokeStyle = '#ffd166';
+  ctx.beginPath();
+  ctx.moveTo(x2_0, t2Y - 18);
+  ctx.lineTo(x2_1, t2Y - 18);
+  ctx.stroke();
+  ctx.fillText(`公差 T' = T(1−v/c) = ${fmtSig(Tprime, 3)} s`, x2_0 + 8, t2Y - 26);
+}
+
+// ---------------- 模式 B：時空圖 ----------------
+function drawModeB_Spacetime() {
+  if (!cvB_st_ctx) return;
+  const ctx = cvB_st_ctx, W = ctx._w, H = ctx._h;
+  ctx.clearRect(0, 0, W, H);
+
+  // 背景
+  ctx.fillStyle = '#070b18';
+  ctx.fillRect(0, 0, W, H);
+
+  const ml = 65, mr = 40, mt = 40, mb = 40;
+  const dw = W - ml - mr, dh = H - mt - mb;
+
+  const tLimit = state.D0 / state.u;
+  const tMax = tLimit * 1.12;
+  const xMax = state.D0 * 1.05;
+
+  const px = x => ml + (x / xMax) * dw;
+  const pt = t => mt + (t / tMax) * dh;
+
+  // 坐標軸
+  ctx.strokeStyle = 'rgba(255,255,255,.2)';
+  ctx.lineWidth = 1.2;
+  // X 軸（頂部）
+  ctx.beginPath();
+  ctx.moveTo(ml, mt);
+  ctx.lineTo(ml + dw, mt);
+  ctx.stroke();
+  ctx.fillStyle = '#8a99ad';
+  ctx.font = '12px system-ui';
+  ctx.fillText('距離 x (m) →', ml + dw - 60, mt - 12);
+
+  // T 軸（垂直向下）
+  ctx.beginPath();
+  ctx.moveTo(ml, mt);
+  ctx.lineTo(ml, mt + dh);
+  ctx.stroke();
+  ctx.fillText('時間 t (s) ↓', ml - 55, mt + 14);
+
+  // 固定牆世界線 (x = 0)
+  ctx.strokeStyle = '#4cc2ff';
+  ctx.lineWidth = 3;
+  ctx.beginPath();
+  ctx.moveTo(px(0), pt(0));
+  ctx.lineTo(px(0), pt(tMax));
+  ctx.stroke();
+  ctx.fillStyle = '#4cc2ff';
+  ctx.font = 'bold 12px system-ui';
+  ctx.fillText('固定牆 (x=0)', px(0) + 8, pt(0) + 16);
+
+  // 移動牆世界線 (x = D0 - ut)
+  ctx.strokeStyle = '#ff7a45';
+  ctx.lineWidth = 3;
+  ctx.beginPath();
+  ctx.moveTo(px(state.D0), pt(0));
+  ctx.lineTo(px(0), pt(tLimit));
+  ctx.stroke();
+  ctx.fillStyle = '#ff7a45';
+  ctx.fillText('移動牆 (x = D₀ − ut)', px(state.D0) - 120, pt(0) + 18);
+
+  // 奇點 tLimit 虛線
+  ctx.strokeStyle = 'rgba(255, 84, 112, 0.7)';
+  ctx.setLineDash([4, 4]);
+  ctx.beginPath();
+  ctx.moveTo(ml, pt(tLimit));
+  ctx.lineTo(ml + dw, pt(tLimit));
+  ctx.stroke();
+  ctx.setLineDash([]);
+  ctx.fillStyle = '#ff5470';
+  ctx.fillText(`兩牆重合 t = D₀/u (${fmtSig(tLimit, 3)} s)`, ml + 14, pt(tLimit) - 8);
+
+  // 聲脈衝世界線（鋸齒）
+  const N_bounces = Math.min(state.N, 14);
+  const seq = reflectSeq(N_bounces, state.f0, state.u, state.c, state.D0);
+
+  ctx.strokeStyle = '#7CFFB2';
+  ctx.lineWidth = 2;
+  ctx.beginPath();
+  ctx.moveTo(px(0), pt(0));
+
+  let prevT = 0;
+  for (let n = 0; n < N_bounces; n++) {
+    const dtGo = seq.dt[n] / 2;
+    const tHit = prevT + dtGo;
+    const xHit = state.c * dtGo;
+    const tRet = seq.t[n];
+
+    // 到移動牆
+    ctx.lineTo(px(xHit), pt(tHit));
+    // 回固定牆
+    ctx.lineTo(px(0), pt(tRet));
+    prevT = tRet;
+  }
+  ctx.stroke();
+
+  // 標註撞擊點 n=1, 2, 3...
+  prevT = 0;
+  for (let n = 0; n < N_bounces; n++) {
+    const dtGo = seq.dt[n] / 2;
+    const tHit = prevT + dtGo;
+    const xHit = state.c * dtGo;
+    prevT = seq.t[n];
+
+    const rx = px(xHit), ry = pt(tHit);
+    ctx.fillStyle = '#ffd166';
+    ctx.beginPath();
+    ctx.arc(rx, ry, 4, 0, Math.PI * 2);
+    ctx.fill();
+
+    if (n < 8) {
+      ctx.fillStyle = '#ffd166';
+      ctx.font = '11px system-ui';
+      ctx.fillText(`n=${n + 1}`, rx + 6, ry + 4);
+    }
+  }
+}
+
+// ---------------- 模式 B：兩牆波形即時動畫 ----------------
+function drawModeB_Wave() {
+  if (!cvB_wv_ctx) return;
+  const ctx = cvB_wv_ctx, W = ctx._w, H = ctx._h;
+  ctx.clearRect(0, 0, W, H);
+
+  ctx.fillStyle = '#070b18';
+  ctx.fillRect(0, 0, W, H);
+
+  const tLimit = state.D0 / state.u;
+  const loopDur = 7.0;
+  const pNorm = (animTimeB % loopDur) / loopDur;
+  const tCur = pNorm * (tLimit * 0.95);
+
+  const st = pulseState(tCur, state.u, state.c, state.D0);
+  const k = reflectFactor(state.u, state.c);
+  const curFreq = state.f0 * Math.pow(k, st.bounces);
+  const curWaveLen = state.c / curFreq;
+
+  const x0 = 70;
+  const trackW = W - 140;
+  const xWall = x0 + (st.wall / state.D0) * trackW;
+  const xPulse = x0 + (st.x / state.D0) * trackW;
+  const cy = H / 2 + 10;
+
+  // 頂部資訊字樣
+  ctx.fillStyle = '#c9d6ea';
+  ctx.font = '12px system-ui';
+  ctx.fillText(`反射次數 n = ${st.bounces} ｜ 牆距 D = ${fmtSig(st.wall, 3)} m ｜ 當前頻率 fₙ = ${fmtSig(curFreq, 3)} Hz ｜ 波長 λₙ = ${fmtSig(curWaveLen, 3)} m`, 20, 24);
+
+  // 左固定牆
+  ctx.fillStyle = '#1e385c';
+  ctx.fillRect(x0 - 24, cy - 45, 24, 90);
+  ctx.strokeStyle = '#4cc2ff';
+  ctx.lineWidth = 2;
+  ctx.strokeRect(x0 - 24, cy - 45, 24, 90);
+  ctx.fillStyle = '#4cc2ff';
+  ctx.font = 'bold 11px system-ui';
+  ctx.fillText('固定牆', x0 - 20, cy + 60);
+
+  // 右移動牆
+  ctx.fillStyle = '#5c2d1e';
+  ctx.fillRect(xWall, cy - 45, 24, 90);
+  ctx.strokeStyle = '#ff7a45';
+  ctx.lineWidth = 2;
+  ctx.strokeRect(xWall, cy - 45, 24, 90);
+  ctx.fillStyle = '#ff7a45';
+  ctx.fillText('移動牆', xWall + 2, cy + 60);
+
+  // 移動牆速度箭頭
+  ctx.strokeStyle = '#ff7a45';
+  ctx.lineWidth = 2;
+  ctx.beginPath();
+  ctx.moveTo(xWall + 12, cy - 54);
+  ctx.lineTo(xWall - 16, cy - 54);
+  ctx.stroke();
+  ctx.beginPath();
+  ctx.moveTo(xWall - 16, cy - 54);
+  ctx.lineTo(xWall - 8, cy - 58);
+  ctx.lineTo(xWall - 8, cy - 50);
+  ctx.closePath();
+  ctx.fillStyle = '#ff7a45';
+  ctx.fill();
+  ctx.font = '11px system-ui';
+  ctx.fillText(`u = ${state.u} m/s`, xWall - 60, cy - 60);
+
+  // 兩牆之間的聲波正弦波（波長 λₙ = c / fₙ）
+  const waveSpan = Math.max(5, xWall - x0);
+  // 隨反射次數提升視覺波數，直觀體會波越擠越密
+  const baseCycles = 3;
+  const visualCycles = Math.min(50, baseCycles * Math.pow(k, st.bounces));
+
+  ctx.strokeStyle = st.bounces % 2 === 0 ? '#7CFFB2' : '#ffd166';
+  ctx.lineWidth = 2.5;
+  ctx.beginPath();
+  for (let px = x0; px <= xWall; px += 2) {
+    const normX = (px - x0) / waveSpan;
+    const y = cy + 26 * Math.sin(normX * visualCycles * Math.PI * 2 - animTimeB * 14);
+    if (px === x0) ctx.moveTo(px, y); else ctx.lineTo(px, y);
+  }
+  ctx.stroke();
+
+  // 聲脈衝前緣點
+  ctx.fillStyle = '#ff5470';
+  ctx.beginPath();
+  ctx.arc(xPulse, cy, 6, 0, Math.PI * 2);
+  ctx.fill();
+}
+
+// ---------------- 模式 B：對數折線圖 ----------------
+function drawModeB_Chart() {
+  if (!cvB_ch_ctx) return;
+  const ctx = cvB_ch_ctx, W = ctx._w, H = ctx._h;
+  ctx.clearRect(0, 0, W, H);
+
+  ctx.fillStyle = '#070b18';
+  ctx.fillRect(0, 0, W, H);
+
+  const ml = 75, mr = 35, mt = 35, mb = 45;
+  const dw = W - ml - mr, dh = H - mt - mb;
+
+  const N = state.N;
+  const seq = reflectSeq(N, state.f0, state.u, state.c, state.D0);
+
+  const fMin = state.f0;
+  const fMax = seq.f[N];
+  const logMin = Math.log10(fMin) - 0.05;
+  const logMax = Math.log10(fMax) + 0.15;
+
+  const px = n => ml + (n / N) * dw;
+  const py = f => mt + dh - ((Math.log10(f) - logMin) / (logMax - logMin)) * dh;
+
+  // 網格與 Y 軸標籤（對數刻度）
+  ctx.strokeStyle = 'rgba(255,255,255,.08)';
+  ctx.lineWidth = 1;
+  const yTicks = [fMin, fMin * 2, fMin * 5, fMin * 10, fMin * 20, fMin * 50, fMax];
+  yTicks.forEach(val => {
+    if (val >= fMin && val <= fMax * 1.05) {
+      const y = py(val);
+      ctx.beginPath();
+      ctx.moveTo(ml, y);
+      ctx.lineTo(ml + dw, y);
+      ctx.stroke();
+      ctx.fillStyle = '#8a99ad';
+      ctx.font = '11px system-ui';
+      ctx.fillText(`${fmtSig(val, 3)} Hz`, ml - 68, y + 4);
+    }
+  });
+
+  // X 軸（n）
+  ctx.strokeStyle = 'rgba(255,255,255,.3)';
+  ctx.beginPath();
+  ctx.moveTo(ml, mt + dh);
+  ctx.lineTo(ml + dw, mt + dh);
+  ctx.stroke();
+  for (let n = 0; n <= N; n++) {
+    const x = px(n);
+    ctx.beginPath();
+    ctx.moveTo(x, mt + dh);
+    ctx.lineTo(x, mt + dh + 5);
+    ctx.stroke();
+    ctx.fillStyle = '#8a99ad';
+    ctx.font = '11px system-ui';
+    ctx.fillText(`${n}`, x - 4, mt + dh + 18);
+  }
+  ctx.fillText('反射次數 n →', ml + dw - 70, mt + dh + 34);
+
+  // 精確等比曲線（在對數軸上為嚴格直線）
+  ctx.strokeStyle = '#4cc2ff';
+  ctx.lineWidth = 2.5;
+  ctx.beginPath();
+  for (let n = 0; n <= N; n++) {
+    const x = px(n), y = py(seq.f[n]);
+    if (n === 0) ctx.moveTo(x, y); else ctx.lineTo(x, y);
+  }
+  ctx.stroke();
+  // 標記點
+  for (let n = 0; n <= N; n++) {
+    ctx.fillStyle = '#4cc2ff';
+    ctx.beginPath();
+    ctx.arc(px(n), py(seq.f[n]), 4, 0, Math.PI * 2);
+    ctx.fill();
+  }
+
+  // 線性近似曲線 f₀(1+2nu/c)（在對數軸上彎曲向下，誤差增大）
+  ctx.strokeStyle = '#ffb02e';
+  ctx.lineWidth = 2;
+  ctx.setLineDash([5, 4]);
+  ctx.beginPath();
+  for (let n = 0; n <= N; n++) {
+    const fa = linearApprox(n, state.f0, state.u, state.c);
+    const x = px(n), y = py(fa);
+    if (n === 0) ctx.moveTo(x, y); else ctx.lineTo(x, y);
+  }
+  ctx.stroke();
+  ctx.setLineDash([]);
+  for (let n = 0; n <= N; n++) {
+    const fa = linearApprox(n, state.f0, state.u, state.c);
+    ctx.fillStyle = '#ffb02e';
+    ctx.fillRect(px(n) - 3, py(fa) - 3, 6, 6);
+  }
+
+  // 圖例
+  ctx.fillStyle = '#4cc2ff';
+  ctx.beginPath();
+  ctx.arc(ml + 16, mt + 14, 4, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.font = '12px system-ui';
+  ctx.fillText('精確值 f₀ · kⁿ（等比數列，對數軸上為直線）', ml + 28, mt + 18);
+
+  ctx.fillStyle = '#ffb02e';
+  ctx.fillRect(ml + 12, mt + 34, 7, 7);
+  ctx.fillText('線性近似 f₀(1 + 2nu/c)（n·u/c 增大時嚴重低估）', ml + 28, mt + 42);
+}
+
+// 動畫循環
+function animLoop(timestamp) {
+  if (!lastTimestamp) lastTimestamp = timestamp;
+  const dt = Math.min((timestamp - lastTimestamp) / 1000, 0.1);
+  lastTimestamp = timestamp;
+  animTimeA += dt;
+  animTimeB += dt;
+  draw();
+  requestAnimationFrame(animLoop);
+}
+
+window.addEventListener('load', () => {
+  buildSliders('slidersA', slidersA_def);
+  buildSliders('slidersB', slidersB_def);
+  refresh();
+  requestAnimationFrame(animLoop);
+});
+
+window.addEventListener('resize', () => {
+  setupCanvases();
+  draw();
+});
+</script>
+</body>
+</html>

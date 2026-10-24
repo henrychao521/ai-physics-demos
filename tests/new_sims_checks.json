@@ -1,0 +1,1125 @@
+[
+ {
+  "slug": "current-magnetism-3d",
+  "name": "有限長直導線（長 2 m）在 r=5 cm 的磁場大小與方向（+x 處 B 指向 −z）",
+  "js": "const B=segB([0.05,0,0],[0,-1,0],[0,1,0],5);return B;",
+  "expect": [
+   0.0,
+   0.0,
+   -1.9975046777556896e-05
+  ],
+  "tol": 1e-09,
+  "rel": false,
+  "ref": "B=μ₀I/(4πd)(cosθ₁−cosθ₂)"
+ },
+ {
+  "slug": "current-magnetism-3d",
+  "name": "長直導線近似 μ₀I/2πr（L=40 m、r=3 cm）",
+  "js": "return vlen(fieldAt([0.03,0,0],{kind:'wire',I:8,dir:1,L:40}));",
+  "expect": 5.333333333333334e-05,
+  "tol": 1e-05,
+  "rel": true,
+  "ref": "B=μ₀I/2πr"
+ },
+ {
+  "slug": "current-magnetism-3d",
+  "name": "圓線圈中心（180 邊形）＝ μ₀I·n·tan(π/n)/(2πR)",
+  "js": "return fieldAt([0,0,0],{kind:'loop',I:3,dir:1,R:0.04})[0];",
+  "expect": 4.7128675306187475e-05,
+  "tol": 1e-09,
+  "rel": true,
+  "ref": "多邊形線圈中心精確值；n→∞ 為 μ₀I/2R"
+ },
+ {
+  "slug": "current-magnetism-3d",
+  "name": "圓線圈中心接近 μ₀I/2R（誤差 < 0.02%）",
+  "js": "return fieldAt([0,0,0],{kind:'loop',I:3,dir:1,R:0.04})[0];",
+  "expect": 4.712388980384689e-05,
+  "tol": 0.0002,
+  "rel": true,
+  "ref": "B=μ₀I/2R"
+ },
+ {
+  "slug": "current-magnetism-3d",
+  "name": "電流反向 → 圓線圈中心磁場反向",
+  "js": "return fieldAt([0,0,0],{kind:'loop',I:3,dir:-1,R:0.04})[0];",
+  "expect": -4.7128675306187475e-05,
+  "tol": 1e-09,
+  "rel": true,
+  "ref": "右手定則"
+ },
+ {
+  "slug": "current-magnetism-3d",
+  "name": "螺線管中心（10 匝、長 20 cm、半徑 3 cm）：頁面解析式 vs Python 數值積分",
+  "js": "return fieldAt([0,0,0],{kind:'solenoid',I:2,dir:1,R:0.03,len:0.2,turns:10});",
+  "expect": [
+   0.0001203893975002208,
+   -4.6648850644927996e-21,
+   1.009602650015122e-06
+  ],
+  "tol": 0.0001,
+  "rel": false,
+  "ref": "必歐-沙伐數值積分"
+ },
+ {
+  "slug": "current-magnetism-3d",
+  "name": "螺線管中心接近有限長公式 μ₀NI/√(L²+4R²)（誤差 < 2%）",
+  "js": "return fieldAt([0,0,0],{kind:'solenoid',I:2,dir:1,R:0.03,len:0.2,turns:10})[0];",
+  "expect": 0.00012036400084263885,
+  "tol": 0.02,
+  "rel": true,
+  "ref": "有限長螺線管中心"
+ },
+ {
+  "slug": "current-magnetism-3d",
+  "name": "指南針 N 極方向＝磁場單位向量",
+  "js": "return needleDir([0,3e-5,-4e-5]);",
+  "expect": [
+   0,
+   0.6,
+   -0.8
+  ],
+  "tol": 1e-12,
+  "rel": false,
+  "ref": ""
+ },
+ {
+  "slug": "emwave-3d",
+  "name": "線偏振 30°：E 與 B 分量（B=ẑ×E/c）",
+  "js": "const r=waveFields(0.07,1.3e-10,1e9,{E0:10,pol:'linear',angle:30});return [...r.E,...r.B];",
+  "expect": [
+   6.892833659994362,
+   3.9795793690770567,
+   0,
+   -1.3274447915154213e-08,
+   2.2992018231473863e-08,
+   0
+  ],
+  "tol": 1e-12,
+  "rel": false,
+  "ref": "E⊥B⊥k、|B|=|E|/c"
+ },
+ {
+  "slug": "emwave-3d",
+  "name": "E·B = 0、|B| = |E|/c、(E×B)·ẑ > 0（圓偏振，任意時刻）",
+  "js": "const r=waveFields(0.31,2.7e-10,1e9,{E0:7,pol:'circular',hand:1});const E=r.E,B=r.B;const dot=E[0]*B[0]+E[1]*B[1]+E[2]*B[2];const S=E[0]*B[1]-E[1]*B[0];return [dot, Math.hypot(...B)*C0/Math.hypot(...E), S>0?1:0];",
+  "expect": [
+   0,
+   1,
+   1
+  ],
+  "tol": 1e-12,
+  "rel": false,
+  "ref": ""
+ },
+ {
+  "slug": "emwave-3d",
+  "name": "波長 λ=c/f（2.45 GHz 微波）",
+  "js": "return waveNumbers(2.45e9).lambda;",
+  "expect": 0.12236426857142857,
+  "tol": 1e-12,
+  "rel": true,
+  "ref": "c=λf"
+ },
+ {
+  "slug": "emwave-3d",
+  "name": "強度 I=½cε₀E₀²（線偏振 E₀=100 V/m）",
+  "js": "return intensity({E0:100,pol:'linear',angle:0});",
+  "expect": 13.272093639964782,
+  "tol": 1e-12,
+  "rel": true,
+  "ref": ""
+ },
+ {
+  "slug": "emwave-3d",
+  "name": "偏振片：線偏振 0° 入射、透射軸 60° → cos²60° = 0.25（馬呂斯定律）",
+  "js": "return polarizerOut({E0:1,pol:'linear',angle:0},60).ratio;",
+  "expect": 0.25,
+  "tol": 1e-12,
+  "rel": false,
+  "ref": "I=I₀cos²θ"
+ },
+ {
+  "slug": "emwave-3d",
+  "name": "偏振片：圓偏振入射 → 任何角度都剩一半",
+  "js": "return [polarizerOut({E0:1,pol:'circular',hand:1},0).ratio,polarizerOut({E0:1,pol:'circular',hand:-1},73).ratio];",
+  "expect": [
+   0.5,
+   0.5
+  ],
+  "tol": 1e-12,
+  "rel": false,
+  "ref": ""
+ },
+ {
+  "slug": "emwave-3d",
+  "name": "偏振片：橢圓偏振（短長軸比 0.5）透射軸 40°",
+  "js": "return polarizerOut({E0:1,pol:'elliptical',ratio:0.5,hand:1},40).ratio;",
+  "expect": 0.552094453300079,
+  "tol": 1e-12,
+  "rel": false,
+  "ref": ""
+ },
+ {
+  "slug": "emwave-3d",
+  "name": "可見光 550 nm 的光子能量 E=hf（eV）",
+  "js": "return photonEnergyEV(C0/550e-9);",
+  "expect": 2.254258153330914,
+  "tol": 1e-12,
+  "rel": true,
+  "ref": "E=hf"
+ },
+ {
+  "slug": "induction-3d",
+  "name": "ε = −N dΦ/dt（z=-0.04 m、v=0.5 m/s，Python 用數值微分）",
+  "js": "return emfAt(-0.04,0.5,200,1.2,0.03);",
+  "expect": -0.026057626107244405,
+  "tol": 1e-06,
+  "rel": true,
+  "ref": "法拉第定律"
+ },
+ {
+  "slug": "induction-3d",
+  "name": "ε = −N dΦ/dt（z=0.02 m、v=0.5 m/s，Python 用數值微分）",
+  "js": "return emfAt(0.02,0.5,200,1.2,0.03);",
+  "expect": 0.06681846483889466,
+  "tol": 1e-06,
+  "rel": true,
+  "ref": "法拉第定律"
+ },
+ {
+  "slug": "induction-3d",
+  "name": "ε = −N dΦ/dt（z=0.0 m、v=0.5 m/s，Python 用數值微分）",
+  "js": "return emfAt(0.0,0.5,200,1.2,0.03);",
+  "expect": -0.0,
+  "tol": 1e-06,
+  "rel": false,
+  "ref": "法拉第定律"
+ },
+ {
+  "slug": "induction-3d",
+  "name": "ε = −N dΦ/dt（z=0.05 m、v=-1.0 m/s，Python 用數值微分）",
+  "js": "return emfAt(0.05,-1.0,200,1.2,0.03);",
+  "expect": -0.03020143550979394,
+  "tol": 1e-06,
+  "rel": true,
+  "ref": "法拉第定律"
+ },
+ {
+  "slug": "induction-3d",
+  "name": "線圈中心的單匝磁通量 μ₀m/(2a)",
+  "js": "return fluxDipole(0,1.2,0.03);",
+  "expect": 2.5132741228718347e-05,
+  "tol": 1e-12,
+  "rel": true,
+  "ref": ""
+ },
+ {
+  "slug": "induction-3d",
+  "name": "冷次定律：N 極朝上的磁鐵從下方靠近（磁通增加）→ 從上往下看順時針（−1）、感應磁場朝下",
+  "js": "const r=lenzInfo(-0.04,0.5,1.2,0.03);return [r.sense, r.inducedB, emfAt(-0.04,0.5,200,1.2,0.03)<0?1:0];",
+  "expect": [
+   -1,
+   -1,
+   1
+  ],
+  "tol": 0,
+  "rel": false,
+  "ref": "冷次定律"
+ },
+ {
+  "slug": "induction-3d",
+  "name": "冷次定律：穿過中心後遠離（磁通減少）→ 逆時針（+1）",
+  "js": "return lenzInfo(0.04,0.5,1.2,0.03).sense;",
+  "expect": 1,
+  "tol": 0,
+  "rel": false,
+  "ref": ""
+ },
+ {
+  "slug": "induction-3d",
+  "name": "等速穿越全程 ∫ε dt = −N·ΔΦ（梯形積分）",
+  "js": "let s=0;const n=20000,dt=(0.25-(-0.3))/0.8/n;for(let i=0;i<n;i++){const za=-0.3+0.8*i*dt,zb=za+0.8*dt;s+=0.5*(emfAt(za,0.8,200,1.2,0.03)+emfAt(zb,0.8,200,1.2,0.03))*dt;}return s;",
+  "expect": -3.549500072412083e-06,
+  "tol": 1e-06,
+  "rel": true,
+  "ref": ""
+ },
+ {
+  "slug": "induction-3d",
+  "name": "自由落下 0.2 s 後的位置與速度",
+  "js": "const r=magnetMotion('drop',0.2,{z0:0.3,g:9.8});return [r.z,r.v];",
+  "expect": [
+   0.10399999999999998,
+   -1.9600000000000002
+  ],
+  "tol": 1e-12,
+  "rel": false,
+  "ref": ""
+ },
+ {
+  "slug": "doppler-geometric",
+  "name": "波前抵達時間是等差數列，公差 T(1−v/c)",
+  "js": "const a=emitArrivals(6,500,34,340,680);return a.map(o=>o.ta);",
+  "expect": [
+   2.0,
+   2.0018,
+   2.0036,
+   2.0054,
+   2.0071999999999997,
+   2.009
+  ],
+  "tol": 1e-12,
+  "rel": true,
+  "ref": "tᵢ'=D/c+iT(1−v/c)"
+ },
+ {
+  "slug": "doppler-geometric",
+  "name": "f' = f/(1−v/c)",
+  "js": "return apparentFreq(500,34,340);",
+  "expect": 555.5555555555555,
+  "tol": 1e-12,
+  "rel": true,
+  "ref": ""
+ },
+ {
+  "slug": "doppler-geometric",
+  "name": "每次反射乘上 k=(c+u)/(c−u)：f₀…f₅",
+  "js": "return reflectSeq(5,500,17,340,10).f;",
+  "expect": [
+   500.0,
+   552.6315789473684,
+   610.8033240997231,
+   675.0984108470625,
+   746.1614014625427,
+   824.7047068796526
+  ],
+  "tol": 1e-12,
+  "rel": true,
+  "ref": "等比數列"
+ },
+ {
+  "slug": "doppler-geometric",
+  "name": "第 1–8 趟回到固定牆的時刻（Python 逐趟模擬）",
+  "js": "return reflectSeq(8,500,17,340,10).t;",
+  "expect": [
+   0.056022408963585436,
+   0.1067093504068294,
+   0.15256896409357396,
+   0.19406099552443806,
+   0.2316014049142675,
+   0.2655665372193513,
+   0.296296895019189,
+   0.32410055207618504
+  ],
+  "tol": 1e-12,
+  "rel": true,
+  "ref": ""
+ },
+ {
+  "slug": "doppler-geometric",
+  "name": "無窮等比級數：來回時間總和 → D₀/u",
+  "js": "const r=reflectSeq(400,500,17,340,10);return [r.t[r.t.length-1], r.tLimit];",
+  "expect": [
+   0.5882352941176471,
+   0.5882352941176471
+  ],
+  "tol": 1e-09,
+  "rel": true,
+  "ref": "Σ=a/(1−r)"
+ },
+ {
+  "slug": "doppler-geometric",
+  "name": "線性近似 f₀(1+2nu/c) 在 n=10 時比精確值小（誤差隨 n 變大）",
+  "js": "const e=reflectSeq(10,500,17,340,10).f[10];return [linearApprox(10,500,17,340), e];",
+  "expect": [
+   1000.0,
+   1360.2757070989076
+  ],
+  "tol": 1e-12,
+  "rel": true,
+  "ref": ""
+ },
+ {
+  "slug": "doppler-geometric",
+  "name": "牆距 × 頻率 不變（Dₙ·fₙ = D₀·f₀）",
+  "js": "const r=reflectSeq(6,500,17,340,10);return r.D.map((d,i)=>d*r.f[i]);",
+  "expect": [
+   5000.0,
+   5000.0,
+   5000.0,
+   5000.0,
+   5000.0,
+   5000.0,
+   5000.0
+  ],
+  "tol": 1e-12,
+  "rel": true,
+  "ref": "Dₙ/λₙ 不變"
+ },
+ {
+  "slug": "doppler-geometric",
+  "name": "等比級數公式 a(1−rⁿ)/(1−r)",
+  "js": "return geomSum(2,0.5,10);",
+  "expect": 3.99609375,
+  "tol": 1e-12,
+  "rel": true,
+  "ref": ""
+ },
+ {
+  "slug": "stirling-engine",
+  "name": "理想史特靈循環 回熱器效率 1.0：W、Qh、η",
+  "js": "const r=stirlingIdeal({n:0.05,Th:600,Tc:300,Vmin:1e-4,Vmax:2e-4,cvR:1.5,regen:1.0});return [r.W,r.Qh,r.eta];",
+  "expect": [
+   86.44719482306643,
+   172.89438964613285,
+   0.5
+  ],
+  "tol": 1e-12,
+  "rel": true,
+  "ref": "W=nR(Th−Tc)ln r"
+ },
+ {
+  "slug": "stirling-engine",
+  "name": "理想史特靈循環 回熱器效率 0.0：W、Qh、η",
+  "js": "const r=stirlingIdeal({n:0.05,Th:600,Tc:300,Vmin:1e-4,Vmax:2e-4,cvR:1.5,regen:0.0});return [r.W,r.Qh,r.eta];",
+  "expect": [
+   86.44719482306643,
+   359.9697985511329,
+   0.240151243718261
+  ],
+  "tol": 1e-12,
+  "rel": true,
+  "ref": "W=nR(Th−Tc)ln r"
+ },
+ {
+  "slug": "stirling-engine",
+  "name": "理想史特靈循環 回熱器效率 0.6：W、Qh、η",
+  "js": "const r=stirlingIdeal({n:0.05,Th:600,Tc:300,Vmin:1e-4,Vmax:2e-4,cvR:1.5,regen:0.6});return [r.W,r.Qh,r.eta];",
+  "expect": [
+   86.44719482306643,
+   247.72455320813287,
+   0.34896498430833917
+  ],
+  "tol": 1e-12,
+  "rel": true,
+  "ref": "W=nR(Th−Tc)ln r"
+ },
+ {
+  "slug": "stirling-engine",
+  "name": "完美回熱 → 效率 = 卡諾 1−Tc/Th",
+  "js": "const r=stirlingIdeal({n:0.05,Th:600,Tc:300,Vmin:1e-4,Vmax:2e-4,cvR:1.5,regen:1});return [r.eta, r.etaCarnot];",
+  "expect": [
+   0.5,
+   0.5
+  ],
+  "tol": 1e-12,
+  "rel": true,
+  "ref": ""
+ },
+ {
+  "slug": "stirling-engine",
+  "name": "能量守恆 Qh − Qc = W（回熱器 0.3）",
+  "js": "const r=stirlingIdeal({n:0.05,Th:600,Tc:300,Vmin:1e-4,Vmax:2e-4,cvR:2.5,regen:0.3});return r.Qh-r.Qc-r.W;",
+  "expect": 0,
+  "tol": 1e-09,
+  "rel": false,
+  "ref": ""
+ },
+ {
+  "slug": "stirling-engine",
+  "name": "四個狀態點的壓力 P=nRT/V",
+  "js": "return stirlingIdeal({n:0.05,Th:600,Tc:300,Vmin:1e-4,Vmax:2e-4,cvR:1.5,regen:1}).states.map(s=>s.P);",
+  "expect": [
+   2494338.7854,
+   1247169.3927,
+   623584.69635,
+   1247169.3927
+  ],
+  "tol": 1e-12,
+  "rel": true,
+  "ref": ""
+ },
+ {
+  "slug": "stirling-engine",
+  "name": "施密特分析：一圈的功 ∮PdV（Python 用辛普森法、解析 dV/dθ）",
+  "js": "return schmidtWork({VD:1e-4,VP:1e-4,Vdh:2e-5,Vdc:2e-5,Vr:1e-5},0.01,600,300,2000);",
+  "expect": 4.106457240656323,
+  "tol": 0.0001,
+  "rel": true,
+  "ref": ""
+ },
+ {
+  "slug": "stirling-engine",
+  "name": "施密特分析：功為正（引擎），且小於同溫度、同壓縮比的理想史特靈循環",
+  "js": "const g={VD:1e-4,VP:1e-4,Vdh:2e-5,Vdc:2e-5,Vr:1e-5};const W=schmidtWork(g,0.01,600,300,2000);let vmin=1,vmax=0;for(let i=0;i<720;i++){const V=schmidtVolumes(i/720*2*Math.PI,g).V;vmin=Math.min(vmin,V);vmax=Math.max(vmax,V);}const Wi=stirlingIdeal({n:0.01,Th:600,Tc:300,Vmin:vmin,Vmax:vmax,cvR:1.5,regen:1}).W;return [W>0?1:0, W<Wi?1:0];",
+  "expect": [
+   1,
+   1
+  ],
+  "tol": 0,
+  "rel": false,
+  "ref": ""
+ },
+ {
+  "slug": "thermal-conductivity",
+  "name": "物性表（Çengel & Ghajar 附錄）k 值：銅…空氣",
+  "js": "return ['cu','al','fe','ss','ice','glass','water','oak','pine','eps','air'].map(i=>matById(i).k);",
+  "expect": [
+   401,
+   237,
+   80.2,
+   14.9,
+   1.88,
+   0.7,
+   0.607,
+   0.17,
+   0.15,
+   0.04,
+   0.02551
+  ],
+  "tol": 0,
+  "rel": true,
+  "ref": "表 A-3、A-6、A-8、A-9、A-15"
+ },
+ {
+  "slug": "thermal-conductivity",
+  "name": "傅立葉定律 q=kAΔT/L：銅、木（A=1 cm²、ΔT=100 K、L=10 cm）",
+  "js": "return [fourierFlux(401,1e-4,100,0.1), fourierFlux(0.17,1e-4,100,0.1)];",
+  "expect": [
+   40.099999999999994,
+   0.017
+  ],
+  "tol": 1e-12,
+  "rel": true,
+  "ref": ""
+ },
+ {
+  "slug": "thermal-conductivity",
+  "name": "銅與橡木的熱流比 = k 比 ≈ 2360 倍",
+  "js": "return fourierFlux(401,1,1,1)/fourierFlux(0.17,1,1,1);",
+  "expect": 2358.8235294117644,
+  "tol": 1e-12,
+  "rel": true,
+  "ref": ""
+ },
+ {
+  "slug": "thermal-conductivity",
+  "name": "熱擴散率 α=k/(ρc)：銅、水",
+  "js": "return [diffusivity(matById('cu')), diffusivity(matById('water'))];",
+  "expect": [
+   0.00011659671348465706,
+   1.456522678082093e-07
+  ],
+  "tol": 1e-12,
+  "rel": true,
+  "ref": ""
+ },
+ {
+  "slug": "thermal-conductivity",
+  "name": "接觸溫度：37 °C 的水（近似手指）碰 20 °C 的銅",
+  "js": "return contactTemp(matById('water'),37,matById('cu'),20);",
+  "expect": 20.69817620321439,
+  "tol": 1e-12,
+  "rel": true,
+  "ref": "Tc=(e₁T₁+e₂T₂)/(e₁+e₂)"
+ },
+ {
+  "slug": "thermal-conductivity",
+  "name": "接觸溫度：37 °C 的水（近似手指）碰 20 °C 的橡木",
+  "js": "return contactTemp(matById('water'),37,matById('oak'),20);",
+  "expect": 33.12179965572408,
+  "tol": 1e-12,
+  "rel": true,
+  "ref": "Tc=(e₁T₁+e₂T₂)/(e₁+e₂)"
+ },
+ {
+  "slug": "thermal-conductivity",
+  "name": "銅棒（10 cm）30 秒後中點溫度：差分 vs 級數解（誤差 < 0.3 °C）",
+  "js": "let T=new Array(41).fill(0);T[0]=100;T=rodAdvance(T,matById('cu'),0.1,30,100,0);return T[20];",
+  "expect": 47.9836334159278,
+  "tol": 0.3,
+  "rel": false,
+  "ref": "傅立葉級數解"
+ },
+ {
+  "slug": "thermal-conductivity",
+  "name": "級數解函式本身（銅、中點、30 秒）",
+  "js": "return rodExact(0.05,30,matById('cu'),0.1,100,0,400);",
+  "expect": 47.9836334159278,
+  "tol": 1e-09,
+  "rel": true,
+  "ref": ""
+ },
+ {
+  "slug": "thermal-conductivity",
+  "name": "橡木棒 30 秒後中點仍接近 0 °C（< 0.01 °C）",
+  "js": "let T=new Array(41).fill(0);T[0]=100;T=rodAdvance(T,matById('oak'),0.1,30,100,0);return T[20];",
+  "expect": 0.0,
+  "tol": 0.01,
+  "rel": false,
+  "ref": ""
+ },
+ {
+  "slug": "thermal-conductivity",
+  "name": "特徵時間 L²/α：10 cm 銅約 85 s、橡木約 21 小時",
+  "js": "return [diffusionTime(matById('cu'),0.1), diffusionTime(matById('oak'),0.1)];",
+  "expect": [
+   85.76571072319203,
+   76460.29411764706
+  ],
+  "tol": 1e-12,
+  "rel": true,
+  "ref": ""
+ },
+ {
+  "slug": "voltage-multiplier",
+  "name": "共振時 V_C = Q·Vs（L=10 mH、C=1 μF、R=5 Ω、Vs=2 V）",
+  "js": "const r=rlcSeries(2,1591.5494309189535,5,10e-3,1e-6);return [r.VC, r.Q, r.f0];",
+  "expect": [
+   40.0,
+   20.0,
+   1591.5494309189535
+  ],
+  "tol": 1e-09,
+  "rel": true,
+  "ref": "V_C=Q·Vs"
+ },
+ {
+  "slug": "voltage-multiplier",
+  "name": "偏離共振（f=0.8f₀、1.3f₀）時的 V_C（Python 複數阻抗）",
+  "js": "return [rlcSeries(2,1273.2395447351628,5,10e-3,1e-6).VC, rlcSeries(2,2069.0142601946395,5,10e-3,1e-6).VC];",
+  "expect": [
+   5.521576303742327,
+   2.885774556334216
+  ],
+  "tol": 1e-09,
+  "rel": true,
+  "ref": ""
+ },
+ {
+  "slug": "voltage-multiplier",
+  "name": "暫態從 0 開始，足夠久後振幅趨近 Q·Vs（誤差 < 2%）",
+  "js": "const r=rlcTransient(2,1591.5494309189535,5,10e-3,1e-6,0.05,4000);let m=0;for(let i=Math.floor(r.vc.length*0.8);i<r.vc.length;i++)m=Math.max(m,Math.abs(r.vc[i]));return m;",
+  "expect": 40.0,
+  "tol": 0.02,
+  "rel": true,
+  "ref": "包絡時間常數 2L/R"
+ },
+ {
+  "slug": "voltage-multiplier",
+  "name": "半波倍壓（1 級）空載：多個週期後輸出 → 2Vp",
+  "js": "return cwRun(1,{Vp:10,f:50,C:100e-6,Vf:0},40,400).st.v[1];",
+  "expect": 20.0,
+  "tol": 0.01,
+  "rel": true,
+  "ref": "Villard／Greinacher"
+ },
+ {
+  "slug": "voltage-multiplier",
+  "name": "3 級 Cockcroft–Walton 空載 → 6Vp",
+  "js": "return cwRun(3,{Vp:10,f:50,C:100e-6,Vf:0},200,400).st.v[5];",
+  "expect": 60.0,
+  "tol": 0.02,
+  "rel": true,
+  "ref": "2n·Vp"
+ },
+ {
+  "slug": "voltage-multiplier",
+  "name": "1 級倍壓、二極體壓降 0.7 V：空載 → 2(Vp − 0.7)",
+  "js": "return cwRun(1,{Vp:10,f:50,C:100e-6,Vf:0.7},60,400).st.v[1];",
+  "expect": 18.6,
+  "tol": 0.01,
+  "rel": true,
+  "ref": ""
+ },
+ {
+  "slug": "voltage-multiplier",
+  "name": "2 級、負載 20 kΩ：穩態平均輸出 vs 近似式 2nVp − ΔV（誤差 < 10%）",
+  "js": "const r=cwRun(2,{Vp:10,f:1000,C:10e-6,RL:20000,Vf:0},300,200);const o=r.out.slice(-2000);return o.reduce((a,b)=>a+b,0)/o.length;",
+  "expect": 38.64734299516908,
+  "tol": 0.1,
+  "rel": true,
+  "ref": "ΔV≈(I/fC)(2n³/3+n²/2−n/6)"
+ },
+ {
+  "slug": "voltage-multiplier",
+  "name": "近似式函式 cwDrop、cwRipple",
+  "js": "return [cwDrop(1e-3,1000,10e-6,2), cwRipple(1e-3,1000,10e-6,2)];",
+  "expect": [
+   0.7000000000000001,
+   0.30000000000000004
+  ],
+  "tol": 1e-12,
+  "rel": true,
+  "ref": ""
+ },
+ {
+  "slug": "motor-130",
+  "name": "六個轉角的總力矩（Python 獨立取樣電刷接觸）",
+  "js": "return [0.3,1.1,2.0,2.9,4.4,5.6].map(t=>motorState(t,{},1).torque);",
+  "expect": [
+   4.387975974340563,
+   4.010433120276459,
+   4.091838420715567,
+   4.322245957373083,
+   4.282209332502821,
+   4.442818824154947
+  ],
+  "tol": 1e-09,
+  "rel": false,
+  "ref": "τ=Σ−mₖB sinφₖ"
+ },
+ {
+  "slug": "motor-130",
+  "name": "一圈內力矩永遠為正（換向器讓轉向不變）：最小值 > 0",
+  "js": "return Math.min(...torqueCurve({},1,720).map(p=>p[1]))>0?1:0;",
+  "expect": 1,
+  "tol": 0,
+  "rel": false,
+  "ref": ""
+ },
+ {
+  "slug": "motor-130",
+  "name": "電源反接 → 力矩反向",
+  "js": "return [0.3,2.0,4.4].map(t=>motorState(t,{},-1).torque);",
+  "expect": [
+   -4.387975974340563,
+   -4.091838420715567,
+   -4.282209332502821
+  ],
+  "tol": 1e-09,
+  "rel": false,
+  "ref": ""
+ },
+ {
+  "slug": "motor-130",
+  "name": "一圈平均力矩（取 701 點，避開恰好落在換向邊界的角度）",
+  "js": "const c=torqueCurve({},1,701);return c.reduce((a,p)=>a+p[1],0)/c.length;",
+  "expect": 4.422652536431556,
+  "tol": 1e-06,
+  "rel": true,
+  "ref": ""
+ },
+ {
+  "slug": "astable",
+  "name": "555：t_H=ln2(R1+R2)C、t_L=ln2·R2·C、f",
+  "js": "const r=ne555(1000,10000,10e-6);return [r.tH,r.tL,r.f,r.duty];",
+  "expect": [
+   0.076246189861594,
+   0.06931471805599453,
+   6.86997638518554,
+   0.5238095238095238
+  ],
+  "tol": 1e-12,
+  "rel": true,
+  "ref": "TI NE555 資料手冊"
+ },
+ {
+  "slug": "astable",
+  "name": "555：近似式 1.44/((R1+2R2)C) 與精確值差 < 0.2%",
+  "js": "const r=ne555(1000,10000,10e-6);return r.fApprox/r.f;",
+  "expect": 1.0,
+  "tol": 0.002,
+  "rel": true,
+  "ref": "1/ln2=1.4427"
+ },
+ {
+  "slug": "astable",
+  "name": "555 波形：穩態後相鄰兩次上升沿的間隔 = 週期（取樣誤差內）",
+  "js": "const s=sim555(1000,10000,10e-6,9,1.2,24000);const up=[];for(let i=1;i<s.out.length;i++)if(s.out[i]>s.out[i-1])up.push(s.t[i]);return up[up.length-1]-up[up.length-2];",
+  "expect": 0.14556090791758852,
+  "tol": 0.002,
+  "rel": true,
+  "ref": ""
+ },
+ {
+  "slug": "astable",
+  "name": "555 電容電壓在 Vcc/3 與 2Vcc/3 之間擺動（第一次充電後）",
+  "js": "const s=sim555(1000,10000,10e-6,9,1.2,24000);const v=s.vc.slice(6000);return [Math.min(...v),Math.max(...v)];",
+  "expect": [
+   3.0,
+   6.0
+  ],
+  "tol": 0.005,
+  "rel": true,
+  "ref": ""
+ },
+ {
+  "slug": "astable",
+  "name": "雙電晶體：半週期 R_B·C·ln((2Vcc−V_BE)/(Vcc−V_BE))",
+  "js": "const r=bjtAstable(47000,10e-6,47000,22e-6,9,0.65);return [r.t1,r.t2,r.f];",
+  "expect": [
+   0.7561962204261277,
+   0.34372555473914895,
+   0.9091555623123634
+  ],
+  "tol": 1e-12,
+  "rel": true,
+  "ref": "RC 指數充電"
+ },
+ {
+  "slug": "astable",
+  "name": "雙電晶體：Vcc ≫ V_BE 時半週期 ≈ 0.693·R_B·C",
+  "js": "const r=bjtAstable(47000,10e-6,47000,10e-6,1000,0.65);return r.t1/r.t1Approx;",
+  "expect": 1.0,
+  "tol": 0.001,
+  "rel": true,
+  "ref": ""
+ },
+ {
+  "slug": "refraction-multilayer",
+  "name": "四個界面的折射角（空氣→水→玻璃→水→空氣，入射 40°）",
+  "js": "return snellChain([1.0003,1.33,1.52,1.33,1.0003],40).angles;",
+  "expect": [
+   40.0,
+   28.910574088965745,
+   25.024985989409195,
+   28.910574088965745,
+   39.99999999999999
+  ],
+  "tol": 1e-09,
+  "rel": true,
+  "ref": "n·sinθ 不變"
+ },
+ {
+  "slug": "refraction-multilayer",
+  "name": "平行多層：出射角＝入射角（頭尾同介質）",
+  "js": "const r=snellChain([1,1.33,1.52,2.42,1],55);return r.angles[r.angles.length-1];",
+  "expect": 55.0,
+  "tol": 1e-09,
+  "rel": true,
+  "ref": ""
+ },
+ {
+  "slug": "refraction-multilayer",
+  "name": "玻璃→水→空氣 入射 60°：在哪個界面全反射（1.52·sin60°=1.316 < 1.33，過了水；> 1.0003 → 第 1 號界面）",
+  "js": "return snellChain([1.52,1.33,1.0003],60).tir;",
+  "expect": 1,
+  "tol": 0,
+  "rel": false,
+  "ref": ""
+ },
+ {
+  "slug": "refraction-multilayer",
+  "name": "臨界角：水→空氣、鑽石→空氣",
+  "js": "return [criticalDeg(1.33,1.0003), criticalDeg(2.42,1.0003)];",
+  "expect": [
+   48.77307284420772,
+   24.415269016323933
+  ],
+  "tol": 1e-09,
+  "rel": true,
+  "ref": "sinθc=n₂/n₁"
+ },
+ {
+  "slug": "refraction-multilayer",
+  "name": "菲涅耳反射率：空氣→玻璃 0°（4.3%）與 60°",
+  "js": "return [fresnelR(1,1.52,0), fresnelR(1,1.52,60)];",
+  "expect": [
+   0.042579994960947345,
+   0.09248270530035495
+  ],
+  "tol": 1e-09,
+  "rel": true,
+  "ref": ""
+ },
+ {
+  "slug": "optical-fiber",
+  "name": "NA=√(n1²−n2²)（1.50／1.40）與接受角",
+  "js": "return [fiberNA(1.5,1.4), acceptDeg(1.5,1.4,1)];",
+  "expect": [
+   0.5385164807134506,
+   32.58270625514922
+  ],
+  "tol": 1e-12,
+  "rel": true,
+  "ref": "NA=√(n₁²−n₂²)"
+ },
+ {
+  "slug": "optical-fiber",
+  "name": "NA 0.14（單模光纖典型）接受半角約 8°",
+  "js": "return acceptDeg(Math.sqrt(1.4436**2+0.14**2),1.4436,1);",
+  "expect": 8.047846247311517,
+  "tol": 1e-09,
+  "rel": true,
+  "ref": ""
+ },
+ {
+  "slug": "optical-fiber",
+  "name": "入射 10°：纖芯折射角、界面入射角、是否全反射",
+  "js": "const r=fiberRay(1,1.5,1.4,10);return [r.thetaCore,r.incidence,r.tir?1:0];",
+  "expect": [
+   6.647777092828615,
+   83.35222290717138,
+   1
+  ],
+  "tol": 1e-09,
+  "rel": true,
+  "ref": ""
+ },
+ {
+  "slug": "optical-fiber",
+  "name": "入射 25°：纖芯折射角、界面入射角、是否全反射",
+  "js": "const r=fiberRay(1,1.5,1.4,25);return [r.thetaCore,r.incidence,r.tir?1:0];",
+  "expect": [
+   16.36440972864499,
+   73.63559027135501,
+   1
+  ],
+  "tol": 1e-09,
+  "rel": true,
+  "ref": ""
+ },
+ {
+  "slug": "optical-fiber",
+  "name": "入射 40°：纖芯折射角、界面入射角、是否全反射",
+  "js": "const r=fiberRay(1,1.5,1.4,40);return [r.thetaCore,r.incidence,r.tir?1:0];",
+  "expect": [
+   25.373993939179407,
+   64.6260060608206,
+   0
+  ],
+  "tol": 1e-09,
+  "rel": true,
+  "ref": ""
+ },
+ {
+  "slug": "optical-fiber",
+  "name": "接受角邊界與全反射判斷一致（θa 內 tir、θa 外不 tir）",
+  "js": "const a=acceptDeg(1.5,1.4,1);return [fiberRay(1,1.5,1.4,a-0.01).tir?1:0, fiberRay(1,1.5,1.4,a+0.01).tir?1:0];",
+  "expect": [
+   1,
+   0
+  ],
+  "tol": 0,
+  "rel": false,
+  "ref": ""
+ },
+ {
+  "slug": "optical-fiber",
+  "name": "dB ↔ 穿透率：0.02 dB、0.3 dB",
+  "js": "return [dBtoT(0.02), dBtoT(0.3), TtodB(0.5)];",
+  "expect": [
+   0.995405417351527,
+   0.933254300796991,
+   3.010299956639812
+  ],
+  "tol": 1e-12,
+  "rel": true,
+  "ref": "T=10^(−dB/10)"
+ },
+ {
+  "slug": "optical-fiber",
+  "name": "對芯偏移 1 μm、MFD 9.2 μm 的損耗（高斯模態）",
+  "js": "return offsetLossDB(1,9.2);",
+  "expect": 0.20524313889567666,
+  "tol": 1e-12,
+  "rel": true,
+  "ref": "Marcuse 1977"
+ },
+ {
+  "slug": "optical-fiber",
+  "name": "鏈路預算：10 km×0.5 dB/km ＋ 4 個接續點×0.3 ＋ 2 個連接器×0.75",
+  "js": "return linkBudget(10,0.5,4,0.3,2,0.75);",
+  "expect": 7.7,
+  "tol": 1e-12,
+  "rel": true,
+  "ref": "TIA-568 上限值"
+ },
+ {
+  "slug": "bridge-resonance",
+  "name": "穩態振幅曲線（f=1.5、2.0、2.4 Hz，F0=74×280 N）",
+  "js": "return [1.5,2.0,2.4].map(f=>bridgeAmp(f,74*280,40000,2,0.01));",
+  "expect": [
+   0.007493364619800184,
+   0.1640136660210343,
+   0.007444100992606493
+  ],
+  "tol": 1e-12,
+  "rel": true,
+  "ref": "X=(F0/K)/√((1−r²)²+(2ζr)²)"
+ },
+ {
+  "slug": "bridge-resonance",
+  "name": "共振峰 F0/(2ζK)",
+  "js": "return resonancePeakAmp(74*280,40000,2,0.01);",
+  "expect": 0.1640136660210343,
+  "tol": 1e-12,
+  "rel": true,
+  "ref": ""
+ },
+ {
+  "slug": "bridge-resonance",
+  "name": "齊步走 74 人、步頻＝自然頻率：模擬 60 s 後振幅接近穩態 F0/(2ζK)（誤差 < 3%）",
+  "js": "const pp=makeCrowd(74,2,true);const r=simulateBridge({M:40000,fn:2,zeta:0.01},pp,60,0.002,false);return maxAbs(r.x,Math.floor(r.x.length*0.9));",
+  "expect": 0.1639264940658684,
+  "tol": 0.03,
+  "rel": true,
+  "ref": "暫態 1−e^(−ζωt)"
+ },
+ {
+  "slug": "bridge-resonance",
+  "name": "便步走（隨機相位、步頻散布 5%）：最大振幅遠小於齊步走（< 30%）",
+  "js": "const a=simulateBridge({M:40000,fn:2,zeta:0.01},makeCrowd(74,2,true),40,0.002,false);const b=simulateBridge({M:40000,fn:2,zeta:0.01},makeCrowd(74,2,false,0.05,7),40,0.002,false);return maxAbs(b.x)/maxAbs(a.x)<0.3?1:0;",
+  "expect": 1,
+  "tol": 0,
+  "rel": false,
+  "ref": "√N 對 N"
+ },
+ {
+  "slug": "bridge-resonance",
+  "name": "同相時總力振幅 = N×280 N；側向每人 35 N、頻率為步頻一半",
+  "js": "const p=makeCrowd(10,2,true);return [crowdForce(0.125,p,false), crowdForce(0.25,p,true)];",
+  "expect": [
+   2800.0,
+   350.0
+  ],
+  "tol": 1e-09,
+  "rel": true,
+  "ref": "Sétra 2006"
+ },
+ {
+  "slug": "nd-filter",
+  "name": "T=10^(−OD)：OD 0.3、0.9、3.0",
+  "js": "return [ndT(0.3),ndT(0.9),ndT(3)];",
+  "expect": [
+   0.5011872336272722,
+   0.12589254117941673,
+   0.001
+  ],
+  "tol": 1e-12,
+  "rel": true,
+  "ref": ""
+ },
+ {
+  "slug": "nd-filter",
+  "name": "ND1000：OD=3、約 10 級（log₂1000）",
+  "js": "const r=ndFromFactor(1000);return [r.od,r.stops];",
+  "expect": [
+   3.0,
+   9.965784284662087
+  ],
+  "tol": 1e-12,
+  "rel": true,
+  "ref": ""
+ },
+ {
+  "slug": "nd-filter",
+  "name": "疊片 OD 相加、T 相乘（0.3＋0.9）",
+  "js": "const r=stackOD([0.3,0.9]);return [r.od,r.T];",
+  "expect": [
+   1.2,
+   0.06309573444801932
+  ],
+  "tol": 1e-12,
+  "rel": true,
+  "ref": ""
+ },
+ {
+  "slug": "nd-filter",
+  "name": "馬呂斯定律 I=I₀cos²θ（θ=30°、60°）",
+  "js": "return [malus(1,30),malus(1,60)];",
+  "expect": [
+   0.75,
+   0.25
+  ],
+  "tol": 1e-12,
+  "rel": true,
+  "ref": ""
+ },
+ {
+  "slug": "nd-filter",
+  "name": "兩片偏振片當可變 ND：非偏振光、夾角 70°",
+  "js": "const r=crossedND(1,70);return [r.T,r.od];",
+  "expect": [
+   0.058488889220255524,
+   1.2329266263729466
+  ],
+  "tol": 1e-12,
+  "rel": true,
+  "ref": "(I₀/2)cos²θ"
+ },
+ {
+  "slug": "nd-filter",
+  "name": "快門補償：1/100 s 加 OD 3.0 → 10 s",
+  "js": "return shutterAfter(0.01,3);",
+  "expect": 10.0,
+  "tol": 1e-12,
+  "rel": true,
+  "ref": ""
+ },
+ {
+  "slug": "nd-filter",
+  "name": "理想 ND 的穿透光譜各波長相同",
+  "js": "const s=spectrumND(0.6,[400,500,600,700]);return Math.max(...s)-Math.min(...s);",
+  "expect": 0.0,
+  "tol": 1e-15,
+  "rel": false,
+  "ref": ""
+ },
+ {
+  "slug": "mass-energy-anim",
+  "name": "互毀：兩個 0.511 MeV 光子、波長 2.43 pm（康普頓波長）",
+  "js": "const r=annihilation(0);return [r.Egamma, r.lambda];",
+  "expect": [
+   0.51099895,
+   2.4263102301873616e-12
+  ],
+  "tol": 1e-09,
+  "rel": true,
+  "ref": "λ=hc/E"
+ },
+ {
+  "slug": "mass-energy-anim",
+  "name": "成對產生門檻 1.022 MeV、γ=2 MeV 時正負電子共分動能",
+  "js": "const a=pairCreation(1.0),b=pairCreation(2.0);return [a.possible?1:0,b.possible?1:0,b.KEtot];",
+  "expect": [
+   0,
+   1,
+   0.9780021000000001
+  ],
+  "tol": 1e-09,
+  "rel": true,
+  "ref": ""
+ },
+ {
+  "slug": "mass-energy-anim",
+  "name": "pp I 各步 Q 值（MeV）：0.420、5.49、12.86",
+  "js": "const q=ppQ();return [q.pp,q.dp,q.he];",
+  "expect": [
+   0.4202213778592545,
+   5.493475291092727,
+   12.859579750985443
+  ],
+  "tol": 1e-09,
+  "rel": true,
+  "ref": "AME2020"
+ },
+ {
+  "slug": "mass-energy-anim",
+  "name": "總能量 26.73 MeV = (4m_H − m_He)c²；質量的 0.71%",
+  "js": "const q=ppQ();return [q.total,q.totalFromMass,q.fraction];",
+  "expect": [
+   26.730968888889407,
+   26.730968888889407,
+   0.00711851588540409
+  ],
+  "tol": 1e-09,
+  "rel": true,
+  "ref": ""
+ },
+ {
+  "slug": "mass-energy-anim",
+  "name": "太陽每秒：質量減少 L/c²、反應次數、消耗氫",
+  "js": "const s=sunBudget();return [s.massLoss,s.reactionsPerSec,s.hydrogenPerSec];",
+  "expect": [
+   4259224414.5732517,
+   9.118936341002061e+37,
+   610433576547.646
+  ],
+  "tol": 1e-09,
+  "rel": true,
+  "ref": "IAU 2015 B3 L☉"
+ }
+]
