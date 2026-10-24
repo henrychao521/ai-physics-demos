@@ -3,8 +3,8 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>偏振與馬呂士定律 ｜ I=I₀cos²θ・起偏器/檢偏器</title>
-<meta name="description" content="光的偏振互動模擬：自然光通過起偏器變成線偏振光（強度減半），再通過檢偏器時，穿透強度遵守馬呂士定律 I=I₀cos²θ。兩偏振片夾角 90°（正交）時完全變暗；在正交兩片之間插入第三片卻又能透光。">
+<title>偏振與馬呂斯定律 ｜ I=I₀cos²θ・起偏器/檢偏器</title>
+<meta name="description" content="光的偏振互動模擬：自然光通過起偏器變成線偏振光（強度減半），再通過檢偏器時，穿透強度遵守馬呂斯定律 I=I₀cos²θ。兩偏振片夾角 90°（正交）時完全變暗；在正交兩片之間插入第三片卻又能透光。">
 <link rel="icon" href="../assets/favicon.svg" type="image/svg+xml">
 <link rel="stylesheet" href="../assets/site.css">
 <script src="../assets/sim.js"></script>
@@ -41,13 +41,13 @@
   footer{color:var(--muted);font-size:.78rem;margin-top:24px;text-align:center;line-height:1.7}
 </style>
 </head>
-<body data-demo="偏振與馬呂士定律">
+<body data-demo="偏振與馬呂斯定律">
 <div class="wrap">
   <header>
     <span class="badge">光學・偏振</span>
-    <h1>偏振與馬呂士定律</h1>
+    <h1>偏振與馬呂斯定律（Malus’s law）</h1>
     <p>光是橫波，電場可朝各方向振動。<b>自然光</b>通過<b>起偏器</b>後只剩單一方向（線偏振，強度剩一半）。
-       再通過<b>檢偏器</b>時，只有沿其穿透軸的分量能過，強度遵守<b>馬呂士定律 I = I₀cos²θ</b>：θ=0°最亮、<b>θ=90°（正交）全暗</b>。</p>
+       再通過<b>檢偏器</b>時，只有沿其穿透軸的分量能過，強度遵守<b>馬呂斯定律 I = I₀cos²θ</b>：θ=0°最亮、<b>θ=90°（正交）全暗</b>。</p>
   </header>
 
   <div class="scene-wrap">
@@ -71,7 +71,7 @@
 
   <div class="note">
     <b>物理重點：</b>自然光各方向振動均勻，通過<b>起偏器</b>後只留下沿其軸的分量，強度變一半（I₀＝入射的 ½）。
-    線偏振光再遇<b>檢偏器</b>（軸與前者夾角 θ）時，電場沿軸的分量為 E₀cosθ，強度正比於振幅平方 → <code>I = I₀cos²θ</code>（馬呂士定律）。
+    線偏振光再遇<b>檢偏器</b>（軸與前者夾角 θ）時，電場沿軸的分量為 E₀cosθ，強度正比於振幅平方 → <code>I = I₀cos²θ</code>（馬呂斯定律）。
     θ=0° 全透、θ=90° 全擋（兩片正交＝消光）。<b>三片悖論</b>：把兩片調成正交（暗），在中間插入一片 45° 的偏振片，光<b>又透出來</b>了——因為每經一片光的偏振方向被「轉一點」，
     45°+45° 比直接 90° 損失少（I=I₀·cos²45°·cos²45°=I₀/4）。偏光太陽眼鏡、液晶顯示器、攝影偏光鏡都用到偏振。
   </div>
@@ -99,7 +99,7 @@ function setTheta(a){state.theta=a;document.getElementById('r_theta').value=a;do
 const rad=d=>d*Math.PI/180;
 // 相對於 I₀(起偏後)的穿透比
 function transFrac(){const th=state.theta;
-  if(!third){return Math.cos(rad(th))**2;}        // 馬呂士:單檢偏器
+  if(!third){return Math.cos(rad(th))**2;}        // 馬呂斯:單檢偏器
   // 三片:0°→45°→θ。 I=I₀·cos²45·cos²(θ−45)
   return Math.cos(rad(45))**2 * Math.cos(rad(th-45))**2;
 }
@@ -111,7 +111,7 @@ function updateFormula(){const th=state.theta,c2=Math.cos(rad(th))**2,frac=trans
   document.getElementById('formula').innerHTML=
     `<h4>📐 計算公式（即時代入　I₀ = 起偏後強度 = 自然光的 ½、θ=${th}°）</h4>`
     + frow('cos θ','cos '+th+'°','投影分量', Math.cos(rad(th)).toFixed(3))
-    + frow('馬呂士 I/I₀','cos²θ',`cos²${th}°`, c2.toFixed(3))
+    + frow('馬呂斯 I/I₀','cos²θ',`cos²${th}°`, c2.toFixed(3))
     + (third
         ? frow('三片穿透 I/I₀','cos²45°·cos²(θ−45°)',`0.5·cos²(${th}−45)`, frac.toFixed(3))
         : frow('相對自然光','½·cos²θ',`0.5·${c2.toFixed(3)}`, (0.5*frac).toFixed(3)))
