@@ -362,8 +362,14 @@ function draw() {
     baseLabel = '基準線';
   }
   sc.fillStyle = 'rgba(255, 255, 255, 0.55)';
-  sc.textAlign = 'center';
-  sc.fillText(baseLabel, midX, y0 - 4);
+  if (isNarrow) {
+    // 窄畫面：兩筒之間要放 A₁d₁、A₂d₂ 標註，基準線的說明改放畫布左上角，避免文字重疊
+    sc.textAlign = 'left';
+    sc.fillText('虛線＝未施力時的液面', 8, 14);
+  } else {
+    sc.textAlign = 'center';
+    sc.fillText(baseLabel, midX, y0 - 4);
+  }
 
   // 6. 容器外壁與水平連通管管壁
   sc.strokeStyle = '#4e6785';
