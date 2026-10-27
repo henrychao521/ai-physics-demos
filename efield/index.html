@@ -18,15 +18,14 @@
   .badge{display:inline-block;background:var(--panel2);border:1px solid var(--line);color:var(--muted);font-size:.72rem;padding:2px 8px;border-radius:99px;margin-right:6px}
   .scene-wrap{position:relative;border-radius:16px;overflow:hidden;border:1px solid var(--line);box-shadow:0 18px 50px rgba(0,0,0,.45)}
   #cv{display:block;width:100%;touch-action:none;cursor:grab}
-  .toolbar{position:absolute;top:12px;left:12px;display:flex;gap:7px;flex-wrap:wrap}
-  .toolbar button{background:rgba(8,10,24,.6);backdrop-filter:blur(6px);color:#dce6ff;border:1px solid rgba(160,180,255,.2);border-radius:9px;padding:7px 11px;font-size:.82rem;cursor:pointer;font-family:inherit}
+  .toolbar{position:absolute;top:12px;left:12px;display:flex;gap:7px;flex-wrap:wrap;z-index:2}
+  .toolbar button{background:rgba(8,10,24,.6);backdrop-filter:blur(6px);color:#dce6ff;border:1px solid rgba(160,180,255,.2);border-radius:9px;padding:7px 11px;font-size:.82rem;cursor:pointer;font-family:inherit;min-height:36px;display:inline-flex;align-items:center;justify-content:center}
   .toolbar button:hover{border-color:var(--accent)}
   .sub{position:absolute;bottom:12px;left:12px;background:rgba(8,10,24,.6);border:1px solid rgba(160,180,255,.18);border-radius:10px;padding:6px 11px;color:#dce6ff;font-size:.82rem}
   .probe{position:absolute;bottom:12px;right:12px;background:rgba(8,10,24,.7);border:1px solid rgba(255,206,84,.35);border-radius:10px;padding:6px 11px;color:#ffe7a8;font-size:.82rem;font-variant-numeric:tabular-nums;pointer-events:none}
-  @media(max-width:700px){.probe,.sub{position:static;border-radius:0;border-width:1px 0 0;text-align:center}.sub{font-size:.74rem;color:#b8c4e0}}
   .modes{display:flex;gap:7px;flex-wrap:wrap;align-items:center;margin-top:14px}
   .modes span{color:var(--muted);font-size:.8rem}
-  .pbtn{background:var(--panel2);color:var(--txt);border:1px solid var(--line);padding:7px 12px;border-radius:9px;cursor:pointer;font-size:.83rem;font-family:inherit}
+  .pbtn{background:var(--panel2);color:var(--txt);border:1px solid var(--line);padding:7px 12px;border-radius:9px;cursor:pointer;font-size:.83rem;font-family:inherit;min-height:36px;display:inline-flex;align-items:center;justify-content:center}
   .pbtn:hover{border-color:var(--accent)}
   .bar{display:flex;gap:14px;flex-wrap:wrap;align-items:flex-end;background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:14px 16px;margin-top:14px}
   .sld{flex:1;min-width:200px}
@@ -36,6 +35,17 @@
   .note{background:var(--panel);border-left:3px solid var(--accent2);border-radius:8px;padding:12px 14px;color:var(--muted);font-size:.86rem;line-height:1.7;margin-top:14px}
   .note b{color:var(--txt)}.note code{background:var(--bg2);padding:1px 6px;border-radius:5px;color:var(--green);font-size:.85em}
   footer{color:var(--muted);font-size:.78rem;margin-top:24px;text-align:center;line-height:1.7}
+
+  @media(max-width:600px){
+    .scene-wrap{display:flex;flex-direction:column;border-radius:12px}
+    .toolbar{position:static;order:-1;background:var(--panel);border-bottom:1px solid var(--line);padding:8px;width:100%;justify-content:space-between}
+    .toolbar button{min-height:44px;flex:1;padding:8px;font-size:.86rem}
+    .probe,.sub{position:static;border-radius:0;border-width:1px 0 0;text-align:center;padding:9px 12px;width:100%}
+    .sub{font-size:.76rem;color:#b8c4e0;background:var(--panel2)}
+    .probe{font-size:.85rem;background:var(--panel);border-color:rgba(255,206,84,.35)}
+    .pbtn{min-height:44px;padding:10px 14px}
+    .sld input[type="range"]{height:44px}
+  }
 </style>
 </head>
 <body data-demo="電場與電位">
@@ -81,113 +91,371 @@
 <script>
 const S=SIM;
 const state={mag:4};
+let selected=-1; // 目前選取的電荷索引，若無則為 -1
+
 function frow(n,sym,sub,val){return `<div class="frow"><span class="fname">${n}</span><span class="fsym">${sym}</span><span class="fsub">= ${sub}</span><span class="fval">${val}</span></div>`;}
-// 三位有效數字的科學記號（原本 toFixed(4) 在 q=1 時只剩 0.0001 一位有效數字）
 function sci3(x){const sup=n=>String(n).replace(/-/g,'⁻').replace(/\d/g,d=>'⁰¹²³⁴⁵⁶⁷⁸⁹'[d]);let e=Math.floor(Math.log10(x)),a=x/10**e;if(+a.toFixed(2)>=10){a/=10;e++;}return a.toFixed(2)+'×10'+sup(e);}
-// 帶正負號的三位有效數字科學記號
 function sgn3(x){return Math.abs(x)<1e-9?'0':(x<0?'−':'')+sci3(Math.abs(x));}
 function num(x){return String(+x.toFixed(1)).replace('-','−');}
-// 量測點 P：桌機＝游標所在點；觸控＝點一下（或按住拖曳）的位置
+function sci3OrZero(x){return x<1e-12?'0':sci3(x);}
+
 let probe={x:450,y:110};
-function probeData(){const k=1,rows=[];let ex=0,ey=0,V=0,clamped=false;
-  for(const c of charges){const dx=probe.x-c.x,dy=probe.y-c.y,r0=Math.hypot(dx,dy),r=Math.max(r0,9);if(r0<9)clamped=true;
-    const e=k*c.q/(r*r*r);ex+=e*dx;ey+=e*dy;V+=k*c.q/r;rows.push({q:c.q,r});}
-  return {ex,ey,E:Math.hypot(ex,ey),V,rows,clamped};}
+function probeData(){
+  const k=1,rows=[];let ex=0,ey=0,V=0,clamped=false;
+  for(const c of charges){
+    const dx=probe.x-c.x,dy=probe.y-c.y,r0=Math.hypot(dx,dy),r=Math.max(r0,9);
+    if(r0<9)clamped=true;
+    const e=k*c.q/(r*r*r);
+    ex+=e*dx;ey+=e*dy;V+=k*c.q/r;
+    rows.push({q:c.q,r});
+  }
+  return {ex,ey,E:Math.hypot(ex,ey),V,rows,clamped};
+}
+
 function updateFormula(){
   const d=probeData(), q=state.mag, F=q*d.E;
   const list=d.rows.slice(0,3), more=d.rows.length>3?' + …':'';
   const qs=x=>x<0?'('+String(x).replace('-','−')+')':String(x);
   let html=`<h4>📐 計算公式（量測點 P＝游標所在處；觸控點一下　k=1、距離以畫面像素為相對單位、y 向上為正）</h4>`;
-  if(!d.rows.length){html+=`<div class="frow"><span class="fname">量測點 P</span><span class="fsub">畫面上沒有電荷，E＝0、V＝0</span></div>`;}
-  else{
+  if(!d.rows.length){
+    html+=`<div class="frow"><span class="fname">量測點 P</span><span class="fsub">畫面上沒有電荷，E＝0、V＝0</span></div>`;
+  }else{
     html+=frow('量測點 P','(x, y)',`(${num(probe.x)}, ${num(470-probe.y)})　各電荷距離 r：${d.rows.map(o=>num(o.r)).join('、')}`,d.clamped?'太靠近電荷，r 以 9 計':'');
     html+=frow('電位 V','Σ kqᵢ / rᵢ',list.map(o=>`1·${qs(o.q)}/${num(o.r)}`).join(' + ')+more, sgn3(d.V)+' (相對)');
     html+=frow('電場 E','|Σ kqᵢ/rᵢ² 向量和|',`√(Eₓ²+E_y²)，Eₓ=${sgn3(d.ex)}、E_y=${sgn3(-d.ey)}`, sci3OrZero(d.E)+' (相對)');
     html+=frow('試探電荷受力 F','q·E',`${q} × ${sci3OrZero(d.E)}（在 P 放 +${q}）`, sci3OrZero(F)+' (相對)');
   }
   html+=`<div class="frel">📈 <b>單一電荷 E ∝ 1/r²、V ∝ 1/r</b>：距離加倍 → 電場剩 ¼、電位剩 ½　·　<b>多個電荷</b>：V 直接相加（純量），E 要向量相加　·　<b>F = qE</b>：同一點放的電荷量加倍，受力加倍。</div>`;
-  document.getElementById('formula').innerHTML=html;
-  document.getElementById('probe').textContent=d.rows.length?`P 點　E = ${sci3OrZero(d.E)}　V = ${sgn3(d.V)}（相對）`:'P 點　E = 0　V = 0';
+  const fEl=document.getElementById('formula');
+  if(fEl)fEl.innerHTML=html;
+  const pEl=document.getElementById('probe');
+  if(pEl)pEl.textContent=d.rows.length?`P 點　E = ${sci3OrZero(d.E)}　V = ${sgn3(d.V)}（相對）`:'P 點　E = 0　V = 0';
 }
-function sci3OrZero(x){return x<1e-12?'0':sci3(x);}
-const sBar=document.getElementById('sliders');
-{const d=document.createElement('div');d.className='sld';
- d.innerHTML=`<label><span>新增電荷量 |q|</span><span class="v" id="v_mag">4</span></label><input type="range" id="r_mag" min="1" max="8" step="1" value="4">`;
- sBar.appendChild(d);d.querySelector('input').addEventListener('input',e=>{state.mag=parseFloat(e.target.value);document.getElementById('v_mag').textContent=state.mag;updateFormula();});}
 
-function _hd(c,w,h){var d=window.devicePixelRatio||1;c.width=w*d;c.height=h*d;var x=c.getContext('2d');x.setTransform(d,0,0,d,0,0);return x;}
+const sBar=document.getElementById('sliders');
+{
+  const d=document.createElement('div');
+  d.className='sld';
+  d.innerHTML=`<label><span>電荷量 |q|（調整目前電荷／新增量）</span><span class="v" id="v_mag">4</span></label><input type="range" id="r_mag" min="1" max="8" step="1" value="4">`;
+  sBar.appendChild(d);
+  d.querySelector('input').addEventListener('input',e=>{
+    const val=parseFloat(e.target.value);
+    state.mag=val;
+    document.getElementById('v_mag').textContent=state.mag;
+    if(charges.length>0){
+      let idx=(selected>=0&&selected<charges.length)?selected:charges.length-1;
+      const s=charges[idx].q<0?-1:1;
+      setSelectedQ(s*val);
+    }else{
+      draw();
+    }
+  });
+}
+
+function _hd(c,w,h){const d=window.devicePixelRatio||1;c.width=w*d;c.height=h*d;const x=c.getContext('2d');x.setTransform(d,0,0,d,0,0);return x;}
 const cv=document.getElementById('cv'),cc=_hd(cv,900,470);
 let charges=[{x:300,y:235,q:5},{x:600,y:235,q:-5}];
-function potential(x,y){let v=0;for(const c of charges){const r=Math.hypot(x-c.x,y-c.y);v+=c.q/Math.max(r,9);}return v;}
-function field(x,y){let ex=0,ey=0;for(const c of charges){const dx=x-c.x,dy=y-c.y,r=Math.max(Math.hypot(dx,dy),9),e=c.q/(r*r*r);ex+=e*dx;ey+=e*dy;}return {ex,ey};}
-function fieldLine(sx,sy,sign){cc.beginPath();cc.moveTo(sx,sy);let x=sx,y=sy;
-  for(let i=0;i<420;i++){const {ex,ey}=field(x,y),m=Math.hypot(ex,ey)||1e-6;x+=sign*ex/m*3;y+=sign*ey/m*3;
-    if(x<0||x>900||y<0||y>470)break;let near=false;for(const c of charges)if(Math.hypot(x-c.x,y-c.y)<10){near=true;break;}cc.lineTo(x,y);if(near)break;}
-  cc.strokeStyle='rgba(220,230,255,.45)';cc.lineWidth=1.3;cc.stroke();}
-function draw(){const W=900,H=470;
+
+function potential(x,y){
+  let v=0;
+  for(const c of charges){
+    const r=Math.hypot(x-c.x,y-c.y);
+    v+=c.q/Math.max(r,9);
+  }
+  return v;
+}
+
+function field(x,y){
+  let ex=0,ey=0;
+  for(const c of charges){
+    const dx=x-c.x,dy=y-c.y,r=Math.max(Math.hypot(dx,dy),9),e=c.q/(r*r*r);
+    ex+=e*dx;ey+=e*dy;
+  }
+  return {ex,ey};
+}
+
+function setSelectedQ(q){
+  if(!charges.length)return;
+  let idx=selected;
+  if(idx<0||idx>=charges.length)idx=charges.length-1;
+  charges[idx].q=q;
+  selected=idx;
+  const mag=Math.abs(q);
+  if(mag>0){
+    state.mag=mag;
+    const rMag=document.getElementById('r_mag');
+    const vMag=document.getElementById('v_mag');
+    if(rMag)rMag.value=mag;
+    if(vMag)vMag.textContent=mag;
+  }
+  draw();
+}
+
+function addCharge(sign,x,y){
+  const s=(sign===-1||(typeof sign==='number'&&sign<0))?-1:1;
+  const q=(typeof sign==='number'&&Math.abs(sign)!==1&&Math.abs(sign)!==0)?sign:s*state.mag;
+  if(x==null||y==null){
+    const cands=[
+      {x:450,y:235},{x:380,y:235},{x:520,y:235},
+      {x:450,y:170},{x:450,y:300},{x:380,y:170},
+      {x:520,y:170},{x:380,y:300},{x:520,y:300},
+      {x:310,y:235},{x:590,y:235},{x:310,y:170},
+      {x:590,y:170},{x:310,y:300},{x:590,y:300}
+    ];
+    let chosen=null;
+    for(const cand of cands){
+      if(charges.every(c=>Math.hypot(cand.x-c.x,cand.y-c.y)>=36)){
+        chosen=cand;break;
+      }
+    }
+    if(!chosen){
+      const ang=charges.length*1.35,dist=50+((charges.length*25)%150);
+      chosen={
+        x:Math.max(60,Math.min(840,450+Math.cos(ang)*dist)),
+        y:Math.max(60,Math.min(410,235+Math.sin(ang)*dist))
+      };
+    }
+    x=chosen.x;y=chosen.y;
+  }
+  const newC={x,y,q};
+  charges.push(newC);
+  selected=charges.length-1;
+  draw();
+  return newC;
+}
+
+function fieldLine(sx,sy,sign){
+  cc.beginPath();cc.moveTo(sx,sy);let x=sx,y=sy;
+  for(let i=0;i<450;i++){
+    const {ex,ey}=field(x,y),m=Math.hypot(ex,ey);
+    if(m<1e-7)break;
+    x+=sign*(ex/m)*3;y+=sign*(ey/m)*3;
+    if(x<0||x>900||y<0||y>470)break;
+    let near=false;
+    for(const c of charges){
+      const cr=10+Math.abs(c.q)*1.1;
+      if(Math.hypot(x-c.x,y-c.y)<cr){near=true;break;}
+    }
+    cc.lineTo(x,y);
+    if(near)break;
+  }
+  cc.strokeStyle='rgba(220,230,255,.45)';cc.lineWidth=1.3;cc.stroke();
+}
+
+function draw(){
+  const W=900,H=470;
   // 電位熱圖(等位面)
   const cell=5,img=cc.createImageData(W,H);
-  for(let y=0;y<H;y+=cell)for(let x=0;x<W;x+=cell){const v=potential(x+cell/2,y+cell/2),t=Math.tanh(v*8),band=Math.round(t*9)/9;   // 係數原為 0.06：畫面距離是 px，V=q/r≈0.01~0.2，×0.06 後全落在第 0 帶→看不到任何等位面
-    let r,g,b;if(band>=0){r=18+band*150;g=14+band*22;b=30+band*12;}else{r=14-band*8;g=20-band*30;b=44-band*150;}
-    for(let yy=y;yy<Math.min(y+cell,H);yy++)for(let xx=x;xx<Math.min(x+cell,W);xx++){const o=(yy*W+xx)*4;img.data[o]=r;img.data[o+1]=g;img.data[o+2]=b;img.data[o+3]=255;}}
-  // putImageData 不受 setTransform 影響(以 device px 寫入)，高清(dpr>1)下只填左上 1/4 → 改經離屏 canvas 再 drawImage(受 transform 縮放填滿全畫布)
-  if(!draw._hm){draw._hm=document.createElement('canvas');draw._hm.width=W;draw._hm.height=H;draw._hmx=draw._hm.getContext('2d');}
-  draw._hmx.putImageData(img,0,0);cc.drawImage(draw._hm,0,0);
-  // 場線
-  // 場線條數 ∝ 電荷量（每單位電荷 3 條）；正電荷往外畫。負電荷總量多於正電荷時，多出來的部分由負電荷往回畫
-  // （原本只從正電荷出發，只放負電荷時完全沒有場線）
-  const LPQ=3,qPos=charges.reduce((s,c)=>s+(c.q>0?c.q:0),0),qNeg=charges.reduce((s,c)=>s+(c.q<0?-c.q:0),0);
-  for(const c of charges)if(c.q>0){const nL=Math.round(LPQ*c.q);for(let i=0;i<nL;i++){const a=i/nL*2*Math.PI;fieldLine(c.x+Math.cos(a)*11,c.y+Math.sin(a)*11,1);}}
-  if(qNeg>qPos)for(const c of charges)if(c.q<0){const nL=Math.round(LPQ*(-c.q)*(qNeg-qPos)/qNeg);for(let i=0;i<nL;i++){const a=(i+0.5)/nL*2*Math.PI;fieldLine(c.x+Math.cos(a)*11,c.y+Math.sin(a)*11,-1);}}
-  // 場向量
-  for(let y=30;y<H;y+=48)for(let x=30;x<W;x+=48){const {ex,ey}=field(x,y),m=Math.hypot(ex,ey);if(m<1e-6)continue;
-    const len=Math.min(18,6+Math.log(1+m*4000)*3),ux=ex/m,uy=ey/m,x2=x+ux*len,y2=y+uy*len;
-    cc.strokeStyle='rgba(180,200,235,.5)';cc.lineWidth=1.2;cc.beginPath();cc.moveTo(x,y);cc.lineTo(x2,y2);cc.stroke();
-    const a=Math.atan2(uy,ux);cc.fillStyle='rgba(180,200,235,.5)';cc.beginPath();cc.moveTo(x2,y2);cc.lineTo(x2-5*Math.cos(a-.4),y2-5*Math.sin(a-.4));cc.lineTo(x2-5*Math.cos(a+.4),y2-5*Math.sin(a+.4));cc.closePath();cc.fill();}
-  // 電荷(發光球)
-  for(const c of charges){const pos=c.q>0,r=11+Math.abs(c.q)*1.2;
-    cc.save();cc.globalCompositeOperation='lighter';const halo=cc.createRadialGradient(c.x,c.y,0,c.x,c.y,r*2.4);
-    halo.addColorStop(0,pos?'rgba(255,90,90,.6)':'rgba(90,140,255,.6)');halo.addColorStop(1,'rgba(0,0,0,0)');cc.fillStyle=halo;cc.beginPath();cc.arc(c.x,c.y,r*2.4,0,7);cc.fill();cc.restore();
+  for(let y=0;y<H;y+=cell){
+    for(let x=0;x<W;x+=cell){
+      const v=potential(x+cell/2,y+cell/2),t=Math.tanh(v*8),band=Math.round(t*9)/9;
+      let r,g,b;
+      if(band>=0){r=18+band*150;g=14+band*22;b=30+band*12;}
+      else{r=14-band*8;g=20-band*30;b=44-band*150;}
+      for(let yy=y;yy<Math.min(y+cell,H);yy++){
+        for(let xx=x;xx<Math.min(x+cell,W);xx++){
+          const o=(yy*W+xx)*4;
+          img.data[o]=r;img.data[o+1]=g;img.data[o+2]=b;img.data[o+3]=255;
+        }
+      }
+    }
+  }
+
+  if(!draw._hm){
+    draw._hm=document.createElement('canvas');
+    draw._hm.width=W;draw._hm.height=H;
+    draw._hmx=draw._hm.getContext('2d');
+  }
+  draw._hmx.putImageData(img,0,0);
+  cc.drawImage(draw._hm,0,0);
+
+  // 場線：數量 ∝ |q|
+  const LPQ=3.5;
+  const qPos=charges.reduce((s,c)=>s+(c.q>0?c.q:0),0);
+  const qNeg=charges.reduce((s,c)=>s+(c.q<0?-c.q:0),0);
+  for(const c of charges){
+    if(c.q>0){
+      const nL=Math.max(3,Math.round(LPQ*c.q));
+      const cr=10+Math.abs(c.q)*1.2;
+      for(let i=0;i<nL;i++){
+        const a=(i/nL)*2*Math.PI;
+        fieldLine(c.x+Math.cos(a)*(cr+2),c.y+Math.sin(a)*(cr+2),1);
+      }
+    }
+  }
+  if(qNeg>0){
+    const frac=qPos===0?1:Math.max(0,(qNeg-qPos)/qNeg);
+    if(frac>0){
+      for(const c of charges){
+        if(c.q<0){
+          const nL=Math.max(3,Math.round(LPQ*(-c.q)*frac));
+          const cr=10+Math.abs(c.q)*1.2;
+          for(let i=0;i<nL;i++){
+            const a=((i+0.5)/nL)*2*Math.PI;
+            fieldLine(c.x+Math.cos(a)*(cr+2),c.y+Math.sin(a)*(cr+2),-1);
+          }
+        }
+      }
+    }
+  }
+
+  // 場向量箭頭：大小與明暗隨電場強度 E 變動
+  for(let y=30;y<H;y+=48){
+    for(let x=30;x<W;x+=48){
+      const {ex,ey}=field(x,y),m=Math.hypot(ex,ey);
+      if(m<1e-6)continue;
+      const len=Math.min(20,5+Math.log(1+m*3500)*3);
+      const ux=ex/m,uy=ey/m,x2=x+ux*len,y2=y+uy*len;
+      const alpha=Math.min(0.85,0.25+Math.min(m*1500,0.55));
+      cc.strokeStyle=`rgba(180,205,245,${alpha})`;
+      cc.fillStyle=`rgba(180,205,245,${alpha})`;
+      cc.lineWidth=1.2;
+      cc.beginPath();cc.moveTo(x,y);cc.lineTo(x2,y2);cc.stroke();
+      const a=Math.atan2(uy,ux);
+      cc.beginPath();cc.moveTo(x2,y2);
+      cc.lineTo(x2-5*Math.cos(a-.4),y2-5*Math.sin(a-.4));
+      cc.lineTo(x2-5*Math.cos(a+.4),y2-5*Math.sin(a+.4));
+      cc.closePath();cc.fill();
+    }
+  }
+
+  // 電荷球體
+  for(let i=0;i<charges.length;i++){
+    const c=charges[i],pos=c.q>0,mag=Math.abs(c.q),r=11+mag*1.3;
+    if(selected===i){
+      cc.save();
+      cc.strokeStyle='#ffe7a8';cc.lineWidth=2.5;cc.setLineDash([4,3]);
+      cc.beginPath();cc.arc(c.x,c.y,r+6,0,Math.PI*2);cc.stroke();
+      cc.restore();
+    }
+
+    cc.save();
+    cc.globalCompositeOperation='lighter';
+    const halo=cc.createRadialGradient(c.x,c.y,0,c.x,c.y,r*2.4);
+    halo.addColorStop(0,pos?'rgba(255,90,90,.6)':'rgba(90,140,255,.6)');
+    halo.addColorStop(1,'rgba(0,0,0,0)');
+    cc.fillStyle=halo;cc.beginPath();cc.arc(c.x,c.y,r*2.4,0,Math.PI*2);cc.fill();
+    cc.restore();
+
     const g=cc.createRadialGradient(c.x-r*.35,c.y-r*.35,r*.1,c.x,c.y,r);
-    g.addColorStop(0,pos?'#ffb0b0':'#b0c8ff');g.addColorStop(1,pos?'#c01818':'#1840c0');cc.fillStyle=g;cc.beginPath();cc.arc(c.x,c.y,r,0,7);cc.fill();
-    cc.strokeStyle='#fff';cc.lineWidth=2;cc.stroke();cc.fillStyle='#fff';cc.font='bold 16px system-ui';cc.textAlign='center';cc.fillText(pos?'+':'−',c.x,c.y+6);cc.textAlign='left';}
-  document.getElementById('sub').textContent=charges.length+' 個電荷　白線＝電場線（條數∝電荷量），色帶邊界＝等位面';
+    g.addColorStop(0,pos?'#ffb0b0':'#b0c8ff');
+    g.addColorStop(1,pos?'#c01818':'#1840c0');
+    cc.fillStyle=g;cc.beginPath();cc.arc(c.x,c.y,r,0,Math.PI*2);cc.fill();
+    cc.strokeStyle=selected===i?'#ffe7a8':'#fff';
+    cc.lineWidth=selected===i?2.5:2;
+    cc.stroke();
+
+    cc.fillStyle='#fff';
+    cc.font=`bold ${Math.max(12,Math.min(16,11+mag))}px system-ui`;
+    cc.textAlign='center';
+    cc.textBaseline='middle';
+    cc.fillText((pos?'+':'−')+mag,c.x,c.y);
+    cc.textAlign='left';
+    cc.textBaseline='alphabetic';
+  }
+
+  const selInfo=(selected>=0&&selected<charges.length)?`（已選取第 ${selected+1} 個，q=${charges[selected].q>0?'+':''}${charges[selected].q}）`:'';
+  document.getElementById('sub').textContent=charges.length+' 個電荷　白線＝電場線（條數∝|q|），色帶邊界＝等位面'+selInfo;
   draw._base=cc.getImageData(0,0,cv.width,cv.height);
   drawProbe();
 }
-// 量測點標記：黃色準星＋該點電場方向箭頭（長度固定，只示方向）
+
 function drawProbe(){
   if(draw._base)cc.putImageData(draw._base,0,0);
   const {x,y}=probe,d=probeData();
-  cc.save();cc.strokeStyle='#ffce54';cc.fillStyle='#ffce54';cc.lineWidth=2;
-  cc.beginPath();cc.arc(x,y,7,0,7);cc.stroke();
-  cc.beginPath();cc.moveTo(x-12,y);cc.lineTo(x-4,y);cc.moveTo(x+4,y);cc.lineTo(x+12,y);cc.moveTo(x,y-12);cc.lineTo(x,y-4);cc.moveTo(x,y+4);cc.lineTo(x,y+12);cc.stroke();
-  if(d.E>1e-12){const ux=d.ex/d.E,uy=d.ey/d.E,x1=x+ux*9,y1=y+uy*9,x2=x+ux*38,y2=y+uy*38,a=Math.atan2(uy,ux);
+  cc.save();
+  cc.strokeStyle='#ffce54';cc.fillStyle='#ffce54';cc.lineWidth=2;
+  cc.beginPath();cc.arc(x,y,7,0,Math.PI*2);cc.stroke();
+  cc.beginPath();
+  cc.moveTo(x-12,y);cc.lineTo(x-4,y);
+  cc.moveTo(x+4,y);cc.lineTo(x+12,y);
+  cc.moveTo(x,y-12);cc.lineTo(x,y-4);
+  cc.moveTo(x,y+4);cc.lineTo(x,y+12);
+  cc.stroke();
+  if(d.E>1e-12){
+    const ux=d.ex/d.E,uy=d.ey/d.E,x1=x+ux*9,y1=y+uy*9,x2=x+ux*38,y2=y+uy*38,a=Math.atan2(uy,ux);
     cc.lineWidth=2.5;cc.beginPath();cc.moveTo(x1,y1);cc.lineTo(x2,y2);cc.stroke();
-    cc.beginPath();cc.moveTo(x2+3*Math.cos(a),y2+3*Math.sin(a));cc.lineTo(x2-8*Math.cos(a-.45),y2-8*Math.sin(a-.45));cc.lineTo(x2-8*Math.cos(a+.45),y2-8*Math.sin(a+.45));cc.closePath();cc.fill();}
-  cc.font='bold 15px system-ui';cc.fillText('P',x+10,y-10);cc.restore();
+    cc.beginPath();cc.moveTo(x2+3*Math.cos(a),y2+3*Math.sin(a));
+    cc.lineTo(x2-8*Math.cos(a-.45),y2-8*Math.sin(a-.45));
+    cc.lineTo(x2-8*Math.cos(a+.45),y2-8*Math.sin(a+.45));
+    cc.closePath();cc.fill();
+  }
+  cc.font='bold 15px system-ui';cc.fillText('P',x+10,y-10);
+  cc.restore();
   updateFormula();
 }
+
 function setProbe(p){probe={x:Math.max(0,Math.min(900,p.x)),y:Math.max(0,Math.min(470,p.y))};drawProbe();}
+
 let drag=-1,probing=false;
 function pos(e){const r=cv.getBoundingClientRect();return {x:(e.clientX-r.left)*900/r.width,y:(e.clientY-r.top)*470/r.height};}
-function hitCharge(p){const hit=Math.max(18,16*900/cv.getBoundingClientRect().width);for(let i=0;i<charges.length;i++)if(Math.hypot(p.x-charges[i].x,p.y-charges[i].y)<hit)return i;return -1;}
-// 按在電荷上＝拖曳電荷；按在空白處＝把量測點 P 移到該處（觸控點一下即可，按住可拖曳）
-cv.addEventListener('pointerdown',e=>{const p=pos(e),i=hitCharge(p);cv.setPointerCapture(e.pointerId);
-  if(i>=0){drag=i;cv.style.cursor='grabbing';return;}
-  probing=true;setProbe(p);});
-// 滑鼠移動（未按鍵）時 P 跟著游標；觸控則只在按住拖曳時移動
-cv.addEventListener('pointermove',e=>{const p=pos(e);
-  if(drag>=0){charges[drag].x=p.x;charges[drag].y=p.y;draw();return;}
+function hitCharge(p){
+  const hit=Math.max(20,18*900/cv.getBoundingClientRect().width);
+  for(let i=charges.length-1;i>=0;i--){
+    if(Math.hypot(p.x-charges[i].x,p.y-charges[i].y)<hit)return i;
+  }
+  return -1;
+}
+
+cv.addEventListener('pointerdown',e=>{
+  const p=pos(e),i=hitCharge(p);
+  cv.setPointerCapture(e.pointerId);
+  if(i>=0){
+    drag=i;selected=i;
+    state.mag=Math.abs(charges[i].q);
+    const rMag=document.getElementById('r_mag');
+    const vMag=document.getElementById('v_mag');
+    if(rMag)rMag.value=state.mag;
+    if(vMag)vMag.textContent=state.mag;
+    cv.style.cursor='grabbing';
+    draw();
+    return;
+  }
+  probing=true;setProbe(p);
+});
+
+cv.addEventListener('pointermove',e=>{
+  const p=pos(e);
+  if(drag>=0){
+    charges[drag].x=Math.max(20,Math.min(880,p.x));
+    charges[drag].y=Math.max(20,Math.min(450,p.y));
+    draw();return;
+  }
   if(probing||e.pointerType==='mouse'){setProbe(p);}
-  if(e.pointerType==='mouse')cv.style.cursor=hitCharge(p)>=0?'grab':'crosshair';});
+  if(e.pointerType==='mouse')cv.style.cursor=hitCharge(p)>=0?'grab':'crosshair';
+});
+
 window.addEventListener('pointerup',()=>{drag=-1;probing=false;});
-document.getElementById('addPos').onclick=()=>{charges.push({x:450,y:235,q:state.mag});draw();};
-document.getElementById('addNeg').onclick=()=>{charges.push({x:450,y:235,q:-state.mag});draw();};
-document.getElementById('clear').onclick=()=>{charges=[];draw();};
-const PRE={single:[{x:450,y:235,q:6}],dipole:[{x:300,y:235,q:5},{x:600,y:235,q:-5}],two:[{x:300,y:235,q:5},{x:600,y:235,q:5}]};
-document.querySelectorAll('[data-preset]').forEach(b=>b.onclick=()=>{const p=PRE[b.dataset.preset];if(!p)return;charges=p.map(c=>({...c}));draw();});
-window.addEventListener('load',()=>{draw();});
+
+document.getElementById('addPos').onclick=()=>{addCharge(1);};
+document.getElementById('addNeg').onclick=()=>{addCharge(-1);};
+document.getElementById('clear').onclick=()=>{charges=[];selected=-1;draw();};
+
+const PRE={
+  single:[{x:450,y:235,q:6}],
+  dipole:[{x:300,y:235,q:5},{x:600,y:235,q:-5}],
+  two:[{x:300,y:235,q:5},{x:600,y:235,q:5}]
+};
+
+document.querySelectorAll('[data-preset]').forEach(b=>b.onclick=()=>{
+  const p=PRE[b.dataset.preset];
+  if(!p)return;
+  charges=p.map(c=>({...c}));
+  selected=charges.length-1;
+  if(charges.length>0){
+    state.mag=Math.abs(charges[selected].q);
+    const rMag=document.getElementById('r_mag');
+    const vMag=document.getElementById('v_mag');
+    if(rMag)rMag.value=state.mag;
+    if(vMag)vMag.textContent=state.mag;
+  }
+  draw();
+});
+
+window.addEventListener('load',()=>{
+  if(charges.length>0)selected=charges.length-1;
+  draw();
+});
 </script>
 </body>
 </html>

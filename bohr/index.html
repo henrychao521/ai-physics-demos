@@ -16,7 +16,7 @@
   header h1{font-size:1.5rem;margin:.2em 0}
   header p{color:var(--muted);margin:.2em 0 1em;line-height:1.6}
   .badge{display:inline-block;background:var(--panel2);border:1px solid var(--line);color:var(--muted);font-size:.72rem;padding:2px 8px;border-radius:99px;margin-right:6px}
-  .row{display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-bottom:10px}
+  .row{display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-top:14px;margin-bottom:10px}
   .row .lab{font-size:.82rem;color:var(--muted);min-width:54px}
   .nbtn{width:34px;height:34px;padding:0;border-radius:8px;background:var(--panel2);color:var(--txt);border:1px solid var(--line);cursor:pointer;font-family:inherit}
   .nbtn.on{background:var(--accent);color:#04121c;border-color:var(--accent);font-weight:700}
@@ -31,7 +31,13 @@
   .stage .sub{position:absolute;top:10px;right:12px;font-size:.78rem;color:#b8b0e0;z-index:2}
   canvas{display:block;width:100%}
   /* 光譜條在手機只剩約 30px 高，左右兩個浮貼標籤會互相壓住：窄螢幕改成疊在畫布上方的一般文字 */
-  @media(max-width:600px){.stage.spec{padding-top:6px}.stage.spec .lab,.stage.spec .sub{position:static;display:block;padding:2px 12px}.stage.spec .sub{padding-bottom:6px}}
+  @media(max-width:600px){
+    .nbtn{width:44px;height:44px;font-size:1rem}
+    .btn{min-height:44px;padding:10px 14px}
+    .stage.spec{padding-top:6px}
+    .stage.spec .lab,.stage.spec .sub{position:static;display:block;padding:2px 12px}
+    .stage.spec .sub{padding-bottom:6px}
+  }
   .statgrid{display:grid;grid-template-columns:repeat(auto-fit,minmax(120px,1fr));gap:10px;margin-top:14px}
   .box{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:10px 12px}
   .box .k{font-size:.72rem;color:var(--muted)}.box .v{font-size:1.02rem;font-variant-numeric:tabular-nums;font-weight:700}
@@ -49,15 +55,6 @@
        能量等於兩能階差 <b>hf = E_高 − E_低</b>——這就是氫氣只發出幾條固定顏色<b>光譜線</b>的原因。</p>
   </header>
 
-  <div class="row"><span class="lab">起始 n：</span><span id="niRow"></span>
-    <span class="lab" style="margin-left:10px">落到 n：</span><span id="nfRow"></span>
-    <button class="btn" id="emit" style="margin-left:8px;background:var(--accent);color:#04121c;font-weight:700">⚡ 放出光子</button></div>
-  <div class="modes"><span>經典譜線：</span>
-    <button class="btn" data-tr="3,2">Hα (3→2)</button><button class="btn" data-tr="4,2">Hβ (4→2)</button>
-    <button class="btn" data-tr="5,2">Hγ (5→2)</button><button class="btn" data-tr="2,1">Lyman-α (2→1)</button></div>
-
-  <div class="formula" id="formula"></div>
-
   <div class="grid2">
     <div class="stage"><div class="lab">波耳軌道（電子躍遷放出光子；半徑未按比例，實際 r<sub>n</sub> ∝ n²）</div><div class="sub" id="sub"></div><canvas id="atom" width="430" height="360"></canvas></div>
     <div class="stage"><div class="lab">能階圖（箭頭＝躍遷）</div><canvas id="levels" width="430" height="360"></canvas></div>
@@ -66,6 +63,15 @@
   <div class="stage spec" style="margin-top:14px"><div class="lab">氫原子發射光譜（這條躍遷的譜線位置）</div><div class="sub" id="serlab"></div><canvas id="spec" width="1080" height="92"></canvas></div>
 
   <div class="statgrid" id="stats"></div>
+
+  <div class="row"><span class="lab">起始 n：</span><span id="niRow"></span>
+    <span class="lab" style="margin-left:10px">落到 n：</span><span id="nfRow"></span>
+    <button class="btn" id="emit" style="margin-left:8px;background:var(--accent);color:#04121c;font-weight:700">⚡ 放出光子</button></div>
+  <div class="modes"><span>經典譜線：</span>
+    <button class="btn" data-tr="3,2">Hα (3→2)</button><button class="btn" data-tr="4,2">Hβ (4→2)</button>
+    <button class="btn" data-tr="5,2">Hγ (5→2)</button><button class="btn" data-tr="2,1">Lyman-α (2→1)</button></div>
+
+  <div class="formula" id="formula"></div>
 
   <div class="note">
     <b>物理重點：</b>能階能量 <code>E_n = −13.6/n²</code> eV（負號＝束縛態，n=1 最低最穩）。躍遷放出光子能量 <code>ΔE = 13.6(1/n_f² − 1/n_i²)</code>，波長 <code>λ = 1240/ΔE</code> nm。

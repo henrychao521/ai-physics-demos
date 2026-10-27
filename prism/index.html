@@ -23,22 +23,31 @@
   .chip{background:rgba(10,16,24,.62);backdrop-filter:blur(6px);border:1px solid rgba(120,180,255,.16);border-radius:10px;padding:6px 11px;color:#dceaff;font-size:.8rem;line-height:1.25}
   .chip b{display:block;font-size:1.02rem;font-variant-numeric:tabular-nums;color:#fff}
   .chip.red b{color:#ff8f8f}.chip.violet b{color:#c39bff}.chip.green b{color:#7CFFB2}
-  .toolbar{position:absolute;top:12px;right:12px;   /* 移到右上：原本在右下會蓋住落在螢幕底端的紫光 */display:flex;gap:7px;flex-wrap:wrap;justify-content:flex-end}
-  .toolbar button{background:rgba(10,16,24,.62);backdrop-filter:blur(6px);color:#dceaff;border:1px solid rgba(120,180,255,.2);border-radius:9px;padding:7px 11px;font-size:.82rem;cursor:pointer;font-family:inherit}
+  .toolbar{position:absolute;top:12px;right:12px;display:flex;gap:7px;flex-wrap:wrap;justify-content:flex-end}
+  .toolbar button{background:rgba(10,16,24,.62);backdrop-filter:blur(6px);color:#dceaff;border:1px solid rgba(120,180,255,.2);border-radius:9px;padding:7px 14px;font-size:.84rem;cursor:pointer;font-family:inherit;min-height:44px;display:inline-flex;align-items:center;justify-content:center}
   .toolbar button.on{background:var(--accent);color:#04121c;border-color:var(--accent);font-weight:700}
-  @media(max-width:560px){.toolbar{position:static;justify-content:center;padding:8px 10px;background:rgba(8,14,22,.5);border-top:1px solid var(--line)}}
   .bar{display:flex;gap:14px;flex-wrap:wrap;align-items:flex-end;background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:14px 16px;margin-top:14px}
   .sld{flex:1;min-width:180px}
   .sld label{display:flex;justify-content:space-between;font-size:.82rem;color:var(--muted);margin-bottom:5px}
   .sld label .v{color:var(--accent);font-variant-numeric:tabular-nums;font-weight:700}
-  .sld input{width:100%;accent-color:var(--accent)}
+  .sld input{width:100%;accent-color:var(--accent);height:28px}
   .presets{display:flex;gap:7px;flex-wrap:wrap;align-items:center;margin-top:12px}
   .presets span{color:var(--muted);font-size:.8rem}
-  .pbtn{background:var(--panel2);color:var(--txt);border:1px solid var(--line);padding:7px 12px;border-radius:9px;cursor:pointer;font-size:.83rem;font-family:inherit}
+  .pbtn{background:var(--panel2);color:var(--txt);border:1px solid var(--line);padding:7px 14px;border-radius:9px;cursor:pointer;font-size:.83rem;font-family:inherit;min-height:44px;display:inline-flex;align-items:center;justify-content:center}
   .pbtn:hover{border-color:var(--accent)}
   .note{background:var(--panel);border-left:3px solid var(--accent2);border-radius:8px;padding:12px 14px;color:var(--muted);font-size:.86rem;line-height:1.7;margin-top:14px}
   .note b{color:var(--txt)}.note code{background:var(--bg2);padding:1px 6px;border-radius:5px;color:var(--green);font-size:.85em}
   footer{color:var(--muted);font-size:.78rem;margin-top:24px;text-align:center;line-height:1.7}
+
+  @media(max-width:600px){
+    .scene-wrap{display:flex;flex-direction:column}
+    .hud{position:static;order:1;padding:10px 12px;background:var(--panel);border-bottom:1px solid var(--line);width:100%;pointer-events:auto;justify-content:center}
+    #scene{order:2}
+    .toolbar{position:static;order:3;justify-content:center;padding:10px 12px;background:rgba(8,14,22,.65);border-top:1px solid var(--line);width:100%}
+    .toolbar button{width:100%;max-width:320px}
+    .sld{min-width:100%}
+    .sld input{height:36px}
+  }
 </style>
 </head>
 <body data-demo="稜鏡色散">
@@ -107,7 +116,7 @@ function deviation(lam){const n=nOf(lam),A=rad(state.apex),i1=rad(state.inc);
   const r1=Math.asin(Math.min(1,Math.sin(i1)/n)); const r2=A-r1;
   const s=n*Math.sin(r2); if(Math.abs(s)>1)return null; const i2=Math.asin(s);
   return deg(i1+i2-A);}
-function recompute(){updateFormula();if(sc)draw();}   // 原本只更新公式面板：拖滑桿時稜鏡、光線與 HUD 都不會重畫
+function recompute(){updateFormula();if(sc)draw();}
 
 // 波長→RGB
 function wlColor(nm){let r=0,g=0,b=0;
@@ -145,41 +154,22 @@ function segHit(P,d,Pa,Pb){const e=sub(Pb,Pa);const den=d.x*(-e.y)+d.y*(e.x);
   const t=(diff.x*(-e.y)+diff.y*(e.x))/den; const s=(d.x*diff.y-d.y*diff.x)/den;
   if(t>0.01 && s>=-0.001 && s<=1.001)return {pt:add(P,mul(d,t)),t}; return null;}
 
-// ---- 視圖 ----
+// ---- 稜鏡幾何與視圖 ----
 let sc;
 const SKY={skyTop:'#0a1020',skyBottom:'#070d16',vignette:'rgba(0,0,0,.45)'};
 function setupCanvases(){sc=S.fit(document.getElementById('scene'),1.85);}
-function tracePrism(lam,geo){  // 回傳折線點陣列(到螢幕)
-  const n=nOf(lam);
-  // 入射:由左方瞄準左面中點 M，入射角 θ1 相對左面法線
-  const {T,L,Rr,nLeft,nRight,M,screenX}=geo;
-  // 由 inc 角構造入射方向:左面外法線 nLeft 指向空氣側,入射線與 nLeft 夾角=inc
-  const faceL=norm(sub(L,T));  // 左面方向(沿面,T→L 朝左下)
-  const th=rad(state.inc);
-  // 入射方向 = 內法線(−nLeft)繞面切線旋轉 inc 角 → 與法線夾角=入射角
-  const base=mul(nLeft,-1);    // 指向稜鏡內部
-  const din=norm(V(base.x*Math.cos(th)+(-faceL.x)*Math.sin(th),
-                   base.y*Math.cos(th)+(-faceL.y)*Math.sin(th)));
-  const Psrc=add(M,mul(din,-260));   // 由入射方向回推光源位置
-  const pts=[Psrc];
-  // 第一面折射(空氣→玻璃)
-  const h1=segHit(Psrc,din,T,L); if(!h1)return null; pts.push(h1.pt);
-  const d1=refract(din,nLeft,1/n); if(!d1)return null;
-  // 第二面(玻璃→空氣)
-  const h2=segHit(h1.pt,d1,T,Rr); if(!h2){ // 可能打到底面→當作未出射
-    return null;} pts.push(h2.pt);
-  const d2=refract(d1,mul(nRight,-1),n); if(!d2)return null;  // 出射,法線指向玻璃內,故取反由 refract 處理
-  // 延伸到螢幕
-  const tS=(screenX-h2.pt.x)/(d2.x||1e-6); const end=add(h2.pt,mul(d2,Math.max(20,tS)));
-  pts.push(end);
-  return pts;
-}
-function draw(){const W=sc._w,H=sc._h;S.scene(sc,SKY,{});
-  // 稜鏡幾何
-  const cx=W*0.40, cy=H*0.54, sz=Math.min(150,H*0.46);
+
+function getGeo(W,H){
+  W=(typeof W==='number')?W:(sc?sc._w:800);
+  H=(typeof H==='number')?H:(sc?sc._h:432);
+  const dev=deviation(550);
+  // 大色散 / 大偏向角時，自適應動態往左、往上微調，給出射扇形預留足夠投射空間
+  const devNorm=dev!=null?Math.max(0,Math.min(1,(dev-20)/45)):0.5;
+  const cx=W*(0.38-0.08*devNorm);
+  const cy=H*(0.47-0.15*devNorm);
+  const sz=Math.min(130,H*0.40,W*0.22);
   const a2=rad(state.apex/2);
   const T=V(cx, cy-sz*0.62);
-  // 半底寬 = 高·tan(A/2)，頂角才會真的等於 A（原本用 sin(A/2)·sz，60° 稜鏡實際畫成 51°，光線偏向角與 HUD 不符）
   const L=V(cx-Math.tan(a2)*sz*1.04, cy+sz*0.42);
   const Rr=V(cx+Math.tan(a2)*sz*1.04, cy+sz*0.42);
   const G=V((T.x+L.x+Rr.x)/3,(T.y+L.y+Rr.y)/3);
@@ -187,46 +177,202 @@ function draw(){const W=sc._w,H=sc._h;S.scene(sc,SKY,{});
     if(dot(sub(mid,G),nn)<0)nn=mul(nn,-1);return nn;}
   const nLeft=outN(T,L), nRight=outN(T,Rr);
   const M=mul(add(T,L),0.5);
-  const screenX=W-30;
-  const geo={T,L,Rr,nLeft,nRight,M,screenX};
-  // 螢幕
-  sc.fillStyle='rgba(20,26,40,.7)';sc.fillRect(screenX,40,8,H-80);
-  // 白光入射(畫一次,用中間波長路徑的入射段)
-  const wref=tracePrism(550,geo);
-  if(wref){sc.strokeStyle='rgba(255,255,255,.92)';sc.lineWidth=3;sc.beginPath();sc.moveTo(wref[0].x,wref[0].y);sc.lineTo(wref[1].x,wref[1].y);sc.stroke();
-    sc.fillStyle='rgba(255,255,255,.85)';sc.font='12px system-ui';sc.fillText('白光',wref[0].x+6,wref[0].y-8);}
-  // 各色光線（出射段相對中央光線放大色散角顯示，順序與相對間距仍正確）
-  const AMP=6;
-  const refp=tracePrism(550,geo);
-  const refAng=refp?Math.atan2(refp[3].y-refp[2].y, refp[3].x-refp[2].x):0;
-  let landMin=1e9,landMax=-1e9,yRed=null,yVio=null;
-  LAMS.forEach(lam=>{const pts=tracePrism(lam,geo); if(!pts)return; const c=wlColor(lam);
-    // 入射→第一面→第二面(實體段)
-    sc.strokeStyle=`rgb(${c[0]},${c[1]},${c[2]})`;sc.lineWidth=2.2;sc.beginPath();
-    sc.moveTo(pts[1].x,pts[1].y);sc.lineTo(pts[2].x,pts[2].y);
-    // 出射段:放大角度
-    const rawAng=Math.atan2(pts[3].y-pts[2].y, pts[3].x-pts[2].x);
-    const ampAng=refAng+(rawAng-refAng)*AMP;
-    const dx=Math.cos(ampAng)||1e-6, t=(screenX-pts[2].x)/dx;
-    const ly=pts[2].y+Math.sin(ampAng)*Math.max(20,t);
-    sc.lineTo(screenX,ly);sc.stroke();
-    landMin=Math.min(landMin,ly);landMax=Math.max(landMax,ly);if(lam===660)yRed=ly;if(lam===430)yVio=ly;
-    sc.fillStyle=`rgb(${c[0]},${c[1]},${c[2]})`;sc.fillRect(screenX,ly-4,8,8);
+  const screenX=W-25;
+  return {T,L,Rr,nLeft,nRight,M,screenX,cx,cy,sz,W,H};
+}
+
+function tracePrism(lam,geo){  // 回傳折線點陣列(到螢幕)
+  if(!geo) geo=getGeo(sc?sc._w:800, sc?sc._h:432);
+  const n=nOf(lam);
+  // 入射:由左方瞄準左面中點 M，入射角 θ1 相對左面法線
+  const {T,L,Rr,nLeft,nRight,M,screenX}=geo;
+  const faceL=norm(sub(L,T));
+  const th=rad(state.inc);
+  const base=mul(nLeft,-1);
+  const din=norm(V(base.x*Math.cos(th)+(-faceL.x)*Math.sin(th),
+                   base.y*Math.cos(th)+(-faceL.y)*Math.sin(th)));
+  const Psrc=add(M,mul(din,-260));
+  const pts=[Psrc];
+  // 第一面折射(空氣→玻璃)
+  const h1=segHit(Psrc,din,T,L); if(!h1)return null; pts.push(h1.pt);
+  const d1=refract(din,nLeft,1/n); if(!d1)return null;
+  // 第二面(玻璃→空氣)
+  const h2=segHit(h1.pt,d1,T,Rr); if(!h2) return null; pts.push(h2.pt);
+  const d2=refract(d1,mul(nRight,-1),n); if(!d2)return null;
+  // 延伸到螢幕基準線
+  const tS=(screenX-h2.pt.x)/(d2.x||1e-6); const end=add(h2.pt,mul(d2,Math.max(20,tS)));
+  pts.push(end);
+  return pts;
+}
+
+// 算出各波長出射光線在畫面上的終點座標陣列 [{lam,x,y}]（實際用來畫的點，保證留在 0<=x<=W, 0<=y<=H 內）
+function rayEndpoints(W,H){
+  W=(typeof W==='number')?W:(sc?sc._w:800);
+  H=(typeof H==='number')?H:(sc?sc._h:432);
+  const geo=getGeo(W,H);
+
+  const traces=[];
+  LAMS.forEach(lam=>{
+    const pts=tracePrism(lam,geo);
+    if(pts && pts.length>=4){
+      const rawAng=Math.atan2(pts[3].y-pts[2].y, pts[3].x-pts[2].x);
+      traces.push({lam,pts,rawAng});
+    }
   });
-  if(!wref){sc.fillStyle='#ffb3c1';sc.font='bold 13px system-ui';sc.textAlign='center';
-    sc.fillText(deviation(550)==null?'光在第二面發生全反射，無法從斜面射出':'光線打到稜鏡底面，未從第二面射出',W/2,40);sc.textAlign='left';}
+  if(traces.length===0)return [];
+
+  const ref=traces.find(t=>t.lam===550)||traces[Math.floor(traces.length/2)];
+  const refAng=ref.rawAng;
+
+  // 自適應放大倍率 AMP：放大色散角以利肉眼觀察，但控制整體扇形張角避免爆框
+  let minAng=Infinity, maxAng=-Infinity;
+  traces.forEach(t=>{
+    if(t.rawAng<minAng)minAng=t.rawAng;
+    if(t.rawAng>maxAng)maxAng=t.rawAng;
+  });
+  const rawSpread=Math.max(1e-4, maxAng-minAng);
+  let AMP=5;
+  if(rawSpread*AMP > 0.28) AMP=0.28/rawSpread;
+  if(AMP<1.5) AMP=1.5;
+
+  // 畫面邊界嚴格限制在 [0, W] 與 [0, H] 內
+  const xMin=10, xMax=Math.max(xMin+10, W-25);
+  const yMin=10, yMax=Math.max(yMin+10, H-15);
+
+  const endpoints=[];
+  traces.forEach(t=>{
+    const P2=t.pts[2];
+    const ampAng=refAng+(t.rawAng-refAng)*AMP;
+    const dx=Math.cos(ampAng), dy=Math.sin(ampAng);
+
+    let tEnd=Infinity;
+    if(dx>1e-6){
+      const ts=(xMax-P2.x)/dx;
+      if(ts>0 && ts<tEnd) tEnd=ts;
+    }else if(dx<-1e-6){
+      const ts=(xMin-P2.x)/dx;
+      if(ts>0 && ts<tEnd) tEnd=ts;
+    }
+    if(dy>1e-6){
+      const ty=(yMax-P2.y)/dy;
+      if(ty>0 && ty<tEnd) tEnd=ty;
+    }else if(dy<-1e-6){
+      const ty=(yMin-P2.y)/dy;
+      if(ty>0 && ty<tEnd) tEnd=ty;
+    }
+
+    if(!isFinite(tEnd) || tEnd<10) tEnd=40;
+    let ex=P2.x+tEnd*dx;
+    let ey=P2.y+tEnd*dy;
+
+    ex=Math.max(0,Math.min(W,ex));
+    ey=Math.max(0,Math.min(H,ey));
+
+    endpoints.push({lam:t.lam, x:ex, y:ey});
+  });
+
+  return endpoints;
+}
+
+function draw(){
+  const W=sc._w, H=sc._h;
+  S.scene(sc,SKY,{});
+
+  const geo=getGeo(W,H);
+  const {T,L,Rr,cx,cy,screenX}=geo;
+  const endpoints=rayEndpoints(W,H);
+
+  // 接收屏：右側立面螢幕；若光線落在底部邊緣，同時繪製底部接收板
+  sc.fillStyle='rgba(20,26,40,.75)';
+  sc.fillRect(screenX,40,8,H-75);
+
+  const landsOnBottom=endpoints.some(p=>p.y>=H-25);
+  if(landsOnBottom){
+    const bottomPts=endpoints.filter(p=>p.y>=H-25);
+    const minX=Math.min(...bottomPts.map(p=>p.x));
+    const maxX=Math.max(...bottomPts.map(p=>p.x));
+    sc.fillStyle='rgba(20,26,40,.85)';
+    sc.fillRect(Math.max(10,minX-20), H-19, (maxX-minX)+40, 8);
+  }
+
+  // 白光入射(畫一次，用中間波長路徑的入射段)
+  const wref=tracePrism(550,geo);
+  if(wref){
+    sc.strokeStyle='rgba(255,255,255,.92)';
+    sc.lineWidth=3;
+    sc.beginPath();
+    sc.moveTo(wref[0].x,wref[0].y);
+    sc.lineTo(wref[1].x,wref[1].y);
+    sc.stroke();
+    sc.fillStyle='rgba(255,255,255,.85)';
+    sc.font='12px system-ui';
+    sc.fillText('白光',Math.max(10,wref[0].x+6),wref[0].y-8);
+  }
+
+  // 繪製各色光線（實體段 + 出射段延伸到邊緣終點）
+  let yRed=null, yVio=null, xRed=null, xVio=null;
+  endpoints.forEach(ep=>{
+    const pts=tracePrism(ep.lam,geo);
+    if(!pts)return;
+    const c=wlColor(ep.lam);
+    sc.strokeStyle=`rgb(${c[0]},${c[1]},${c[2]})`;
+    sc.lineWidth=2.2;
+    sc.beginPath();
+    // 稜鏡內路徑
+    sc.moveTo(pts[1].x,pts[1].y);
+    sc.lineTo(pts[2].x,pts[2].y);
+    // 出射段：直達終點
+    sc.lineTo(ep.x,ep.y);
+    sc.stroke();
+
+    // 邊緣落點色標
+    sc.fillStyle=`rgb(${c[0]},${c[1]},${c[2]})`;
+    sc.fillRect(ep.x-4,ep.y-4,8,8);
+
+    if(ep.lam===660){yRed=ep.y;xRed=ep.x;}
+    if(ep.lam===430){yVio=ep.y;xVio=ep.x;}
+  });
+
+  if(!wref || endpoints.length===0){
+    sc.fillStyle='#ffb3c1';
+    sc.font='bold 13px system-ui';
+    sc.textAlign='center';
+    sc.fillText(deviation(550)==null?'光在第二面發生全反射，無法從斜面射出':'光線打到稜鏡底面，未從第二面射出',W/2,40);
+    sc.textAlign='left';
+  }
+
   // 稜鏡(半透明)
   sc.beginPath();sc.moveTo(T.x,T.y);sc.lineTo(L.x,L.y);sc.lineTo(Rr.x,Rr.y);sc.closePath();
-  const pg=sc.createLinearGradient(L.x,T.y,Rr.x,Rr.y);pg.addColorStop(0,'rgba(150,180,220,.18)');pg.addColorStop(1,'rgba(120,150,200,.10)');
-  sc.fillStyle=pg;sc.fill();sc.strokeStyle='rgba(180,205,235,.6)';sc.lineWidth=1.6;sc.stroke();
-  sc.fillStyle='rgba(190,205,235,.75)';sc.font='12px system-ui';sc.fillText('A='+state.apex+'°',cx-14,T.y-6);
-  // 螢幕光譜標註
-  if(landMax>landMin){sc.fillStyle='rgba(210,220,240,.8)';sc.font='11px system-ui';
-    // 依實際落點標紅、紫（原本寫反：紅光偏折最少、落在上方＝landMin）
-    if(yRed!=null)sc.fillText('紅',screenX-18,yRed+4);if(yVio!=null)sc.fillText('紫',screenX-18,yVio+4);
-    sc.fillText('光譜',screenX-26,(landMin+landMax)/2);}
+  const pg=sc.createLinearGradient(L.x,T.y,Rr.x,Rr.y);
+  pg.addColorStop(0,'rgba(150,180,220,.18)');
+  pg.addColorStop(1,'rgba(120,150,200,.10)');
+  sc.fillStyle=pg;sc.fill();
+  sc.strokeStyle='rgba(180,205,235,.6)';
+  sc.lineWidth=1.6;
+  sc.stroke();
+  sc.fillStyle='rgba(190,205,235,.75)';
+  sc.font='12px system-ui';
+  sc.fillText('A='+state.apex+'°',cx-14,T.y-6);
+
+  // 落點標註
+  if(endpoints.length>0 && xRed!=null && xVio!=null){
+    sc.fillStyle='rgba(210,220,240,.85)';
+    sc.font='11px system-ui';
+    const onBottom=(yRed>=H-25 && yVio>=H-25);
+    if(onBottom){
+      sc.fillText('紅',xRed-6,yRed-10);
+      sc.fillText('紫',xVio-6,yVio-10);
+      sc.fillText('光譜',(xRed+xVio)/2-12,yRed-10);
+    }else{
+      sc.fillText('紅',xRed-18,yRed+4);
+      sc.fillText('紫',xVio-18,yVio+4);
+      sc.fillText('光譜',Math.min(xRed,xVio)-26,(yRed+yVio)/2);
+    }
+  }
+
   updateHud();
 }
+
 function updateHud(){const nr=nOf(660),nv=nOf(430),dr=deviation(660),dv=deviation(430);
   const spread=(dr!=null&&dv!=null)?(dv-dr).toFixed(2)+'°':'—';
   document.getElementById('hud').innerHTML=
@@ -237,7 +383,7 @@ function updateHud(){const nr=nOf(660),nv=nOf(430),dr=deviation(660),dv=deviatio
 
 document.getElementById('glass').onclick=function(){gk=(gk==='crown')?'flint':'crown';
   this.textContent='玻璃：'+(gk==='crown'?'冕牌':'火石');this.classList.toggle('on',gk==='crown');recompute();draw();};
-// 「接近最小偏向角」依目前玻璃即時計算：光在稜鏡內對稱穿過（r₁=A/2）時 sinθ₁ = n·sin(A/2)（原寫死 42°，冕牌實際約 49°）
+// 「接近最小偏向角」依目前玻璃即時計算：光在稜鏡內對稱穿過（r₁=A/2）時 sinθ₁ = n·sin(A/2)
 document.querySelectorAll('[data-p]').forEach(b=>b.onclick=()=>{const a=b.dataset.p.split(',');
   const inc=a[1]==='min'?Math.round(deg(Math.asin(Math.min(1,nOf(550)*Math.sin(rad(+a[0]/2)))))):+a[1];setP(+a[0],inc);});
 
