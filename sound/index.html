@@ -17,12 +17,12 @@
   header p{color:var(--muted);margin:.2em 0 1em;line-height:1.6}
   .badge{display:inline-block;background:var(--panel2);border:1px solid var(--line);color:var(--muted);font-size:.72rem;padding:2px 8px;border-radius:99px;margin-right:6px}
   .modes{display:flex;gap:8px;margin:6px 0 14px;flex-wrap:wrap;align-items:center}
-  .modes button{background:var(--panel2);color:var(--txt);border:1px solid var(--line);padding:8px 13px;border-radius:9px;cursor:pointer;font-size:.85rem;font-family:inherit}
+  .modes button{background:var(--panel2);color:var(--txt);border:1px solid var(--line);padding:8px 14px;border-radius:9px;cursor:pointer;font-size:.85rem;font-family:inherit;min-height:44px;display:inline-flex;align-items:center;justify-content:center}
   .modes button.on{background:var(--accent);color:#04121c;border-color:var(--accent);font-weight:700}
   #playBtn.on{background:#7CFFB2;border-color:#7CFFB2;color:#04211a}
-  .stage{position:relative;border-radius:14px;overflow:hidden;border:1px solid var(--line);margin-bottom:14px;box-shadow:0 12px 36px rgba(0,0,0,.4)}
-  .stage .lab{position:absolute;top:10px;left:12px;font-size:.78rem;color:#9fb4d8;z-index:2}
-  .stage .sub{position:absolute;top:10px;right:12px;font-size:.78rem;color:#9fb4d8;z-index:2}
+  .stage{position:relative;border-radius:14px;overflow:hidden;border:1px solid var(--line);margin-bottom:14px;box-shadow:0 12px 36px rgba(0,0,0,.4);transition:opacity .2s}
+  .stage .lab{position:absolute;top:10px;left:12px;font-size:.78rem;color:#9fb4d8;z-index:2;pointer-events:none}
+  .stage .sub{position:absolute;top:10px;right:12px;font-size:.78rem;color:#9fb4d8;z-index:2;pointer-events:none}
   canvas{display:block;width:100%}
   .statgrid{display:grid;grid-template-columns:repeat(auto-fit,minmax(120px,1fr));gap:10px;margin:2px 0 14px}
   .box{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:10px 12px}
@@ -31,11 +31,19 @@
   .sld{flex:1;min-width:150px}
   .sld label{display:flex;justify-content:space-between;font-size:.82rem;color:var(--muted);margin-bottom:5px}
   .sld label .v{font-variant-numeric:tabular-nums;font-weight:700}
-  .sld input{width:100%}
+  .sld input{width:100%;height:32px;cursor:pointer}
   #r_f1{accent-color:#4cc2ff}#r_f2{accent-color:#8b9cff}#r_vol{accent-color:#7CFFB2}
   .note{background:var(--panel);border-left:3px solid var(--accent2);border-radius:8px;padding:12px 14px;color:var(--muted);font-size:.86rem;line-height:1.7;margin-top:14px}
   .note b{color:var(--txt)}.note code{background:var(--bg2);padding:1px 6px;border-radius:5px;color:var(--green);font-size:.85em}
   footer{color:var(--muted);font-size:.78rem;margin-top:24px;text-align:center;line-height:1.7}
+  @media(max-width:600px){
+    .wrap{padding:12px 10px 48px}
+    .modes{gap:6px}
+    .modes button{flex:1 1 auto;min-height:44px;padding:8px 10px;font-size:.82rem}
+    .stage .lab,.stage .sub{font-size:.72rem}
+    .box{padding:8px 10px}
+    .box .v{font-size:.95rem}
+  }
 </style>
 </head>
 <body data-demo="聲波合成器">
@@ -90,25 +98,37 @@ sliders.forEach(s=>{ state[s.id]=s.val;
   d.querySelector('input').addEventListener('input',e=>{state[s.id]=parseFloat(e.target.value);
     document.getElementById('v_'+s.id).textContent=`${state[s.id]} ${s.unit}`;updateAudio();});
 });
+
 function wsample(type,ph){ph=ph%(2*Math.PI);if(ph<0)ph+=2*Math.PI;
   if(type==='sine')return Math.sin(ph);if(type==='square')return Math.sin(ph)>=0?1:-1;
   if(type==='triangle')return 2/Math.PI*Math.asin(Math.sin(ph));return ph/Math.PI-1;}
+
+function mixSample(t,f1,f2,type,dual){
+  return wsample(type,2*Math.PI*f1*t)+(dual?wsample(type,2*Math.PI*f2*t):0);
+}
+
 let wc,bc;
 function setupCanvases(){wc=S.fit(document.getElementById('wave'),5.2);bc=S.fit(document.getElementById('beat'),5.2);}
 function glowLine(ctx,pts,rgb,w){ctx.save();ctx.globalCompositeOperation='lighter';ctx.shadowColor=`rgb(${rgb})`;ctx.shadowBlur=10;
   ctx.strokeStyle=`rgb(${rgb})`;ctx.lineWidth=w;ctx.beginPath();pts.forEach((p,i)=>i?ctx.lineTo(p[0],p[1]):ctx.moveTo(p[0],p[1]));ctx.stroke();ctx.restore();}
+
 function drawWave(){const W=wc._w,H=wc._h,mid=H/2;wc.fillStyle='#080c16';wc.fillRect(0,0,W,H);
   wc.strokeStyle='#16202f';wc.beginPath();wc.moveTo(0,mid);wc.lineTo(W,mid);wc.stroke();
-  // 固定顯示 15 ms：頻率越高、畫面上的週期越多（原本固定畫 6 個週期，改 f₁ 波形完全不變，看不出音調）。
-  // 振幅與音量成正比（原本 0% 音量仍畫 20% 振幅）。
   const WIN=0.015,cycles=state.f1*WIN,A=(H/2-12)*(state.vol/100),pts=[];
   for(let i=0;i<=W;i++)pts.push([i,mid-wsample(wf,i/W*cycles*2*Math.PI)*A]);
   glowLine(wc,pts,'76,194,255',2.6);
   wc.fillStyle='#8a99ad';wc.font='10px system-ui';wc.textAlign='right';wc.fillText('顯示 15 ms（'+cycles.toFixed(1)+' 個週期）',W-6,H-5);wc.textAlign='left';
   document.getElementById('sub1').textContent=wf+'　f₁='+state.f1+' Hz';}
+
 function drawBeat(){const W=bc._w,H=bc._h,mid=H/2;bc.fillStyle='#080c16';bc.fillRect(0,0,W,H);
   bc.strokeStyle='#16202f';bc.beginPath();bc.moveTo(0,mid);bc.lineTo(W,mid);bc.stroke();
-  if(!dual){bc.fillStyle='#46566b';bc.font='13px system-ui';bc.fillText('（單音模式：開啟「雙音」以觀察拍音）',W/2-130,mid);return;}
+  if(!dual){
+    bc.fillStyle='#46566b';bc.font='13px system-ui';bc.textAlign='center';
+    bc.fillText('（單音模式：開啟「雙音」以觀察拍音）',W/2,mid);
+    bc.textAlign='left';
+    document.getElementById('sub2').textContent='單音模式';
+    return;
+  }
   const df=Math.abs(state.f1-state.f2),win=df>0.2?3/df:0.02,A=(H/2-14)*(state.vol/100);
   // 包絡(填色)
   bc.fillStyle='rgba(124,255,178,.1)';bc.beginPath();
@@ -116,16 +136,24 @@ function drawBeat(){const W=bc._w,H=bc._h,mid=H/2;bc.fillStyle='#080c16';bc.fill
   for(let i=W;i>=0;i--){const e=A*Math.abs(2*Math.cos(Math.PI*df*(i/W*win)));bc.lineTo(i,mid+e*0.5);}bc.closePath();bc.fill();
   bc.strokeStyle='rgba(124,255,178,.6)';bc.lineWidth=1.5;
   [1,-1].forEach(sg=>{bc.beginPath();for(let i=0;i<=W;i++){const e=sg*A*Math.abs(2*Math.cos(Math.PI*df*(i/W*win)));i?bc.lineTo(i,mid-e*0.5):bc.moveTo(i,mid-e*0.5);}bc.stroke();});
-  // 疊加波(發光)
-  const NS=3000,pts=[];for(let i=0;i<=NS;i++){const t=i/NS*win,v=Math.sin(2*Math.PI*state.f1*t)+Math.sin(2*Math.PI*state.f2*t);pts.push([i/NS*W,mid-v*A*0.5]);}
+  // 疊加波(依目前音色 mixSample 計算)
+  const NS=3000,pts=[];
+  for(let i=0;i<=NS;i++){
+    const t=i/NS*win;
+    const v=mixSample(t,state.f1,state.f2,wf,dual);
+    pts.push([i/NS*W,mid-v*A*0.5]);
+  }
   glowLine(bc,pts,'76,194,255',1.4);
   if(df>0.2){const Tb=1/df,xb=Tb/win*W;bc.strokeStyle='#7CFFB2';bc.setLineDash([3,3]);bc.beginPath();bc.moveTo(xb,12);bc.lineTo(xb,H-12);bc.stroke();bc.setLineDash([]);
     bc.fillStyle='#7CFFB2';bc.font='11px system-ui';bc.fillText('1 拍 ('+Tb.toFixed(3)+'s)',6,16);}
   document.getElementById('sub2').textContent='拍頻 '+df.toFixed(1)+' Hz';}
+
 function drawStats(){const df=Math.abs(state.f1-state.f2);
   const rows=[['頻率 f₁',state.f1+' Hz','#4cc2ff'],['頻率 f₂',state.f2+' Hz','#8b9cff'],['拍頻 |f₁−f₂|',dual?df.toFixed(1)+' Hz':'—','#7CFFB2'],['拍週期',dual&&df>0.2?(1/df).toFixed(3)+' s':'—','#ffce54']];
   document.getElementById('stats').innerHTML=rows.map(r=>`<div class="box"><div class="k">${r[0]}</div><div class="v" style="color:${r[2]}">${r[1]}</div></div>`).join('');}
+
 function frow(n,sym,sub,val){return `<div class="frow"><span class="fname">${n}</span><span class="fsym">${sym}</span><span class="fsub">= ${sub}</span><span class="fval">${val}</span></div>`;}
+
 function updateFormula(){
   const f1=state.f1,f2=state.f2,vol=state.vol;
   const df=Math.abs(f1-f2);
@@ -143,22 +171,100 @@ function updateFormula(){
   }
   document.getElementById('formula').innerHTML=html;
 }
+
 function redraw(){drawWave();drawBeat();drawStats();updateFormula();}
 
 // ---- Web Audio ----
-let actx=null,o1=null,o2=null,g=null,playing=false;
-function startAudio(){if(!actx)actx=new (window.AudioContext||window.webkitAudioContext)();if(actx.state==='suspended')actx.resume();
-  g=actx.createGain();g.gain.value=0.0001;g.connect(actx.destination);
-  o1=actx.createOscillator();o1.type=wf;o1.frequency.value=state.f1;o1.connect(g);o1.start();
-  o2=actx.createOscillator();o2.type=wf;o2.frequency.value=dual?state.f2:state.f1;o2.connect(g);o2.start();setGain();playing=true;}
-function stopAudio(){if(o1){o1.stop();o2.stop();o1.disconnect();o2.disconnect();g.disconnect();o1=o2=null;}playing=false;}
-function setGain(){if(g)g.gain.setTargetAtTime(state.vol/100*0.18,actx.currentTime,0.02);}
-function updateAudio(){if(playing){o1.frequency.setTargetAtTime(state.f1,actx.currentTime,0.01);o2.frequency.setTargetAtTime(dual?state.f2:state.f1,actx.currentTime,0.01);o1.type=wf;o2.type=wf;setGain();}redraw();}
+let actx=null,o1=null,o2=null,g=null,g2=null,playing=false;
+
+function startAudio(){
+  if(!actx)actx=new (window.AudioContext||window.webkitAudioContext)();
+  if(actx.state==='suspended')actx.resume();
+  const t=actx.currentTime;
+  g=actx.createGain();
+  g.gain.setValueAtTime(0.0001,t);
+  g.connect(actx.destination);
+
+  g2=actx.createGain();
+  g2.gain.setValueAtTime(dual?1:0.0001,t);
+  g2.connect(g);
+
+  o1=actx.createOscillator();
+  o1.type=wf;
+  o1.frequency.setValueAtTime(state.f1,t);
+  o1.connect(g);
+  o1.start();
+
+  o2=actx.createOscillator();
+  o2.type=wf;
+  o2.frequency.setValueAtTime(state.f2,t);
+  o2.connect(g2);
+  o2.start();
+
+  setGain();
+  playing=true;
+}
+
+function stopAudio(){
+  if(o1){
+    try{o1.stop();}catch(e){}
+    try{o2.stop();}catch(e){}
+    try{o1.disconnect();}catch(e){}
+    try{o2.disconnect();}catch(e){}
+    if(g2){try{g2.disconnect();}catch(e){}g2=null;}
+    if(g){try{g.disconnect();}catch(e){}g=null;}
+    o1=o2=null;
+  }
+  playing=false;
+}
+
+function setGain(){
+  if(!actx)return;
+  const t=actx.currentTime;
+  if(g)g.gain.setTargetAtTime(state.vol/100*0.18,t,0.03);
+  if(g2)g2.gain.setTargetAtTime(dual?1:0,t,0.03);
+}
+
+function updateAudio(){
+  if(playing&&actx&&o1&&o2){
+    const t=actx.currentTime;
+    o1.frequency.setTargetAtTime(state.f1,t,0.03);
+    o2.frequency.setTargetAtTime(state.f2,t,0.03);
+    o1.type=wf;
+    o2.type=wf;
+    setGain();
+  }
+  redraw();
+}
+
 const playBtn=document.getElementById('playBtn');
-playBtn.onclick=()=>{if(playing){stopAudio();playBtn.classList.remove('on');playBtn.textContent='▶ 播放聲音';}else{startAudio();playBtn.classList.add('on');playBtn.textContent='⏹ 停止聲音';}};
+playBtn.onclick=()=>{
+  if(playing){
+    stopAudio();
+    playBtn.classList.remove('on');
+    playBtn.textContent='▶ 播放聲音';
+  }else{
+    startAudio();
+    playBtn.classList.add('on');
+    playBtn.textContent='⏹ 停止聲音';
+  }
+};
+
 const dualBtn=document.getElementById('dualBtn');
-dualBtn.onclick=()=>{dual=!dual;dualBtn.classList.toggle('on',dual);dualBtn.textContent=dual?'雙音（拍音）':'單音';document.getElementById('beatStage').style.opacity=dual?1:.5;updateAudio();};
-document.querySelectorAll('.wf').forEach(b=>b.onclick=()=>{wf=b.dataset.wf;document.querySelectorAll('.wf').forEach(x=>x.classList.toggle('on',x===b));updateAudio();});
+dualBtn.onclick=()=>{
+  dual=!dual;
+  dualBtn.classList.toggle('on',dual);
+  dualBtn.textContent=dual?'雙音（拍音）':'單音';
+  document.getElementById('beatStage').style.opacity=dual?'1':'0.5';
+  updateAudio();
+};
+
+document.querySelectorAll('.wf').forEach(b=>b.onclick=()=>{
+  wf=b.dataset.wf;
+  document.querySelectorAll('.wf').forEach(x=>x.classList.toggle('on',x===b));
+  updateAudio();
+});
+
 window.addEventListener('beforeunload',stopAudio);
 window.addEventListener('load',()=>{setupCanvases();redraw();});
 window.addEventListener('resize',()=>{setupCanvases();redraw();});

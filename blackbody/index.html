@@ -17,25 +17,185 @@
   header h1{font-size:1.5rem;margin:.2em 0}
   header p{color:var(--muted);margin:.2em 0 1em;line-height:1.6}
   .badge{display:inline-block;background:var(--panel2);border:1px solid var(--line);color:var(--muted);font-size:.72rem;padding:2px 8px;border-radius:99px;margin-right:6px}
-  .scene-wrap{position:relative;border-radius:16px;overflow:hidden;border:1px solid var(--line);box-shadow:0 18px 50px rgba(0,0,0,.45)}
-  #scene{display:block;width:100%}
-  .hud{position:absolute;top:12px;left:12px;display:flex;gap:8px;flex-wrap:wrap;pointer-events:none}
-  .chip{background:rgba(10,16,24,.62);backdrop-filter:blur(6px);border:1px solid rgba(120,180,255,.16);border-radius:10px;padding:6px 11px;color:#dceaff;font-size:.8rem;line-height:1.25}
-  .chip b{display:block;font-size:1.02rem;font-variant-numeric:tabular-nums;color:#fff}
-  .chip.amber b{color:#ffd27a}.chip.cyan b{color:#6cd0ff}.chip.green b{color:#7CFFB2}
-  .toolbar{position:absolute;bottom:12px;right:12px;display:flex;gap:7px;flex-wrap:wrap;justify-content:flex-end}
-  .toolbar button{background:rgba(10,16,24,.62);backdrop-filter:blur(6px);color:#dceaff;border:1px solid rgba(120,180,255,.2);border-radius:9px;padding:7px 11px;font-size:.82rem;cursor:pointer;font-family:inherit}
-  .toolbar button.on{background:var(--accent);color:#04121c;border-color:var(--accent);font-weight:700}
-  @media(max-width:560px){.toolbar{position:static;justify-content:center;padding:8px 10px;background:rgba(8,14,22,.5);border-top:1px solid var(--line)}}
+
+  /* 模擬外框：高度僅由寬度與固定寬高比決定，絕不隨溫度或文字長短改變 */
+  .scene-wrap{
+    position:relative;
+    border-radius:16px;
+    overflow:hidden;
+    border:1px solid var(--line);
+    box-shadow:0 18px 50px rgba(0,0,0,.45);
+    background:#070d15;
+  }
+  #scene{
+    display:block;
+    width:100%;
+    aspect-ratio:1.85;
+    height:auto;
+  }
+
+  /* HUD 數值卡 */
+  .hud{
+    position:absolute;
+    top:12px;
+    left:12px;
+    display:flex;
+    gap:8px;
+    flex-wrap:wrap;
+    pointer-events:none;
+    z-index:2;
+  }
+  .chip{
+    background:rgba(10,16,24,.75);
+    backdrop-filter:blur(6px);
+    border:1px solid rgba(120,180,255,.16);
+    border-radius:10px;
+    padding:6px 11px;
+    color:#dceaff;
+    font-size:.8rem;
+    line-height:1.25;
+    min-height:48px;
+    box-sizing:border-box;
+  }
+  .chip b{
+    display:block;
+    font-size:1.02rem;
+    font-variant-numeric:tabular-nums;
+    color:#fff;
+    white-space:nowrap;
+  }
+  .chip.amber b{color:#ffd27a}
+  .chip.cyan b{color:#6cd0ff}
+  .chip.green b{color:#7CFFB2}
+
+  /* 工具列 */
+  .toolbar{
+    position:absolute;
+    bottom:12px;
+    right:12px;
+    display:flex;
+    gap:7px;
+    flex-wrap:wrap;
+    justify-content:flex-end;
+    z-index:2;
+  }
+  .toolbar button{
+    background:rgba(10,16,24,.75);
+    backdrop-filter:blur(6px);
+    color:#dceaff;
+    border:1px solid rgba(120,180,255,.2);
+    border-radius:9px;
+    padding:7px 12px;
+    font-size:.82rem;
+    cursor:pointer;
+    font-family:inherit;
+    min-height:36px;
+    display:inline-flex;
+    align-items:center;
+    justify-content:center;
+  }
+  .toolbar button.on{
+    background:var(--accent);
+    color:#04121c;
+    border-color:var(--accent);
+    font-weight:700;
+  }
+
+  /* 手機窄螢幕適配（寬 ≤ 600px）：數值卡與按鈕不疊在畫布上，排在畫布上方與下方；可按元素至少 44px 高 */
+  @media(max-width:600px){
+    .hud{
+      position:static;
+      display:grid;
+      grid-template-columns:repeat(3,1fr);
+      gap:6px;
+      padding:8px;
+      background:rgba(8,14,22,.9);
+      border-bottom:1px solid var(--line);
+      min-height:68px;
+      box-sizing:border-box;
+      pointer-events:auto;
+    }
+    .chip{
+      padding:6px 4px;
+      font-size:.72rem;
+      min-height:50px;
+      display:flex;
+      flex-direction:column;
+      justify-content:center;
+      align-items:center;
+      text-align:center;
+    }
+    .chip b{
+      font-size:.82rem;
+    }
+    .toolbar{
+      position:static;
+      justify-content:center;
+      padding:10px;
+      background:rgba(8,14,22,.7);
+      border-top:1px solid var(--line);
+      min-height:64px;
+      box-sizing:border-box;
+    }
+    .toolbar button{
+      min-height:44px;
+      min-width:140px;
+      font-size:.88rem;
+    }
+  }
+
+  /* 滑桿列 */
   .bar{display:flex;gap:14px;flex-wrap:wrap;align-items:flex-end;background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:14px 16px;margin-top:14px}
   .sld{flex:1;min-width:200px}
-  .sld label{display:flex;justify-content:space-between;font-size:.82rem;color:var(--muted);margin-bottom:5px}
+  .sld label{display:flex;justify-content:space-between;font-size:.82rem;color:var(--muted);margin-bottom:6px;min-height:20px}
   .sld label .v{color:var(--accent);font-variant-numeric:tabular-nums;font-weight:700}
-  .sld input{width:100%;accent-color:var(--accent)}
+  .sld input{width:100%;accent-color:var(--accent);height:28px;cursor:pointer}
+
+  /* 情境按鈕：至少 44px 高 */
   .presets{display:flex;gap:7px;flex-wrap:wrap;align-items:center;margin-top:12px}
   .presets span{color:var(--muted);font-size:.8rem}
-  .pbtn{background:var(--panel2);color:var(--txt);border:1px solid var(--line);padding:7px 12px;border-radius:9px;cursor:pointer;font-size:.83rem;font-family:inherit}
+  .pbtn{
+    background:var(--panel2);
+    color:var(--txt);
+    border:1px solid var(--line);
+    padding:8px 14px;
+    border-radius:9px;
+    cursor:pointer;
+    font-size:.83rem;
+    font-family:inherit;
+    min-height:44px;
+    display:inline-flex;
+    align-items:center;
+    justify-content:center;
+  }
   .pbtn:hover{border-color:var(--accent)}
+
+  /* 計算公式面板：固定 min-height，避免數值代入時高度跳動推擠下方說明 */
+  .formula{
+    background:var(--panel);
+    border:1px solid var(--line);
+    border-radius:14px;
+    padding:14px 16px;
+    margin-top:14px;
+    min-height:190px;
+    box-sizing:border-box;
+  }
+  .formula h4{margin:0 0 10px;font-size:.92rem;color:var(--accent)}
+  .frow{display:flex;gap:10px;align-items:baseline;font-size:.83rem;padding:5px 0;border-bottom:1px solid rgba(255,255,255,.05);min-height:30px;box-sizing:border-box}
+  .fname{color:var(--muted);min-width:140px;flex-shrink:0}
+  .fsym{color:var(--txt);font-weight:700;min-width:70px;flex-shrink:0}
+  .fsub{color:var(--muted);font-family:monospace;flex:1;min-width:140px;font-variant-numeric:tabular-nums}
+  .fval{color:var(--accent);font-weight:700;font-variant-numeric:tabular-nums;text-align:right;white-space:nowrap}
+  .frel{margin-top:10px;font-size:.78rem;color:var(--muted);line-height:1.6;min-height:38px}
+
+  @media(max-width:600px){
+    .formula{min-height:250px}
+    .frow{flex-wrap:wrap;gap:4px;padding:6px 0}
+    .fname{min-width:100%}
+    .fsym{min-width:auto}
+    .fval{margin-left:auto}
+  }
+
   .note{background:var(--panel);border-left:3px solid var(--accent2);border-radius:8px;padding:12px 14px;color:var(--muted);font-size:.86rem;line-height:1.7;margin-top:14px}
   .note b{color:var(--txt)}.note code{background:var(--bg2);padding:1px 6px;border-radius:5px;color:var(--green);font-size:.85em}
   footer{color:var(--muted);font-size:.78rem;margin-top:24px;text-align:center;line-height:1.7}
@@ -51,8 +211,8 @@
   </header>
 
   <div class="scene-wrap">
-    <canvas id="scene" style="width:100%;aspect-ratio:1.85"></canvas>
     <div class="hud" id="hud"></div>
+    <canvas id="scene"></canvas>
     <div class="toolbar">
       <button id="tint" class="on">譜線著色：開</button>
     </div>
@@ -136,71 +296,218 @@ function updateFormula(){const lm=lamMax(),P=power(),Psun=sigma*Math.pow(5800,4)
 
 // ---- 視圖 ----
 let sc;
+let lastW = 0;
 const SKY={skyTop:'#0b1220',skyBottom:'#070d15',vignette:'rgba(0,0,0,.4)'};
-function setupCanvases(){sc=S.fit(document.getElementById('scene'),1.85);}
+function setupCanvases(){
+  const canvas = document.getElementById('scene');
+  sc = S.fit(canvas, 1.85);
+  lastW = canvas.parentElement ? canvas.parentElement.clientWidth : 0;
+}
 const LAM0=100, LAM1=2000;  // 顯示波長範圍 nm
-function draw(){const W=sc._w,H=sc._h;
+function draw(){
+  const W=sc._w, H=sc._h;
   S.scene(sc,SKY,{});
-  const ml=54,mr=14,mt=18,mb=34, gw=W-ml-mr-150, gh=H-mt-mb;  // 右側留 150px 給發光球
+
+  // 固定內部座標區域，右側保留 140px 放置發光球
+  const ml=60, mr=14, mt=20, mb=36;
+  const gw=W-ml-mr-140, gh=H-mt-mb;
   const x0=ml, y0=mt+gh;
   const xOf=nm=>x0+(nm-LAM0)/(LAM1-LAM0)*gw;
-  // 自動縮放:取目前曲線峰值
-  let peak=0; for(let nm=LAM0;nm<=LAM1;nm+=10){peak=Math.max(peak,planck(nm*1e-9,state.T));}
-  const yOf=B=>y0-(B/peak)*gh*0.9;
-  // 可見光底帶
-  for(let nm=380;nm<=750;nm+=4){const c=wlColor(nm);if(!c)continue;sc.fillStyle=`rgba(${c[0]},${c[1]},${c[2]},.5)`;sc.fillRect(xOf(nm),y0+4,Math.max(1,gw/((LAM1-LAM0)/4)+1),8);}
-  sc.fillStyle='rgba(200,210,230,.5)';sc.font='11px system-ui';sc.fillText('可見光',xOf(540)-16,y0+26);
-  // 座標軸
-  sc.strokeStyle='rgba(150,170,210,.5)';sc.lineWidth=1.2;
-  sc.beginPath();sc.moveTo(x0,mt);sc.lineTo(x0,y0);sc.lineTo(x0+gw,y0);sc.stroke();
-  sc.fillStyle='rgba(170,185,215,.7)';sc.font='10px system-ui';
-  for(const nm of [500,1000,1500,2000]){const x=xOf(nm);sc.beginPath();sc.moveTo(x,y0);sc.lineTo(x,y0+3);sc.stroke();sc.fillText(nm,x-10,y0+16);}
-  sc.fillText('波長 (nm)',x0+gw-58,mt+10);
-  sc.save();sc.translate(14,mt+gh/2);sc.rotate(-Math.PI/2);sc.fillText('輻射強度（相對值）',-46,0);sc.restore();
-  // 普朗克曲線 + 填色
+
+  // 自動縮放：在固定框內以目前溫度光譜峰值歸一化
+  const lm=lamMax();
+  let peak = planck(lm * 1e-9, state.T);
+  if (!isFinite(peak) || peak <= 0) peak = 1e-30;
+  for(let nm=LAM0; nm<=LAM1; nm+=10){
+    peak = Math.max(peak, planck(nm * 1e-9, state.T));
+  }
+
+  // 固定縱軸高度映射：以當前峰值為 1.0 (映射至 0.88 * gh)，保留頂部邊界空間
+  const scaleH = gh * 0.88;
+  const yOf = B => y0 - (B / peak) * scaleH;
+
+  // 繪製固定模擬框背景格線與縱軸刻度
+  sc.save();
+  const yTicks = [
+    { v: 0.0, l: '0' },
+    { v: 0.5, l: '0.5' },
+    { v: 1.0, l: '1.0' }
+  ];
+
+  yTicks.forEach(t => {
+    const y = y0 - t.v * scaleH;
+    // 水平對齊虛線
+    sc.strokeStyle = 'rgba(120, 160, 220, 0.12)';
+    sc.setLineDash([4, 4]);
+    sc.beginPath();
+    sc.moveTo(x0, y);
+    sc.lineTo(x0 + gw, y);
+    sc.stroke();
+    sc.setLineDash([]);
+
+    // 刻度短線
+    sc.strokeStyle = 'rgba(150, 170, 210, 0.45)';
+    sc.lineWidth = 1;
+    sc.beginPath();
+    sc.moveTo(x0 - 5, y);
+    sc.lineTo(x0, y);
+    sc.stroke();
+
+    // 刻度文字標示
+    sc.fillStyle = 'rgba(170, 185, 215, 0.8)';
+    sc.font = '10px system-ui';
+    sc.textAlign = 'right';
+    sc.textBaseline = 'middle';
+    sc.fillText(t.l, x0 - 8, y);
+  });
+
+  // 固定模擬框外邊界（矩形框）
+  sc.strokeStyle = 'rgba(150, 170, 210, 0.5)';
+  sc.lineWidth = 1.2;
+  sc.strokeRect(x0, mt, gw, gh);
+  sc.restore();
+
+  // 可見光底帶 (380–750 nm)
+  for(let nm=380; nm<=750; nm+=4){
+    const c=wlColor(nm);
+    if(!c) continue;
+    sc.fillStyle=`rgba(${c[0]},${c[1]},${c[2]},.52)`;
+    sc.fillRect(xOf(nm), y0 + 1, Math.max(1, gw/((LAM1-LAM0)/4) + 1), 6);
+  }
+  sc.fillStyle='rgba(200, 210, 230, 0.6)';
+  sc.font='10px system-ui';
+  sc.textAlign='center';
+  sc.textBaseline='top';
+  sc.fillText('可見光', xOf(565), y0 + 19);
+
+  // 橫軸波長刻度
+  sc.fillStyle='rgba(170, 185, 215, 0.8)';
+  sc.font='10px system-ui';
+  sc.textAlign='center';
+  for(const nm of [500, 1000, 1500, 2000]){
+    const x=xOf(nm);
+    sc.strokeStyle='rgba(150, 170, 210, 0.5)';
+    sc.lineWidth=1;
+    sc.beginPath();
+    sc.moveTo(x, y0);
+    sc.lineTo(x, y0 + 4);
+    sc.stroke();
+    sc.fillText(nm, x, y0 + 6);
+  }
+  sc.textAlign='right';
+  sc.fillText('波長 (nm)', x0 + gw, y0 + 19);
+
+  // 縱軸文字標籤
+  sc.save();
+  sc.translate(14, mt + gh / 2);
+  sc.rotate(-Math.PI / 2);
+  sc.fillStyle='rgba(170, 185, 215, 0.8)';
+  sc.font='11px system-ui';
+  sc.textAlign='center';
+  sc.textBaseline='middle';
+  sc.fillText('輻射強度（相對值 B / B_max）', 0, 0);
+  sc.restore();
+
+  // 框內標示當前峰值絕對數值，兼顧相對縮放與絕對量級感知
+  sc.fillStyle='rgba(170, 185, 215, 0.65)';
+  sc.font='10px system-ui';
+  sc.textAlign='left';
+  sc.textBaseline='top';
+  sc.fillText(`B_max ≈ ${peak.toExponential(2)} W/(m²·sr·m)`, x0 + 8, mt + 8);
+
+  // 普朗克曲線 + 填色（限制於固定框內繪製）
   const col=bbColor(state.T);
+  sc.save();
+  sc.beginPath();
+  sc.rect(x0, mt, gw, gh);
+  sc.clip();
+
   sc.beginPath();
   let first=true;
-  for(let nm=LAM0;nm<=LAM1;nm+=6){const x=xOf(nm),y=yOf(planck(nm*1e-9,state.T));if(first){sc.moveTo(x,y);first=false;}else sc.lineTo(x,y);}
-  // 填到底
-  sc.lineTo(xOf(LAM1),y0);sc.lineTo(x0,y0);sc.closePath();
-  if(tintOn){
-    // 用可見光顏色為可見段著色,其餘用黑體色
-    const grad=sc.createLinearGradient(x0,0,x0+gw,0);
-    grad.addColorStop(0,`rgba(${col[0]},${col[1]},${col[2]},.10)`);
-    grad.addColorStop(Math.max(0,(380-LAM0)/(LAM1-LAM0)),`rgba(${col[0]},${col[1]},${col[2]},.10)`);
-    grad.addColorStop((565-LAM0)/(LAM1-LAM0),`rgba(${col[0]},${col[1]},${col[2]},.34)`);
-    grad.addColorStop((750-LAM0)/(LAM1-LAM0),`rgba(${col[0]},${col[1]},${col[2]},.14)`);
-    grad.addColorStop(1,`rgba(${col[0]},${col[1]},${col[2]},.08)`);
-    sc.fillStyle=grad;
-  } else sc.fillStyle=`rgba(${col[0]},${col[1]},${col[2]},.18)`;
-  sc.fill();
-  // 描邊
-  sc.beginPath();first=true;
-  for(let nm=LAM0;nm<=LAM1;nm+=6){const x=xOf(nm),y=yOf(planck(nm*1e-9,state.T));if(first){sc.moveTo(x,y);first=false;}else sc.lineTo(x,y);}
-  sc.strokeStyle=`rgb(${col[0]},${col[1]},${col[2]})`;sc.lineWidth=2.4;sc.stroke();
-  // λ_max 標線
-  const lm=lamMax();
-  if(lm<=LAM1){const xm=xOf(lm),ym=yOf(planck(lm*1e-9,state.T));
-    sc.strokeStyle='rgba(255,210,122,.8)';sc.setLineDash([5,4]);sc.lineWidth=1.4;
-    sc.beginPath();sc.moveTo(xm,ym);sc.lineTo(xm,y0);sc.stroke();sc.setLineDash([]);
-    sc.fillStyle='#ffd27a';sc.font='bold 12px system-ui';sc.fillText('λmax '+lm.toFixed(0)+'nm',xm+4,ym+12);
-    S.sphere(sc,xm,ym,4,[40,100,74]);
-  } else {
-    sc.fillStyle='#ffd27a';sc.font='12px system-ui';sc.fillText('λmax='+lm.toFixed(0)+'nm（紅外，超出範圍→）',x0+gw-200,mt+30);
+  for(let nm=LAM0; nm<=LAM1; nm+=4){
+    const x=xOf(nm), y=yOf(planck(nm*1e-9, state.T));
+    if(first){ sc.moveTo(x, y); first=false; } else sc.lineTo(x, y);
   }
+  sc.lineTo(xOf(LAM1), y0);
+  sc.lineTo(x0, y0);
+  sc.closePath();
+
+  if(tintOn){
+    const grad=sc.createLinearGradient(x0, 0, x0 + gw, 0);
+    grad.addColorStop(0, `rgba(${col[0]},${col[1]},${col[2]},.10)`);
+    grad.addColorStop(Math.max(0, (380 - LAM0) / (LAM1 - LAM0)), `rgba(${col[0]},${col[1]},${col[2]},.10)`);
+    grad.addColorStop((565 - LAM0) / (LAM1 - LAM0), `rgba(${col[0]},${col[1]},${col[2]},.34)`);
+    grad.addColorStop((750 - LAM0) / (LAM1 - LAM0), `rgba(${col[0]},${col[1]},${col[2]},.14)`);
+    grad.addColorStop(1, `rgba(${col[0]},${col[1]},${col[2]},.08)`);
+    sc.fillStyle=grad;
+  } else {
+    sc.fillStyle=`rgba(${col[0]},${col[1]},${col[2]},.18)`;
+  }
+  sc.fill();
+
+  // 描繪光譜曲線
+  sc.beginPath();
+  first=true;
+  for(let nm=LAM0; nm<=LAM1; nm+=4){
+    const x=xOf(nm), y=yOf(planck(nm*1e-9, state.T));
+    if(first){ sc.moveTo(x, y); first=false; } else sc.lineTo(x, y);
+  }
+  sc.strokeStyle=`rgb(${col[0]},${col[1]},${col[2]})`;
+  sc.lineWidth=2.4;
+  sc.stroke();
+  sc.restore();
+
+  // λ_max 標線
+  if(lm<=LAM1){
+    const xm=xOf(lm), ym=yOf(planck(lm*1e-9, state.T));
+    sc.strokeStyle='rgba(255,210,122,.85)';
+    sc.setLineDash([5, 4]);
+    sc.lineWidth=1.4;
+    sc.beginPath();
+    sc.moveTo(xm, ym);
+    sc.lineTo(xm, y0);
+    sc.stroke();
+    sc.setLineDash([]);
+    sc.fillStyle='#ffd27a';
+    sc.font='bold 12px system-ui';
+    sc.textAlign='left';
+    sc.textBaseline='bottom';
+    const tx = Math.min(xm + 4, x0 + gw - 86);
+    sc.fillText('λmax ' + lm.toFixed(0) + 'nm', tx, Math.max(ym - 4, mt + 18));
+    S.sphere(sc, xm, ym, 4, [40, 100, 74]);
+  } else {
+    sc.fillStyle='#ffd27a';
+    sc.font='12px system-ui';
+    sc.textAlign='right';
+    sc.textBaseline='top';
+    sc.fillText('λmax=' + lm.toFixed(0) + 'nm（紅外，超出範圍→）', x0 + gw - 8, mt + 26);
+  }
+
   // 右側發光球(黑體色)
-  const bx=W-78,by=H/2,br=Math.min(46,30+ (state.T/12000)*22);
-  const g2=sc.createRadialGradient(bx,by,2,bx,by,br*2.4);
-  g2.addColorStop(0,`rgba(${col[0]},${col[1]},${col[2]},.95)`);
-  g2.addColorStop(.5,`rgba(${col[0]},${col[1]},${col[2]},.32)`);
-  g2.addColorStop(1,'rgba(0,0,0,0)');
-  sc.fillStyle=g2;sc.beginPath();sc.arc(bx,by,br*2.4,0,7);sc.fill();
-  sc.fillStyle=`rgb(${col[0]},${col[1]},${col[2]})`;sc.beginPath();sc.arc(bx,by,br,0,7);sc.fill();
-  sc.fillStyle='rgba(210,220,240,.7)';sc.font='11px system-ui';sc.textAlign='center';sc.fillText('物體顏色',bx,by+br+18);sc.textAlign='left';
+  const bx=W-68, by=H/2, br=Math.min(44, 28 + (state.T/12000)*20);
+  const g2=sc.createRadialGradient(bx, by, 2, bx, by, br * 2.2);
+  g2.addColorStop(0, `rgba(${col[0]},${col[1]},${col[2]},.95)`);
+  g2.addColorStop(.5, `rgba(${col[0]},${col[1]},${col[2]},.32)`);
+  g2.addColorStop(1, 'rgba(0,0,0,0)');
+  sc.fillStyle=g2;
+  sc.beginPath();
+  sc.arc(bx, by, br * 2.2, 0, Math.PI * 2);
+  sc.fill();
+  sc.fillStyle=`rgb(${col[0]},${col[1]},${col[2]})`;
+  sc.beginPath();
+  sc.arc(bx, by, br, 0, Math.PI * 2);
+  sc.fill();
+  sc.fillStyle='rgba(210,220,240,.75)';
+  sc.font='11px system-ui';
+  sc.textAlign='center';
+  sc.textBaseline='top';
+  sc.fillText('物體顏色', bx, by + br + 14);
+
   updateHud(col);
 }
-function updateHud(col){const lm=lamMax(),P=power();
+
+function updateHud(col){
+  const lm=lamMax(), P=power();
   let region = lm>750?'紅外 IR':(lm<380?'紫外 UV':'可見光');
   document.getElementById('hud').innerHTML=
    `<div class="chip amber">溫度 T<b>${state.T} K</b></div>`+
@@ -212,7 +519,14 @@ document.getElementById('tint').onclick=function(){tintOn=!tintOn;this.classList
 document.querySelectorAll('[data-t]').forEach(b=>b.onclick=()=>setT(parseInt(b.dataset.t)));
 
 window.addEventListener('load',()=>{setupCanvases();recompute();});
-window.addEventListener('resize',()=>{setupCanvases();draw();});
+window.addEventListener('resize',()=>{
+  const c = document.getElementById('scene');
+  const curW = c && c.parentElement ? c.parentElement.clientWidth : 0;
+  if(curW !== lastW){
+    setupCanvases();
+    draw();
+  }
+});
 </script>
 </body>
 </html>
