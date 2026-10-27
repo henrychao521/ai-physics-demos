@@ -283,7 +283,7 @@ function updateFormula() {
     html += frow('圓線圈中心 B', 'μ₀I / (2R)', `(4π×10⁻⁷ × ${I}) / (2 × ${R_m} m) [${fmtSig(B_cen * 1e6, 3)} μT]`, fmtSig(B_cen, 3) + ' T');
     html += frow('探針軸上解析 B', 'μ₀IR² / [2(R²+x²)^(3/2)]', `x = ${state.r} cm, R = ${state.R} cm [${fmtSig(B_axis * 1e6, 3)} μT]`, fmtSig(B_axis, 3) + ' T');
     html += frow('必歐-沙伐數值', '∫ dB', `探針 (x=${state.r} cm) 處數值積分 [${fmtSig(B_num * 1e6, 3)} μT]`, fmtSig(B_num, 3) + ' T');
-    html += `<div class="frel">📈 <b>線圈中心 vs 直導線</b>：同半徑處線圈中心磁場剛好是直導線的 <b>π 倍</b>（約 3.14 倍）　·　沿軸向離開線圈中心，磁場隨距離立方反比劇烈衰減。</div>`;
+    html += `<div class="frel">📈 <b>線圈中心 vs 直導線</b>：同半徑處線圈中心磁場剛好是直導線的 <b>π 倍</b>（約 3.14 倍）　·　沿軸向離開線圈中心，磁場 B = μ₀IR²/(2(R²+x²)^{3/2}) 逐漸變小；距離遠大於半徑（x ≫ R）時才近似和距離的立方成反比。</div>`;
   } else {
     const B_cen = BsolCenter(I, state.turns, len_m, R_m);
     const B_idl = BsolIdeal(I, state.turns, len_m);

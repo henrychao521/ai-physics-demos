@@ -132,7 +132,7 @@
       <li><b>預熔放電清潔端面</b>：熔接機施加微弱電弧進行瞬間閃爍放電（Cleaning Arc），燒除端面殘留微粒雜質並鈍化微小毛邊。</li>
       <li><b>自動對芯（core alignment）</b>：高精密步進馬達利用輪廓對準系統（PAS）或局部注入檢測技術，在 X、Y 軸精密微調，使兩側纖芯達到微米級中心對齊。</li>
       <li><b>放電熔接、把兩端推在一起</b>：主電弧放電（約 2000°C 熔融二氧化矽），步進馬達同步向中心推進微幅擠壓，消除交界面熔融接合為一體。</li>
-      <li><b>熔接機估計損耗（不合格重做）</b>：熔接機依據端面光折射紋路、軸向偏移與變形幾何特徵演算法估算接續損耗；若預估值超標則須切除重新熔接。</li>
+      <li><b>熔接機估計損耗（不合格重做）</b>：熔接機依據端面影像、兩纖芯的橫向偏移與變形幾何特徵演算法估算接續損耗；若預估值超標則須切除重新熔接。</li>
       <li><b>套上熱縮保護套加熱</b>：打開防風罩，將預先套在光纖上的熱縮保護套（內含不鏽鋼抗彎補強針）移到熔接點中央，放入機載加熱槽熱縮烘烤固定。</li>
       <li><b>收進熔接盤</b>：待保護套冷卻固定後，將光纖依光纖規格的最小彎曲半徑以上盤繞收容至配線架或接續盒的熔接盤（Splice Tray）中卡槽定位。</li>
     </ol>
@@ -191,7 +191,7 @@
     <canvas id="sceneOffset" style="width:100%;aspect-ratio:2.4"></canvas>
     <div class="bar" style="margin-top:10px">
       <div class="sld">
-        <label><span>對芯軸向偏移量 d（μm）</span><span class="v" id="v_dOffset">1.0 μm</span></label>
+        <label><span>對芯橫向偏移量 d（μm）</span><span class="v" id="v_dOffset">1.0 μm</span></label>
         <input type="range" id="r_dOffset" min="0" max="3.0" step="0.1" value="1.0">
       </div>
       <div class="sld">

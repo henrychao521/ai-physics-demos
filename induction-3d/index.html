@@ -161,7 +161,8 @@ function coilCurrent(emf, R) { return emf / R; }
 function lenzInfo(z, v, m, a) {
   const dPhi = dFluxdz(z, m, a) * v;                       // dΦ/dt（單匝）
   const sense = dPhi > 0 ? -1 : dPhi < 0 ? 1 : 0;          // 電流方向：+1 逆時針（從上往下看）、−1 順時針
-  return { dPhidt: dPhi, change: dPhi > 0 ? '增加' : dPhi < 0 ? '減少' : '不變', sense, inducedB: sense };   // inducedB：+1 表示線圈中心感應磁場朝 +z
+  const dAbs = Math.sign(m) * dPhi;                        // 「增加／減少」指磁通量的大小 |Φ|（磁鐵翻轉時 Φ 為負）
+  return { dPhidt: dPhi, change: dAbs > 0 ? '增加' : dAbs < 0 ? '減少' : '不變', sense, inducedB: sense };   // inducedB：+1 表示線圈中心感應磁場朝 +z
 }
 // 磁鐵運動：mode 'push'（等速，z = z0 + v0·t）、'drop'（自由落下，z = z0 − ½gt²，不計磁阻尼）、'spring'（彈簧振盪 z = A·cos ωt）
 function magnetMotion(mode, t, p) {
