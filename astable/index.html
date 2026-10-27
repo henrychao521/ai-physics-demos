@@ -3,8 +3,8 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>非穩態複振器 ｜ 555 計時器・雙電晶體閃爍燈・f≈1.44/((R1+2R2)C)</title>
-<meta name="description" content="非穩態複振器互動模擬：NE555 計時器非穩態電路（f≈1.44/((R1+2R2)C)）與對稱雙電晶體非穩態閃爍電路，展示 RC 充放電指數曲線、門檻比較切換、動態電路圖與輸出方波。">
+<title>非穩態多諧振盪器 ｜ 555 計時器・雙電晶體閃爍燈・f≈1.44/((R1+2R2)C)</title>
+<meta name="description" content="非穩態多諧振盪器互動模擬：NE555 計時器非穩態電路（f≈1.44/((R1+2R2)C)）與對稱雙電晶體非穩態閃爍電路，展示 RC 充放電指數曲線、門檻比較切換、動態電路圖與輸出方波。">
 <link rel="icon" href="../assets/favicon.svg" type="image/svg+xml">
 <link rel="stylesheet" href="../assets/site.css">
 <script src="../assets/sim.js"></script>
@@ -58,12 +58,12 @@
   footer{color:var(--muted,#8b9bb4);font-size:.78rem;margin-top:24px;text-align:center;line-height:1.7}
 </style>
 </head>
-<body data-demo="非穩態複振器">
+<body data-demo="非穩態多諧振盪器">
 <div class="wrap">
   <header>
     <span class="badge">電磁・RC 電路</span>
-    <h1>非穩態複振器（555 與雙電晶體閃爍電路）</h1>
-    <p>非穩態複振器（Astable Multivibrator）<b>沒有任何穩定平衡狀態</b>，電路在兩組暫態間自主往復翻轉。核心機制皆為 <b>RC 充放電</b> 搭配<b>「到達電壓門檻即翻轉觸發」</b>的正回饋機制，廣泛應用於時脈訊號產生器、閃爍警示燈、警報音效與 PWM 調光器。</p>
+    <h1>非穩態多諧振盪器（555 與雙電晶體閃爍電路）</h1>
+    <p>非穩態多諧振盪器（Astable Multivibrator）<b>沒有任何穩定平衡狀態</b>，電路在兩組暫態間自主往復翻轉。核心機制皆為 <b>RC 充放電</b> 搭配<b>「到達電壓門檻即翻轉觸發」</b>的正回饋機制，廣泛應用於時脈訊號產生器、閃爍警示燈、警報音效與 PWM 調光器。</p>
   </header>
 
   <div class="canvas-grid">
@@ -270,7 +270,7 @@ function updateFormula() {
   const el = document.getElementById('formula');
   if (state.mode === '555') {
     const res = ne555(state.R1 * 1e3, state.R2 * 1e3, state.C * 1e-6);
-    let html = `<h4>📐 計算公式（即時代入：555 非穩態複振器）</h4>`;
+    let html = `<h4>📐 計算公式（即時代入：555 非穩態多諧振盪器）</h4>`;
     html += frow('高電位時間 t_H', 'ln 2 · (R₁ + R₂) · C', `ln 2 · (${state.R1}k + ${state.R2}k) · ${state.C}μF`, fmtSig(res.tH, 3) + ' s');
     html += frow('低電位時間 t_L', 'ln 2 · R₂ · C', `ln 2 · ${state.R2}k · ${state.C}μF`, fmtSig(res.tL, 3) + ' s');
     html += frow('振盪週期 T', 't_H + t_L', `${fmtSig(res.tH, 3)} + ${fmtSig(res.tL, 3)}`, fmtSig(res.T, 3) + ' s');
@@ -282,7 +282,7 @@ function updateFormula() {
   } else {
     const p = { RB1: state.RB1 * 1e3, C1: state.C1 * 1e-6, RB2: state.RB2 * 1e3, C2: state.C2 * 1e-6, RC: 1000, Vcc: state.Vcc, Vbe: state.Vbe };
     const resB = bjtAstable(p.RB1, p.C1, p.RB2, p.C2, p.Vcc, p.Vbe);
-    let html = `<h4>📐 計算公式（即時代入：雙電晶體非穩態複振器）</h4>`;
+    let html = `<h4>📐 計算公式（即時代入：雙電晶體非穩態多諧振盪器）</h4>`;
     html += frow('半週期 t₁ (Q1截止)', 'R_B1 · C₂ · ln((2Vcc−V_BE)/(Vcc−V_BE))', `${state.RB1}k · ${state.C2}μF · ln((2·${state.Vcc}−0.65)/(${state.Vcc}−0.65))`, fmtSig(resB.t1, 3) + ' s');
     html += frow('半週期 t₂ (Q2截止)', 'R_B2 · C₁ · ln((2Vcc−V_BE)/(Vcc−V_BE))', `${state.RB2}k · ${state.C1}μF · ln((2·${state.Vcc}−0.65)/(${state.Vcc}−0.65))`, fmtSig(resB.t2, 3) + ' s');
     html += frow('總振盪週期 T', 't₁ + t₂', `${fmtSig(resB.t1, 3)} + ${fmtSig(resB.t2, 3)}`, fmtSig(resB.T, 3) + ' s');
