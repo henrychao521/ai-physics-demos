@@ -259,7 +259,8 @@ let simTime = 0;
 let liveX = 0, liveV = 0;
 let crowd = [];
 let simDataIn = null, simDataBreak = null;
-const VIS_MAG = 60; // 視覺放大 60 倍
+const VIS_MAG = 60; // 視覺放大上限 60 倍；振幅大時自動縮小，讓橋面最大位移不超過畫布高的 14%
+let visGain = VIS_MAG;
 
 function frow(n, sym, sub, val) {
   return `<div class="frow"><span class="fname">${n}</span><span class="fsym">${sym}</span><span class="fsub">= ${sub}</span><span class="fval">${val}</span></div>`;
@@ -307,7 +308,7 @@ function updateSlidersFromState() {
 
   const modeStr = (state.inStep ? '齊步走' : '便步走') + '（' + (state.lateral ? '側向擺動' : '垂直振動') + '）';
   document.getElementById('hudMode').textContent = modeStr;
-  document.getElementById('hudAmp').textContent = `×${VIS_MAG} 倍`;
+  document.getElementById('hudAmp').textContent = `×${fmtSig(visGain, 2)} 倍`;
 }
 
 function recomputeSimulations() {
@@ -366,7 +367,10 @@ function drawBridgeScene() {
   // 第一模態變形：y(s) = x(t) * sin(π * s)
   // 視覺位移放大 VIS_MAG 倍
   const pxPerMeter = 180;
-  const visualDisplacementPx = liveX * VIS_MAG * pxPerMeter;
+  const maxX = Math.max(simDataIn ? maxAbs(simDataIn.x) : 0, simDataBreak ? maxAbs(simDataBreak.x) : 0, 1e-6);
+  visGain = Math.min(VIS_MAG, 0.14 * H / (maxX * pxPerMeter));
+  const hudA = document.getElementById('hudAmp'); if (hudA) hudA.textContent = `×${fmtSig(visGain, 2)} 倍`;
+  const visualDisplacementPx = liveX * visGain * pxPerMeter;
   
   function getDeckY(x) {
     if (x < tower1X || x > tower2X) return deckBaseY;
@@ -556,7 +560,7 @@ function drawBridgeScene() {
   // 畫布上方小字
   scCtx.font = '12px system-ui, sans-serif';
   scCtx.fillStyle = 'rgba(255,255,255,0.75)';
-  scCtx.fillText(`中央位移 x(t)：${(dispCm >= 0 ? '+' : '')}${fmtSig(dispCm, 3)} cm（視覺放大 ×${VIS_MAG}）`, midX - 110, deckBaseY - 32);
+  scCtx.fillText(`中央位移 x(t)：${(dispCm >= 0 ? '+' : '')}${fmtSig(dispCm, 3)} cm（視覺放大 ×${fmtSig(visGain, 2)}）`, midX - 110, deckBaseY - 32);
   if (state.lateral) {
     scCtx.fillStyle = '#ffce54';
     scCtx.fillText(`【側向擺動模式】步頻減半（${fmtSig(state.fs / 2, 3)} Hz）、每人推力 35 N`, midX - 120, deckBaseY - 14);

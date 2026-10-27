@@ -545,8 +545,8 @@ function drawModeA() {
   const titleA2 = isNarrow ? '時刻對照：兩排刻度與公差壓縮' : '時刻對照：兩排刻度與公差壓縮（斜線連線表示聲脈衝傳播途徑）';
   ctx.fillText(titleA2, isNarrow ? 14 : 24, H * 0.53);
 
-  const t1Y = H * 0.65;
-  const t2Y = H * 0.86;
+  const t1Y = isNarrow ? H * 0.62 : H * 0.65;
+  const t2Y = isNarrow ? H * 0.88 : H * 0.86;
   const timeW = isNarrow ? W - 110 : W - 150;
   const tStart = isNarrow ? 65 : 80;
 
@@ -608,26 +608,28 @@ function drawModeA() {
     ctx.stroke();
   }
 
-  // 標註公差 T 與 T'
+  // 標註公差 T 與 T'（窄螢幕垂直分層，公差 T 偏上、公差 T' 偏下，避免混雜重疊）
   const x1_0 = tStart, x1_1 = tStart + dtEmitPix;
+  const b1Y = isNarrow ? t1Y + 11 : t1Y + 18;
   ctx.strokeStyle = '#ffd166';
   ctx.lineWidth = 2;
   ctx.beginPath();
-  ctx.moveTo(x1_0, t1Y + 18);
-  ctx.lineTo(x1_1, t1Y + 18);
+  ctx.moveTo(x1_0, b1Y);
+  ctx.lineTo(x1_1, b1Y);
   ctx.stroke();
   ctx.fillStyle = '#ffd166';
   ctx.font = '11px system-ui';
-  ctx.fillText(`公差 T = ${fmtSig(T, 3)} s`, x1_0 + 8, t1Y + (isNarrow ? 28 : 32));
+  ctx.fillText(`公差 T = ${fmtSig(T, 3)} s`, x1_0 + (isNarrow ? 6 : 8), isNarrow ? t1Y + 22 : t1Y + 32);
 
   const x2_0 = tStart + arrOffset, x2_1 = x2_0 + dtArrPix;
+  const b2Y = isNarrow ? t2Y - 25 : t2Y - 18;
   ctx.strokeStyle = '#ffd166';
   ctx.beginPath();
-  ctx.moveTo(x2_0, t2Y - 18);
-  ctx.lineTo(x2_1, t2Y - 18);
+  ctx.moveTo(x2_0, b2Y);
+  ctx.lineTo(x2_1, b2Y);
   ctx.stroke();
   const tolText2 = isNarrow ? `公差 T' = ${fmtSig(Tprime, 3)} s` : `公差 T' = T(1−v/c) = ${fmtSig(Tprime, 3)} s`;
-  ctx.fillText(tolText2, x2_0 + 8, t2Y - (isNarrow ? 22 : 26));
+  ctx.fillText(tolText2, x2_0 + (isNarrow ? 6 : 8), isNarrow ? t2Y - 13 : t2Y - 26);
 }
 
 // ---------------- 模式 B：時空圖 ----------------
@@ -642,7 +644,7 @@ function drawModeB_Spacetime() {
   ctx.fillStyle = '#070b18';
   ctx.fillRect(0, 0, W, H);
 
-  const ml = isNarrow ? 55 : 65, mr = isNarrow ? 25 : 40, mt = 40, mb = 40;
+  const ml = isNarrow ? 58 : 65, mr = isNarrow ? 20 : 40, mt = 40, mb = 40;
   const dw = W - ml - mr, dh = H - mt - mb;
 
   const tLimit = state.D0 / state.u;
@@ -669,7 +671,7 @@ function drawModeB_Spacetime() {
   ctx.moveTo(ml, mt);
   ctx.lineTo(ml, mt + dh);
   ctx.stroke();
-  ctx.fillText('時間 t (s) ↓', isNarrow ? 6 : ml - 55, mt + 14);
+  ctx.fillText(isNarrow ? 't (s) ↓' : '時間 t (s) ↓', isNarrow ? 6 : ml - 55, mt + 14);
 
   // 固定牆世界線 (x = 0)
   ctx.strokeStyle = '#4cc2ff';
@@ -691,8 +693,8 @@ function drawModeB_Spacetime() {
   ctx.stroke();
   ctx.fillStyle = '#ff7a45';
   ctx.font = isNarrow ? '11px system-ui' : '12px system-ui';
-  const wallText = isNarrow ? '移動牆 (x=D₀−ut)' : '移動牆 (x = D₀ − ut)';
-  const wallW = ctx.measureText ? ctx.measureText(wallText).width : 90;
+  const wallText = isNarrow ? '移動牆' : '移動牆 (x = D₀ − ut)';
+  const wallW = ctx.measureText ? ctx.measureText(wallText).width : 45;
   ctx.fillText(wallText, Math.max(px(state.D0) - wallW - 4, ml + 10), pt(0) + 18);
 
   // 奇點 tLimit 虛線
@@ -779,14 +781,14 @@ function drawModeB_Wave() {
   const trackW = W - (isNarrow ? 100 : 140);
   const xWall = x0 + (st.wall / state.D0) * trackW;
   const xPulse = x0 + (st.x / state.D0) * trackW;
-  const cy = H / 2 + (isNarrow ? 14 : 10);
+  const cy = H / 2 + (isNarrow ? 8 : 10);
 
   // 頂部資訊字樣（窄螢幕拆為兩行並保留邊距）
   ctx.fillStyle = '#c9d6ea';
   if (isNarrow) {
     ctx.font = '11px system-ui';
-    ctx.fillText(`n = ${st.bounces} ｜ 牆距 D = ${fmtSig(st.wall, 3)} m`, 12, 16);
-    ctx.fillText(`頻率 fₙ = ${fmtSig(curFreq, 3)} Hz ｜ 波長 λₙ = ${fmtSig(curWaveLen, 3)} m`, 12, 30);
+    ctx.fillText(`n = ${st.bounces} ｜ D = ${fmtSig(st.wall, 3)} m`, 12, 14);
+    ctx.fillText(`fₙ = ${fmtSig(curFreq, 3)} Hz ｜ λₙ = ${fmtSig(curWaveLen, 3)} m`, 12, 26);
   } else {
     ctx.font = '12px system-ui';
     ctx.fillText(`反射次數 n = ${st.bounces} ｜ 牆距 D = ${fmtSig(st.wall, 3)} m ｜ 當前頻率 fₙ = ${fmtSig(curFreq, 3)} Hz ｜ 波長 λₙ = ${fmtSig(curWaveLen, 3)} m`, 20, 24);
@@ -800,7 +802,7 @@ function drawModeB_Wave() {
   ctx.strokeRect(x0 - 24, cy - 45, 24, 90);
   ctx.fillStyle = '#4cc2ff';
   ctx.font = 'bold 11px system-ui';
-  ctx.fillText('固定牆', x0 - 22, cy + 60);
+  ctx.fillText('固定牆', x0 - 22, cy + (isNarrow ? 56 : 60));
 
   // 右移動牆
   ctx.fillStyle = '#5c2d1e';
@@ -810,25 +812,26 @@ function drawModeB_Wave() {
   ctx.strokeRect(xWall, cy - 45, 24, 90);
   ctx.fillStyle = '#ff7a45';
   const movX = isNarrow ? Math.min(xWall + 2, W - 42) : xWall + 2;
-  ctx.fillText('移動牆', movX, cy + 60);
+  ctx.fillText('移動牆', movX, cy + (isNarrow ? 56 : 60));
 
   // 移動牆速度箭頭
+  const arrowY = isNarrow ? cy - 48 : cy - 54;
   ctx.strokeStyle = '#ff7a45';
   ctx.lineWidth = 2;
   ctx.beginPath();
-  ctx.moveTo(xWall + 12, cy - 54);
-  ctx.lineTo(xWall - 16, cy - 54);
+  ctx.moveTo(xWall + 12, arrowY);
+  ctx.lineTo(xWall - 16, arrowY);
   ctx.stroke();
   ctx.beginPath();
-  ctx.moveTo(xWall - 16, cy - 54);
-  ctx.lineTo(xWall - 8, cy - 58);
-  ctx.lineTo(xWall - 8, cy - 50);
+  ctx.moveTo(xWall - 16, arrowY);
+  ctx.lineTo(xWall - 8, arrowY - 4);
+  ctx.lineTo(xWall - 8, arrowY + 4);
   ctx.closePath();
   ctx.fillStyle = '#ff7a45';
   ctx.fill();
   ctx.font = '11px system-ui';
   const uX = Math.max(isNarrow ? 10 : 20, xWall - (isNarrow ? 52 : 60));
-  ctx.fillText(`u = ${state.u} m/s`, uX, cy - (isNarrow ? 58 : 60));
+  ctx.fillText(`u = ${state.u} m/s`, uX, isNarrow ? arrowY - 4 : cy - 60);
 
   // 兩牆之間的聲波正弦波（波長 λₙ = c / fₙ）
   const waveSpan = Math.max(5, xWall - x0);
@@ -864,7 +867,7 @@ function drawModeB_Chart() {
   ctx.fillStyle = '#070b18';
   ctx.fillRect(0, 0, W, H);
 
-  const ml = isNarrow ? 60 : 75, mr = isNarrow ? 20 : 35, mt = 35, mb = 45;
+  const ml = isNarrow ? 65 : 75, mr = isNarrow ? 20 : 35, mt = 35, mb = 45;
   const dw = W - ml - mr, dh = H - mt - mb;
 
   const N = state.N;
@@ -891,7 +894,7 @@ function drawModeB_Chart() {
       ctx.stroke();
       ctx.fillStyle = '#8a99ad';
       ctx.font = '11px system-ui';
-      ctx.fillText(`${fmtSig(val, 3)} Hz`, ml - (isNarrow ? 56 : 68), y + 4);
+      ctx.fillText(`${fmtSig(val, 3)} Hz`, ml - (isNarrow ? 60 : 68), y + 4);
     }
   });
 
@@ -954,7 +957,7 @@ function drawModeB_Chart() {
   ctx.arc(ml + 16, mt + 14, 4, 0, Math.PI * 2);
   ctx.fill();
   ctx.font = isNarrow ? '11px system-ui' : '12px system-ui';
-  const leg1 = isNarrow ? '精確值 f₀·kⁿ（等比直線）' : '精確值 f₀ · kⁿ（等比數列，對數軸上為直線）';
+  const leg1 = isNarrow ? '精確值 f₀·kⁿ（等比）' : '精確值 f₀ · kⁿ（等比數列，對數軸上為直線）';
   ctx.fillText(leg1, ml + 26, mt + (isNarrow ? 17 : 18));
 
   ctx.fillStyle = '#ffb02e';

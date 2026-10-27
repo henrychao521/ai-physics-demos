@@ -388,7 +388,7 @@ function drawPairMode(W, H) {
   const wL = isNarrow ? W : W * 0.5;
   const hL = isNarrow ? H * 0.5 : H;
   const cxL = xLeft + wL * 0.5;
-  const cyL = isCompact ? (yTopL + hL * 0.35) : (yTopL + hL * 0.46);
+  const cyL = isCompact ? (yTopL + 38) : (yTopL + hL * 0.46);
 
   ctx.save();
   ctx.fillStyle = 'rgba(255,255,255,.015)';
@@ -396,13 +396,13 @@ function drawPairMode(W, H) {
   ctx.strokeStyle = 'rgba(255,255,255,.07)';
   ctx.strokeRect(xLeft + 4, yTopL + 4, wL - 8, hL - 8);
 
-  ctx.font = isCompact ? 'bold 12px system-ui' : 'bold 14px system-ui';
+  ctx.font = isCompact ? 'bold 11px system-ui' : 'bold 14px system-ui';
   ctx.fillStyle = '#94a3b8';
   ctx.textAlign = 'left';
-  ctx.fillText('【互毀】e⁻ + e⁺ → 2γ（成對互毀成兩個光子）', xLeft + (isCompact ? 12 : 16), yTopL + (isCompact ? 16 : 24));
+  ctx.fillText(isCompact ? '【互毀】e⁻ + e⁺ → 2γ' : '【互毀】e⁻ + e⁺ → 2γ（成對互毀成兩個光子）', xLeft + (isCompact ? 12 : 16), yTopL + (isCompact ? 15 : 24));
 
-  const pR = isCompact ? 11 : 14;
-  const statusYL = isCompact ? (cyL + 18) : (cyL + 34);
+  const pR = isCompact ? 10 : 14;
+  const statusYL = isCompact ? (yTopL + 56) : (cyL + 34);
 
   // 動態進程：靠近 -> 相遇閃光 -> 背對背飛出
   if (tCycle < 0.42) {
@@ -416,7 +416,7 @@ function drawPairMode(W, H) {
     ctx.fillText(isCompact ? '電子（藍）與正子（紅）靠近中…' : '電子（藍）與正子（紅）慢慢靠近…', cxL, statusYL);
   } else if (tCycle < 0.50) {
     const flashProg = (tCycle - 0.42) / 0.08;
-    const rFlash = (isCompact ? 6 : 8) + flashProg * (isCompact ? 26 : 35);
+    const rFlash = (isCompact ? 6 : 8) + flashProg * (isCompact ? 24 : 35);
     const gf = ctx.createRadialGradient(cxL, cyL, 0, cxL, cyL, rFlash);
     gf.addColorStop(0, 'rgba(255,255,255,1)');
     gf.addColorStop(0.4, 'rgba(255,209,102,.8)');
@@ -446,29 +446,29 @@ function drawPairMode(W, H) {
 
   // 互毀能量長條：質量能（2mₑc²）↔ 光子能量，兩邊一樣高（能量守恆）
   if (isCompact) {
-    const barY = yTopL + hL - 18;
-    const bW = Math.min(115, Math.floor((wL - 56) * 0.5));
-    const bH = 13;
+    const barY = yTopL + hL - 14;
+    const bW = Math.min(105, Math.floor((wL - 60) * 0.5));
+    const bH = 12;
     ctx.font = '11px system-ui';
     ctx.textAlign = 'left';
     ctx.fillStyle = '#94a3b8';
-    ctx.fillText('能量守恆（兩邊等高）：', xLeft + 12, barY - 4);
+    ctx.fillText('能量守恆（兩邊等高）：', xLeft + 12, barY - 3);
 
     ctx.fillStyle = '#38bdf8';
     ctx.fillRect(xLeft + 12, barY, bW, bH);
     ctx.fillStyle = '#fff';
-    ctx.fillText(`2mₑc² (${fmtSig(2 * MEC2, 3)}M)`, xLeft + 16, barY + 10);
+    ctx.fillText(`2mₑc² (${fmtSig(2 * MEC2, 3)}M)`, xLeft + 15, barY + 9);
 
     ctx.fillStyle = '#ffd166';
     ctx.textAlign = 'center';
-    ctx.fillText('↔', xLeft + 12 + bW + 12, barY + 10);
+    ctx.fillText('↔', xLeft + 12 + bW + 10, barY + 9);
 
     ctx.fillStyle = '#ffd166';
-    ctx.fillRect(xLeft + 12 + bW + 24, barY, bW, bH);
+    ctx.fillRect(xLeft + 12 + bW + 20, barY, bW, bH);
     ctx.fillStyle = '#050c18';
     ctx.font = 'bold 11px system-ui';
     ctx.textAlign = 'left';
-    ctx.fillText(`光子 (${fmtSig(annRes.Etot, 3)}M)`, xLeft + 16 + bW + 24, barY + 10);
+    ctx.fillText(`光子 (${fmtSig(annRes.Etot, 3)}M)`, xLeft + 15 + bW + 20, barY + 9);
   } else {
     const barY = yTopL + hL - 32;
     const bW = Math.min(100, wL * 0.32);
@@ -500,7 +500,7 @@ function drawPairMode(W, H) {
   const wR = isNarrow ? W : W * 0.5;
   const hR = isNarrow ? H * 0.5 : H;
   const cxR = isCompact ? (xRight + wR * 0.50) : (xRight + wR * 0.55);
-  const cyR = isCompact ? (yTopR + hR * 0.38) : (yTopR + hR * 0.46);
+  const cyR = isCompact ? (yTopR + 46) : (yTopR + hR * 0.46);
 
   ctx.save();
   ctx.fillStyle = 'rgba(255,255,255,.015)';
@@ -508,28 +508,28 @@ function drawPairMode(W, H) {
   ctx.strokeStyle = 'rgba(255,255,255,.07)';
   ctx.strokeRect(xRight + 4, yTopR + 4, wR - 8, hR - 8);
 
-  ctx.font = isCompact ? 'bold 12px system-ui' : 'bold 14px system-ui';
+  ctx.font = isCompact ? 'bold 11px system-ui' : 'bold 14px system-ui';
   ctx.fillStyle = '#94a3b8';
   ctx.textAlign = 'left';
-  ctx.fillText('【成對產生】γ + 原子核 → e⁻ + e⁺ + 核', xRight + (isCompact ? 12 : 16), yTopR + (isCompact ? 16 : 24));
+  ctx.fillText(isCompact ? '【成對產生】γ + 核 → e⁻ + e⁺ + 核' : '【成對產生】γ + 原子核 → e⁻ + e⁺ + 核', xRight + (isCompact ? 12 : 16), yTopR + (isCompact ? 14 : 24));
 
   // 原子核（灰球）
-  drawParticle(ctx, cxR, cyR, isCompact ? 13 : 18, '#8a99ad', '核');
+  drawParticle(ctx, cxR, cyR, isCompact ? 11 : 18, '#8a99ad', '核');
   ctx.font = '11px system-ui';
   ctx.fillStyle = '#94a3b8';
   ctx.textAlign = 'center';
-  ctx.fillText(isCompact ? '核（吸收動量）' : '原子核（吸收動量）', cxR, cyR - (isCompact ? 17 : 26));
+  ctx.fillText(isCompact ? '核（吸收動量）' : '原子核（吸收動量）', cxR, cyR - (isCompact ? 15 : 26));
 
-  const statusYR = isCompact ? (cyR + 18) : (cyR + 34);
+  const statusYR = isCompact ? (cyR + 20) : (cyR + 34);
 
   if (crtRes.possible) {
     if (tCycle < 0.40) {
       const prog = tCycle / 0.40;
-      const xG = (xRight + 18) + prog * (cxR - (xRight + 18) - (isCompact ? 16 : 22));
-      drawWavyPhoton(ctx, xRight + 18, cyR, xG, cyR, { color: '#ffd166', waves: 3, label: isCompact ? `γ (${fmtSig(state.Eg, 3)} MeV)` : `γ 入射 (${fmtSig(state.Eg, 3)} MeV)`, amp: isCompact ? 4 : 6, fontSize: isCompact ? 'bold 11px system-ui' : '' });
+      const xG = (xRight + 16) + prog * (cxR - (xRight + 16) - (isCompact ? 15 : 22));
+      drawWavyPhoton(ctx, xRight + 16, cyR, xG, cyR, { color: '#ffd166', waves: 3, label: isCompact ? `γ (${fmtSig(state.Eg, 3)} MeV)` : `γ 入射 (${fmtSig(state.Eg, 3)} MeV)`, amp: isCompact ? 4 : 6, fontSize: isCompact ? 'bold 11px system-ui' : '' });
     } else {
       const pProg = (tCycle - 0.40) / 0.60;
-      const flyD = pProg * (wR * (isCompact ? 0.28 : 0.32));
+      const flyD = pProg * (wR * (isCompact ? 0.26 : 0.32));
       const ex = cxR + flyD * 0.8, eyTop = cyR - flyD * 0.7, eyBtm = cyR + flyD * 0.7;
       drawParticle(ctx, ex, eyTop, isCompact ? 10 : 12, '#38bdf8', 'e⁻');
       drawParticle(ctx, ex, eyBtm, isCompact ? 10 : 12, '#ff5470', 'e⁺');
@@ -542,7 +542,7 @@ function drawPairMode(W, H) {
     }
   } else {
     const pProg = tCycle;
-    const xG1 = xRight + 18 + pProg * (wR * 0.6);
+    const xG1 = xRight + 16 + pProg * (wR * 0.6);
     const xG2 = xG1 + (isCompact ? 45 : 55);
     drawWavyPhoton(ctx, xG1, cyR, xG2, cyR, { color: '#ffd166', waves: 2, label: `γ (${fmtSig(state.Eg, 3)} MeV)`, amp: isCompact ? 4 : 6, fontSize: isCompact ? 'bold 11px system-ui' : '' });
 
@@ -587,11 +587,19 @@ function drawPPMode(W, H) {
     '步驟 ④：³He + ³He → ⁴He + 2p（兩顆氦-3 碰撞結合成氦-4）',
     '步驟 ⑤：總結（4p + 2e⁻ → ⁴He + 2ν + 6γ 完整能量帳）'
   ];
+  const compactTitles = [
+    '步驟 ⓪：太陽核心 4 個質子待命',
+    '步驟 ①：兩次 p+p → d + e⁺ + ν（合成氘核）',
+    '步驟 ②：e⁺ + e⁻ → 2γ（正負電子互毀）',
+    '步驟 ③：兩次 d + p → ³He + γ（融合為氦-3）',
+    '步驟 ④：³He + ³He → ⁴He + 2p（結合成氦-4）',
+    '步驟 ⑤：總結（4p + 2e⁻ → ⁴He + 2ν + 6γ）'
+  ];
 
-  ctx.font = isCompact ? 'bold 12px system-ui' : 'bold 15px system-ui';
+  ctx.font = isCompact ? 'bold 11px system-ui' : 'bold 15px system-ui';
   ctx.fillStyle = '#ffd166';
   ctx.textAlign = 'center';
-  ctx.fillText(stepTitles[step], W * 0.5, isCompact ? 24 : 30);
+  ctx.fillText(isCompact ? compactTitles[step] : stepTitles[step], W * 0.5, isCompact ? 20 : 30);
 
   ctx.font = isCompact ? '11px system-ui' : '13px system-ui';
   ctx.fillStyle = '#7CFFB2';
@@ -602,7 +610,7 @@ function drawPPMode(W, H) {
   else if (step === 3) qText = isCompact ? `Q(dp) = ${fmtSig(q.dp, 3)} MeV（兩次 ${fmtSig(q.dp * 2, 3)} MeV）` : `該步 Q 值 dp = ${fmtSig(q.dp, 3)} MeV（兩次共 ${fmtSig(q.dp * 2, 3)} MeV）`;
   else if (step === 4) qText = isCompact ? `Q(he) = ${fmtSig(q.he, 3)} MeV（釋放並歸還 2 個質子）` : `該步 Q 值 he = ${fmtSig(q.he, 3)} MeV（釋放並歸還 2 個質子）`;
   else qText = isCompact ? `總結：total = ${fmtSig(q.total, 3)} MeV（熱 ${fmtSig(q.heat, 3)} + ν ${fmtSig(q.neutrino, 3)}）` : `總結：total = ${fmtSig(q.total, 3)} MeV（留在太陽的熱 ${fmtSig(q.heat, 3)} MeV + 微中子帶走 ${fmtSig(q.neutrino, 3)} MeV）`;
-  ctx.fillText(qText, W * 0.5, isCompact ? 42 : 52);
+  ctx.fillText(qText, W * 0.5, isCompact ? 36 : 52);
 
   const cx = W * 0.5, cy = isCompact ? H * 0.52 : H * 0.54;
   const t = (animTimer % 2400) / 2400;
@@ -614,7 +622,7 @@ function drawPPMode(W, H) {
     drawParticle(ctx, cx + 110, cy + 35, 16, '#ff5470', 'p');
     ctx.font = isCompact ? '11px system-ui' : '12px system-ui';
     ctx.fillStyle = '#94a3b8';
-    ctx.fillText('質子（紅）在高溫高壓核心中準備進行核融合', cx, cy + (isCompact ? 70 : 85));
+    ctx.fillText('質子（紅）在高溫高壓核心中準備進行核融合', cx, cy + (isCompact ? 65 : 85));
   } else if (step === 1) {
     // ① 兩次 p+p → d + e⁺ + ν
     // 質子紅、中子灰、正子粉、微中子小白點飛出畫面（標「帶走能量、幾乎不和物質作用」）
@@ -648,7 +656,7 @@ function drawPPMode(W, H) {
 
     ctx.font = isCompact ? '11px system-ui' : '12px system-ui';
     ctx.fillStyle = '#94a3b8';
-    ctx.fillText('正子（粉）與電子（藍）互毀產生光子，Q(ann) = 1.022 MeV', cx, cy + (isCompact ? 70 : 85));
+    ctx.fillText('正子（粉）與電子（藍）互毀產生光子，Q(ann) = 1.022 MeV', cx, cy + (isCompact ? 65 : 85));
   } else if (step === 3) {
     // ③ 兩次 d + p → ³He + γ
     drawParticle(ctx, cx - 85, cy - 10, 13, '#ff5470', 'p');
@@ -667,7 +675,7 @@ function drawPPMode(W, H) {
 
     ctx.font = isCompact ? '11px system-ui' : '12px system-ui';
     ctx.fillStyle = '#94a3b8';
-    ctx.fillText('氘與質子融合為氦-3，各釋放 Q(dp) = 5.49 MeV', cx, cy + (isCompact ? 70 : 85));
+    ctx.fillText('氘與質子融合為氦-3，各釋放 Q(dp) = 5.49 MeV', cx, cy + (isCompact ? 65 : 85));
   } else if (step === 4) {
     // ④ ³He + ³He → ⁴He + 2p
     drawParticle(ctx, cx - 12, cy - 12, 14, '#ff5470', 'p');
@@ -688,20 +696,20 @@ function drawPPMode(W, H) {
 
     ctx.font = isCompact ? '11px system-ui' : '12px system-ui';
     ctx.fillStyle = '#94a3b8';
-    ctx.fillText('生成超穩定氦-4 並吐回 2 個質子，Q(he) = 12.86 MeV', cx, cy + (isCompact ? 70 : 85));
+    ctx.fillText('生成超穩定氦-4 並吐回 2 個質子，Q(he) = 12.86 MeV', cx, cy + (isCompact ? 65 : 85));
   } else {
     // ⑤ 總結
-    ctx.font = isCompact ? 'bold 12px system-ui' : 'bold 15px system-ui';
+    ctx.font = isCompact ? 'bold 11px system-ui' : 'bold 15px system-ui';
     ctx.fillStyle = '#38bdf8';
     ctx.fillText('淨反應：4 p + 2 e⁻  →  ⁴He + 2 νₑ + 6 γ', cx, cy - (isCompact ? 16 : 20));
 
     ctx.font = isCompact ? '11px system-ui' : '13px system-ui';
     ctx.fillStyle = '#dce6ff';
-    ctx.fillText(`總能量 total = ${fmtSig(q.total, 3)} MeV（虧損比率約 0.71%）`, cx, cy + (isCompact ? 8 : 10));
+    ctx.fillText(isCompact ? `總能量 total = ${fmtSig(q.total, 3)} MeV（虧損比約 0.71%）` : `總能量 total = ${fmtSig(q.total, 3)} MeV（虧損比率約 0.71%）`, cx, cy + (isCompact ? 6 : 10));
     ctx.fillStyle = '#ffd166';
-    ctx.fillText(`留在太陽的熱約 26.2 MeV　·　微中子帶走約 0.53 MeV`, cx, cy + (isCompact ? 26 : 34));
+    ctx.fillText(isCompact ? `熱約 26.2 MeV · 微中子約 0.53 MeV` : `留在太陽的熱約 26.2 MeV　·　微中子帶走約 0.53 MeV`, cx, cy + (isCompact ? 24 : 34));
 
-    drawParticle(ctx, cx, cy + (isCompact ? 56 : 70), isCompact ? 14 : 16, '#4ade80', '⁴He');
+    drawParticle(ctx, cx, cy + (isCompact ? 54 : 70), isCompact ? 13 : 16, '#4ade80', '⁴He');
   }
 }
 

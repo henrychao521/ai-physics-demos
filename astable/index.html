@@ -400,8 +400,8 @@ function draw555Circuit(ctx, W, H) {
   ctx.strokeStyle = '#4cc2ff';
   ctx.beginPath(); ctx.moveTo(marginX, yGnd); ctx.lineTo(W - marginX, yGnd); ctx.stroke();
   ctx.fillStyle = '#4cc2ff'; ctx.font = isNarrow ? 'bold 11px monospace' : 'bold 12px monospace';
-  // 窄螢幕時將 GND 標籤移至線條上方，避免與底部狀態文字衝突
-  ctx.fillText('GND (0V)', marginX, isNarrow ? yGnd - 5 : yGnd + 16);
+  // 窄螢幕時將 GND 標籤移至線條上方，避免與底部狀態文字衝突；縮短為 GND 避免壓到電容標籤
+  ctx.fillText(isNarrow ? 'GND' : 'GND (0V)', marginX, isNarrow ? yGnd - 5 : yGnd + 16);
 
   // 555 IC 方塊（置中稍偏右）
   const icW = isNarrow ? Math.min(W * 0.47, 250) : Math.min(W * 0.44, 250);
@@ -551,10 +551,10 @@ function draw555Circuit(ctx, W, H) {
   drawLED(ctx, ledX, rLedBot + 2, ledBot, isHigh, isHigh ? '#7CFFB2' : '#2a443a');
   ctx.beginPath(); ctx.moveTo(ledX, ledBot); ctx.lineTo(ledX, yGnd); ctx.stroke();
 
-  // 電容電壓即時標籤：窄螢幕移至電容上方，不擠在電路底部
+  // 電容電壓即時標籤：窄螢幕移至電容旁/下方，避免與第 2 腳 TRIG 重疊
   ctx.fillStyle = '#7CFFB2'; ctx.font = 'bold 11px system-ui';
   if (isNarrow) {
-    ctx.fillText(`v_C: ${fmtSig(vCap, 3)}V`, wireLX + 8, capTopY - 4);
+    ctx.fillText(`v_C: ${fmtSig(vCap, 3)}V`, wireLX + 10, Math.min(capBotY + 5, yGnd - 6));
   } else {
     ctx.fillText(`v_C: ${fmtSig(vCap, 3)}V`, wireLX + 8, capBotY + 16);
   }
@@ -597,7 +597,7 @@ function drawBjtCircuit(ctx, W, H) {
   ctx.strokeStyle = '#4cc2ff';
   ctx.beginPath(); ctx.moveTo(marginX, yGnd); ctx.lineTo(W - marginX, yGnd); ctx.stroke();
   ctx.fillStyle = '#4cc2ff'; ctx.font = isNarrow ? 'bold 11px monospace' : 'bold 12px monospace';
-  ctx.fillText('GND (0V)', marginX, isNarrow ? yGnd - 5 : yGnd + 16);
+  ctx.fillText(isNarrow ? 'GND' : 'GND (0V)', marginX, isNarrow ? yGnd - 5 : yGnd + 16);
 
   // 左右對稱座標
   const cx = W / 2;
