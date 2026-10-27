@@ -149,19 +149,20 @@
         <select class="c-select" id="sel_rod_3"></select>
       </div>
     </div>
+
+    <!-- 滑桿列 -->
+    <div class="bar">
+      <div class="sld">
+        <label><span>棒長 L（兩端溫差固定 100 °C）</span><span class="v" id="v_L">10 cm</span></label>
+        <input type="range" id="r_L" min="2" max="20" step="1" value="10">
+      </div>
+      <div class="sld" style="max-width:240px">
+        <label><span>截面積 A（固定規格）</span><span class="v">1.00 cm²</span></label>
+        <div style="font-size:13px;color:var(--muted);padding-top:8px">A = 1×10⁻⁴ m²（各棒相同）</div>
+      </div>
+    </div>
   </div>
 
-  <!-- 滑桿列 -->
-  <div class="bar">
-    <div class="sld">
-      <label><span>棒長 L（兩端溫差固定 100 °C）</span><span class="v" id="v_L">10 cm</span></label>
-      <input type="range" id="r_L" min="2" max="20" step="1" value="10">
-    </div>
-    <div class="sld" style="max-width:240px">
-      <label><span>截面積 A（固定規格）</span><span class="v">1.00 cm²</span></label>
-      <div style="font-size:13px;color:var(--muted);padding-top:8px">A = 1×10⁻⁴ m²（各棒相同）</div>
-    </div>
-  </div>
 
   <!-- 計算公式（即時代入） -->
   <div class="formula" id="formula"></div>
@@ -381,7 +382,7 @@ let ctxSim, ctxBar, ctxContact;
 function setupCanvases() {
   const isNarrow = window.innerWidth <= 640;
   ctxSim = SIM.fit(document.getElementById('scene'), isNarrow ? 1.05 : 1.6);
-  ctxBar = SIM.fit(document.getElementById('barCanvas'), isNarrow ? 0.95 : 1.7);
+  ctxBar = SIM.fit(document.getElementById('barCanvas'), isNarrow ? 1.3 : 1.7);   // 比主畫布矮：手機版釘住畫面時才會選到主畫布
   ctxContact = SIM.fit(document.getElementById('contactCanvas'), isNarrow ? 2.0 : 3.4);
 }
 

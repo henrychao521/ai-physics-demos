@@ -89,7 +89,7 @@
       </div>
     </div>
     
-    <canvas id="scene" style="width:100%;aspect-ratio:2.2"></canvas>
+    <canvas id="scene" style="width:100%;aspect-ratio:1.5"></canvas>
     
     <div class="btn-bar">
       <button class="pbtn on" id="btnInStep">齊步走</button>
@@ -108,14 +108,14 @@
         <span>頻率響應曲線（穩態振幅 vs 頻率）</span>
         <span id="chartResLegend">標註 fₙ 與目前步頻</span>
       </div>
-      <canvas id="chartRes" style="width:100%;aspect-ratio:1.6"></canvas>
+      <canvas id="chartRes" style="width:100%;aspect-ratio:2"></canvas>
     </div>
     <div class="chart-card">
       <div class="chart-title">
         <span>60 秒時間歷程（從靜止開始）</span>
         <span>齊步走 vs 便步走</span>
       </div>
-      <canvas id="chartTime" style="width:100%;aspect-ratio:1.6"></canvas>
+      <canvas id="chartTime" style="width:100%;aspect-ratio:2"></canvas>
     </div>
   </div>
 
@@ -843,9 +843,9 @@ document.getElementById('btnReset').addEventListener('click', () => {
 });
 
 function setupCanvases() {
-  scCtx = SIM.fit(document.getElementById('scene'), 2.2);
-  cResCtx = SIM.fit(document.getElementById('chartRes'), 1.6);
-  cTimeCtx = SIM.fit(document.getElementById('chartTime'), 1.6);
+  scCtx = SIM.fit(document.getElementById('scene'), 1.5);
+  cResCtx = SIM.fit(document.getElementById('chartRes'), 2);
+  cTimeCtx = SIM.fit(document.getElementById('chartTime'), 2);
 }
 
 window.addEventListener('load', () => {
