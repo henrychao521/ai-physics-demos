@@ -55,6 +55,8 @@
   .note code{background:rgba(124,255,178,0.12);padding:1px 6px;border-radius:4px;color:var(--accent2,#7cffb2);font-size:.88em}
 
   footer{color:var(--muted,#8ca2c4);font-size:.78rem;margin-top:28px;text-align:center;line-height:1.7}
+  /* 手機：各小計算的結果跟著自己的控制項（區塊內 sticky，App 體檢以 data-pl-result 量這一塊是否看得到） */
+  .res-sticky{position:sticky;top:54px;z-index:5;background:var(--panel,#101726);padding:6px 0}
 </style>
 </head>
 <body data-demo="ND 減光鏡">
@@ -106,11 +108,11 @@
   </div>
 
   <!-- 第二部分：兩片偏振片當可變 ND -->
-  <div class="sec-card">
+  <div class="sec-card" data-pl-result="#cvPolBox">
     <h2>2. 用兩片偏振片當「可變 ND」與馬呂斯定律</h2>
     <p class="desc">非偏振光通過第一片垂直偏振片後成為垂直線偏振光（強度剩 I₀/2）；再通過夾角 θ 的第二片偏振片時，透射強度遵守<b>馬呂斯定律</b> <code>I = (I₀/2)·cos²θ</code>。旋轉角度即可連續調節透光量。</p>
     
-    <div class="canvas-box">
+    <div class="canvas-box res-sticky" id="cvPolBox">
       <canvas id="cvPol" style="aspect-ratio:2.1"></canvas>
     </div>
 
@@ -129,16 +131,16 @@
     </div>
 
     <div class="note" style="margin-top:12px;border-left-color:var(--accent)">
-      可變 ND 減光鏡就是兩片偏振片疊在一起旋轉；轉到接近 90° 時，實際產品會出現不均勻的『X 形』暗紋、顏色也不再完全中性。
+      可變 ND 減光鏡的原理就是兩片偏振片疊在一起旋轉：夾角越接近 90°，穿透越少，強度照 (I₀/2)·cos²θ 變化。
     </div>
   </div>
 
   <!-- 第三部分：攝影曝光補償與長曝光瀑布 -->
-  <div class="sec-card">
+  <div class="sec-card" data-pl-result="#cvWaterBox">
     <h2>3. 攝影曝光補償與長曝光「絲絹瀑布」模擬</h2>
     <p class="desc">在強光下欲獲得<b>長曝光</b>或<b>大光圈淺景深</b>，必須加裝 ND 鏡阻擋多餘進光量。快門時間需乘上 10^OD 才能維持相同曝光值。</p>
 
-    <div class="canvas-box">
+    <div class="canvas-box res-sticky" id="cvWaterBox">
       <canvas id="cvWater" style="aspect-ratio:2.2"></canvas>
     </div>
 

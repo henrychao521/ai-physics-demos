@@ -72,6 +72,8 @@
   .calc-item .num{font-size:1.15rem;font-weight:700;color:var(--accent);margin-top:4px}
   
   footer{color:var(--muted);font-size:.8rem;margin-top:30px;text-align:center;line-height:1.7}
+  /* 手機：各小計算的結果跟著自己的滑桿（區塊內 sticky，App 體檢以 data-pl-result 量這一塊是否看得到） */
+  .res-sticky{position:sticky;top:54px;z-index:5;background:var(--panel);padding:6px 0}
 </style>
 </head>
 <body data-demo="光纖與熔接">
@@ -83,6 +85,7 @@
   </header>
 
   <!-- 第一部分：光纖裡的全反射 -->
+  <section class="main-sim">
   <div class="scene-wrap">
     <div class="scene-bar">
       <span>光纖規格預設：</span>
@@ -118,6 +121,7 @@
   <div class="note">
     <b>物理重點：</b>光纖靠纖芯 n1 > 披覆 n2 的全反射導光；NA 越大越容易把光收進去（但多模光纖的模態色散也越大）；熔接的關鍵是端面平整與纖芯對準。
   </div>
+  </section>
 
   <!-- 第二部分：光纖熔接 -->
   <div class="card">
@@ -151,20 +155,10 @@
   </div>
 
   <!-- 小互動一：dB ↔ 穿透率換算 -->
-  <div class="card">
+  <div class="card" data-pl-result="#fibRes1">
     <h3>小互動一：分貝（dB）↔ 穿透率（T）換算器</h3>
     <p style="font-size:.86rem;color:var(--muted)">損耗公式：<code>T = 10^(−dB / 10)</code>。光學損耗以分貝表示時，每增加 3 dB 代表功率減半；0.02 dB 與 0.3 dB 的光穿透效率如下：</p>
-    <div class="bar" style="margin-top:8px">
-      <div class="sld">
-        <label><span>接續損耗（dB）</span><span class="v" id="v_lossDB">0.02 dB</span></label>
-        <input type="range" id="r_lossDB" min="0" max="1.0" step="0.01" value="0.02">
-      </div>
-      <div style="display:flex;gap:8px;flex-wrap:wrap">
-        <button class="pbtn" onclick="setLossDB(0.02)">Fujikura 典型 0.02 dB</button>
-        <button class="pbtn" onclick="setLossDB(0.30)">TIA-568 上限 0.30 dB</button>
-        <button class="pbtn" onclick="setLossDB(0.75)">連接器上限 0.75 dB</button>
-      </div>
-    </div>
+    <div class="res-sticky" id="fibRes1">
     <div class="meter-wrap">
       <div class="meter-fill" id="meterFill" style="width:99.54%"></div>
     </div>
@@ -182,23 +176,26 @@
         <div class="num" id="calc_loss" style="color:var(--force)">0.459 %</div>
       </div>
     </div>
+    </div>
+    <div class="bar" style="margin-top:8px">
+      <div class="sld">
+        <label><span>接續損耗（dB）</span><span class="v" id="v_lossDB">0.02 dB</span></label>
+        <input type="range" id="r_lossDB" min="0" max="1.0" step="0.01" value="0.02">
+      </div>
+      <div style="display:flex;gap:8px;flex-wrap:wrap">
+        <button class="pbtn" onclick="setLossDB(0.02)">Fujikura 典型 0.02 dB</button>
+        <button class="pbtn" onclick="setLossDB(0.30)">TIA-568 上限 0.30 dB</button>
+        <button class="pbtn" onclick="setLossDB(0.75)">連接器上限 0.75 dB</button>
+      </div>
+    </div>
   </div>
 
   <!-- 小互動二：對芯偏移造成的損耗 -->
-  <div class="card">
+  <div class="card" data-pl-result="#fibRes2">
     <h3>小互動二：單模光纖對芯偏移損耗模擬（Marcuse 高斯模態近似）</h3>
     <p style="font-size:.86rem;color:var(--muted)">單模光纖的光場分佈近似高斯光束。兩根光纖端面若發生微小徑向錯位（Offset d），耦合效率急劇衰退。高斯模態近似公式：<code>η = exp(−(d / w)²)</code>，<code>w = MFD / 2</code>，損耗 <code>Loss = −10·log₁₀(η) ≈ 4.343·(d/w)² dB</code>。</p>
+    <div class="res-sticky" id="fibRes2">
     <canvas id="sceneOffset" style="width:100%;aspect-ratio:2.4"></canvas>
-    <div class="bar" style="margin-top:10px">
-      <div class="sld">
-        <label><span>對芯橫向偏移量 d（μm）</span><span class="v" id="v_dOffset">1.0 μm</span></label>
-        <input type="range" id="r_dOffset" min="0" max="3.0" step="0.1" value="1.0">
-      </div>
-      <div class="sld">
-        <label><span>模場直徑 MFD（μm）</span><span class="v" id="v_mfd">9.2 μm</span></label>
-        <input type="range" id="r_mfd" min="8.0" max="11.0" step="0.1" value="9.2">
-      </div>
-    </div>
     <div class="grid-calc">
       <div class="calc-item">
         <div class="title">對芯偏移量 d</div>
@@ -213,6 +210,17 @@
         <div class="num" id="calc_eta">95.4 %</div>
       </div>
     </div>
+    </div>
+    <div class="bar" style="margin-top:10px">
+      <div class="sld">
+        <label><span>對芯橫向偏移量 d（μm）</span><span class="v" id="v_dOffset">1.0 μm</span></label>
+        <input type="range" id="r_dOffset" min="0" max="3.0" step="0.1" value="1.0">
+      </div>
+      <div class="sld">
+        <label><span>模場直徑 MFD（μm）</span><span class="v" id="v_mfd">9.2 μm</span></label>
+        <input type="range" id="r_mfd" min="8.0" max="11.0" step="0.1" value="9.2">
+      </div>
+    </div>
     <div class="note" style="margin-top:12px">
       <b>物理重點說明：</b>單模纖芯只有約 9 μm，偏 1 μm 就有約 0.2 dB 損耗！這說明了為何熔接必須依賴顯微高精度步進馬達進行自動對芯。
       <br><span style="font-size:.82rem;color:var(--muted)">註明：高斯模態近似，D. Marcuse, Bell System Technical Journal 56, 703（1977）。</span>
@@ -220,9 +228,33 @@
   </div>
 
   <!-- 小互動三：鏈路預算 linkBudget -->
-  <div class="card">
+  <div class="card" data-pl-result="#fibRes3">
     <h3>小互動三：光纖傳輸鏈路損耗預算計算機（Link Budget）</h3>
     <p style="font-size:.86rem;color:var(--muted)">光纖鏈路總衰減預算 = 光纖本體衰減（長度 × 衰減率）＋ 熔接接續損耗（點數 × 每點損耗）＋ 連接器接頭損耗（對數 × 每對損耗）。</p>
+    <div class="res-sticky" id="fibRes3">
+    <div class="grid-calc">
+      <div class="calc-item">
+        <div class="title">光纖本體總衰減</div>
+        <div class="num" id="calc_fiberLoss">10.0 dB</div>
+      </div>
+      <div class="calc-item">
+        <div class="title">熔接點總損耗</div>
+        <div class="num" id="calc_spliceLoss">0.200 dB</div>
+      </div>
+      <div class="calc-item">
+        <div class="title">連接器總損耗</div>
+        <div class="num" id="calc_connLoss">1.50 dB</div>
+      </div>
+      <div class="calc-item" style="border-color:var(--accent)">
+        <div class="title">鏈路總損耗預算</div>
+        <div class="num" id="calc_totalBudget" style="color:var(--accent)">11.7 dB</div>
+      </div>
+      <div class="calc-item" style="border-color:var(--green)">
+        <div class="title">終端到達光功率比 (T)</div>
+        <div class="num" id="calc_totalT" style="color:var(--green)">6.76 %</div>
+      </div>
+    </div>
+    </div>
     <div class="bar">
       <div class="sld">
         <label><span>光纖總長度（km）</span><span class="v" id="v_km">20 km</span></label>
@@ -247,28 +279,6 @@
       <div class="sld">
         <label><span>每對連接器損耗（dB）</span><span class="v" id="v_connDB">0.75 dB</span></label>
         <input type="range" id="r_connDB" min="0.1" max="1.5" step="0.05" value="0.75">
-      </div>
-    </div>
-    <div class="grid-calc">
-      <div class="calc-item">
-        <div class="title">光纖本體總衰減</div>
-        <div class="num" id="calc_fiberLoss">10.0 dB</div>
-      </div>
-      <div class="calc-item">
-        <div class="title">熔接點總損耗</div>
-        <div class="num" id="calc_spliceLoss">0.200 dB</div>
-      </div>
-      <div class="calc-item">
-        <div class="title">連接器總損耗</div>
-        <div class="num" id="calc_connLoss">1.50 dB</div>
-      </div>
-      <div class="calc-item" style="border-color:var(--accent)">
-        <div class="title">鏈路總損耗預算</div>
-        <div class="num" id="calc_totalBudget" style="color:var(--accent)">11.7 dB</div>
-      </div>
-      <div class="calc-item" style="border-color:var(--green)">
-        <div class="title">終端到達光功率比 (T)</div>
-        <div class="num" id="calc_totalT" style="color:var(--green)">6.76 %</div>
       </div>
     </div>
   </div>

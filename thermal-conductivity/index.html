@@ -92,6 +92,8 @@
 
   footer{color:var(--muted);font-size:13px;margin-top:28px;text-align:center;line-height:1.8}
   .ext-links{margin-top:16px;font-size:14px;color:var(--muted)}
+  /* 手機：各小計算的結果跟著自己的控制項（區塊內 sticky，App 體檢以 data-pl-result 量這一塊是否看得到） */
+  .res-sticky{position:sticky;top:54px;z-index:5;background:var(--panel);padding:6px 0}
 </style>
 </head>
 <body data-demo="熱傳導材料比較">
@@ -179,12 +181,22 @@
   </div>
 
   <!-- 第三區：為什麼金屬摸起來比較冷？ -->
-  <div class="card">
+  <div class="card" data-pl-result="#contactRes">
     <h3>❄️ 為什麼金屬摸起來比木頭冷？（熱滲透率 e）</h3>
     <p style="font-size:14px;color:var(--muted);margin:0 0 10px;line-height:1.6">
       冬天摸室溫下的鐵欄杆感覺刺骨冰冷，但摸木頭卻覺得溫和，然而兩者溫度完全相同（皆為室溫 20 °C）！這是因為人體皮膚感測到的是<b>接觸瞬間的介面溫度 T<sub>c</sub></b>。
     </p>
 
+    <div class="res-sticky" id="contactRes">
+      <div class="contact-res">
+        <div class="r-title">接觸面瞬時溫度 T<sub>c</sub>：</div>
+        <div class="r-temp" id="tcVal">-- °C</div>
+        <div class="r-desc" id="tcDesc">計算中...</div>
+      </div>
+    <div class="canvas-box" style="margin-top:8px">
+      <canvas id="contactCanvas"></canvas>
+    </div>
+    </div>
     <div class="contact-box">
       <div class="rod-select-item">
         <label>人體組織（以 37 °C 近似）：</label>
@@ -200,16 +212,8 @@
           <button class="pbtn" style="min-height:44px;padding:4px 10px;font-size:13px" id="btnQuickEps">點選：保麗龍</button>
         </div>
       </div>
-      <div class="contact-res">
-        <div class="r-title">接觸面瞬時溫度 T<sub>c</sub>：</div>
-        <div class="r-temp" id="tcVal">-- °C</div>
-        <div class="r-desc" id="tcDesc">計算中...</div>
-      </div>
     </div>
 
-    <div class="canvas-box" style="margin-top:14px">
-      <canvas id="contactCanvas"></canvas>
-    </div>
 
     <div class="note" style="margin-top:12px">
       <b>物理原理解析：</b>當手指接觸物體時，介面溫度滿足 <code>T_c = (e₁T₁ + e₂T₂)/(e₁ + e₂)</code>。材料的 k、ρ、c 越大，其熱滲透率 <code>e = √(kρc)</code> 越大，代表它能以極大速率把手的熱帶走，使接觸面溫度越接近物體初溫。金屬銅的 e 高達 37,100，瞬間將接觸面拉低至約 20.7 °C（讓人感到冰冷刺骨）；橡木的 e 僅約 470，接觸面仍有 33.1 °C（溫和舒適）；保麗龍的 e 只有約 28，接觸面高達 36.6 °C，甚至感覺微溫。
