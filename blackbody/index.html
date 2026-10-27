@@ -308,17 +308,21 @@ function draw(){
   const W=sc._w, H=sc._h;
   S.scene(sc,SKY,{});
 
-  // 固定內部座標區域，右側保留 140px 放置發光球
-  const ml=60, mr=14, mt=20, mb=36;
-  const gw=W-ml-mr-140, gh=H-mt-mb;
-  const x0=ml, y0=mt+gh;
-  const xOf=nm=>x0+(nm-LAM0)/(LAM1-LAM0)*gw;
+  // 在手機或窄螢幕時微調留白，為光譜曲線爭取更多空間
+  const isNarrow = W < 500;
+  const sphereW = isNarrow ? 96 : 140;
+  const ml = isNarrow ? 52 : 60;
+  const mr = isNarrow ? 8 : 14;
+  const mt = 20, mb = 36;
+  const gw = W - ml - mr - sphereW, gh = H - mt - mb;
+  const x0 = ml, y0 = mt + gh;
+  const xOf = nm => x0 + (nm - LAM0) / (LAM1 - LAM0) * gw;
 
   // 自動縮放：在固定框內以目前溫度光譜峰值歸一化
-  const lm=lamMax();
+  const lm = lamMax();
   let peak = planck(lm * 1e-9, state.T);
   if (!isFinite(peak) || peak <= 0) peak = 1e-30;
-  for(let nm=LAM0; nm<=LAM1; nm+=10){
+  for(let nm = LAM0; nm <= LAM1; nm += 10){
     peak = Math.max(peak, planck(nm * 1e-9, state.T));
   }
 
@@ -355,7 +359,7 @@ function draw(){
 
     // 刻度文字標示
     sc.fillStyle = 'rgba(170, 185, 215, 0.8)';
-    sc.font = '10px system-ui';
+    sc.font = (isNarrow ? '9px' : '10px') + ' system-ui';
     sc.textAlign = 'right';
     sc.textBaseline = 'middle';
     sc.fillText(t.l, x0 - 8, y);
@@ -399,21 +403,29 @@ function draw(){
 
   // 縱軸文字標籤
   sc.save();
-  sc.translate(14, mt + gh / 2);
+  sc.translate(isNarrow ? 12 : 14, mt + gh / 2);
   sc.rotate(-Math.PI / 2);
   sc.fillStyle='rgba(170, 185, 215, 0.8)';
-  sc.font='11px system-ui';
+  sc.font=(isNarrow ? '10px' : '11px') + ' system-ui';
   sc.textAlign='center';
   sc.textBaseline='middle';
   sc.fillText('輻射強度（相對值 B / B_max）', 0, 0);
   sc.restore();
 
-  // 框內標示當前峰值絕對數值，兼顧相對縮放與絕對量級感知
-  sc.fillStyle='rgba(170, 185, 215, 0.65)';
-  sc.font='10px system-ui';
-  sc.textAlign='left';
-  sc.textBaseline='top';
-  sc.fillText(`B_max ≈ ${peak.toExponential(2)} W/(m²·sr·m)`, x0 + 8, mt + 8);
+  // 判斷峰值在左半邊或右半邊：動態將 B_max 放在與峰值相反的角落，徹底避免重疊
+  const isPeakOnLeft = lm <= 1000;
+  sc.fillStyle = 'rgba(170, 185, 215, 0.75)';
+  sc.font = (isNarrow ? '9.5px' : '10px') + ' system-ui';
+  sc.textBaseline = 'top';
+  if (isPeakOnLeft) {
+    // 峰值在左側（如 5800K, 10000K）：B_max 置於圖表右上角
+    sc.textAlign = 'right';
+    sc.fillText(`B_max ≈ ${peak.toExponential(2)} W/(m²·sr·m)`, x0 + gw - 8, mt + 8);
+  } else {
+    // 峰值在右側（如 1000K~2500K）：B_max 置於圖表左上角
+    sc.textAlign = 'left';
+    sc.fillText(`B_max ≈ ${peak.toExponential(2)} W/(m²·sr·m)`, x0 + 8, mt + 8);
+  }
 
   // 普朗克曲線 + 填色（限制於固定框內繪製）
   const col=bbColor(state.T);
@@ -457,7 +469,7 @@ function draw(){
   sc.stroke();
   sc.restore();
 
-  // λ_max 標線
+  // λ_max 標線與標籤：放置在峰值下方旁邊，避開頂端曲線與 B_max
   if(lm<=LAM1){
     const xm=xOf(lm), ym=yOf(planck(lm*1e-9, state.T));
     sc.strokeStyle='rgba(255,210,122,.85)';
@@ -468,24 +480,35 @@ function draw(){
     sc.lineTo(xm, y0);
     sc.stroke();
     sc.setLineDash([]);
-    sc.fillStyle='#ffd27a';
-    sc.font='bold 12px system-ui';
-    sc.textAlign='left';
-    sc.textBaseline='bottom';
-    const tx = Math.min(xm + 4, x0 + gw - 86);
-    sc.fillText('λmax ' + lm.toFixed(0) + 'nm', tx, Math.max(ym - 4, mt + 18));
+
+    // 峰值點
     S.sphere(sc, xm, ym, 4, [40, 100, 74]);
-  } else {
+
+    // 文字標籤：靠右邊界時靠左排，否則靠右排；放在峰值頂點下方旁邊
+    const nearRight = xm > x0 + gw - 80;
     sc.fillStyle='#ffd27a';
-    sc.font='12px system-ui';
+    sc.font='bold 11px system-ui';
+    sc.textAlign = nearRight ? 'right' : 'left';
+    sc.textBaseline = 'top';
+    const tx = nearRight ? xm - 6 : xm + 6;
+    const ty = Math.min(ym + 10, y0 - 24);
+    sc.fillText('λmax ' + lm.toFixed(0) + 'nm', tx, ty);
+  } else {
+    // 超出可見波長範圍（如 1000K 峰值在紅外 2898nm）
+    sc.fillStyle='#ffd27a';
+    sc.font=(isNarrow ? '10px' : '11px') + ' system-ui';
     sc.textAlign='right';
     sc.textBaseline='top';
-    sc.fillText('λmax=' + lm.toFixed(0) + 'nm（紅外，超出範圍→）', x0 + gw - 8, mt + 26);
+    sc.fillText('λmax=' + lm.toFixed(0) + 'nm（紅外，超出範圍→）', x0 + gw - 8, mt + 24);
   }
 
   // 右側發光球(黑體色)
-  const bx=W-68, by=H/2, br=Math.min(44, 28 + (state.T/12000)*20);
-  const g2=sc.createRadialGradient(bx, by, 2, bx, by, br * 2.2);
+  const bx = W - sphereW / 2 - (isNarrow ? 4 : 8);
+  const by = H / 2;
+  const maxR = isNarrow ? 34 : 44;
+  const baseR = isNarrow ? 20 : 28;
+  const br = Math.min(maxR, baseR + (state.T / 12000) * (isNarrow ? 15 : 20));
+  const g2 = sc.createRadialGradient(bx, by, 2, bx, by, br * 2.2);
   g2.addColorStop(0, `rgba(${col[0]},${col[1]},${col[2]},.95)`);
   g2.addColorStop(.5, `rgba(${col[0]},${col[1]},${col[2]},.32)`);
   g2.addColorStop(1, 'rgba(0,0,0,0)');
@@ -501,7 +524,7 @@ function draw(){
   sc.font='11px system-ui';
   sc.textAlign='center';
   sc.textBaseline='top';
-  sc.fillText('物體顏色', bx, by + br + 14);
+  sc.fillText('物體顏色', bx, by + br + 12);
 
   updateHud(col);
 }

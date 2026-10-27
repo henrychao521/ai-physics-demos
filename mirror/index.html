@@ -252,16 +252,30 @@ function draw(){
   }
   sc.lineCap='butt';
 
-  // 焦點 F 與曲率中心 C 標記
+  // 焦點 F 與曲率中心 C 標記（窄畫布或兩點過近時自動上下錯開並簡化為單字母）
+  sc.save();
   sc.font='600 11px system-ui';
-  [[-F,'F (焦點)'],[-2*F,'C (曲率中心)']].forEach(([xc,lb])=>{
+  sc.textAlign='center';
+  const distFC=Math.abs(F)*SCALE;
+  const useShort=(W<=600)||distFC<75;
+  const stagger=useShort||distFC<110;
+
+  const fLabel=useShort?'F':'F (焦點)';
+  const cLabel=useShort?'C':'C (曲率中心)';
+  const fY=AY+16;
+  const cY=stagger?(AY-9):(AY+16);
+
+  [[-F,fLabel,fY],[-2*F,cLabel,cY]].forEach(([xc,lb,yPos])=>{
     if(Math.abs(xc)*SCALE>AX-10)return;
     sc.fillStyle='#7aa2cd';sc.beginPath();sc.arc(X(xc),AY,3.5,0,Math.PI*2);sc.fill();
-    sc.fillText(lb,X(xc)-18,AY+17);
+    sc.fillText(lb,X(xc),yPos);
   });
+
   // 鏡心頂點 V
+  sc.textAlign='left';
   sc.fillStyle='#94a3b8';sc.beginPath();sc.arc(AX,AY,3,0,Math.PI*2);sc.fill();
-  sc.fillText('V(頂點)',AX+6,AY-9);
+  sc.fillText(W<=600?'V':'V(頂點)',AX+6,AY-9);
+  sc.restore();
 
   // 物體（鏡前，以綠色實線箭頭表示）
   arrowObj(-p,h,'#22c55e','物',false);

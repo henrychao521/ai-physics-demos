@@ -211,7 +211,7 @@ function leverTorques(){return {L:lever.w1*lever.d1,R:lever.w2*lever.d2};}
 
 function setupCanvases(){
   const narrow=window.innerWidth<=600;
-  const aspect=narrow?(mode==='lever'?1.65:1.12):2.05;
+  const aspect=narrow?(mode==='lever'?1.65:1.05):2.05;
   sc=S.fit(document.getElementById('scene'),aspect);
 }
 
@@ -262,30 +262,62 @@ function drawWheelPrimitive(cx,cy,r){
   sc.fill();
 }
 
+function drawFeatureBadge(lines, color){
+  const W=sc._w,H=sc._h;
+  const narrow=W<=600;
+  if(typeof lines==='string') lines=[lines];
+
+  const lineH=narrow?16:18;
+  const padY=narrow?6:8;
+  const badgeH=lines.length*lineH+padY*2;
+  const maxW=Math.min(W-16,narrow?360:480);
+  const badgeX=(W-maxW)/2;
+  const badgeY=narrow?8:(H-badgeH-14);
+
+  sc.save();
+  sc.fillStyle='rgba(8,14,26,0.93)';
+  rr(badgeX,badgeY,maxW,badgeH,7);
+  sc.fill();
+  sc.strokeStyle=color;
+  sc.lineWidth=1.4;
+  sc.stroke();
+
+  sc.fillStyle=color;
+  sc.font=narrow?'bold 11px system-ui':'bold 12px system-ui';
+  sc.textAlign='center';
+  sc.textBaseline='middle';
+  lines.forEach((ln,idx)=>{
+    const ty=badgeY+padY+(idx+0.5)*lineH;
+    sc.fillText(ln,W/2,ty);
+  });
+  sc.restore();
+}
+
 function drawFixedPulley(){
   const W=sc._w,H=sc._h,bx=W/2;
+  const narrow=W<=600;
   const dVal=pulley.d||1;
   const res=pulleyIdeal('fixed',pulley.W,pulley.N,dVal);
   S.scene(sc,LAB,{});
 
-  const topY=34;
+  const topY=narrow?64:34;
   S.metal(sc,bx-140,topY-12,280,12);
 
-  const py=topY+46;
+  const py=topY+44;
   const pr=28;
 
   sc.fillStyle='#657285';
-  sc.fillRect(bx-5,topY,10,46);
+  sc.fillRect(bx-5,topY,10,44);
   sc.strokeStyle='#cfd8e6';
   sc.lineWidth=1;
-  sc.strokeRect(bx-5,topY,10,46);
+  sc.strokeRect(bx-5,topY,10,44);
 
   drawWheelPrimitive(bx,py,pr);
 
   const ropeLeftX=bx-pr;
   const ropeRightX=bx+pr;
-  const botY=py+Math.min(H*0.38,150);
-  const pullY=botY+18;
+  const botY=py+Math.min(H*0.36,130);
+  const pullY=botY+14;
 
   // 連續繩子：從左側重物 -> 沿切線向上 -> 繞過滑輪頂部半圓 -> 沿切線向下至施力端
   sc.strokeStyle='#7CFFB2';
@@ -301,7 +333,7 @@ function drawFixedPulley(){
 
   // 重物
   const load=pulley.W;
-  const lsz=Math.min(54,38+load*0.08);
+  const lsz=Math.min(50,36+load*0.08);
   const g=sc.createLinearGradient(0,botY,0,botY+lsz*0.7);
   g.addColorStop(0,'#ff8fa3');
   g.addColorStop(1,'#c83a55');
@@ -313,64 +345,71 @@ function drawFixedPulley(){
   sc.lineWidth=1;
   sc.stroke();
   sc.fillStyle='#fff';
-  sc.font='600 13px system-ui';
+  sc.font='600 12px system-ui';
   sc.textAlign='center';
   sc.textBaseline='middle';
   sc.fillText(load+' N',ropeLeftX,botY+lsz*0.35);
 
-  S.arrow(sc,ropeLeftX,botY+lsz*0.7,ropeLeftX,botY+lsz*0.7+24,{
-    color:'#ff5470',width:2.5,label:'W = '+load+' N'
+  // 重力箭頭與數值（標在箭頭旁不壓到其他圖形）
+  const gravArrowLen=22;
+  S.arrow(sc,ropeLeftX,botY+lsz*0.7,ropeLeftX,botY+lsz*0.7+gravArrowLen,{
+    color:'#ff5470',width:2.5
   });
+  sc.fillStyle='#ff5470';
+  sc.font='bold 11px system-ui';
+  sc.textAlign='left';
+  sc.textBaseline='middle';
+  sc.fillText('W = '+load+' N',ropeLeftX+10,botY+lsz*0.7+gravArrowLen/2);
 
-  // 向下拉力
-  S.arrow(sc,ropeRightX,pullY-24,ropeRightX,pullY+26,{
-    color:'#4cc2ff',width:3.5,label:'F = '+res.F.toFixed(1)+' N (向下)'
+  // 向下拉力箭頭與數值（標在箭頭旁）
+  const pullArrowLen=26;
+  S.arrow(sc,ropeRightX,pullY,ropeRightX,pullY+pullArrowLen,{
+    color:'#4cc2ff',width:3.5
   });
+  sc.fillStyle='#4cc2ff';
+  sc.font='bold 12px system-ui';
+  sc.textAlign='left';
+  sc.textBaseline='middle';
+  sc.fillText('F = '+res.F.toFixed(1)+' N ↓',ropeRightX+10,pullY+pullArrowLen/2);
 
+  // 文字標示
   sc.fillStyle='#7CFFB2';
-  sc.font='12px system-ui';
-  sc.textAlign='right';
-  sc.fillText('張力 T = '+load+' N',ropeLeftX-10,(py+botY)/2);
-  sc.fillStyle='rgba(124,255,178,.85)';
   sc.font='11px system-ui';
-  sc.fillText('重物上升 d = '+dVal+' m ↑',ropeLeftX-10,(py+botY)/2+18);
+  sc.textAlign='right';
+  sc.fillText('張力 T = '+load+' N',ropeLeftX-10,(py+botY)/2-8);
+  sc.fillText('重物上升 d = '+dVal+' m ↑',ropeLeftX-10,(py+botY)/2+10);
 
   sc.fillStyle='#4cc2ff';
   sc.textAlign='left';
-  sc.font='12px system-ui';
-  sc.fillText('拉繩端下降 s = '+dVal+' m ↓',ropeRightX+12,(py+pullY)/2);
+  sc.font='11px system-ui';
+  sc.fillText('拉繩 s = '+dVal+' m ↓',ropeRightX+10,(py+pullY)/2);
 
-  const badgeY=Math.min(H-16,botY+lsz*0.7+40);
-  const badgeW=Math.min(440,W-20);
-  const badgeX=bx-badgeW/2;
-  sc.fillStyle='rgba(8,14,26,.92)';
-  rr(badgeX,badgeY-22,badgeW,30,8);
-  sc.fill();
-  sc.strokeStyle='#ffce54';
-  sc.lineWidth=1.5;
-  sc.stroke();
-
-  sc.fillStyle='#ffce54';
-  sc.font='bold 12px system-ui';
-  sc.textAlign='center';
-  sc.textBaseline='middle';
-  sc.fillText('💡 定滑輪特性：MA = 1，改變施力方向（不省力、不費距離，功守恆）',bx,badgeY-7);
+  // 特性膠囊：窄畫布時放於最頂端一列
+  if(narrow){
+    drawFeatureBadge([
+      '💡 定滑輪特性：MA = 1，改變施力方向',
+      '不省力、不省距離（施力 F = W，拉繩長 s = d）'
+    ],'#ffce54');
+  }else{
+    drawFeatureBadge('💡 定滑輪特性：MA = 1，改變施力方向（不省力、不費距離，功守恆）','#ffce54');
+  }
 }
 
 function drawMovablePulley(){
   const W=sc._w,H=sc._h,bx=W/2;
+  const narrow=W<=600;
   const dVal=pulley.d||1;
   const res=pulleyIdeal('movable',pulley.W,pulley.N,dVal);
   S.scene(sc,LAB,{});
 
-  const topY=34;
+  const topY=narrow?64:34;
   S.metal(sc,bx-140,topY-12,280,12);
 
   const pr=28;
   const ropeLeftX=bx-pr;
   const ropeRightX=bx+pr;
-  const py=topY+Math.min(H*0.38,150);
-  const pullY=topY+18;
+  const py=topY+Math.min(H*0.35,130);
+  const pullY=topY+28;
 
   // 連續繩子：固定在天花板 -> 沿左切線向下 -> 繞過動滑輪底部半圓 -> 沿右切線向上拉
   sc.strokeStyle='#7CFFB2';
@@ -398,9 +437,9 @@ function drawMovablePulley(){
   // 支撐繩標記 ① 與 ②
   const midY=(topY+py)/2;
   [ropeLeftX,ropeRightX].forEach((rx,idx)=>{
-    sc.fillStyle='rgba(8,14,26,.9)';
+    sc.fillStyle='rgba(8,14,26,.92)';
     sc.beginPath();
-    sc.arc(rx,midY,10,0,Math.PI*2);
+    sc.arc(rx,midY,9.5,0,Math.PI*2);
     sc.fill();
     sc.strokeStyle='#7CFFB2';
     sc.lineWidth=1.5;
@@ -412,15 +451,26 @@ function drawMovablePulley(){
     sc.fillText(String(idx+1),rx,midY);
   });
 
-  // 向上拉力
-  S.arrow(sc,ropeRightX,pullY+34,ropeRightX,pullY-14,{
-    color:'#4cc2ff',width:3.5,label:'F = '+res.F.toFixed(1)+' N (向上)'
+  // 拉繩端把手與向上拉力箭頭（在橫樑下方，標示在箭頭旁，絕不和橫樑重疊）
+  sc.fillStyle='#4cc2ff';
+  sc.beginPath();
+  sc.arc(ropeRightX,pullY,3.5,0,Math.PI*2);
+  sc.fill();
+
+  const arrowLen=24;
+  S.arrow(sc,ropeRightX,pullY+arrowLen,ropeRightX,pullY,{
+    color:'#4cc2ff',width:3.5
   });
+  sc.fillStyle='#4cc2ff';
+  sc.font='bold 12px system-ui';
+  sc.textAlign='left';
+  sc.textBaseline='middle';
+  sc.fillText('F = '+res.F.toFixed(1)+' N ↑',ropeRightX+12,pullY+arrowLen/2);
 
   // 掛於動滑輪下方的重物
   const load=pulley.W;
-  const lsz=Math.min(54,38+load*0.08);
-  const botY=py+pr+18;
+  const lsz=Math.min(50,36+load*0.08);
+  const botY=py+pr+16;
 
   sc.strokeStyle='#8a96ac';
   sc.lineWidth=2.5;
@@ -440,44 +490,45 @@ function drawMovablePulley(){
   sc.lineWidth=1;
   sc.stroke();
   sc.fillStyle='#fff';
-  sc.font='600 13px system-ui';
+  sc.font='600 12px system-ui';
   sc.textAlign='center';
   sc.textBaseline='middle';
   sc.fillText(load+' N',bx,botY+lsz*0.35);
 
-  S.arrow(sc,bx,botY+lsz*0.7,bx,botY+lsz*0.7+24,{
-    color:'#ff5470',width:2.5,label:'W = '+load+' N'
+  const gravArrowLen=22;
+  S.arrow(sc,bx,botY+lsz*0.7,bx,botY+lsz*0.7+gravArrowLen,{
+    color:'#ff5470',width:2.5
   });
+  sc.fillStyle='#ff5470';
+  sc.font='bold 11px system-ui';
+  sc.textAlign='left';
+  sc.textBaseline='middle';
+  sc.fillText('W = '+load+' N',bx+10,botY+lsz*0.7+gravArrowLen/2);
 
   sc.fillStyle='#7CFFB2';
   sc.font='11px system-ui';
   sc.textAlign='right';
-  sc.fillText('兩段繩各負擔 W/2 = '+res.F.toFixed(1)+' N',ropeLeftX-10,midY);
-  sc.fillText('重物上升 d = '+dVal+' m ↑',ropeLeftX-10,midY+16);
+  sc.fillText('每段分擔 W/2 = '+res.F.toFixed(1)+' N',ropeLeftX-10,midY-8);
+  sc.fillText('重物上升 d = '+dVal+' m ↑',ropeLeftX-10,midY+10);
 
   sc.fillStyle='#4cc2ff';
   sc.textAlign='left';
-  sc.fillText('拉繩長度 s = 2d = '+(dVal*2).toFixed(1)+' m ↑',ropeRightX+14,midY);
+  sc.fillText('拉繩 s = 2d = '+(dVal*2).toFixed(1)+' m ↑',ropeRightX+12,pullY+arrowLen+14);
 
-  const badgeY=Math.min(H-16,botY+lsz*0.7+40);
-  const badgeW=Math.min(460,W-20);
-  const badgeX=bx-badgeW/2;
-  sc.fillStyle='rgba(8,14,26,.92)';
-  rr(badgeX,badgeY-22,badgeW,30,8);
-  sc.fill();
-  sc.strokeStyle='#7CFFB2';
-  sc.lineWidth=1.5;
-  sc.stroke();
-
-  sc.fillStyle='#7CFFB2';
-  sc.font='bold 12px system-ui';
-  sc.textAlign='center';
-  sc.textBaseline='middle';
-  sc.fillText('💡 動滑輪特性：2 段繩支撐動滑輪，省一半力、繩拉 2 倍長（MA = 2，s = 2d）',bx,badgeY-7);
+  // 特性膠囊：窄畫布時放於最頂端一列
+  if(narrow){
+    drawFeatureBadge([
+      '💡 動滑輪特性：MA = 2，省一半力、繩拉 2 倍長',
+      '2 段繩支撐動滑輪（施力 F = W/2，拉繩長 s = 2d）'
+    ],'#7CFFB2');
+  }else{
+    drawFeatureBadge('💡 動滑輪特性：2 段繩支撐動滑輪，省一半力、繩拉 2 倍長（MA = 2，s = 2d）','#7CFFB2');
+  }
 }
 
 function drawPulley(){
   const W=sc._w,H=sc._h,bx=W/2;
+  const narrow=W<=600;
   const N=Math.max(2,Math.min(6,Math.round(pulley.N||2)));
   const load=pulley.W;
   const dVal=pulley.d||1;
@@ -485,13 +536,13 @@ function drawPulley(){
   const F=res.F;
   S.scene(sc,LAB,{});
 
-  const R=N<=3?20:(N<=4?18:16);
-  const topY=34;
+  const R=narrow?(N<=3?18:(N<=4?16:14)):(N<=3?20:(N<=4?18:16));
+  const topY=narrow?64:34;
   S.metal(sc,bx-(N*R+55),topY-12,(N*R+55)*2,12);
 
-  const Y_F=topY+44;
-  const Y_M=topY+Math.min(H*0.42,175);
-  const Y_pull=Y_M+34;
+  const Y_F=topY+42;
+  const Y_M=topY+Math.min(H*0.38,150);
+  const Y_pull=Y_M+26;
 
   const x_0=bx-N*R;
   const x_N=x_0+N*2*R;
@@ -564,7 +615,7 @@ function drawPulley(){
   if(N%2===0){
     sc.fillStyle='#ffce54';
     sc.beginPath();
-    sc.arc(x_0,Y_F,5,0,Math.PI*2);
+    sc.arc(x_0,Y_F,4.5,0,Math.PI*2);
     sc.fill();
     sc.strokeStyle='#fff';
     sc.lineWidth=1;
@@ -572,11 +623,11 @@ function drawPulley(){
     sc.fillStyle='#ffce54';
     sc.font='10px system-ui';
     sc.textAlign='right';
-    sc.fillText('繩端 (偶數綁定滑輪)',x_0-8,Y_F-8);
+    sc.fillText('繩端固定',x_0-6,Y_F-8);
   }else{
     sc.fillStyle='#ffce54';
     sc.beginPath();
-    sc.arc(x_0,Y_M,5,0,Math.PI*2);
+    sc.arc(x_0,Y_M,4.5,0,Math.PI*2);
     sc.fill();
     sc.strokeStyle='#fff';
     sc.lineWidth=1;
@@ -584,7 +635,7 @@ function drawPulley(){
     sc.fillStyle='#ffce54';
     sc.font='10px system-ui';
     sc.textAlign='right';
-    sc.fillText('繩端 (奇數綁動滑輪)',x_0-8,Y_M+16);
+    sc.fillText('繩端固定',x_0-6,Y_M+16);
   }
 
   // 標記支撐動滑輪的繩段 1, 2, ..., N
@@ -593,7 +644,7 @@ function drawPulley(){
     const sx=x_0+i*2*R;
     sc.fillStyle='rgba(8,14,26,.92)';
     sc.beginPath();
-    sc.arc(sx,strandMidY,9.5,0,Math.PI*2);
+    sc.arc(sx,strandMidY,9,0,Math.PI*2);
     sc.fill();
     sc.strokeStyle='#7CFFB2';
     sc.lineWidth=1.5;
@@ -606,15 +657,24 @@ function drawPulley(){
     sc.fillText(String(i+1),sx,strandMidY);
   }
 
-  // 自由端向下施力箭頭
-  S.arrow(sc,x_N,Y_pull-22,x_N,Y_pull+26,{
-    color:'#4cc2ff',width:3.5,label:'F = '+F.toFixed(1)+' N (向下)'
+  // 自由端向下施力箭頭與數值（標在箭頭旁，自動防邊緣超出）
+  const pullArrowLen=26;
+  S.arrow(sc,x_N,Y_pull,x_N,Y_pull+pullArrowLen,{
+    color:'#4cc2ff',width:3.5
   });
+
+  const freeTextX=(x_N+72>W-10)?(x_N-8):(x_N+8);
+  const freeTextAlign=(x_N+72>W-10)?'right':'left';
+  sc.fillStyle='#4cc2ff';
+  sc.font='bold 12px system-ui';
+  sc.textAlign=freeTextAlign;
+  sc.textBaseline='middle';
+  sc.fillText('F = '+F.toFixed(1)+' N ↓',freeTextX,Y_pull+pullArrowLen/2);
 
   // 掛於動滑輪中心的重物
   const loadX=(x_0+(x_0+(N-1)*2*R))/2;
-  const lsz=Math.min(54,38+load*0.08);
-  const boxTop=Y_M+R+16;
+  const lsz=Math.min(50,36+load*0.08);
+  const boxTop=Y_M+R+14;
 
   sc.strokeStyle='#8a96ac';
   sc.lineWidth=2.5;
@@ -635,39 +695,40 @@ function drawPulley(){
   sc.stroke();
 
   sc.fillStyle='#fff';
-  sc.font='600 13px system-ui';
+  sc.font='600 12px system-ui';
   sc.textAlign='center';
   sc.textBaseline='middle';
   sc.fillText(load+' N',loadX,boxTop+lsz*0.35);
 
-  S.arrow(sc,loadX,boxTop+lsz*0.7,loadX,boxTop+lsz*0.7+24,{
-    color:'#ff5470',width:2.5,label:'W = '+load+' N'
+  const gravArrowLen=22;
+  S.arrow(sc,loadX,boxTop+lsz*0.7,loadX,boxTop+lsz*0.7+gravArrowLen,{
+    color:'#ff5470',width:2.5
   });
-
-  sc.fillStyle='#7CFFB2';
-  sc.font='11px system-ui';
+  sc.fillStyle='#ff5470';
+  sc.font='bold 11px system-ui';
   sc.textAlign='left';
-  sc.fillText('重物上升 d = '+dVal+' m ↑',loadX+lsz/2+10,boxTop+lsz*0.35);
-
-  sc.fillStyle='#4cc2ff';
-  sc.textAlign='right';
-  sc.fillText('拉繩長度 s = '+N+'d = '+(N*dVal).toFixed(1)+' m ↓',x_N-8,Y_pull-10);
-
-  const badgeY=Math.min(H-16,boxTop+lsz*0.7+40);
-  const badgeW=Math.min(480,W-20);
-  const badgeX=bx-badgeW/2;
-  sc.fillStyle='rgba(8,14,26,.92)';
-  rr(badgeX,badgeY-22,badgeW,30,8);
-  sc.fill();
-  sc.strokeStyle='#4cc2ff';
-  sc.lineWidth=1.5;
-  sc.stroke();
-
-  sc.fillStyle='#4cc2ff';
-  sc.font='bold 12px system-ui';
-  sc.textAlign='center';
   sc.textBaseline='middle';
-  sc.fillText(`💡 滑輪組特性：${N} 段繩支撐動滑輪，省力 ${N} 倍（MA = ${N}，F = W/${N}，需拉 ${N}d 繩長）`,bx,badgeY-7);
+  sc.fillText('W = '+load+' N',loadX+10,boxTop+lsz*0.7+gravArrowLen/2);
+
+  // 上升與拉繩長度說明
+  sc.fillStyle='#7CFFB2';
+  sc.font='10.5px system-ui';
+  sc.textAlign='right';
+  sc.fillText('上升 d='+dVal+'m',x_0-6,strandMidY);
+
+  sc.fillStyle='#4cc2ff';
+  sc.textAlign=freeTextAlign;
+  sc.fillText('拉繩 s='+(N*dVal).toFixed(1)+'m',freeTextX,Y_pull+pullArrowLen+12);
+
+  // 特性膠囊：窄畫布時放於最頂端一列
+  if(narrow){
+    drawFeatureBadge([
+      `💡 滑輪組特性：MA = ${N}，省力 ${N} 倍、繩拉 ${N} 倍長`,
+      `${N} 段繩支撐動滑輪（施力 F = W/${N}，拉繩長 s = ${N}d）`
+    ],'#4cc2ff');
+  }else{
+    drawFeatureBadge(`💡 滑輪組特性：${N} 段繩支撐動滑輪，省力 ${N} 倍（MA = ${N}，F = W/${N}，需拉 ${N}d 繩長）`,'#4cc2ff');
+  }
 }
 
 const drawFixed=drawFixedPulley;
