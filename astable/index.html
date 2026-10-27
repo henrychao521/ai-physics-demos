@@ -487,11 +487,11 @@ function draw555Circuit(ctx, W, H) {
   ctx.fillText(isNarrow ? 'RS正反器' : 'RS 正反器', blkX + (isNarrow ? 6 : 10), isNarrow ? rsY + 15 : icY + 54);
 
   // 外部接線與元件
-  const wireLX = isNarrow ? Math.max(icX - 44, 38) : Math.max(icX - 60, 48); // 左側主要連接縱線
+  const wireLX = isNarrow ? Math.max(icX - 44, 42) : Math.max(icX - 60, 48); // 左側主要連接縱線
   ctx.strokeStyle = '#8fa4c8'; ctx.lineWidth = 2;
 
   // 1. Pin 8 與 Pin 4 接 Vcc
-  const vccWireX = isNarrow ? wireLX + 18 : wireLX + 25;
+  const vccWireX = isNarrow ? wireLX + 16 : wireLX + 25;
   ctx.beginPath();
   ctx.moveTo(icX - 10, pin8Y); ctx.lineTo(vccWireX, pin8Y); ctx.lineTo(vccWireX, yVcc);
   ctx.moveTo(icX - 10, pin4Y); ctx.lineTo(vccWireX, pin4Y);
@@ -506,14 +506,30 @@ function draw555Circuit(ctx, W, H) {
   ctx.beginPath();
   ctx.moveTo(wireLX, yVcc); ctx.lineTo(wireLX, pin7Y - 26);
   ctx.stroke();
-  drawResistor(ctx, wireLX, pin7Y - 26, wireLX, pin7Y - 2, 'R₁ ' + state.R1 + 'k');
+  if (isNarrow) {
+    drawResistor(ctx, wireLX, pin7Y - 26, wireLX, pin7Y - 2);
+    ctx.fillStyle = '#ffce54'; ctx.font = 'bold 11px monospace'; ctx.textAlign = 'right';
+    ctx.fillText('R₁', wireLX - 7, pin7Y - 17);
+    ctx.fillText(state.R1 + 'k', wireLX - 7, pin7Y - 6);
+    ctx.textAlign = 'start';
+  } else {
+    drawResistor(ctx, wireLX, pin7Y - 26, wireLX, pin7Y - 2, 'R₁ ' + state.R1 + 'k');
+  }
   ctx.beginPath();
   ctx.moveTo(wireLX, pin7Y - 2); ctx.lineTo(wireLX, pin7Y);
   ctx.lineTo(icX - 10, pin7Y);
   ctx.stroke();
 
   // 4. R2 接 7 腳到 6/2 腳
-  drawResistor(ctx, wireLX, pin7Y + 4, wireLX, pin6Y - 14, 'R₂ ' + state.R2 + 'k');
+  if (isNarrow) {
+    drawResistor(ctx, wireLX, pin7Y + 4, wireLX, pin6Y - 14);
+    ctx.fillStyle = '#ffce54'; ctx.font = 'bold 11px monospace'; ctx.textAlign = 'right';
+    ctx.fillText('R₂', wireLX - 7, pin7Y + 16);
+    ctx.fillText(state.R2 + 'k', wireLX - 7, pin7Y + 27);
+    ctx.textAlign = 'start';
+  } else {
+    drawResistor(ctx, wireLX, pin7Y + 4, wireLX, pin6Y - 14, 'R₂ ' + state.R2 + 'k');
+  }
   ctx.beginPath();
   ctx.moveTo(wireLX, pin7Y); ctx.lineTo(wireLX, pin7Y + 4);
   ctx.moveTo(wireLX, pin6Y - 14); ctx.lineTo(wireLX, pin6Y);
@@ -527,7 +543,16 @@ function draw555Circuit(ctx, W, H) {
   ctx.beginPath();
   ctx.moveTo(wireLX, pin2Y); ctx.lineTo(wireLX, capTopY);
   ctx.stroke();
-  drawCapacitor(ctx, wireLX, capTopY, capBotY, 'C ' + state.C + 'μF');
+  if (isNarrow) {
+    drawCapacitor(ctx, wireLX, capTopY, capBotY);
+    ctx.font = 'bold 11px monospace';
+    ctx.fillStyle = '#4cc2ff';
+    ctx.fillText('C ' + state.C + 'μF', wireLX + 12, pin2Y + 14);
+    ctx.fillStyle = '#7CFFB2';
+    ctx.fillText(`v_C: ${fmtSig(vCap, 3)}V`, wireLX + 12, pin2Y + 27);
+  } else {
+    drawCapacitor(ctx, wireLX, capTopY, capBotY, 'C ' + state.C + 'μF');
+  }
   ctx.beginPath();
   ctx.moveTo(wireLX, capBotY); ctx.lineTo(wireLX, yGnd);
   ctx.stroke();
@@ -551,11 +576,9 @@ function draw555Circuit(ctx, W, H) {
   drawLED(ctx, ledX, rLedBot + 2, ledBot, isHigh, isHigh ? '#7CFFB2' : '#2a443a');
   ctx.beginPath(); ctx.moveTo(ledX, ledBot); ctx.lineTo(ledX, yGnd); ctx.stroke();
 
-  // 電容電壓即時標籤：窄螢幕移至電容旁/下方，避免與第 2 腳 TRIG 重疊
-  ctx.fillStyle = '#7CFFB2'; ctx.font = 'bold 11px system-ui';
-  if (isNarrow) {
-    ctx.fillText(`v_C: ${fmtSig(vCap, 3)}V`, wireLX + 10, Math.min(capBotY + 5, yGnd - 6));
-  } else {
+  // 電容電壓即時標籤（寬螢幕維持原樣）
+  if (!isNarrow) {
+    ctx.fillStyle = '#7CFFB2'; ctx.font = 'bold 11px system-ui';
     ctx.fillText(`v_C: ${fmtSig(vCap, 3)}V`, wireLX + 8, capBotY + 16);
   }
 
@@ -839,13 +862,23 @@ function draw555Wave(ctx, W, H) {
   ctx.strokeStyle = '#ff7a45'; ctx.lineWidth = 1.5;
   ctx.beginPath(); ctx.moveTo(padL, toY(vHigh)); ctx.lineTo(padL + pW, toY(vHigh)); ctx.stroke();
   ctx.fillStyle = '#ff7a45'; ctx.font = '11px system-ui';
-  ctx.fillText(isNarrow ? `2/3 Vcc (${fmtSig(vHigh, 3)}V)` : `上門檻 2/3 Vcc (${fmtSig(vHigh, 3)}V)`, padL + 6, toY(vHigh) - 5);
+  if (isNarrow) {
+    ctx.fillText('2/3 Vcc', padL + 4, toY(vHigh) - 14);
+    ctx.fillText(`(${fmtSig(vHigh, 3)}V)`, padL + 4, toY(vHigh) - 3);
+  } else {
+    ctx.fillText(`上門檻 2/3 Vcc (${fmtSig(vHigh, 3)}V)`, padL + 6, toY(vHigh) - 5);
+  }
 
   // 下門檻
   ctx.strokeStyle = '#4cc2ff'; ctx.lineWidth = 1.5;
   ctx.beginPath(); ctx.moveTo(padL, toY(vLow)); ctx.lineTo(padL + pW, toY(vLow)); ctx.stroke();
   ctx.fillStyle = '#4cc2ff'; ctx.font = '11px system-ui';
-  ctx.fillText(isNarrow ? `1/3 Vcc (${fmtSig(vLow, 3)}V)` : `下門檻 1/3 Vcc (${fmtSig(vLow, 3)}V)`, padL + 6, toY(vLow) - 5);
+  if (isNarrow) {
+    ctx.fillText('1/3 Vcc', padL + 4, toY(vLow) - 14);
+    ctx.fillText(`(${fmtSig(vLow, 3)}V)`, padL + 4, toY(vLow) - 3);
+  } else {
+    ctx.fillText(`下門檻 1/3 Vcc (${fmtSig(vLow, 3)}V)`, padL + 6, toY(vLow) - 5);
+  }
   ctx.restore();
 
   // 0V 與 Vcc 標籤
@@ -873,28 +906,31 @@ function draw555Wave(ctx, W, H) {
   const tStart = res.T * 1.05;
   const xH1 = toX(tStart), xH2 = toX(tStart + res.tH), xL2 = toX(tStart + res.tH + res.tL);
   if (xL2 <= padL + pW) {
-    const annY = toY(state.Vcc) - 10;
+    const annY = isNarrow ? toY(state.Vcc) - 12 : toY(state.Vcc) - 10;
+    const tickH = isNarrow ? 3 : 4;
     ctx.strokeStyle = '#ffce54'; ctx.lineWidth = 1.5;
     ctx.beginPath();
     ctx.moveTo(xH1, annY); ctx.lineTo(xH2, annY);
-    ctx.moveTo(xH1, annY - 4); ctx.lineTo(xH1, annY + 4);
-    ctx.moveTo(xH2, annY - 4); ctx.lineTo(xH2, annY + 4);
+    ctx.moveTo(xH1, annY - tickH); ctx.lineTo(xH1, annY + tickH);
+    ctx.moveTo(xH2, annY - tickH); ctx.lineTo(xH2, annY + tickH);
     ctx.stroke();
 
     ctx.strokeStyle = '#8bd8ff';
     ctx.beginPath();
     ctx.moveTo(xH2, annY); ctx.lineTo(xL2, annY);
-    ctx.moveTo(xL2, annY - 4); ctx.lineTo(xL2, annY + 4);
+    ctx.moveTo(xL2, annY - tickH); ctx.lineTo(xL2, annY + tickH);
     ctx.stroke();
 
-    // 窄螢幕時交錯高度並置中對齊，徹底解決「t_H = 0.0762s0.0693s」擠在一起重疊問題
     if (isNarrow) {
       ctx.font = 'bold 11px system-ui';
       ctx.textAlign = 'center';
+      const tlY = (xL2 - xH2 < 40) ? annY - 23 : annY - 13;
       ctx.fillStyle = '#ffce54';
-      ctx.fillText(`t_H=${fmtSig(res.tH, 3)}s`, (xH1 + xH2) / 2, annY - 14);
+      ctx.fillText('t_H', (xH1 + xH2) / 2, annY - 13);
+      ctx.fillText(`${fmtSig(res.tH, 3)}s`, (xH1 + xH2) / 2, annY - 3);
       ctx.fillStyle = '#8bd8ff';
-      ctx.fillText(`t_L=${fmtSig(res.tL, 3)}s`, (xH2 + xL2) / 2, annY - 3);
+      ctx.fillText('t_L', (xH2 + xL2) / 2, tlY);
+      ctx.fillText(`${fmtSig(res.tL, 3)}s`, (xH2 + xL2) / 2, tlY + 10);
       ctx.textAlign = 'start';
     } else {
       ctx.fillStyle = '#ffce54'; ctx.font = 'bold 11px system-ui';
