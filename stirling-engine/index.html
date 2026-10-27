@@ -59,6 +59,7 @@
   .back-nav{margin-top:18px;text-align:center;font-size:14px}
   /* 手機上連結的點按範圍至少 44px 高 */
   a[href^="../"]{display:inline-block;padding:12px 0}
+  .col-main{min-width:0}
 </style>
 </head>
 <body data-demo="史特靈引擎">
@@ -71,6 +72,7 @@
   </header>
 
   <div class="sim-grid">
+    <div class="col-main">  <!-- 剖面畫布和控制項同一欄：手機釘住畫面時調參數也看得到引擎 -->
     <div class="card">
       <div class="card-head">
         <span>⚙️ β 型史特靈引擎剖面運作模擬</span>
@@ -78,6 +80,15 @@
       </div>
       <canvas id="scene" style="aspect-ratio:1.2"></canvas>
       <div class="card-status" id="engineStatus">載入中...</div>
+    </div>
+    <div class="btn-bar">
+      <button id="btnIdeal" class="pbtn on">理想循環</button>
+      <button id="btnCrank" class="pbtn">正弦曲柄（施密特分析）</button>
+      <button id="btnPlay" class="pbtn">暫停</button>
+      <button id="btnRegen" class="pbtn on">回熱器 開／關</button>
+    </div>
+
+    <div class="bar" id="sliders"></div>
     </div>
 
     <div>
@@ -99,14 +110,6 @@
     </div>
   </div>
 
-  <div class="btn-bar">
-    <button id="btnIdeal" class="pbtn on">理想循環</button>
-    <button id="btnCrank" class="pbtn">正弦曲柄（施密特分析）</button>
-    <button id="btnPlay" class="pbtn">暫停</button>
-    <button id="btnRegen" class="pbtn on">回熱器 開／關</button>
-  </div>
-
-  <div class="bar" id="sliders"></div>
 
   <div class="formula" id="formula"></div>
 
