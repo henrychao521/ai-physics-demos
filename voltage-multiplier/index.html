@@ -463,6 +463,7 @@ function draw() {
 // 模式 A：串聯 RLC
 function drawModeRLC(ctx, W, H) {
   const isMobile = W < 680;
+  const isNarrow = W < 520;
   const L_SI = state.L * 1e-3, C_SI = state.C * 1e-6;
   const f0 = 1 / (2 * Math.PI * Math.sqrt(L_SI * C_SI));
   const f = state.fr * f0;
@@ -482,8 +483,12 @@ function drawModeRLC(ctx, W, H) {
 
   // 標題
   ctx.fillStyle = '#e6efff';
-  ctx.font = 'bold 14px system-ui';
-  ctx.fillText('串聯 RLC 交流電路圖', x1, isMobile ? 22 : y1 - 24);
+  ctx.font = isNarrow ? 'bold 12px system-ui' : 'bold 14px system-ui';
+  if (isNarrow) {
+    ctx.fillText('串聯 RLC 電路', 14, 16);
+  } else {
+    ctx.fillText('串聯 RLC 交流電路圖', x1, isMobile ? 22 : y1 - 24);
+  }
 
   // 導線矩形
   ctx.strokeStyle = '#2b3d68';
@@ -528,8 +533,12 @@ function drawModeRLC(ctx, W, H) {
   }
   ctx.stroke();
   ctx.fillStyle = '#4cc2ff';
-  ctx.font = 'bold 12px system-ui';
-  ctx.fillText(`Vs = ${fmtSig(state.Vs, 3)} V`, x1 - 58, srcY + 4);
+  ctx.font = isNarrow ? 'bold 11px system-ui' : 'bold 12px system-ui';
+  if (isNarrow) {
+    ctx.fillText(`Vs = ${fmtSig(state.Vs, 3)} V`, x1 + 22, srcY + 4);
+  } else {
+    ctx.fillText(`Vs = ${fmtSig(state.Vs, 3)} V`, x1 - 58, srcY + 4);
+  }
 
   // 元件 2：電阻 R (頂部水平邊中央)
   const resX = cx;
@@ -546,10 +555,18 @@ function drawModeRLC(ctx, W, H) {
   ctx.lineTo(resX + 24, y1);
   ctx.stroke();
   ctx.fillStyle = '#ffb02e';
-  ctx.font = '12px system-ui';
-  ctx.fillText(`R = ${state.R} Ω`, resX - 20, y1 - 16);
-  ctx.fillStyle = '#d0d8ec';
-  ctx.fillText(`VR = ${fmtSig(rlc.VR, 3)} V`, resX - 24, y1 + 24);
+  ctx.font = isNarrow ? '11px system-ui' : '12px system-ui';
+  if (isNarrow) {
+    ctx.textAlign = 'center';
+    ctx.fillText(`R = ${state.R} Ω`, resX, y1 + 17);
+    ctx.fillStyle = '#d0d8ec';
+    ctx.fillText(`VR = ${fmtSig(rlc.VR, 3)} V`, resX, y1 + 30);
+    ctx.textAlign = 'start';
+  } else {
+    ctx.fillText(`R = ${state.R} Ω`, resX - 20, y1 - 16);
+    ctx.fillStyle = '#d0d8ec';
+    ctx.fillText(`VR = ${fmtSig(rlc.VR, 3)} V`, resX - 24, y1 + 24);
+  }
 
   // 元件 3：電感 L (右垂直邊中央)
   const indY = cy;
@@ -563,10 +580,18 @@ function drawModeRLC(ctx, W, H) {
     ctx.stroke();
   }
   ctx.fillStyle = '#43d17a';
-  ctx.font = '12px system-ui';
-  ctx.fillText(`L = ${state.L} mH`, x2 + 12, indY - 8);
-  ctx.fillStyle = '#d0d8ec';
-  ctx.fillText(`VL = ${fmtSig(rlc.VL, 3)} V`, x2 + 12, indY + 12);
+  ctx.font = isNarrow ? '11px system-ui' : '12px system-ui';
+  if (isNarrow) {
+    ctx.textAlign = 'right';
+    ctx.fillText(`L = ${state.L} mH`, x2 - 14, indY - 6);
+    ctx.fillStyle = '#d0d8ec';
+    ctx.fillText(`VL = ${fmtSig(rlc.VL, 3)} V`, x2 - 14, indY + 10);
+    ctx.textAlign = 'start';
+  } else {
+    ctx.fillText(`L = ${state.L} mH`, x2 + 12, indY - 8);
+    ctx.fillStyle = '#d0d8ec';
+    ctx.fillText(`VL = ${fmtSig(rlc.VL, 3)} V`, x2 + 12, indY + 12);
+  }
 
   // 元件 4：電容 C (底部水平邊中央)
   const capX = cx;
@@ -579,13 +604,25 @@ function drawModeRLC(ctx, W, H) {
   ctx.moveTo(capX + 6, y2 - 14); ctx.lineTo(capX + 6, y2 + 14);
   ctx.stroke();
   ctx.fillStyle = '#ff5470';
-  ctx.font = '12px system-ui';
-  ctx.fillText(`C = ${state.C} μF`, capX - 18, y2 + 28);
+  ctx.font = isNarrow ? '11px system-ui' : '12px system-ui';
+  if (isNarrow) {
+    ctx.textAlign = 'center';
+    ctx.fillText(`C = ${state.C} μF`, capX, y2 + 18);
+    ctx.textAlign = 'start';
+  } else {
+    ctx.fillText(`C = ${state.C} μF`, capX - 18, y2 + 28);
+  }
   // 電容電壓放大標示（共振時特別高光）
   const isBoost = rlc.gain >= 1.5;
   ctx.fillStyle = isBoost ? '#7CFFB2' : '#ffb02e';
-  ctx.font = `bold ${isBoost ? 13 : 12}px system-ui`;
-  ctx.fillText(`VC = ${fmtSig(rlc.VC, 3)} V${isBoost ? ' (Q倍升壓!)' : ''}`, capX - 34, y2 - 20);
+  ctx.font = `bold ${isNarrow ? 11 : (isBoost ? 13 : 12)}px system-ui`;
+  if (isNarrow) {
+    ctx.textAlign = 'center';
+    ctx.fillText(`VC = ${fmtSig(rlc.VC, 3)} V${isBoost ? ' (Q倍升壓!)' : ''}`, capX, y2 - 16);
+    ctx.textAlign = 'start';
+  } else {
+    ctx.fillText(`VC = ${fmtSig(rlc.VC, 3)} V${isBoost ? ' (Q倍升壓!)' : ''}`, capX - 34, y2 - 20);
+  }
 
   // --- 2. 右上：頻率響應圖 ---
   const g1X = rightX + 16, g1W = rightW - 32;
@@ -599,8 +636,9 @@ function drawModeRLC(ctx, W, H) {
   ctx.strokeRect(g1X, g1Y, g1W, g1H);
 
   ctx.fillStyle = '#e6efff';
-  ctx.font = 'bold 12px system-ui';
-  ctx.fillText('頻率響應：電壓放大倍數 (Gain = V_C / Vs)', g1X + 10, g1Y + 18);
+  ctx.font = isNarrow ? 'bold 11px system-ui' : 'bold 12px system-ui';
+  const g1Title = isNarrow ? '頻率響應：增益 (Gain = VC / Vs)' : '頻率響應：電壓放大倍數 (Gain = V_C / Vs)';
+  ctx.fillText(g1Title, g1X + 10, g1Y + (isNarrow ? 16 : 18));
 
   const plot1X = g1X + 44, plot1W = g1W - 54;
   const plot1Y = g1Y + 28, plot1H = g1H - 46;
@@ -609,7 +647,7 @@ function drawModeRLC(ctx, W, H) {
   // 網格與對數橫軸 (0.1 f0 到 10 f0)
   ctx.strokeStyle = 'rgba(255,255,255,0.08)';
   ctx.fillStyle = '#8ba2cc';
-  ctx.font = '10px monospace';
+  ctx.font = isNarrow ? '11px monospace' : '10px monospace';
   const decades = [0.1, 0.2, 0.5, 1.0, 2.0, 5.0, 10.0];
   decades.forEach(dec => {
     const u = Math.log10(dec); // -1 到 +1
@@ -647,7 +685,7 @@ function drawModeRLC(ctx, W, H) {
   ctx.beginPath(); ctx.moveTo(f0X, plot1Y); ctx.lineTo(f0X, plot1Y + plot1H); ctx.stroke();
   ctx.setLineDash([]);
   ctx.fillStyle = '#ff6b9d';
-  ctx.font = '10px system-ui';
+  ctx.font = isNarrow ? '11px system-ui' : '10px system-ui';
   ctx.fillText(`峰值≈Q (${fmtSig(rlc.Q, 3)})`, f0X + 4, plot1Y + 14);
 
   // 當前頻率亮點
@@ -656,7 +694,13 @@ function drawModeRLC(ctx, W, H) {
   const curDotY = plot1Y + plot1H - (rlc.gain / maxGain) * plot1H;
   ctx.fillStyle = '#7CFFB2';
   ctx.beginPath(); ctx.arc(curDotX, curDotY, 5.5, 0, Math.PI * 2); ctx.fill();
-  ctx.fillText(`Gain=${fmtSig(rlc.gain, 3)}×`, curDotX + 8, curDotY - 4);
+  if (isNarrow && curDotX + 65 > plot1X + plot1W) {
+    ctx.textAlign = 'right';
+    ctx.fillText(`Gain=${fmtSig(rlc.gain, 3)}×`, curDotX - 8, curDotY - 4);
+    ctx.textAlign = 'start';
+  } else {
+    ctx.fillText(`Gain=${fmtSig(rlc.gain, 3)}×`, curDotX + 8, curDotY - 4);
+  }
 
   // --- 3. 右下：暫態響應圖 ---
   const g2X = rightX + 16, g2W = rightW - 32;
@@ -669,13 +713,6 @@ function drawModeRLC(ctx, W, H) {
   ctx.fillRect(g2X, g2Y, g2W, g2H);
   ctx.strokeRect(g2X, g2Y, g2W, g2H);
 
-  ctx.fillStyle = '#e6efff';
-  ctx.font = 'bold 12px system-ui';
-  ctx.fillText('暫態響應：v_C(t) 啟動振盪與包絡增長', g2X + 10, g2Y + 18);
-
-  const plot2X = g2X + 44, plot2W = g2W - 54;
-  const plot2Y = g2Y + 28, plot2H = g2H - 46;
-
   // 計算 RK4 暫態
   const tau = (2 * L_SI) / state.R; // 包絡時間常數 2L/R
   const tEnd = Math.max(4.5 * tau, 12 / f);
@@ -685,6 +722,25 @@ function drawModeRLC(ctx, W, H) {
     cachedTransKey = transKey;
   }
 
+  if (isNarrow) {
+    ctx.fillStyle = '#e6efff';
+    ctx.font = 'bold 11px system-ui';
+    ctx.fillText('暫態響應：v_C(t)', g2X + 10, g2Y + 16);
+
+    ctx.fillStyle = '#ff6b9d';
+    ctx.font = '11px system-ui';
+    ctx.textAlign = 'right';
+    ctx.fillText(`包絡 2L/R = ${fmtSig(tau * 1000, 3)} ms`, g2X + g2W - 10, g2Y + 16);
+    ctx.textAlign = 'start';
+  } else {
+    ctx.fillStyle = '#e6efff';
+    ctx.font = 'bold 12px system-ui';
+    ctx.fillText('暫態響應：v_C(t) 啟動振盪與包絡增長', g2X + 10, g2Y + 18);
+  }
+
+  const plot2X = g2X + 44, plot2W = g2W - 54;
+  const plot2Y = g2Y + 28, plot2H = g2H - 46;
+
   const { t: ts, vc } = cachedTransient;
   const vPeak = Math.max(rlc.VC * 1.15, 2.0);
 
@@ -693,7 +749,7 @@ function drawModeRLC(ctx, W, H) {
   ctx.strokeStyle = 'rgba(255,255,255,0.15)';
   ctx.beginPath(); ctx.moveTo(plot2X, midY); ctx.lineTo(plot2X + plot2W, midY); ctx.stroke();
   ctx.fillStyle = '#8ba2cc';
-  ctx.font = '10px monospace';
+  ctx.font = isNarrow ? '11px monospace' : '10px monospace';
   ctx.fillText('0V', plot2X - 20, midY + 3);
   ctx.fillText(`+${fmtSig(vPeak, 2)}V`, plot2X - 38, plot2Y + 8);
   ctx.fillText(`-${fmtSig(vPeak, 2)}V`, plot2X - 38, plot2Y + plot2H);
@@ -732,15 +788,18 @@ function drawModeRLC(ctx, W, H) {
   }
   ctx.stroke();
 
-  // 標記包絡常數說明
-  ctx.fillStyle = '#ff6b9d';
-  ctx.font = '10px system-ui';
-  ctx.fillText(`包絡常數 2L/R = ${fmtSig(tau * 1000, 3)} ms`, plot2X + plot2W - 160, plot2Y + 12);
+  // 標記包絡常數說明 (寬螢幕維持原樣)
+  if (!isNarrow) {
+    ctx.fillStyle = '#ff6b9d';
+    ctx.font = '10px system-ui';
+    ctx.fillText(`包絡常數 2L/R = ${fmtSig(tau * 1000, 3)} ms`, plot2X + plot2W - 160, plot2Y + 12);
+  }
 }
 
 // 模式 B：Cockcroft–Walton 倍壓
 function drawModeCW(ctx, W, H) {
   const isMobile = W < 680;
+  const isNarrow = W < 520;
   const n = state.n;
   const st = cwState;
   if (!st) return;
@@ -751,8 +810,9 @@ function drawModeCW(ctx, W, H) {
 
   // --- 1. 左側：階梯電路 ---
   ctx.fillStyle = '#e6efff';
-  ctx.font = 'bold 14px system-ui';
-  ctx.fillText(`Cockcroft–Walton ${n} 級倍壓電路階梯圖`, 20, 24);
+  ctx.font = isNarrow ? 'bold 12px system-ui' : 'bold 14px system-ui';
+  const cwTitle = isNarrow ? `C-W ${n} 級倍壓階梯圖` : `Cockcroft–Walton ${n} 級倍壓電路階梯圖`;
+  ctx.fillText(cwTitle, isNarrow ? 14 : 20, isNarrow ? 20 : 24);
 
   const colX = isMobile ? leftW * 0.22 : leftW * 0.24;
   const colY = isMobile ? leftW * 0.52 : leftW * 0.56;
@@ -797,7 +857,8 @@ function drawModeCW(ctx, W, H) {
   ctx.stroke();
   ctx.fillStyle = '#4cc2ff';
   ctx.font = '11px system-ui';
-  ctx.fillText(`S: ${fmtSig(st.vS, 3)}V`, nodeS.x - 52, nodeS.y + 26);
+  const sTextX = isNarrow ? Math.max(10, nodeS.x - 52) : nodeS.x - 52;
+  ctx.fillText(`S: ${fmtSig(st.vS, 3)}V`, sTextX, nodeS.y + 26);
 
   // 繪製電容
   function drawCap(p1, p2, vDiff, label) {
@@ -815,7 +876,7 @@ function drawModeCW(ctx, W, H) {
     ctx.stroke();
 
     ctx.fillStyle = '#d0d8ec';
-    ctx.font = '10px monospace';
+    ctx.font = isNarrow ? '11px monospace' : '10px monospace';
     ctx.fillText(`${label}`, mx + 14, my - 2);
     ctx.fillStyle = '#ffb02e';
     ctx.fillText(`${fmtSig(vDiff, 3)}V`, mx + 14, my + 10);
@@ -894,13 +955,14 @@ function drawModeCW(ctx, W, H) {
     // x_k 節點
     ctx.fillStyle = '#ffce54';
     ctx.beginPath(); ctx.arc(px.x, px.y, 4, 0, Math.PI * 2); ctx.fill();
-    ctx.font = '10px monospace';
-    ctx.fillText(`x${k}:${fmtSig(st.v[k - 1], 3)}V`, px.x - 52, px.y + 3);
+    ctx.font = isNarrow ? '11px monospace' : '10px monospace';
+    const xkX = isNarrow ? Math.max(8, px.x - 52) : px.x - 52;
+    ctx.fillText(`x${k}:${fmtSig(st.v[k - 1], 3)}V`, xkX, px.y + 3);
 
     // y_k 節點
     ctx.fillStyle = (k === n) ? '#7CFFB2' : '#4cc2ff';
     ctx.beginPath(); ctx.arc(py.x, py.y, 5, 0, Math.PI * 2); ctx.fill();
-    ctx.font = `${k === n ? 'bold 11px' : '10px'} monospace`;
+    ctx.font = `${k === n ? 'bold ' : ''}${isNarrow ? '11px' : '10px'} monospace`;
     ctx.fillText(`y${k}:${fmtSig(st.v[n + k - 1], 3)}V`, py.x + 8, py.y + 3);
   }
 
@@ -947,7 +1009,7 @@ function drawModeCW(ctx, W, H) {
   ctx.strokeRect(gX, gY, gW, gH);
 
   ctx.fillStyle = '#e6efff';
-  ctx.font = 'bold 12px system-ui';
+  ctx.font = isNarrow ? 'bold 11px system-ui' : 'bold 12px system-ui';
   ctx.fillText(`輸出端電壓 v(y${n}) 歷程曲線`, gX + 12, gY + 20);
 
   const pX = gX + 44, pW = gW - 54;
@@ -958,7 +1020,7 @@ function drawModeCW(ctx, W, H) {
   // 網格刻度
   ctx.strokeStyle = 'rgba(255,255,255,0.08)';
   ctx.fillStyle = '#8ba2cc';
-  ctx.font = '10px monospace';
+  ctx.font = isNarrow ? '11px monospace' : '10px monospace';
   ctx.beginPath(); ctx.moveTo(pX, pY + pH); ctx.lineTo(pX + pW, pY + pH); ctx.stroke();
   ctx.fillText('0V', pX - 22, pY + pH + 3);
   ctx.fillText(`${fmtSig(maxV, 2)}V`, pX - 38, pY + 10);
@@ -970,7 +1032,10 @@ function drawModeCW(ctx, W, H) {
   ctx.beginPath(); ctx.moveTo(pX, idealY); ctx.lineTo(pX + pW, idealY); ctx.stroke();
   ctx.setLineDash([]);
   ctx.fillStyle = '#7CFFB2';
-  ctx.fillText(`理想 2n·Vp = ${idealV}V`, pX + pW - 130, idealY - 4);
+  ctx.font = isNarrow ? '11px system-ui' : '10px monospace';
+  const idealText = isNarrow ? `理想 2n·Vp=${idealV}V` : `理想 2n·Vp = ${idealV}V`;
+  const idealTextW = isNarrow ? 115 : 130;
+  ctx.fillText(idealText, pX + pW - idealTextW, idealY - 4);
 
   // 繪製歷史曲線
   if (historyV.length > 1) {
