@@ -1,0 +1,862 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>質能互換動畫 ｜ 正負電子互毀・成對產生・太陽 pp 鏈能量帳</title>
+<meta name="description" content="近代物理質能互換動畫：正負電子成對互毀與成對產生（動量與能量守恆、門檻能量 1.022 MeV），以及太陽核心質子–質子（pp）核融合鏈分步反應與全能量帳。">
+<link rel="icon" href="../assets/favicon.svg" type="image/svg+xml">
+<link rel="stylesheet" href="../assets/site.css">
+<script src="../assets/sim.js"></script>
+<script defer src="../assets/nav.js"></script>
+<style>
+  *{box-sizing:border-box}
+  html,body{margin:0;padding:0;background:var(--bg);color:var(--txt);font-family:"Noto Sans TC","PingFang TC","Microsoft JhengHei",system-ui,sans-serif}
+  a{color:var(--accent);text-decoration:none}
+  a:hover{text-decoration:underline}
+  .wrap{max-width:1120px;margin:0 auto;padding:18px 16px 60px}
+  header h1{font-size:1.5rem;margin:.2em 0}
+  header p{color:var(--muted);margin:.2em 0 1em;line-height:1.6;font-size:.92rem}
+  .badge{display:inline-block;background:var(--panel2);border:1px solid var(--line);color:var(--muted);font-size:.72rem;padding:2px 8px;border-radius:99px;margin-right:6px}
+
+  /* 畫布容器（畫布獨立呈現，不疊放任何控制元件） */
+  .scene-wrap{width:100%;border-radius:16px;overflow:hidden;border:1px solid var(--line);box-shadow:0 18px 50px rgba(0,0,0,.45);background:#070a14}
+  #scene{display:block;width:100%;touch-action:none}
+  .scene-sub{margin-top:8px;padding:10px 14px;background:var(--panel2);border:1px solid var(--line);border-radius:10px;color:var(--txt);font-size:.85rem;line-height:1.5}
+
+  /* 模式按鈕列（排在畫布下方） */
+  .modes{display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-top:14px}
+  .pbtn{min-height:44px;background:var(--panel2);color:var(--txt);border:1px solid var(--line);padding:8px 14px;border-radius:10px;cursor:pointer;font-size:.86rem;font-family:inherit;display:inline-flex;align-items:center;justify-content:center}
+  .pbtn:hover{border-color:var(--accent)}
+  .pbtn.on{background:var(--accent);color:#04121c;border-color:var(--accent);font-weight:700}
+
+  /* 控制滑桿列 */
+  .bar{display:flex;gap:14px;flex-wrap:wrap;align-items:flex-end;background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:14px 16px;margin-top:14px}
+  .sld{flex:1;min-width:200px}
+  .sld label{display:flex;justify-content:space-between;font-size:.82rem;color:var(--muted);margin-bottom:6px}
+  .sld label .v{color:var(--accent);font-variant-numeric:tabular-nums;font-weight:700}
+  .sld input{width:100%;min-height:24px;accent-color:var(--accent)}
+
+  /* 步驟控制按鈕組 */
+  .step-bar{display:flex;gap:8px;flex-wrap:wrap;align-items:center;width:100%}
+  .step-btn{min-height:44px;background:var(--panel);color:var(--txt);border:1px solid var(--line);padding:6px 12px;border-radius:8px;cursor:pointer;font-size:.82rem;font-family:inherit}
+  .step-btn:hover{border-color:var(--accent)}
+  .step-btn.on{background:var(--accent2);color:#04121c;border-color:var(--accent2);font-weight:700}
+
+  /* 能量帳長條區 */
+  .account-wrap{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:16px;margin-top:14px}
+  .account-wrap h3{margin:0 0 10px;font-size:1.05rem;color:var(--txt)}
+  .bar-compare-grid{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-top:12px}
+  @media(max-width:640px){.bar-compare-grid{grid-template-columns:1fr}}
+  .bar-card{background:var(--panel2);border:1px solid var(--line);border-radius:10px;padding:12px}
+  .bar-title{font-size:.82rem;color:var(--muted);margin-bottom:8px;display:flex;justify-content:space-between}
+  .bar-title span.val{color:var(--accent);font-weight:700}
+  .bar-track{width:100%;height:32px;background:var(--bg2);border-radius:6px;overflow:hidden;display:flex;border:1px solid var(--line)}
+  .bar-seg{height:100%;display:flex;align-items:center;justify-content:center;font-size:.72rem;color:#050d18;font-weight:700;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;padding:0 2px}
+  .seg-pp{background:#ff79c6}
+  .seg-ann{background:#ffd166}
+  .seg-dp{background:#38bdf8}
+  .seg-he{background:#4ade80}
+  .seg-mass{background:linear-gradient(90deg,var(--accent),var(--accent2))}
+  .account-notes{font-size:.82rem;color:var(--muted);margin-top:10px;line-height:1.6}
+  .account-notes b{color:var(--txt)}
+
+  /* 太陽預算卡片 */
+  .sun-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:12px;margin-top:14px}
+  .sun-card{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:14px 16px}
+  .sun-card .lbl{font-size:.78rem;color:var(--muted);margin-bottom:4px}
+  .sun-card .val{font-size:1.35rem;font-weight:700;color:var(--accent);font-variant-numeric:tabular-nums}
+  .sun-card .sub{font-size:.75rem;color:var(--muted);margin-top:4px}
+
+  /* 公式面板（即時代入） */
+  .formula{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:14px 16px;margin-top:14px}
+  .formula h4{margin:0 0 10px;font-size:1rem;color:var(--txt)}
+  .frow{display:flex;flex-wrap:wrap;align-items:baseline;padding:6px 0;border-bottom:1px solid rgba(255,255,255,.05);font-size:.85rem}
+  .fname{width:160px;font-weight:700;color:var(--txt)}
+  .fsym{width:160px;color:var(--accent);font-family:monospace}
+  .fsub{flex:1;min-width:180px;color:var(--muted);font-family:monospace}
+  .fval{width:140px;text-align:right;font-weight:700;color:var(--green);font-variant-numeric:tabular-nums}
+  .frel{font-size:.8rem;color:var(--muted);line-height:1.6;margin-top:8px}
+  @media(max-width:600px){
+    .fname,.fsym,.fval{width:100%;text-align:left}
+    .fval{margin-top:2px;color:var(--accent)}
+  }
+
+  /* 說明與引用 */
+  .note{background:var(--panel);border-left:3px solid var(--accent2);border-radius:8px;padding:12px 14px;color:var(--muted);font-size:.86rem;line-height:1.7;margin-top:14px}
+  .note b{color:var(--txt)}
+  .sources{background:var(--panel2);border:1px solid var(--line);border-radius:8px;padding:12px 14px;color:var(--muted);font-size:.82rem;line-height:1.6;margin-top:14px}
+  .sources h4{margin:0 0 6px;color:var(--txt);font-size:.88rem}
+  .ext-links{margin-top:16px;font-size:.9rem;color:var(--muted)}
+  footer{color:var(--muted);font-size:.78rem;margin-top:28px;text-align:center;line-height:1.7}
+</style>
+</head>
+<body data-demo="質能互換動畫">
+<div class="wrap">
+  <header>
+    <span class="badge">近代物理・E=mc²</span>
+    <h1>質能互換動畫：正負電子互毀與太陽的質子–質子鏈</h1>
+    <p>透過高精度物理參數模擬兩大經典質能轉換過程：<b>(A) 正負電子對滅互毀與逆向的成對產生</b>（動量與能量守恆、雙光子對稱背對背發射、原子核吸收反衝動量門檻）；<b>(B) 太陽核心質子–質子鏈（pp 鏈）核融合</b>分步質量虧損、全能量帳與太陽每秒質能損失。</p>
+  </header>
+
+  <!-- 畫布區（純 Canvas，不包含任何子元素或疊層） -->
+  <div class="scene-wrap">
+    <canvas id="scene"></canvas>
+  </div>
+  <div class="scene-sub" id="sceneSub">載入中…</div>
+
+  <!-- 模式切換按鈕（排在畫布下方） -->
+  <div class="modes">
+    <button id="btnModePair" class="pbtn on" onclick="setMode('pair')">模式 A：互毀與成對產生</button>
+    <button id="btnModePP" class="pbtn" onclick="setMode('pp')">模式 B：太陽核心 pp 鏈</button>
+  </div>
+
+  <!-- 模式 A 滑桿區 -->
+  <div class="bar" id="slidersPair">
+    <div class="sld">
+      <label><span>兩粒子總動能 KE（互毀，0–2 MeV）</span><span class="v" id="v_KE">0 MeV</span></label>
+      <input type="range" id="r_KE" min="0" max="2" step="0.05" value="0">
+    </div>
+    <div class="sld">
+      <label><span>γ 光子入射能量 Eg（成對產生，0.5–5 MeV）</span><span class="v" id="v_Eg">2 MeV</span></label>
+      <input type="range" id="r_Eg" min="0.5" max="5" step="0.05" value="2">
+    </div>
+  </div>
+
+  <!-- 模式 B 控制與分步按鈕區 -->
+  <div class="bar" id="controlsPP" style="display:none">
+    <div class="step-bar">
+      <button class="pbtn" id="btnPrev" onclick="prevStep()">◀ 上一步</button>
+      <button class="pbtn" id="btnNext" onclick="nextStep()">▶ 下一步</button>
+      <button class="pbtn" id="btnPlay" onclick="togglePlay()">⏯ 自動播放</button>
+      <button class="step-btn on" id="sbtn0" onclick="gotoStep(0)">⓪ 起點</button>
+      <button class="step-btn" id="sbtn1" onclick="gotoStep(1)">① p+p</button>
+      <button class="step-btn" id="sbtn2" onclick="gotoStep(2)">② e⁺e⁻</button>
+      <button class="step-btn" id="sbtn3" onclick="gotoStep(3)">③ d+p</button>
+      <button class="step-btn" id="sbtn4" onclick="gotoStep(4)">④ ³He+³He</button>
+      <button class="step-btn" id="sbtn5" onclick="gotoStep(5)">⑤ 總結</button>
+    </div>
+    <div class="sld" style="width:100%;margin-top:8px">
+      <label><span>分步階段（state.step 0–5）</span><span class="v" id="v_step">0</span></label>
+      <input type="range" id="r_step" min="0" max="5" step="1" value="0">
+    </div>
+  </div>
+
+  <!-- 模式 B：能量帳長條區（反應 Q 值堆疊 ↔ 質量虧損 Δmc² 並排等長） -->
+  <div class="account-wrap" id="accountWrap" style="display:none">
+    <h3>太陽核心 pp I 鏈能量帳長條（反應加總 ↔ 原子質量差並排等長）</h3>
+    <div class="bar-compare-grid">
+      <div class="bar-card">
+        <div class="bar-title"><span>反應各步 Q 值堆疊加總（2×pp + 2×ann + 2×dp + he）</span><span class="val" id="barValRx">26.7 MeV</span></div>
+        <div class="bar-track" id="barTrackRx">
+          <div class="bar-seg seg-pp" style="width:3.1%" title="2×pp">2×pp</div>
+          <div class="bar-seg seg-ann" style="width:7.6%" title="2×ann">2×ann</div>
+          <div class="bar-seg seg-dp" style="width:41.1%" title="2×dp">2×dp</div>
+          <div class="bar-seg seg-he" style="width:48.2%" title="he">he</div>
+        </div>
+        <div style="display:flex;gap:8px;font-size:.73rem;color:var(--muted);margin-top:6px;flex-wrap:wrap">
+          <span style="color:#ff79c6">■ 2×pp: 0.84 MeV</span>
+          <span style="color:#ffd166">■ 2×ann: 2.04 MeV</span>
+          <span style="color:#38bdf8">■ 2×dp: 11.0 MeV</span>
+          <span style="color:#4ade80">■ he: 12.9 MeV</span>
+        </div>
+      </div>
+      <div class="bar-card">
+        <div class="bar-title"><span>4 個氫原子 − 1 個氦原子 的質量差 × c² (totalFromMass)</span><span class="val" id="barValMass">26.7 MeV</span></div>
+        <div class="bar-track">
+          <div class="bar-seg seg-mass" style="width:100%" title="Δm·c² = 26.7 MeV">4 M(¹H) − M(⁴He) × c²（兩條等長）</div>
+        </div>
+        <div style="font-size:.73rem;color:var(--muted);margin-top:6px">
+          4 M_H − M_He = 0.02870 u → 換算能量 26.73 MeV
+        </div>
+      </div>
+    </div>
+    <div class="account-notes" id="accountNotes">
+      微中子帶走約 <b>0.53 MeV</b>（2 顆平均各 0.265 MeV，不與太陽作用直奔太空）；留在太陽的熱約 <b>26.2 MeV</b>（ppQ().heat），提供維持太陽熱平衡與光度輻射。
+    </div>
+  </div>
+
+  <!-- 模式 B：太陽每秒消耗卡片（大字卡片） -->
+  <div class="sun-grid" id="sunGrid" style="display:none">
+    <div class="sun-card">
+      <div class="lbl">太陽每秒質量減少（L☉/c²）</div>
+      <div class="val" id="c_massLoss">4.26×10⁹ kg/s</div>
+      <div class="sub">每秒約 4.26×10⁹ kg 質量轉化為純能量</div>
+    </div>
+    <div class="sun-card">
+      <div class="lbl">每秒核反應次數</div>
+      <div class="val" id="c_reactions">9.12×10³⁷ 次/s</div>
+      <div class="sub">每次反應釋放約 26.2 MeV 留在太陽的熱能</div>
+    </div>
+    <div class="sun-card">
+      <div class="lbl">每秒消耗氫質量</div>
+      <div class="val" id="c_hydrogen">6.10×10¹¹ kg/s</div>
+      <div class="sub">每秒約 6.1×10¹¹ kg 氫原子核參與核融合</div>
+    </div>
+    <div class="sun-card">
+      <div class="lbl">質能轉換效率（fraction）</div>
+      <div class="val" id="c_fraction">0.712%</div>
+      <div class="sub">只有約 0.7% 的質量變成能量（fraction）</div>
+    </div>
+  </div>
+
+  <!-- 計算公式（即時代入）面板 -->
+  <div class="formula" id="formula"></div>
+
+  <!-- 物理重點 -->
+  <div class="note">
+    <b>物理重點：</b>E=mc² 是質量與能量的換算；互毀是質量全部變成光子能量、成對產生是能量變成質量；核融合只把很小比例的質量變成能量，但因為 c² 很大，能量非常可觀。在電子與正子對滅互毀時，為遵守動量守恆，靜止對撞時必定產生兩個動量等大反向的光子（背對背飛出）；在成對產生時，單一光子無法在真空中憑空變成正負電子對，必須借助原子核吸收反衝動量，且光子能量必須達到 2mₑc² = 1.022 MeV 門檻。太陽的質子–質子（pp）鏈將 4 個氫原子核聚變成 1 個氦-4 原子核，質量虧損率僅約 0.71%（只有約 0.7% 的質量變成能量），但因為 c² 極大，每秒減少約 4.26×10⁹ kg 質量即可放射出 3.828×10²⁶ W 的光度。
+  </div>
+
+  <!-- 數值出處（照抄規格） -->
+  <div class="sources">
+    <h4>數值出處</h4>
+    電子靜能、原子質量單位、hc：CODATA 2018 建議值；¹H、²H、³He、⁴He 原子質量：AME2020 原子質量評估；太陽光度 3.828×10²⁶ W：國際天文學聯合會 2015 年 B3 決議的標稱值；pp 反應微中子平均能量約 0.265 MeV：J. N. Bahcall《Neutrino Astrophysics》（1989）。這裡只算 pp 鏈的 pp I 分支，太陽裡還有 pp II、pp III 與少量 CNO 循環。
+  </div>
+
+  <!-- 延伸連結 -->
+  <p class="ext-links"><a href="../mass-energy/">← 回到「質能等效與結合能」</a></p>
+  <footer>純前端 HTML5 Canvas 模擬・物理數值嚴格遵循 CODATA 2018 / AME2020 規範</footer>
+</div>
+
+<script>
+/*PHYS:BEGIN*/
+// 有效數字格式（公式面板、數值卡共用；驗收會用同一個函式比對畫面上的數字）
+function fmtSig(v, n) {
+  n = n || 3;
+  if (typeof v !== 'number' || !isFinite(v)) return String(v);
+  if (v === 0) return '0';
+  const a = Math.abs(v);
+  if (a >= 1e5 || a < 1e-3) {
+    let e = Math.floor(Math.log10(a)), m = v / Math.pow(10, e);
+    let ms = m.toFixed(n - 1);
+    if (Math.abs(parseFloat(ms)) >= 10) { e += 1; ms = (v / Math.pow(10, e)).toFixed(n - 1); }
+    const SUP = { '-': '⁻', '0': '⁰', '1': '¹', '2': '²', '3': '³', '4': '⁴', '5': '⁵', '6': '⁶', '7': '⁷', '8': '⁸', '9': '⁹' };
+    return ms + '×10' + String(e).split('').map(ch => SUP[ch]).join('');
+  }
+  const s = Number(v.toPrecision(n));
+  return a >= Math.pow(10, n - 1) ? String(Math.round(s)) : s.toPrecision(n);
+}
+
+// 質能互換的兩個動畫：(A) 正負電子成對互毀與成對產生；(B) 太陽核心的質子–質子鏈（pp I 分支）能量帳。
+// 常數：CODATA 2018（電子靜能 0.51099895000 MeV、原子質量單位 931.49410242 MeV、hc = 1239.84198 MeV·fm）。
+// 原子質量：AME2020（¹H 1.007825032 u、²H 2.014101778 u、³He 3.016029322 u、⁴He 4.002603254 u）。
+// 太陽光度：IAU 2015 決議 B3 標稱值 L☉ = 3.828×10²⁶ W。pp 反應微中子平均能量約 0.265 MeV（Bahcall, Neutrino Astrophysics, 1989）。
+const MEC2 = 0.51099895, U_MEV = 931.49410242, HC_MEV_M = 1239.84198e-15, MEV_J = 1.602176634e-13, C_LIGHT = 299792458;
+const M_H1 = 1.007825032, M_H2 = 2.014101778, M_HE3 = 3.016029322, M_HE4 = 4.002603254, L_SUN = 3.828e26, NU_PP_MEAN = 0.265;
+// (A) 互毀：靜止的 e⁻、e⁺（總動能 KE MeV，動量為 0 的質心系）→ 兩個光子背對背、能量各為總能量的一半
+function annihilation(KE) { const E = 2 * MEC2 + (KE || 0), Eg = E / 2; return { Etot: E, Egamma: Eg, lambda: HC_MEV_M / Eg, massMeV: 2 * MEC2 }; }
+// 成對產生（γ → e⁻ + e⁺，需要原子核在旁邊吸收動量；原子核反衝能量很小，這裡忽略）：門檻 2mₑc² = 1.022 MeV
+function pairCreation(Eg) { const th = 2 * MEC2; return { threshold: th, possible: Eg >= th, KEtot: Math.max(0, Eg - th), lambda: HC_MEV_M / Eg }; }
+// (B) pp I 分支各步的 Q 值（用原子質量算；pp 那步扣掉多出來的兩個電子靜能）
+function ppQ() {
+  const pp = (2 * M_H1 - M_H2) * U_MEV - 2 * MEC2;     // p + p → d + e⁺ + ν（Q 含微中子帶走的能量）
+  const ann = 2 * MEC2;                                  // e⁺ + e⁻ → 2γ
+  const dp = (M_H1 + M_H2 - M_HE3) * U_MEV;              // d + p → ³He + γ
+  const he = (2 * M_HE3 - M_HE4 - 2 * M_H1) * U_MEV;     // ³He + ³He → ⁴He + 2p
+  const total = 2 * (pp + ann + dp) + he;
+  const dm = 4 * M_H1 - M_HE4;                           // 4 個氫原子 → 1 個氦原子 的質量差（u）
+  return { pp, ann, dp, he, total, totalFromMass: dm * U_MEV, dm, fraction: dm / (4 * M_H1), neutrino: 2 * NU_PP_MEAN, heat: total - 2 * NU_PP_MEAN };
+}
+// 太陽每秒：質量減少 L/c²；以每次 pp I 留在太陽裡的能量（扣掉微中子）估計每秒反應次數與消耗的氫質量
+function sunBudget() {
+  const q = ppQ(), perRx = q.heat * MEV_J, rate = L_SUN / perRx, uKg = 1.66053906660e-27;
+  return { massLoss: L_SUN / C_LIGHT ** 2, reactionsPerSec: rate, hydrogenPerSec: rate * 4 * M_H1 * uKg, heliumPerSec: rate * M_HE4 * uKg };
+}
+/*PHYS:END*/
+
+// 全域狀態物件
+const state = {
+  mode: 'pair',   // 'pair' (模式 A) 或 'pp' (模式 B)
+  KE: 0,          // 互毀時兩粒子總動能 (0–2 MeV，預設 0)
+  Eg: 2,          // 成對產生入射 γ 光子能量 (0.5–5 MeV，預設 2)
+  step: 0,        // pp 鏈步驟 (0–5)
+  playing: false  // pp 鏈自動播放
+};
+window.state = state;
+
+// 動畫與繪圖全域變數
+let sc = null;
+let animTimer = 0;
+let playInterval = null;
+
+// 初始化畫布尺寸
+function setupCanvas() {
+  const cv = document.getElementById('scene');
+  sc = SIM.fit(cv, 1.75);
+}
+
+// 輔助繪圖：畫黃色波浪光子箭頭
+function drawWavyPhoton(ctx, x1, y1, x2, y2, opts = {}) {
+  const { color = '#ffd166', waves = 4.5, amp = 6, label = '', lw = 2.4 } = opts;
+  const dx = x2 - x1, dy = y2 - y1;
+  const dist = Math.hypot(dx, dy);
+  if (dist < 4) return;
+  const ang = Math.atan2(dy, dx);
+
+  ctx.save();
+  ctx.translate(x1, y1);
+  ctx.rotate(ang);
+
+  // 波浪身體
+  ctx.strokeStyle = color;
+  ctx.lineWidth = lw;
+  ctx.beginPath();
+  const headGap = 12;
+  const bodyLen = Math.max(0, dist - headGap);
+  for (let x = 0; x <= bodyLen; x += 2) {
+    const y = Math.sin((x / bodyLen) * Math.PI * 2 * waves) * amp;
+    if (x === 0) ctx.moveTo(x, y);
+    else ctx.lineTo(x, y);
+  }
+  ctx.stroke();
+
+  // 箭頭頭部
+  ctx.fillStyle = color;
+  ctx.beginPath();
+  ctx.moveTo(dist, 0);
+  ctx.lineTo(dist - 11, -5.5);
+  ctx.lineTo(dist - 11, 5.5);
+  ctx.closePath();
+  ctx.fill();
+
+  // 標籤
+  if (label) {
+    ctx.font = 'bold 12px system-ui';
+    ctx.fillStyle = color;
+    ctx.textAlign = 'center';
+    ctx.fillText(label, dist * 0.5, -amp - 6);
+  }
+  ctx.restore();
+}
+
+// 輔助繪圖：粒子球體
+function drawParticle(ctx, x, y, r, color, label) {
+  const g = ctx.createRadialGradient(x - r * 0.35, y - r * 0.35, r * 0.1, x, y, r);
+  g.addColorStop(0, '#ffffff');
+  g.addColorStop(0.35, color);
+  g.addColorStop(1, '#050711');
+  ctx.save();
+  ctx.beginPath();
+  ctx.arc(x, y, r, 0, Math.PI * 2);
+  ctx.fillStyle = g;
+  ctx.shadowColor = color;
+  ctx.shadowBlur = 10;
+  ctx.fill();
+  ctx.restore();
+
+  if (label) {
+    ctx.save();
+    ctx.fillStyle = '#ffffff';
+    ctx.font = `bold ${Math.max(11, Math.round(r * 0.95))}px system-ui`;
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    ctx.fillText(label, x, y);
+    ctx.restore();
+  }
+}
+
+// 繪製微中子小白點
+function drawNeutrino(ctx, x, y, label) {
+  ctx.save();
+  ctx.shadowColor = '#ffffff';
+  ctx.shadowBlur = 8;
+  ctx.fillStyle = '#ffffff';
+  ctx.beginPath();
+  ctx.arc(x, y, 4, 0, Math.PI * 2);
+  ctx.fill();
+  if (label) {
+    ctx.font = '12px system-ui';
+    ctx.fillStyle = '#dce6ff';
+    ctx.fillText(label, x + 8, y - 4);
+  }
+  ctx.restore();
+}
+
+// 模式 A：互毀與成對產生繪圖
+function drawPairMode(W, H) {
+  const ctx = sc;
+  const isNarrow = W < 620;
+  const annRes = annihilation(state.KE);
+  const crtRes = pairCreation(state.Eg);
+
+  const tCycle = (animTimer % 3600) / 3600;
+
+  // ---------- 左側 / 上半：互毀動畫 ----------
+  const xLeft = 0, yTopL = 0;
+  const wL = isNarrow ? W : W * 0.5;
+  const hL = isNarrow ? H * 0.5 : H;
+  const cxL = xLeft + wL * 0.5;
+  const cyL = yTopL + hL * 0.46;
+
+  ctx.save();
+  ctx.fillStyle = 'rgba(255,255,255,.015)';
+  ctx.fillRect(xLeft + 4, yTopL + 4, wL - 8, hL - 8);
+  ctx.strokeStyle = 'rgba(255,255,255,.07)';
+  ctx.strokeRect(xLeft + 4, yTopL + 4, wL - 8, hL - 8);
+
+  ctx.font = 'bold 14px system-ui';
+  ctx.fillStyle = '#94a3b8';
+  ctx.fillText('【互毀】e⁻ + e⁺ → 2γ（雙光子對滅）', xLeft + 16, yTopL + 24);
+
+  // 動態進程：靠近 -> 相遇閃光 -> 背對背飛出
+  if (tCycle < 0.42) {
+    const prog = tCycle / 0.42;
+    const offset = (1 - prog) * (wL * 0.36);
+    drawParticle(ctx, cxL - offset, cyL, 14, '#38bdf8', 'e⁻');
+    drawParticle(ctx, cxL + offset, cyL, 14, '#ff5470', 'e⁺');
+    ctx.font = '12px system-ui';
+    ctx.fillStyle = '#94a3b8';
+    ctx.textAlign = 'center';
+    ctx.fillText('電子（藍）與正子（紅）慢慢靠近…', cxL, cyL + 34);
+  } else if (tCycle < 0.50) {
+    const flashProg = (tCycle - 0.42) / 0.08;
+    const rFlash = 8 + flashProg * 35;
+    const gf = ctx.createRadialGradient(cxL, cyL, 0, cxL, cyL, rFlash);
+    gf.addColorStop(0, 'rgba(255,255,255,1)');
+    gf.addColorStop(0.4, 'rgba(255,209,102,.8)');
+    gf.addColorStop(1, 'rgba(255,209,102,0)');
+    ctx.fillStyle = gf;
+    ctx.beginPath();
+    ctx.arc(cxL, cyL, rFlash, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.font = 'bold 12px system-ui';
+    ctx.fillStyle = '#ffd166';
+    ctx.textAlign = 'center';
+    ctx.fillText('⚡ 相遇時閃光，質量轉化為光子！', cxL, cyL + 34);
+  } else {
+    const pProg = (tCycle - 0.50) / 0.50;
+    const arm = Math.min(wL * 0.42, 35 + pProg * (wL * 0.38));
+    const egText = `各 ${fmtSig(annRes.Egamma, 3)} MeV`;
+
+    // 兩個背對背飛出的光子（黃色波浪線箭頭，方向相反）
+    drawWavyPhoton(ctx, cxL, cyL, cxL - arm, cyL, { color: '#ffd166', waves: 3.5, label: egText });
+    drawWavyPhoton(ctx, cxL, cyL, cxL + arm, cyL, { color: '#ffd166', waves: 3.5, label: egText });
+
+    ctx.font = '12px system-ui';
+    ctx.fillStyle = '#7CFFB2';
+    ctx.textAlign = 'center';
+    ctx.fillText('動量守恆所以是兩個光子、方向相反（背對背飛出）', cxL, cyL + 34);
+  }
+
+  // 互毀能量長條：質量能（2mₑc²）↔ 光子能量，兩邊一樣高（能量守恆）
+  const barY = yTopL + hL - 32;
+  const bW = Math.min(100, wL * 0.32);
+  const bH = 14;
+  ctx.font = '11px system-ui';
+  ctx.textAlign = 'left';
+  ctx.fillStyle = '#94a3b8';
+  ctx.fillText('能量守恆長條（兩邊一樣高）：', xLeft + 16, barY - 6);
+
+  ctx.fillStyle = '#38bdf8';
+  ctx.fillRect(xLeft + 16, barY, bW, bH);
+  ctx.fillStyle = '#fff';
+  ctx.fillText(`質量能 2mₑc² (${fmtSig(2 * MEC2, 3)})`, xLeft + 20, barY + 11);
+
+  ctx.fillStyle = '#ffd166';
+  ctx.fillText('↔', xLeft + 22 + bW, barY + 11);
+
+  ctx.fillStyle = '#ffd166';
+  ctx.fillRect(xLeft + 40 + bW, barY, bW, bH);
+  ctx.fillStyle = '#050c18';
+  ctx.font = 'bold 11px system-ui';
+  ctx.fillText(`光子能量 (${fmtSig(annRes.Etot, 3)}M)`, xLeft + 44 + bW, barY + 11);
+  ctx.restore();
+
+  // ---------- 右側 / 下半：成對產生動畫 ----------
+  const xRight = isNarrow ? 0 : W * 0.5;
+  const yTopR = isNarrow ? H * 0.5 : 0;
+  const wR = isNarrow ? W : W * 0.5;
+  const hR = isNarrow ? H * 0.5 : H;
+  const cxR = xRight + wR * 0.55;
+  const cyR = yTopR + hR * 0.46;
+
+  ctx.save();
+  ctx.fillStyle = 'rgba(255,255,255,.015)';
+  ctx.fillRect(xRight + 4, yTopR + 4, wR - 8, hR - 8);
+  ctx.strokeStyle = 'rgba(255,255,255,.07)';
+  ctx.strokeRect(xRight + 4, yTopR + 4, wR - 8, hR - 8);
+
+  ctx.font = 'bold 14px system-ui';
+  ctx.fillStyle = '#94a3b8';
+  ctx.fillText('【成對產生】γ + 原子核 → e⁻ + e⁺ + 核', xRight + 16, yTopR + 24);
+
+  // 原子核（灰球）
+  drawParticle(ctx, cxR, cyR, 18, '#8a99ad', '核');
+  ctx.font = '11px system-ui';
+  ctx.fillStyle = '#94a3b8';
+  ctx.textAlign = 'center';
+  ctx.fillText('原子核（吸收動量）', cxR, cyR - 26);
+
+  if (crtRes.possible) {
+    if (tCycle < 0.40) {
+      const prog = tCycle / 0.40;
+      const xG = (xRight + 18) + prog * (cxR - (xRight + 18) - 22);
+      drawWavyPhoton(ctx, xRight + 18, cyR, xG, cyR, { color: '#ffd166', waves: 3, label: `γ 入射 (${fmtSig(state.Eg, 3)} MeV)` });
+    } else {
+      const pProg = (tCycle - 0.40) / 0.60;
+      const flyD = pProg * (wR * 0.32);
+      const ex = cxR + flyD * 0.8, eyTop = cyR - flyD * 0.7, eyBtm = cyR + flyD * 0.7;
+      drawParticle(ctx, ex, eyTop, 12, '#38bdf8', 'e⁻');
+      drawParticle(ctx, ex, eyBtm, 12, '#ff5470', 'e⁺');
+
+      ctx.font = '12px system-ui';
+      ctx.fillStyle = '#7CFFB2';
+      ctx.textAlign = 'center';
+      ctx.fillText(`產生電子＋正子並分開飛走（剩餘動能 KEtot = ${fmtSig(crtRes.KEtot, 3)} MeV）`, cxR, cyR + 34);
+    }
+  } else {
+    const pProg = tCycle;
+    const xG1 = xRight + 18 + pProg * (wR * 0.6);
+    const xG2 = xG1 + 55;
+    drawWavyPhoton(ctx, xG1, cyR, xG2, cyR, { color: '#ffd166', waves: 2, label: `γ (${fmtSig(state.Eg, 3)} MeV)` });
+
+    // 畫面寫「能量不足 2mₑc² = 1.022 MeV，無法產生」
+    ctx.font = 'bold 13px system-ui';
+    ctx.fillStyle = '#ff5470';
+    ctx.textAlign = 'center';
+    ctx.fillText('能量不足 2mₑc² = 1.022 MeV，無法產生', cxR, cyR + 34);
+  }
+
+  // 說明為什麼需要原子核（吸收動量）
+  ctx.font = '11px system-ui';
+  ctx.fillStyle = '#94a3b8';
+  ctx.textAlign = 'left';
+  ctx.fillText('說明：為什麼需要原子核（吸收動量）——單一光子無法在真空中同時守恆能量與動量。', xRight + 16, yTopR + hR - 12);
+  ctx.restore();
+}
+
+// 模式 B：太陽 pp 鏈繪圖
+function drawPPMode(W, H) {
+  const ctx = sc;
+  const q = ppQ();
+  const step = Math.max(0, Math.min(5, state.step || 0));
+
+  const gCore = ctx.createRadialGradient(W * 0.5, H * 0.5, 20, W * 0.5, H * 0.5, W * 0.6);
+  gCore.addColorStop(0, 'rgba(255,140,50,.08)');
+  gCore.addColorStop(1, 'rgba(0,0,0,0)');
+  ctx.fillStyle = gCore;
+  ctx.fillRect(0, 0, W, H);
+
+  const stepTitles = [
+    '步驟 ⓪：太陽核心 4 個質子待命（高溫高壓環境）',
+    '步驟 ①：兩次 p+p → d + e⁺ + ν（弱交互作用合成氘核）',
+    '步驟 ②：e⁺ + e⁻ → 2γ（產生的正子與核心電子互毀）',
+    '步驟 ③：兩次 d + p → ³He + γ（氘核與質子融合為氦-3）',
+    '步驟 ④：³He + ³He → ⁴He + 2p（兩顆氦-3 碰撞結合成氦-4）',
+    '步驟 ⑤：總結（4p + 2e⁻ → ⁴He + 2ν + 6γ 完整能量帳）'
+  ];
+
+  ctx.font = 'bold 15px system-ui';
+  ctx.fillStyle = '#ffd166';
+  ctx.textAlign = 'center';
+  ctx.fillText(stepTitles[step], W * 0.5, 30);
+
+  ctx.font = '13px system-ui';
+  ctx.fillStyle = '#7CFFB2';
+  let qText = '';
+  if (step === 0) qText = '起點：4 個質子待命，準備進行 pp 鏈核融合';
+  else if (step === 1) qText = `該步 Q 值 pp = ${fmtSig(q.pp, 3)} MeV（兩次共 ${fmtSig(q.pp * 2, 3)} MeV，含微中子）`;
+  else if (step === 2) qText = `該步 Q 值 ann = ${fmtSig(q.ann, 3)} MeV（兩次共 ${fmtSig(q.ann * 2, 3)} MeV）`;
+  else if (step === 3) qText = `該步 Q 值 dp = ${fmtSig(q.dp, 3)} MeV（兩次共 ${fmtSig(q.dp * 2, 3)} MeV）`;
+  else if (step === 4) qText = `該步 Q 值 he = ${fmtSig(q.he, 3)} MeV（釋放並歸還 2 個質子）`;
+  else qText = `總結：total = ${fmtSig(q.total, 3)} MeV（留在太陽的熱 ${fmtSig(q.heat, 3)} MeV + 微中子帶走 ${fmtSig(q.neutrino, 3)} MeV）`;
+  ctx.fillText(qText, W * 0.5, 52);
+
+  const cx = W * 0.5, cy = H * 0.54;
+  const t = (animTimer % 2400) / 2400;
+
+  if (step === 0) {
+    drawParticle(ctx, cx - 110, cy - 35, 16, '#ff5470', 'p');
+    drawParticle(ctx, cx - 40, cy + 30, 16, '#ff5470', 'p');
+    drawParticle(ctx, cx + 40, cy - 30, 16, '#ff5470', 'p');
+    drawParticle(ctx, cx + 110, cy + 35, 16, '#ff5470', 'p');
+    ctx.font = '12px system-ui';
+    ctx.fillStyle = '#94a3b8';
+    ctx.fillText('質子（紅）在高溫高壓核心中準備進行核融合', cx, cy + 85);
+  } else if (step === 1) {
+    // ① 兩次 p+p → d + e⁺ + ν
+    // 質子紅、中子灰、正子粉、微中子小白點飛出畫面（標「帶走能量、幾乎不和物質作用」）
+    drawParticle(ctx, cx - 70, cy, 14, '#ff5470', 'p');
+    drawParticle(ctx, cx - 48, cy, 14, '#8a99ad', 'n');
+    ctx.font = '12px system-ui';
+    ctx.fillStyle = '#fff';
+    ctx.fillText('氘核 d', cx - 59, cy - 24);
+
+    drawParticle(ctx, cx + 50, cy, 14, '#ff5470', 'p');
+    drawParticle(ctx, cx + 72, cy, 14, '#8a99ad', 'n');
+    ctx.fillText('氘核 d', cx + 61, cy - 24);
+
+    drawParticle(ctx, cx - 120, cy + 40, 10, '#ff79c6', 'e⁺');
+    drawParticle(ctx, cx + 120, cy + 40, 10, '#ff79c6', 'e⁺');
+
+    const nuDist = 50 + t * (W * 0.4);
+    drawNeutrino(ctx, cx - nuDist, cy - 40, '帶走能量、幾乎不和物質作用');
+    drawNeutrino(ctx, cx + nuDist * 0.8, cy - 50, 'ν');
+  } else if (step === 2) {
+    // ② e⁺ + e⁻ → 2γ
+    drawParticle(ctx, cx - 80, cy, 11, '#ff79c6', 'e⁺');
+    drawParticle(ctx, cx - 50, cy, 11, '#38bdf8', 'e⁻');
+    drawWavyPhoton(ctx, cx - 65, cy, cx - 65, cy - 65, { color: '#ffd166', waves: 2.5, label: 'γ' });
+    drawWavyPhoton(ctx, cx - 65, cy, cx - 65, cy + 65, { color: '#ffd166', waves: 2.5, label: 'γ' });
+
+    drawParticle(ctx, cx + 50, cy, 11, '#ff79c6', 'e⁺');
+    drawParticle(ctx, cx + 80, cy, 11, '#38bdf8', 'e⁻');
+    drawWavyPhoton(ctx, cx + 65, cy, cx + 65, cy - 65, { color: '#ffd166', waves: 2.5, label: 'γ' });
+    drawWavyPhoton(ctx, cx + 65, cy, cx + 65, cy + 65, { color: '#ffd166', waves: 2.5, label: 'γ' });
+
+    ctx.font = '12px system-ui';
+    ctx.fillStyle = '#94a3b8';
+    ctx.fillText('正子（粉）與電子（藍）互毀產生光子，Q(ann) = 1.022 MeV', cx, cy + 85);
+  } else if (step === 3) {
+    // ③ 兩次 d + p → ³He + γ
+    drawParticle(ctx, cx - 85, cy - 10, 13, '#ff5470', 'p');
+    drawParticle(ctx, cx - 65, cy - 10, 13, '#ff5470', 'p');
+    drawParticle(ctx, cx - 75, cy + 12, 13, '#8a99ad', 'n');
+    ctx.font = '12px system-ui';
+    ctx.fillStyle = '#fff';
+    ctx.fillText('³He', cx - 75, cy - 28);
+    drawWavyPhoton(ctx, cx - 75, cy, cx - 145, cy, { color: '#ffd166', waves: 3, label: 'γ' });
+
+    drawParticle(ctx, cx + 65, cy - 10, 13, '#ff5470', 'p');
+    drawParticle(ctx, cx + 85, cy - 10, 13, '#ff5470', 'p');
+    drawParticle(ctx, cx + 75, cy + 12, 13, '#8a99ad', 'n');
+    ctx.fillText('³He', cx + 75, cy - 28);
+    drawWavyPhoton(ctx, cx + 75, cy, cx + 145, cy, { color: '#ffd166', waves: 3, label: 'γ' });
+
+    ctx.font = '12px system-ui';
+    ctx.fillStyle = '#94a3b8';
+    ctx.fillText('氘與質子融合為氦-3，各釋放 Q(dp) = 5.49 MeV', cx, cy + 85);
+  } else if (step === 4) {
+    // ④ ³He + ³He → ⁴He + 2p
+    drawParticle(ctx, cx - 12, cy - 12, 14, '#ff5470', 'p');
+    drawParticle(ctx, cx + 12, cy - 12, 14, '#8a99ad', 'n');
+    drawParticle(ctx, cx - 12, cy + 12, 14, '#8a99ad', 'n');
+    drawParticle(ctx, cx + 12, cy + 12, 14, '#ff5470', 'p');
+    ctx.font = 'bold 13px system-ui';
+    ctx.fillStyle = '#4ade80';
+    ctx.fillText('⁴He (α 粒子)', cx, cy - 34);
+
+    const pFly = 45 + t * 40;
+    drawParticle(ctx, cx - pFly - 40, cy + 20, 13, '#ff5470', 'p');
+    drawParticle(ctx, cx + pFly + 40, cy + 20, 13, '#ff5470', 'p');
+    ctx.font = '11px system-ui';
+    ctx.fillStyle = '#ff79c6';
+    ctx.fillText('2p 吐出 ↩', cx - pFly - 40, cy + 44);
+    ctx.fillText('↩ 2p 吐出', cx + pFly + 40, cy + 44);
+
+    ctx.font = '12px system-ui';
+    ctx.fillStyle = '#94a3b8';
+    ctx.fillText('生成超穩定氦-4 並吐回 2 個質子，Q(he) = 12.86 MeV', cx, cy + 85);
+  } else {
+    // ⑤ 總結
+    ctx.font = 'bold 15px system-ui';
+    ctx.fillStyle = '#38bdf8';
+    ctx.fillText('淨反應：4 p + 2 e⁻  →  ⁴He + 2 νₑ + 6 γ', cx, cy - 20);
+
+    ctx.font = '13px system-ui';
+    ctx.fillStyle = '#dce6ff';
+    ctx.fillText(`總能量 total = ${fmtSig(q.total, 3)} MeV（質量虧損比例 fraction 約 0.71%）`, cx, cy + 10);
+    ctx.fillStyle = '#ffd166';
+    ctx.fillText(`留在太陽的熱約 26.2 MeV（ppQ().heat）　·　微中子帶走約 0.53 MeV`, cx, cy + 34);
+
+    drawParticle(ctx, cx, cy + 70, 16, '#4ade80', '⁴He');
+  }
+}
+
+// 主畫布繪製進入點
+function draw() {
+  if (!sc) return;
+  const W = sc._w, H = sc._h;
+  sc.clearRect(0, 0, W, H);
+
+  const gBg = sc.createLinearGradient(0, 0, 0, H);
+  gBg.addColorStop(0, '#070a14');
+  gBg.addColorStop(1, '#0c1022');
+  sc.fillStyle = gBg;
+  sc.fillRect(0, 0, W, H);
+
+  if (state.mode === 'pair') {
+    drawPairMode(W, H);
+  } else {
+    drawPPMode(W, H);
+  }
+}
+
+// 輔助函式：產生公式面板中的一列
+function frow(n, sym, sub, val) {
+  return `<div class="frow"><span class="fname">${n}</span><span class="fsym">${sym}</span><span class="fsub">= ${sub}</span><span class="fval">${val}</span></div>`;
+}
+
+// 更新公式面板
+function updateFormula() {
+  const el = document.getElementById('formula');
+  if (!el) return;
+
+  if (state.mode === 'pair') {
+    const ann = annihilation(state.KE);
+    const crt = pairCreation(state.Eg);
+    let html = `<h4>📐 計算公式（即時代入　mₑc² = 0.511 MeV、hc = 1.240×10⁻¹² MeV·m）</h4>`;
+    html += frow('光子能量 E_γ', 'mₑc² + KE/2', `${fmtSig(MEC2, 3)} + ${fmtSig(state.KE, 3)}/2`, `${fmtSig(ann.Egamma, 3)} MeV`);
+    html += frow('光子波長 λ', 'hc / E', `${fmtSig(HC_MEV_M, 3)} / ${fmtSig(ann.Egamma, 3)}`, `${fmtSig(ann.lambda, 3)} m`);
+    html += frow('成對產生門檻 2mₑc²', '2 mₑc²', `2 × ${fmtSig(MEC2, 3)}`, `${fmtSig(crt.threshold, 3)} MeV`);
+    html += frow('成對產生剩餘動能 KEtot', 'max(0, Eg − 2mₑc²)', `${fmtSig(state.Eg, 3)} − ${fmtSig(crt.threshold, 3)}`, crt.possible ? `${fmtSig(crt.KEtot, 3)} MeV` : '0 MeV（能量不足 2mₑc² = 1.022 MeV，無法產生）');
+    html += `<div class="frel">📈 <b>互毀</b>：E_γ = mₑc² + KE/2，動量守恆強制兩光子背對背對稱發射。<b>成對產生</b>：入射光子能量必須達到成對產生門檻 2mₑc² = 1.022 MeV，低於門檻則無法產生；需要原子核吸收動量。</div>`;
+    el.innerHTML = html;
+  } else {
+    const q = ppQ();
+    const sun = sunBudget();
+    let html = `<h4>📐 太陽 pp I 鏈計算公式（即時代入　AME2020 原子質量、IAU 2015 太陽光度 L☉）</h4>`;
+    html += frow('每步 Q：pp', '(2M_H − M_D)c² − 2mₑc²', `(2·${fmtSig(M_H1,3)} − ${fmtSig(M_H2,3)})·931.5 − 1.022`, `${fmtSig(q.pp, 3)} MeV`);
+    html += frow('每步 Q：ann', '2 mₑc²', `2 × ${fmtSig(MEC2, 3)}`, `${fmtSig(q.ann, 3)} MeV`);
+    html += frow('每步 Q：dp', '(M_H + M_D − M_³He)c²', `(${fmtSig(M_H1,3)} + ${fmtSig(M_H2,3)} − ${fmtSig(M_HE3,3)})·931.5`, `${fmtSig(q.dp, 3)} MeV`);
+    html += frow('每步 Q：he', '(2M_³He − M_⁴He − 2M_H)c²', `(2·${fmtSig(M_HE3,3)} − ${fmtSig(M_HE4,3)} − 2·${fmtSig(M_H1,3)})·931.5`, `${fmtSig(q.he, 3)} MeV`);
+    html += frow('總和 (total)', '2×(pp + ann + dp) + he', `2×(${fmtSig(q.pp,3)}+${fmtSig(q.ann,3)}+${fmtSig(q.dp,3)}) + ${fmtSig(q.he,3)}`, `${fmtSig(q.total, 3)} MeV`);
+    html += frow('總和 (totalFromMass)', '(4 M_H − M_⁴He)c²', `(4·${fmtSig(M_H1,3)} − ${fmtSig(M_HE4,3)}) × 931.49`, `${fmtSig(q.totalFromMass, 3)} MeV`);
+    html += frow('質量虧損 Δm（u）', '4 M_H − M_⁴He', `4·${fmtSig(M_H1,3)} − ${fmtSig(M_HE4,3)}`, `${fmtSig(q.dm, 3)} u`);
+    html += frow('質量虧損比率 Δm/m', 'Δm / (4 M_H)', `${fmtSig(q.dm,3)} / (4·${fmtSig(M_H1,3)})`, `${fmtSig(q.fraction * 100, 3)} %`);
+    html += frow('太陽每秒質量損失 L☉/c²', 'L☉ / c²', `3.828×10²⁶ / (2.998×10⁸)²`, `${fmtSig(sun.massLoss, 3)} kg/s`);
+    html += `<div class="frel">📈 <b>微中子帶走</b>：約 ${fmtSig(q.neutrino, 3)} MeV　·　<b>留在太陽的熱</b>：約 ${fmtSig(q.heat, 3)} MeV（ppQ().heat）。只有約 0.7% 的質量變成能量（fraction）。</div>`;
+    el.innerHTML = html;
+  }
+}
+
+// 依據 state 更新所有 DOM 控制項、卡片與長條
+function refresh() {
+  document.getElementById('btnModePair').classList.toggle('on', state.mode === 'pair');
+  document.getElementById('btnModePP').classList.toggle('on', state.mode === 'pp');
+
+  document.getElementById('slidersPair').style.display = state.mode === 'pair' ? 'flex' : 'none';
+  document.getElementById('controlsPP').style.display = state.mode === 'pp' ? 'flex' : 'none';
+  document.getElementById('accountWrap').style.display = state.mode === 'pp' ? 'block' : 'none';
+  document.getElementById('sunGrid').style.display = state.mode === 'pp' ? 'grid' : 'none';
+
+  if (state.mode === 'pair') {
+    const rKE = document.getElementById('r_KE'), vKE = document.getElementById('v_KE');
+    const rEg = document.getElementById('r_Eg'), vEg = document.getElementById('v_Eg');
+    if (rKE && vKE) { rKE.value = state.KE; vKE.textContent = `${fmtSig(state.KE, 3)} MeV`; }
+    if (rEg && vEg) { rEg.value = state.Eg; vEg.textContent = `${fmtSig(state.Eg, 3)} MeV`; }
+
+    const ann = annihilation(state.KE);
+    const crt = pairCreation(state.Eg);
+    const passStatus = crt.possible ? `產生電子＋正子（剩餘動能 KEtot = ${fmtSig(crt.KEtot, 3)} MeV）` : '能量不足 2mₑc² = 1.022 MeV，無法產生';
+    document.getElementById('sceneSub').textContent = `模式 A：互毀釋放 2 顆背對背光子（各 ${fmtSig(ann.Egamma, 3)} MeV）；成對產生光子能量 ${fmtSig(state.Eg, 3)} MeV（${passStatus}）。說明動量守恆與為什麼需要原子核吸收動量。`;
+  }
+
+  if (state.mode === 'pp') {
+    const st = Math.max(0, Math.min(5, state.step || 0));
+    const rStep = document.getElementById('r_step'), vStep = document.getElementById('v_step');
+    if (rStep && vStep) { rStep.value = st; vStep.textContent = String(st); }
+
+    for (let i = 0; i <= 5; i++) {
+      const b = document.getElementById(`sbtn${i}`);
+      if (b) b.classList.toggle('on', i === st);
+    }
+    const playBtn = document.getElementById('btnPlay');
+    if (playBtn) playBtn.textContent = state.playing ? '⏸ 暫停播放' : '⏯ 自動播放';
+
+    const q = ppQ();
+    const sun = sunBudget();
+
+    const elMassLoss = document.getElementById('c_massLoss');
+    const elRx = document.getElementById('c_reactions');
+    const elH = document.getElementById('c_hydrogen');
+    const elFrac = document.getElementById('c_fraction');
+    if (elMassLoss) elMassLoss.textContent = `${fmtSig(sun.massLoss, 3)} kg/s`;
+    if (elRx) elRx.textContent = `${fmtSig(sun.reactionsPerSec, 3)} 次/s`;
+    if (elH) elH.textContent = `${fmtSig(sun.hydrogenPerSec, 3)} kg/s`;
+    if (elFrac) elFrac.textContent = `${fmtSig(q.fraction * 100, 3)}%`;
+
+    const elBVRx = document.getElementById('barValRx');
+    const elBVMass = document.getElementById('barValMass');
+    if (elBVRx) elBVRx.textContent = `${fmtSig(q.total, 3)} MeV`;
+    if (elBVMass) elBVMass.textContent = `${fmtSig(q.totalFromMass, 3)} MeV`;
+
+    document.getElementById('sceneSub').textContent = `模式 B：太陽 pp I 鏈步驟 ${st}。4 個氫結合成 1 個氦，加總＝total (${fmtSig(q.total, 3)} MeV)，質量差×c² totalFromMass (${fmtSig(q.totalFromMass, 3)} MeV)，兩條等長。微中子帶走約 0.53 MeV，留在太陽的熱約 26.2 MeV（ppQ().heat）。只有約 0.7% 的質量變成能量（fraction）。`;
+  }
+
+  updateFormula();
+  draw();
+}
+
+// 模式切換
+function setMode(m) {
+  state.mode = m;
+  refresh();
+}
+
+// 步驟切換操作
+function gotoStep(s) {
+  state.step = s;
+  refresh();
+}
+function nextStep() {
+  state.step = (state.step + 1) % 6;
+  refresh();
+}
+function prevStep() {
+  state.step = (state.step + 5) % 6;
+  refresh();
+}
+function togglePlay() {
+  state.playing = !state.playing;
+  if (state.playing) {
+    if (!playInterval) {
+      playInterval = setInterval(() => {
+        state.step = (state.step + 1) % 6;
+        refresh();
+      }, 2400);
+    }
+  } else {
+    clearInterval(playInterval);
+    playInterval = null;
+  }
+  refresh();
+}
+
+// 動畫循環
+function animLoop(timestamp) {
+  animTimer = timestamp;
+  draw();
+  requestAnimationFrame(animLoop);
+}
+
+// 事件綁定
+window.addEventListener('load', () => {
+  setupCanvas();
+
+  const rKE = document.getElementById('r_KE');
+  if (rKE) {
+    rKE.addEventListener('input', e => {
+      state.KE = parseFloat(e.target.value);
+      refresh();
+    });
+  }
+
+  const rEg = document.getElementById('r_Eg');
+  if (rEg) {
+    rEg.addEventListener('input', e => {
+      state.Eg = parseFloat(e.target.value);
+      refresh();
+    });
+  }
+
+  const rStep = document.getElementById('r_step');
+  if (rStep) {
+    rStep.addEventListener('input', e => {
+      state.step = parseInt(e.target.value, 10);
+      refresh();
+    });
+  }
+
+  refresh();
+  requestAnimationFrame(animLoop);
+});
+
+window.addEventListener('resize', () => {
+  setupCanvas();
+  draw();
+});
+</script>
+</body>
+</html>
