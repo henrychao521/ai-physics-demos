@@ -98,7 +98,14 @@ function fmt(x){return (Math.round(x*100)/100).toString();}
 function setSlider(id,val){state[id]=val;const r=document.getElementById('r_'+id);if(r)r.value=val;
   const s=sliders.find(z=>z.id===id);if(s)document.getElementById('v_'+id).textContent=`${fmt(val)} ${s.unit}`;}
 function f(){return convex?state.fa:-state.fa;}
-function image(){const p=state.p,F=f(),q=p*F/(p-F),m=-q/p;return {q,m};}
+// 薄透鏡成像（純函式，測試會直接呼叫）。符號約定：p>0；凸透鏡 f>0、凹透鏡 f<0；
+// q>0＝實像（在透鏡另一側）、q<0＝虛像（和物同側）；m=−q/p，m<0 倒立、m>0 正立。p=f 時成像於無窮遠。
+function imageOf(p,F){
+  if(Math.abs(p-F)<1e-9) return {q:Infinity,m:Infinity,real:false,upright:false,atInfinity:true};
+  const q=p*F/(p-F), m=-q/p;
+  return {q,m,real:q>0,upright:m>0,atInfinity:false};
+}
+function image(){return imageOf(state.p,f());}
 
 function frow(n,sym,sub,val){return `<div class="frow"><span class="fname">${n}</span><span class="fsym">${sym}</span><span class="fsub">= ${sub}</span><span class="fval">${val}</span></div>`;}
 function updateFormula(){
@@ -125,7 +132,7 @@ function ray(x1,y1,x2,y2,col,dash,w){sc.strokeStyle=col;sc.lineWidth=w||1.8;sc.s
   sc.beginPath();sc.moveTo(X(x1),Y(y1));sc.lineTo(X(x2),Y(y2));sc.stroke();sc.setLineDash([]);}
 function draw(){setupReady();layout();const W=sc._w,H=sc._h;
   S.scene(sc,OPTICS,{});
-  const F=f(),{q,m}=image(),p=state.p,h=state.h,ih=m*h,xR=72;
+  const F=f(),{q,m}=image(),p=state.p,h=state.h,ih=m*h,xR=(W-AX)/SCALE+2;  // 光線一律畫到畫布右緣，不在半路斷掉
   // 主軸
   sc.strokeStyle='rgba(40,60,90,.5)';sc.lineWidth=1;sc.beginPath();sc.moveTo(0,AY);sc.lineTo(W,AY);sc.stroke();
   // 透鏡(玻璃)
@@ -152,7 +159,12 @@ function draw(){setupReady();layout();const W=sc._w,H=sc._h;
   // 光線③ 對準（物側）焦點入射 → 平行主軸射出（物理重點列了三條主光線，原本只畫兩條）
   // 入射線延長通過 x=−F（凸透鏡為物側焦點；凹透鏡 F<0，即對準另一側焦點），打到透鏡的高度恰為像高 ih
   if(isFinite(q)){ray(O.x,O.y,0,ih,'#7b4bd6');ray(0,ih,xR,ih,'#7b4bd6');if(q<0)ray(0,ih,q,ih,'#7b4bd6',[4,4]);}
-  if(Math.abs(q)<200)arrowObj(q,ih,q>0?'#c0392b':'#e07a3c','像'+(q>0?'(實)':'(虛)'),q<0);
+  if(isFinite(q)){
+    const xMin=-AX/SCALE, xMax=(W-AX)/SCALE, yMax=(H/2)/SCALE;
+    if(q>xMin && q<xMax && Math.abs(ih)<yMax) arrowObj(q,ih,q>0?'#c0392b':'#e07a3c','像'+(q>0?'(實)':'(虛)'),q<0);
+    else{ sc.fillStyle=q>0?'#c0392b':'#e07a3c';sc.font='600 12px system-ui';sc.textAlign=q>0?'right':'left';
+      sc.fillText((q>0?'像在右方畫面外 →':'← 虛像在左方畫面外')+`（q=${q.toFixed(0)} cm）`,q>0?W-8:8,18);sc.textAlign='left';}
+  }else{ sc.fillStyle='#5a6b85';sc.font='600 12px system-ui';sc.textAlign='right';sc.fillText('p = f：折射光平行射出，成像於無窮遠',W-8,18);sc.textAlign='left'; }
   drawStats(q,m);
   updateFormula();
 }
