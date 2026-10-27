@@ -149,7 +149,7 @@ function drawBeat(){const W=bc._w,H=bc._h,mid=H/2;bc.fillStyle='#080c16';bc.fill
     bc.strokeStyle='#7CFFB2';bc.setLineDash([3,3]);
     bc.beginPath();bc.moveTo(xb,12);bc.lineTo(xb,H-12);bc.stroke();bc.setLineDash([]);
     bc.fillStyle='#7CFFB2';bc.font='11px system-ui';bc.textAlign='left';
-    bc.fillText('1 拍 ('+Tb.toFixed(3)+'s)',12,32);
+    bc.textAlign='right';bc.fillText('← 1 拍 ('+Tb.toFixed(3)+'s)',Math.max(110,Math.min(xb-4,W-6)),H-10);bc.textAlign='left';   // 放在拍線旁的底部，避開左上角的圖標題
   }
   document.getElementById('sub2').textContent='拍頻 '+df.toFixed(1)+' Hz';}
 
