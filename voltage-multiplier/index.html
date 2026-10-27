@@ -166,22 +166,22 @@
           </tr>
           <tr>
             <td>升壓物理機制</td>
-            <td><b>LC 共振能量互換</b>：當頻率達 $f_0$ 時容抗與感抗等大反向抵消 ($X_L = X_C$)，迴路阻抗降至最小 $R$，電流大增使得電容電壓累積至 $Q\cdot V_s$。</td>
+            <td><b>LC 共振能量互換</b>：當頻率達 f₀ 時容抗與感抗等大反向抵消 （X_L = X_C），迴路阻抗降至最小 R，電流大增使得電容電壓累積至 Q·Vs。</td>
             <td><b>二極體電荷接力泵送</b>：利用二極體單向導通性，正負半週交替時將電荷逐級向上「接力」推升，電容串接疊加直流電位差。</td>
           </tr>
           <tr>
             <td>輸出電壓形式</td>
-            <td><b>高頻交流電 (AC)</b>，頻率為輸入交流頻率 $f_0$。</td>
+            <td><b>交流電（AC）</b>，和電源同頻率。</td>
             <td><b>高壓直流電 (DC)</b>，帶有微小漣波。</td>
           </tr>
           <tr>
             <td>承受負載能力</td>
-            <td><b>極度敏感</b>：外接負載等效於大幅增加迴路損耗，會迅速拉低品質因數 $Q$，使共振升壓幅度急遽縮小。</td>
-            <td><b>中等</b>：可持續輸出直流微安至毫安電流，但壓降與漣波隨級數劇增（$\Delta V \propto I n^3$）。</td>
+            <td><b>極度敏感</b>：外接負載等效於大幅增加迴路損耗，會迅速拉低品質因數 Q，使共振升壓幅度急遽縮小。</td>
+            <td><b>中等</b>：可持續輸出直流微安至毫安電流，但壓降與漣波隨級數劇增（ΔV ∝ I·n³）。</td>
           </tr>
           <tr>
             <td>典型工程用途</td>
-            <td>收音機射頻選台、共振變壓器、特斯拉線圈 (Tesla Coil)、無線電感應加熱、Qi 無線充電。</td>
+            <td>收音機射頻選台、共振變壓器、特斯拉線圈 (Tesla Coil)、Qi 無線充電。</td>
             <td>影印機與雷射印表機碳粉吸附高壓、陰極射線管 (CRT)、X 光機高壓源、粒子加速器 (Cockcroft–Walton 加速器)、電蚊拍。</td>
           </tr>
         </tbody>
@@ -192,7 +192,7 @@
   <p class="ext-links" style="margin-top:16px;font-size:.9rem;color:var(--muted)">
     <a href="../lc-oscillation/">← 回到「LC 振盪電路」</a>
   </p>
-  <footer>純前端 HTML5 / Canvas 物理模擬。依微分方程數值分析與傳輸方程即時解析。</footer>
+  <footer>純前端 HTML5 / Canvas 物理模擬。RLC 以微分方程數值積分（RK4）、倍壓電路以節點分析（後退尤拉法）即時計算。</footer>
 </div>
 
 <script>
@@ -355,7 +355,7 @@ function updateFormula() {
     html += frow('電容電壓振幅 V_C', 'I / (ωC)', `${fmtSig(rlc.I,3)} / (${fmtSig(rlc.w,3)}·${fmtSig(C_SI,3)})`, fmtSig(rlc.VC, 3) + ' V');
     html += frow('電感電壓振幅 V_L', 'I · ωL', `${fmtSig(rlc.I,3)} · ${fmtSig(rlc.w,3)}·${fmtSig(L_SI,3)}`, fmtSig(rlc.VL, 3) + ' V');
     html += frow('電壓增益 Gain', 'V_C / Vs', `${fmtSig(rlc.VC,3)} / ${fmtSig(state.Vs,3)}`, fmtSig(rlc.gain, 3) + ' 倍');
-    html += `<div class="frel">📈 <b>物理本質：</b>當 $f = f_0$ 時，電感感抗與電容容抗完全抵消（相位差 180° 相消），整條迴路阻抗降至極小純電阻 $R$。迴路湧入超大電流 $I = V_s/R$，進而在電容與電感端累積出<b>高達 Q·Vs 的高壓</b>！</div>`;
+    html += `<div class="frel">📈 <b>物理本質：</b>當 f = f₀ 時，電感感抗與電容容抗完全抵消（兩者相位差 180°，互相抵消），整條迴路阻抗降至極小純電阻 R。迴路電流達到最大 I = Vs/R，進而在電容與電感端累積出<b>高達 Q·Vs 的高壓</b>！</div>`;
     el.innerHTML = html;
   } else {
     const n = state.n;
@@ -376,7 +376,7 @@ function updateFormula() {
     html += frow('有載理論壓降 ΔV', '(I/fC)(2n³/3 + n²/2 − n/6)', isFinite(state.RL) ? `(${fmtSig(I,3)} / (${fmtSig(state.f,3)}·${fmtSig(C_SI,3)})) · ${fmtSig(2*n*n*n/3 + n*n/2 - n/6, 3)}` : '空載無壓降', fmtSig(dV, 3) + ' V');
     html += frow('有載漣波峰對峰 δV', '(I/fC) · n(n+1)/2', isFinite(state.RL) ? `(${fmtSig(I,3)} / (${fmtSig(state.f,3)}·${fmtSig(C_SI,3)})) · ${(n*(n+1)/2)}` : '空載無漣波', fmtSig(rip, 3) + ' V');
     html += frow('目前模擬即時輸出', '節點分析數值解 v(yₙ)', '後退尤拉高斯消去', fmtSig(currVout, 3) + ' V');
-    html += `<div class="frel">📘 <b>近似式：</b>Kuffel、Zaengl、Kuffel《High Voltage Engineering: Fundamentals》。負載越大（電流 I 增加）或級數 n 越多，內部壓降以 $n^3$、漣波以 $n^2$ 劇烈惡化，因此大功率高壓電路通常採用高頻交流電 (如數十 kHz) 並加大電容。</div>`;
+    html += `<div class="frel">📘 <b>近似式：</b>Kuffel、Zaengl、Kuffel《High Voltage Engineering: Fundamentals》。負載越大（電流 I 增加）或級數 n 越多，內部壓降以 n³、漣波以 n² 劇烈惡化，因此大功率高壓電路通常採用高頻交流電 (如數十 kHz) 並加大電容。</div>`;
     el.innerHTML = html;
   }
 }
