@@ -39,7 +39,8 @@
   .note b{color:var(--txt)}.note code{background:var(--bg2);padding:1px 6px;border-radius:5px;color:var(--green);font-size:.85em}
   footer{color:var(--muted);font-size:.78rem;margin-top:24px;text-align:center;line-height:1.7}
 
-  @media(max-width:600px){
+  /* 窄螢幕與手機橫放（畫面矮）：數值卡與按鈕排在畫布上下，不疊在畫布上（橫放時按鈕曾蓋住「色散角」） */
+  @media(max-width:600px),(max-height:500px){
     .scene-wrap{display:flex;flex-direction:column}
     .hud{position:static;order:1;padding:10px 12px;background:var(--panel);border-bottom:1px solid var(--line);width:100%;pointer-events:auto;justify-content:center}
     #scene{order:2}
