@@ -46,10 +46,7 @@
        轉軸上<b>三片換向器</b>和<b>兩支電刷</b>。各廠牌細節不同，這個模型<b>不代表任何特定產品的規格</b>，數值是示意單位。</p>
   </header>
 
-  <div class="grid">
-    <div class="scene-wrap"><canvas id="scene" style="aspect-ratio:1.15"></canvas><div class="cap">剖面圖（慢動作）。換向器實際在轉軸的一端，這裡畫在同一個剖面方便對照。</div></div>
-    <div class="scene-wrap"><canvas id="graph" style="aspect-ratio:1.4"></canvas><div class="cap">力矩–轉角圖：三個極各自的力矩（細線）與總力矩（粗線）；淡色區＝電刷同時碰到兩片換向片（換向中）。</div></div>
-  </div>
+  <div class="scene-wrap"><canvas id="scene" style="aspect-ratio:1.15"></canvas><div class="cap">剖面圖（慢動作）。換向器實際在轉軸的一端，這裡畫在同一個剖面方便對照。</div></div>
   <div class="status" id="status"></div>
 
   <div class="row">
@@ -64,6 +61,8 @@
     <div class="sld"><label><span>電壓 V</span><span class="v" id="v_V"></span></label><input type="range" id="r_V" min="0" max="6" step="0.5"></div>
     <div class="sld"><label><span>轉角 θ（暫停時可拖動）</span><span class="v" id="v_th"></span></label><input type="range" id="r_th" min="0" max="360" step="1"></div>
   </div>
+
+  <div class="scene-wrap" style="margin-top:14px"><canvas id="graph" style="aspect-ratio:1.8"></canvas><div class="cap">力矩–轉角圖：三個極各自的力矩（細線）與總力矩（粗線）；淡色區＝電刷同時碰到兩片換向片（換向中）。</div></div>
 
   <div class="formula" id="formula"></div>
 
@@ -149,7 +148,7 @@ const state = { theta: 0.3, V: 3, polarity: 1, playing: true, fixed: false, omeg
 window.state = state;
 let sc, gc, curve = null, curveKey = '', fixedCoil = null;
 const TAU3 = 2 * Math.PI / 3;
-function setup() { sc = S.fit(document.getElementById('scene'), 1.15); gc = S.fit(document.getElementById('graph'), 1.4); }
+function setup() { sc = S.fit(document.getElementById('scene'), 1.15); gc = S.fit(document.getElementById('graph'), 1.8); }
 function cur() {   // 目前的電流與力矩：一般模式用換向器；固定接線時電流維持在拿掉換向器那一刻
   if (!state.fixed) return motorState(state.theta, { V: state.V }, state.polarity);
   const coil = fixedCoil || motorState(0, { V: state.V }, state.polarity).coil;

@@ -25,6 +25,7 @@ export function createView(THREE, container, opts = {}) {
   }
   view.ok = true;
   renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));   // 手機上限 2 倍，省電
+  renderer.domElement.dataset.plDprCap = '2';                          // 告訴 App 的版面體檢：像素比上限 2 是刻意的（省電、降溫）
   renderer.setClearColor(o.background, 1);
   const canvas = renderer.domElement;
   canvas.style.display = 'block'; canvas.style.width = '100%'; canvas.style.touchAction = 'none';
