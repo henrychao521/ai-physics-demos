@@ -97,7 +97,7 @@
           <span>📈 P–V 狀態圖與熱力學循環</span>
           <span style="font-size:12px;color:#fca5a5">閉合循環做功</span>
         </div>
-        <canvas id="cvPV" style="aspect-ratio:1.35"></canvas>
+        <canvas id="cvPV" style="aspect-ratio:1.8"></canvas>
       </div>
 
       <div class="card">
@@ -105,7 +105,7 @@
           <span>📊 能量流動與熱效率比較</span>
           <span style="font-size:12px;color:#7dd3fc">η vs 卡諾效率</span>
         </div>
-        <canvas id="cvBar" style="aspect-ratio:1.35"></canvas>
+        <canvas id="cvBar" style="aspect-ratio:1.8"></canvas>
       </div>
     </div>
   </div>
@@ -419,8 +419,8 @@ function setupCanvases() {
   const cvB = document.getElementById('cvBar');
 
   if (cvE) ctxEngine = S.fit(cvE, 1.25);
-  if (cvP) ctxPV = S.fit(cvP, 1.35);
-  if (cvB) ctxBar = S.fit(cvB, 1.35);
+  if (cvP) ctxPV = S.fit(cvP, 1.8);   // 比引擎剖面扁：橫放分欄縮小剖面後，主畫布仍是剖面
+  if (cvB) ctxBar = S.fit(cvB, 1.8);
 }
 
 function animLoop(timestamp) {
