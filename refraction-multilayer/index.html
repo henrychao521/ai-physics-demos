@@ -1,0 +1,264 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>多層介質折射 ｜ 每個界面都用司乃耳定律・n·sinθ 不變・全反射</title>
+<meta name="description" content="多層介質折射互動模擬：空氣、水、冰、玻璃、壓克力、鑽石等 2–5 層平行介質，每個界面都用司乃耳定律 n₁sinθ₁=n₂sinθ₂，n·sinθ 在每一層都不變；找出在哪個界面發生全反射，並看菲涅耳部分反射。">
+<link rel="icon" href="../assets/favicon.svg" type="image/svg+xml">
+<link rel="stylesheet" href="../assets/site.css">
+<script src="../assets/sim.js"></script>
+<script defer src="../assets/nav.js"></script>
+<style>
+  *{box-sizing:border-box}
+  html,body{margin:0;padding:0;background:var(--bg);color:var(--txt);font-family:"Noto Sans TC","PingFang TC","Microsoft JhengHei",system-ui,sans-serif}
+  a{color:var(--accent)}
+  .wrap{max-width:1120px;margin:0 auto;padding:18px 16px 60px}
+  header h1{font-size:1.5rem;margin:.2em 0}
+  header p{color:var(--muted);margin:.2em 0 1em;line-height:1.6}
+  .badge{display:inline-block;background:var(--panel2);border:1px solid var(--line);color:var(--muted);font-size:.72rem;padding:2px 8px;border-radius:99px;margin-right:6px}
+  .scene-wrap{border-radius:16px;overflow:hidden;border:1px solid var(--line);box-shadow:0 18px 50px rgba(0,0,0,.45)}
+  #scene{display:block;width:100%;touch-action:none}
+  .status{margin-top:10px;padding:9px 12px;border-radius:10px;background:var(--panel);border:1px solid var(--line);font-size:.9rem;line-height:1.6}
+  .status b.tir{color:var(--rose)}
+  .row{display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-top:12px}
+  .row span.lab{color:var(--muted);font-size:.82rem}
+  .pbtn{background:var(--panel2);color:var(--txt);border:1px solid var(--line);min-height:44px;padding:8px 13px;border-radius:10px;cursor:pointer;font-size:.86rem;font-family:inherit}
+  .pbtn.on{background:var(--accent);color:#04121c;border-color:var(--accent);font-weight:700}
+  .layers{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:8px;margin-top:12px}
+  .layers label{display:flex;flex-direction:column;gap:4px;font-size:.8rem;color:var(--muted);background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:8px}
+  .layers select{min-height:40px;background:var(--panel2);color:var(--txt);border:1px solid var(--line);border-radius:8px;font-size:.9rem;font-family:inherit}
+  .bar{display:flex;gap:14px;flex-wrap:wrap;align-items:flex-end;background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:14px 16px;margin-top:14px}
+  .sld{flex:1;min-width:160px}
+  .sld label{display:flex;justify-content:space-between;font-size:.82rem;color:var(--muted);margin-bottom:5px}
+  .sld label .v{color:var(--accent);font-variant-numeric:tabular-nums;font-weight:700}
+  .sld input{width:100%;accent-color:var(--accent);min-height:32px}
+  table{width:100%;border-collapse:collapse;margin-top:14px;font-size:.86rem;font-variant-numeric:tabular-nums}
+  th,td{border-bottom:1px solid var(--line);padding:7px 6px;text-align:left}
+  th{color:var(--muted);font-weight:600}
+  .tblwrap{overflow-x:auto}
+  .note{background:var(--panel);border-left:3px solid var(--accent2);border-radius:8px;padding:12px 14px;color:var(--muted);font-size:.86rem;line-height:1.7;margin-top:14px}
+  .note b{color:var(--txt)}.note code{background:var(--bg2);padding:1px 6px;border-radius:5px;color:var(--green);font-size:.85em}
+  footer{color:var(--muted);font-size:.78rem;margin-top:24px;text-align:center;line-height:1.7}
+</style>
+</head>
+<body data-demo="多層介質折射">
+<div class="wrap">
+  <header>
+    <span class="badge">光學・折射</span>
+    <h1>多層介質的折射（司乃耳定律逐層計算）</h1>
+    <p>光穿過好幾層平行的介質時，每個界面都遵守<b>司乃耳定律 n₁·sinθ₁ = n₂·sinθ₂</b>。因為界面互相平行，<b>n·sinθ 在每一層都一樣</b>（不變量），
+       所以最後的方向只由第一層和最後一層決定；若某個界面上 n·sinθ 大於下一層的 n，光就在那裡<b>全反射</b>。</p>
+  </header>
+
+  <div class="scene-wrap"><canvas id="scene" style="width:100%;aspect-ratio:1.5"></canvas></div>
+  <div class="status" id="status"></div>
+
+  <div class="row"><span class="lab">層數：</span>
+    <button class="pbtn" data-n="2">2 層</button><button class="pbtn" data-n="3">3 層</button><button class="pbtn" data-n="4">4 層</button><button class="pbtn" data-n="5">5 層</button>
+  </div>
+  <div class="row"><span class="lab">情境：</span>
+    <button class="pbtn" data-preset="aw">空氣→水→玻璃→水→空氣</button>
+    <button class="pbtn" data-preset="tir">玻璃→水→空氣（找全反射）</button>
+    <button class="pbtn" data-preset="dia">空氣→鑽石→空氣</button>
+    <button class="pbtn" data-preset="ice">冰層上的水</button>
+  </div>
+  <div class="layers" id="layers"></div>
+
+  <div class="bar">
+    <div class="sld"><label><span>入射角 θ₀（第 0 層）</span><span class="v" id="v_theta"></span></label><input type="range" id="r_theta" min="0" max="89" step="1"></div>
+    <div class="sld"><label><span>每層厚度（畫面）</span><span class="v" id="v_thick"></span></label><input type="range" id="r_thick" min="1" max="5" step="0.5"></div>
+  </div>
+
+  <div class="formula" id="formula"></div>
+
+  <div class="tblwrap"><table><thead><tr><th>層</th><th>介質</th><th>n</th><th>該層角度 θ</th><th>n·sinθ</th></tr></thead><tbody id="tbody"></tbody></table></div>
+
+  <div class="note">
+    <b>物理重點：</b>每個界面都用司乃耳定律 <code>n_i·sinθ_i = n_{i+1}·sinθ_{i+1}</code>。界面互相平行時，前一層的折射角就是下一個界面的入射角，所以 <code>n·sinθ</code> 一路<b>不變</b>：
+    最後一層的角度只看第一層與最後一層（頭尾都是空氣時，出射光和入射光<b>平行</b>，中間的層只造成<b>側移</b>）。
+    <b>全反射</b>只會發生在「光密 → 光疏」的界面，條件是 <code>n·sinθ &gt; n_{下一層}</code>，臨界角 <code>sinθc = n₂/n₁</code>。
+    每個界面也有一小部分光被反射（菲涅耳反射率，垂直入射空氣→玻璃約 4%），所以層數越多、穿透越少。
+    海市蜃樓與光纖都是同一個原理：連續變化的折射率可以看成很多很薄的層。
+  </div>
+  <div class="note">
+    <b>折射率出處：</b>鈉黃光（589 nm）附近的常見值，頁面四捨五入到小數兩位（空氣 1.0003）。玻璃取 SCHOTT 光學玻璃型錄（N-BK7 n_d = 1.5168、F2 n_d = 1.6200），
+    水 1.333、冰 1.309、乙醇 1.361、PMMA（壓克力）1.491、鑽石 2.417，原始文獻可在 refractiveindex.info 資料庫查到。折射率會隨波長與溫度略有變化。
+  </div>
+  <p style="margin-top:14px;font-size:.9rem"><a href="../refraction/">← 回到「折射與全反射」</a>　<a href="../optical-fiber/">光纖與熔接 →</a></p>
+
+  <footer>純前端 HTML / Canvas（SIM 工具庫）。角度由司乃耳定律逐層精確計算；部分反射強度由菲涅耳公式（非偏振光平均）計算，不計層內多次反射。</footer>
+</div>
+
+<script>
+/*PHYS:BEGIN*/
+// 有效數字格式（公式面板、數值卡共用；驗收會用同一個函式比對畫面上的數字）
+function fmtSig(v, n) {
+  n = n || 3;
+  if (typeof v !== 'number' || !isFinite(v)) return String(v);
+  if (v === 0) return '0';
+  const a = Math.abs(v);
+  if (a >= 1e5 || a < 1e-3) {
+    let e = Math.floor(Math.log10(a)), m = v / Math.pow(10, e);
+    let ms = m.toFixed(n - 1);
+    if (Math.abs(parseFloat(ms)) >= 10) { e += 1; ms = (v / Math.pow(10, e)).toFixed(n - 1); }
+    const SUP = { '-': '⁻', '0': '⁰', '1': '¹', '2': '²', '3': '³', '4': '⁴', '5': '⁵', '6': '⁶', '7': '⁷', '8': '⁸', '9': '⁹' };
+    return ms + '×10' + String(e).split('').map(ch => SUP[ch]).join('');
+  }
+  const s = Number(v.toPrecision(n));
+  return a >= Math.pow(10, n - 1) ? String(Math.round(s)) : s.toPrecision(n);
+}
+
+// 多層介質折射：平行的多層介質，每個界面都用司乃耳定律 n_i·sinθ_i = n_{i+1}·sinθ_{i+1}。
+// 因為界面互相平行，n·sinθ 在每一層都一樣（「不變量」），所以最後一層的折射角只由第一層與最後一層決定，中間層只改變路徑（側移）。
+// 某個界面若 n_i·sinθ_i > n_{i+1}（sinθ 會 > 1）就發生全反射，光不再往下走。
+// 折射率（鈉黃光 589 nm 附近，四捨五入到小數兩位；空氣 1.0003）：玻璃取 SCHOTT 光學玻璃型錄 N-BK7 n_d=1.5168、F2 n_d=1.6200；
+// 水 1.333（Hale & Querry 1973）、冰 1.309（Warren 1984）、乙醇 1.361、PMMA 1.491（Sultanova 2009）、鑽石 2.417，皆可在 refractiveindex.info 查到原始文獻。
+const MEDIA = [
+  { id: 'air', name: '空氣', n: 1.0003 }, { id: 'ice', name: '冰', n: 1.31 }, { id: 'water', name: '水', n: 1.33 },
+  { id: 'ethanol', name: '酒精（乙醇）', n: 1.36 }, { id: 'acrylic', name: '壓克力', n: 1.49 }, { id: 'crown', name: '冕牌玻璃（BK7）', n: 1.52 },
+  { id: 'flint', name: '火石玻璃（F2）', n: 1.62 }, { id: 'diamond', name: '鑽石', n: 2.42 },
+];
+function snellChain(ns, theta0Deg) {   // ns：各層折射率（第 0 層是入射介質）
+  const inv = ns[0] * Math.sin(theta0Deg * Math.PI / 180), angles = [theta0Deg];
+  for (let i = 1; i < ns.length; i++) {
+    const s = inv / ns[i];
+    if (s > 1) return { angles, tir: i - 1, invariant: inv };     // 在第 i−1 層與第 i 層的界面全反射
+    angles.push(Math.asin(s) * 180 / Math.PI);
+  }
+  return { angles, tir: -1, invariant: inv };
+}
+function criticalDeg(n1, n2) { return n2 < n1 ? Math.asin(n2 / n1) * 180 / Math.PI : NaN; }
+// 菲涅耳反射率（非偏振光取 s、p 平均）；全反射時回傳 1
+function fresnelR(n1, n2, thetaDeg) {
+  const ti = thetaDeg * Math.PI / 180, s = n1 * Math.sin(ti) / n2;
+  if (s >= 1) return 1;
+  const tt = Math.asin(s), ci = Math.cos(ti), ct = Math.cos(tt);
+  const rs = (n1 * ci - n2 * ct) / (n1 * ci + n2 * ct), rp = (n1 * ct - n2 * ci) / (n1 * ct + n2 * ci);
+  return (rs * rs + rp * rp) / 2;
+}
+// 每層厚度 d（同單位）下，光線在各層的水平前進量與總側移（相對於「沒有中間層、直接用最後一層」以外，這裡只回傳每層水平位移）
+function layerShifts(ns, theta0Deg, ds) {
+  const r = snellChain(ns, theta0Deg), out = [];
+  for (let i = 0; i < ds.length && i < r.angles.length; i++) out.push(ds[i] * Math.tan(r.angles[i] * Math.PI / 180));
+  return { shifts: out, total: out.reduce((a, b) => a + b, 0), chain: r };
+}
+// 穿透率連乘（每個界面 1 − R，不計多次反射）
+function chainTransmission(ns, theta0Deg) {
+  const r = snellChain(ns, theta0Deg); let T = 1;
+  for (let i = 0; i + 1 < r.angles.length; i++) T *= 1 - fresnelR(ns[i], ns[i + 1], r.angles[i]);
+  if (r.tir >= 0) T = 0;
+  return T;
+}
+
+/*PHYS:END*/
+</script>
+<script>
+const S = SIM;
+const state = { layers: ['air', 'water', 'crown', 'water', 'air'], theta: 40, thick: 5 };
+window.state = state;
+const PRE = {
+  aw: { layers: ['air', 'water', 'crown', 'water', 'air'], theta: 40 },
+  tir: { layers: ['crown', 'water', 'air'], theta: 60 },
+  dia: { layers: ['air', 'diamond', 'air'], theta: 50 },
+  ice: { layers: ['air', 'water', 'ice', 'air'], theta: 45 },
+};
+function med(id) { return MEDIA.find(m => m.id === id) || MEDIA[0]; }
+function nsOf() { return state.layers.map(id => med(id).n); }
+let sc;
+function setupCanvas() { sc = S.fit(document.getElementById('scene'), 1.5); }
+function layerColor(n) { const t = Math.min(1, (n - 1) / 1.5); return `rgba(${Math.round(76 - 40 * t)},${Math.round(150 + 20 * t)},255,${0.06 + 0.42 * t})`; }
+
+function draw() {
+  if (!sc) return;
+  const W = sc._w, H = sc._h, ns = nsOf(), L = ns.length, ch = sc;
+  S.scene(ch, { skyTop: '#0c1430', skyBottom: '#060a18', vignette: 'rgba(0,0,0,.4)' }, {});
+  const h = (H / L) * (state.thick / 5);
+  const y0 = (H - h * L) / 2;
+  for (let i = 0; i < L; i++) {
+    ch.fillStyle = layerColor(ns[i]); ch.fillRect(0, y0 + i * h, W, h);
+    ch.fillStyle = '#c9d6ea'; ch.font = '12px system-ui';
+    ch.fillText(`${i}　${med(state.layers[i]).name}　n=${ns[i]}`, 8, y0 + i * h + 16);
+    if (i > 0) { ch.strokeStyle = 'rgba(200,215,240,.45)'; ch.lineWidth = 1; ch.beginPath(); ch.moveTo(0, y0 + i * h); ch.lineTo(W, y0 + i * h); ch.stroke(); }
+  }
+  const r = snellChain(ns, state.theta);
+  let x = W * 0.12, y = y0;
+  const ray = (x1, y1, x2, y2, a, w) => { ch.strokeStyle = `rgba(255,206,84,${a})`; ch.lineWidth = w; ch.beginPath(); ch.moveTo(x1, y1); ch.lineTo(x2, y2); ch.stroke(); };
+  for (let i = 0; i < r.angles.length; i++) {
+    const a = r.angles[i] * Math.PI / 180, nx = x + h * Math.tan(a), ny = y + h;
+    ray(x, y, nx, ny, 1, 3);
+    if (i < r.angles.length - 1 || r.tir === i) {                       // 畫到第 i 層底部的界面
+      ch.setLineDash([4, 4]); ch.strokeStyle = 'rgba(255,255,255,.5)'; ch.lineWidth = 1;
+      ch.beginPath(); ch.moveTo(nx, ny - 28); ch.lineTo(nx, ny + 28); ch.stroke(); ch.setLineDash([]);
+      const R = r.tir === i ? 1 : fresnelR(ns[i], ns[i + 1], r.angles[i]);
+      const rx = nx + h * 0.45 * Math.tan(a), ry = ny - h * 0.45;
+      ray(nx, ny, rx, ry, r.tir === i ? 1 : Math.max(0.12, Math.min(0.8, R * 6)), r.tir === i ? 3 : 1.5);
+      ch.fillStyle = '#ffce54'; ch.font = '12px system-ui';
+      ch.fillText(`θ${i}=${fmtSig(r.angles[i], 3)}°`, nx + 6, ny - 8);
+      if (r.tir === i) { ch.fillStyle = '#ff6b9d'; ch.font = 'bold 13px system-ui'; ch.fillText('全反射', nx + 6, ny + 16); }
+    }
+    x = nx; y = ny;
+    if (r.tir === i) break;
+  }
+}
+
+function updateFormula() {
+  const ns = nsOf(), r = snellChain(ns, state.theta);
+  const row = (n, sym, sub, val) => `<div class="frow"><span class="fname">${n}</span><span class="fsym">${sym}</span><span class="fsub">= ${sub}</span><span class="fval">${val}</span></div>`;
+  let html = '<h4>📐 計算公式（即時代入）</h4>';
+  html += row('不變量', 'n₀·sinθ₀', `${ns[0]}×sin${fmtSig(state.theta, 3)}°`, fmtSig(r.invariant, 3));
+  for (let i = 0; i + 1 < ns.length; i++) {
+    if (i + 1 < r.angles.length) {
+      html += row(`界面 ${i}→${i + 1}`, `n${i}·sinθ${i} = n${i + 1}·sinθ${i + 1}`, `${ns[i]}×sin${fmtSig(r.angles[i], 3)}° = ${ns[i + 1]}×sinθ${i + 1}`, `θ${i + 1} = ${fmtSig(r.angles[i + 1], 3)}°`);
+    } else if (r.tir === i) {
+      const c = criticalDeg(ns[i], ns[i + 1]);
+      html += row(`界面 ${i}→${i + 1}`, `n·sinθ > n${i + 1}`, `${fmtSig(r.invariant, 3)} > ${ns[i + 1]}`, `全反射（臨界角 ${fmtSig(c, 3)}°）`);
+      break;
+    }
+  }
+  html += row('總穿透率', 'Π(1 − R)', '每個界面扣掉菲涅耳反射（不計多次反射）', fmtSig(chainTransmission(ns, state.theta) * 100, 3) + ' %');
+  html += `<div class="frel">📈 n·sinθ 每一層都等於 ${fmtSig(r.invariant, 3)}；頭尾同一種介質時出射角＝入射角。</div>`;
+  document.getElementById('formula').innerHTML = html;
+  const tb = document.getElementById('tbody'); let t = '';
+  for (let i = 0; i < ns.length; i++) {
+    const reached = i < r.angles.length;
+    t += `<tr><td>${i}</td><td>${med(state.layers[i]).name}</td><td>${ns[i]}</td><td>${reached ? fmtSig(r.angles[i], 3) + '°' : '（光到不了）'}</td><td>${reached ? fmtSig(ns[i] * Math.sin(r.angles[i] * Math.PI / 180), 3) : '—'}</td></tr>`;
+  }
+  tb.innerHTML = t;
+  document.getElementById('status').innerHTML = r.tir >= 0
+    ? `<b class="tir">第 ${r.tir} 層與第 ${r.tir + 1} 層的界面發生全反射</b>：n·sinθ = ${fmtSig(r.invariant, 3)} 大於 ${med(state.layers[r.tir + 1]).name} 的 n = ${ns[r.tir + 1]}。`
+    : `光穿過全部 ${ns.length} 層，出射角 ${fmtSig(r.angles[r.angles.length - 1], 3)}°（入射角 ${fmtSig(state.theta, 3)}°）。`;
+}
+
+function renderLayers() {
+  const box = document.getElementById('layers'); box.innerHTML = '';
+  state.layers.forEach((id, i) => {
+    const lab = document.createElement('label');
+    lab.innerHTML = `第 ${i} 層${i === 0 ? '（入射）' : ''}<select>${MEDIA.map(m => `<option value="${m.id}"${m.id === id ? ' selected' : ''}>${m.name}（${m.n}）</option>`).join('')}</select>`;
+    lab.querySelector('select').addEventListener('change', e => { state.layers[i] = e.target.value; refresh(); });
+    box.appendChild(lab);
+  });
+  document.querySelectorAll('[data-n]').forEach(b => b.classList.toggle('on', +b.dataset.n === state.layers.length));
+}
+
+function refresh() {
+  document.getElementById('r_theta').value = state.theta; document.getElementById('v_theta').textContent = fmtSig(state.theta, 3) + '°';
+  document.getElementById('r_thick').value = state.thick; document.getElementById('v_thick').textContent = state.thick;
+  const sel = document.querySelectorAll('#layers select');
+  if (sel.length !== state.layers.length || [...sel].some((s, i) => s.value !== state.layers[i])) renderLayers();
+  updateFormula(); draw();
+}
+document.getElementById('r_theta').addEventListener('input', e => { state.theta = +e.target.value; refresh(); });
+document.getElementById('r_thick').addEventListener('input', e => { state.thick = +e.target.value; refresh(); });
+document.querySelectorAll('[data-n]').forEach(b => b.addEventListener('click', () => {
+  const n = +b.dataset.n; while (state.layers.length < n) state.layers.push('air'); state.layers.length = n; refresh();
+}));
+document.querySelectorAll('[data-preset]').forEach(b => b.addEventListener('click', () => {
+  const p = PRE[b.dataset.preset]; state.layers = p.layers.slice(); state.theta = p.theta; refresh();
+}));
+window.addEventListener('load', () => { setupCanvas(); refresh(); });
+window.addEventListener('resize', () => { setupCanvas(); draw(); });
+</script>
+</body>
+</html>
+
