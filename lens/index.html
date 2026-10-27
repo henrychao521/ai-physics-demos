@@ -70,7 +70,7 @@
   <div class="formula" id="formula"></div>
 
   <div class="note">
-    <b>物理重點：</b>三主光線：①平行軸的光經透鏡<b>折向焦點</b>；②通過<b>透鏡中心</b>的光直行；③通過<b>焦點</b>的光經透鏡後<b>平行射出</b>。
+    <b>物理重點：</b>三條主光線——<b>凸透鏡</b>：①平行主軸的光折射後<b>通過另一側焦點</b>；②通過<b>透鏡中心</b>的光直行；③通過物側焦點的光折射後<b>平行主軸</b>。<b>凹透鏡</b>：①平行主軸的光折射後發散，其<b>反向延長線通過物側焦點</b>；②通過中心直行；③<b>對準另一側焦點</b>入射的光折射後平行主軸。虛像由反向延長線（虛線）相交而成。
     交會處就是像。成像公式 <code>1/f = 1/p + 1/q</code>，放大率 <code>m = −q/p</code>（負號＝倒立）。q&gt;0 為<b>實像</b>（可投影、倒立）；q&lt;0 為<b>虛像</b>（眼睛延長線看到、正立）。
   </div>
 
@@ -120,7 +120,7 @@ function updateFormula(){
     + frow('像距 q','1/f = 1/p + 1/q → q = p·f /(p−f)',`${p}·(${F}) / (${p}−(${F}))`, qStr)
     + frow('放大率 m','m = −q / p',`−(${isFinite(q)?q.toFixed(1):'∞'}) / ${p}`, mStr+'（'+kind+'）')
     + frow('像高 h′','h′ = m · h',`${mStr}·${h}`, ihStr)
-    + `<div class="frel">📈 <b>1/q = 1/f − 1/p</b>：物距 p 越靠近焦距 f，像距 |q| 與放大率 |m| 越大　·　<b>p = f 時 q→∞</b>（成像於無窮遠）　·　<b>q>0 為實像（倒立可投影）、q<0 為虛像（正立放大鏡）</b>；凹透鏡 f<0 恆得縮小正立虛像。</div>`;
+    + `<div class="frel">📈 <b>1/q = 1/f − 1/p</b>：<b>凸透鏡</b>物距 p 越靠近 f，|q| 與 |m| 越大，<b>p = f 時 q→∞</b>（成像於無窮遠），p &lt; f 成正立放大虛像（放大鏡）　·　<b>q&gt;0 實像（倒立、可投影）、q&lt;0 虛像</b>　·　<b>凹透鏡</b> f&lt;0 恆得正立縮小虛像（|m|&lt;1）。</div>`;
 }
 
 let sc,SCALE=1,AX=0,AY=0;
@@ -158,7 +158,10 @@ function draw(){setupReady();layout();const W=sc._w,H=sc._h;
   // 像
   // 光線③ 對準（物側）焦點入射 → 平行主軸射出（物理重點列了三條主光線，原本只畫兩條）
   // 入射線延長通過 x=−F（凸透鏡為物側焦點；凹透鏡 F<0，即對準另一側焦點），打到透鏡的高度恰為像高 ih
-  if(isFinite(q)){ray(O.x,O.y,0,ih,'#7b4bd6');ray(0,ih,xR,ih,'#7b4bd6');if(q<0)ray(0,ih,q,ih,'#7b4bd6',[4,4]);}
+  if(isFinite(q)){ray(O.x,O.y,0,ih,'#7b4bd6');ray(0,ih,xR,ih,'#7b4bd6');if(q<0)ray(0,ih,q,ih,'#7b4bd6',[4,4]);
+    if(convex&&p<F)ray(-F,0,O.x,O.y,'#7b4bd6',[4,4]);   // 放大鏡：入射線的反向延長通過物側焦點
+    if(!convex)ray(0,ih,-F,0,'#7b4bd6',[4,4]);          // 凹透鏡：入射線對準另一側焦點，延長虛線畫到焦點
+  }
   if(isFinite(q)){
     const xMin=-AX/SCALE, xMax=(W-AX)/SCALE, yMax=(H/2)/SCALE;
     if(q>xMin && q<xMax && Math.abs(ih)<yMax) arrowObj(q,ih,q>0?'#c0392b':'#e07a3c','像'+(q>0?'(實)':'(虛)'),q<0);
