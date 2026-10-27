@@ -1,0 +1,863 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>電磁感應 3D ｜ 磁鐵穿過線圈・法拉第定律・冷次定律</title>
+<meta name="description" content="電磁感應 3D 互動模擬：磁鐵穿過圓線圈，依冷次定律與法拉第定律觀察磁通量變化、感應電動勢、感應電流磁場與檢流計偏轉。">
+<link rel="icon" href="../assets/favicon.svg" type="image/svg+xml">
+<link rel="stylesheet" href="../assets/site.css">
+<script src="../assets/sim.js"></script>
+<script defer src="../assets/nav.js"></script>
+<style>
+  *{box-sizing:border-box}
+  html,body{margin:0;padding:0;background:var(--bg,#0a0e17);color:var(--txt,#e2e8f0);font-family:"Noto Sans TC","PingFang TC","Microsoft JhengHei",system-ui,sans-serif}
+  a{color:var(--accent,#38bdf8);text-decoration:none}
+  a:hover{text-decoration:underline}
+  .wrap{max-width:1120px;margin:0 auto;padding:18px 16px 60px}
+  header h1{font-size:1.55rem;margin:.25em 0 .2em}
+  header p{color:var(--muted,#94a3b8);margin:.2em 0 1.1em;line-height:1.65;font-size:.92rem}
+  .badge{display:inline-block;background:var(--panel2,#1e293b);border:1px solid var(--line,#334155);color:var(--accent,#38bdf8);font-size:.75rem;padding:3px 10px;border-radius:99px;font-weight:600}
+  
+  #stage{width:100%;border-radius:14px;overflow:hidden;border:1px solid var(--line,#334155);background:#0a0e17;box-shadow:0 16px 40px rgba(0,0,0,.45)}
+  .hint-3d{color:var(--muted,#94a3b8);font-size:.82rem;margin:8px 4px 14px;text-align:center;line-height:1.5}
+  
+  .status-box{background:var(--panel,#111827);border:1px solid var(--line,#334155);border-left:4px solid var(--accent,#38bdf8);border-radius:10px;padding:12px 16px;font-size:.9rem;line-height:1.6;margin-bottom:14px;color:var(--txt,#e2e8f0)}
+  .status-box strong{color:var(--accent,#38bdf8);font-weight:700}
+  .status-box .hl-cw{color:#f59e0b}
+  .status-box .hl-ccw{color:#10b981}
+
+  .chart-card{background:var(--panel,#111827);border:1px solid var(--line,#334155);border-radius:14px;padding:12px 14px 14px;margin-bottom:14px}
+  .chart-header{display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px;margin-bottom:8px;font-size:.83rem}
+  .chart-title{font-weight:700;color:var(--txt,#e2e8f0);display:flex;align-items:center;gap:6px}
+  .chart-legend{display:flex;gap:14px;flex-wrap:wrap;font-size:.8rem}
+  .legend-item{display:flex;align-items:center;gap:5px}
+  .legend-dot{width:10px;height:10px;border-radius:3px}
+  #chart{display:block;width:100%;border-radius:8px;background:#060a12}
+
+  .btn-row{display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-bottom:14px}
+  .btn-group-label{color:var(--muted,#94a3b8);font-size:.82rem;margin-right:2px}
+  .pbtn{min-height:44px;background:var(--panel2,#1e293b);color:var(--txt,#e2e8f0);border:1px solid var(--line,#334155);padding:8px 14px;border-radius:10px;cursor:pointer;font-size:.85rem;font-family:inherit;display:inline-flex;align-items:center;justify-content:center;font-weight:500;transition:all .15s ease}
+  .pbtn:hover{border-color:var(--accent,#38bdf8);color:#fff}
+  .pbtn.on{background:var(--accent,#38bdf8);color:#04121c;border-color:var(--accent,#38bdf8);font-weight:700}
+  .pbtn.highlight{background:#0284c7;color:#fff;border-color:#38bdf8}
+
+  .bar{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:14px;background:var(--panel,#111827);border:1px solid var(--line,#334155);border-radius:14px;padding:14px 16px;margin-bottom:14px}
+  .sld{display:flex;flex-direction:column;justify-content:space-between}
+  .sld label{display:flex;justify-content:space-between;font-size:.82rem;color:var(--muted,#94a3b8);margin-bottom:6px}
+  .sld label .v{color:var(--accent,#38bdf8);font-variant-numeric:tabular-nums;font-weight:700}
+  .sld input[type=range]{width:100%;height:6px;accent-color:var(--accent,#38bdf8);background:#1e293b;border-radius:3px;outline:none;cursor:pointer}
+
+  .formula{background:var(--panel,#111827);border:1px solid var(--line,#334155);border-radius:14px;padding:14px 16px;margin-bottom:14px}
+  .formula h4{margin:0 0 10px;font-size:.9rem;color:var(--accent,#38bdf8)}
+  .frow{display:grid;grid-template-columns:140px 1.2fr 1.2fr 120px;gap:8px;align-items:center;padding:7px 0;border-bottom:1px solid rgba(255,255,255,.05);font-size:.82rem}
+  .frow:last-child{border-bottom:none}
+  .fname{color:var(--muted,#94a3b8)}
+  .fsym{color:#f8fafc;font-family:"Courier New",Courier,monospace}
+  .fsub{color:#94a3b8;font-variant-numeric:tabular-nums}
+  .fval{color:#38bdf8;font-weight:700;text-align:right;font-variant-numeric:tabular-nums}
+  .fnote{font-size:.8rem;color:var(--muted,#94a3b8);margin-top:10px;line-height:1.5}
+
+  .note{background:var(--panel,#111827);border-left:4px solid #f59e0b;border-radius:10px;padding:14px 16px;color:var(--muted,#94a3b8);font-size:.86rem;line-height:1.75;margin-bottom:14px}
+  .note b{color:var(--txt,#e2e8f0)}
+  .note code{background:#1e293b;padding:2px 6px;border-radius:5px;color:#38bdf8;font-size:.88em}
+
+  footer{color:var(--muted,#94a3b8);font-size:.82rem;margin-top:28px;text-align:center;line-height:1.8}
+  footer a{color:var(--accent,#38bdf8)}
+
+  @media(max-width:720px){
+    .frow{grid-template-columns:1fr;gap:3px;padding:9px 0}
+    .fval{text-align:left}
+  }
+</style>
+</head>
+<body data-demo="電磁感應 3D">
+<div class="wrap">
+  <header>
+    <span class="badge">電磁・電磁感應・3D</span>
+    <h1>電磁感應 3D（磁鐵穿過線圈・冷次定律）</h1>
+    <p>透過 3D 空間視角觀察棒狀磁鐵上下穿過圓線圈的完整動態。中央深色圓盤與藍色箭頭顯示通過線圈的<b>磁通量 Φ</b>，線圈上的移動光點代表<b>感應電流 I</b>，中心綠色箭頭為<b>感應電流所生磁場</b>；觀察其方向如何如實體現<b>冷次定律</b>「阻礙變化」的能量守恆本質。</p>
+  </header>
+
+  <div id="stage"></div>
+  <p class="hint-3d">拖曳旋轉、雙指或滾輪縮放、雙擊重設視角</p>
+
+  <div class="status-box" id="statusText">載入中...</div>
+
+  <div class="chart-card">
+    <div class="chart-header">
+      <div class="chart-title">即時曲線（最近 4 秒）</div>
+      <div class="chart-legend">
+        <div class="legend-item"><div class="legend-dot" style="background:#38bdf8"></div><span>磁通量 Φ (Wb)</span></div>
+        <div class="legend-item"><div class="legend-dot" style="background:#f59e0b"></div><span>感應電動勢 ε (V)</span></div>
+        <div class="legend-item"><div class="legend-dot" style="background:#e2e8f0"></div><span>目前時刻</span></div>
+      </div>
+    </div>
+    <canvas id="chart"></canvas>
+  </div>
+
+  <div class="btn-row">
+    <span class="btn-group-label">運動方式：</span>
+    <button class="pbtn on" id="btnPush">等速穿過 (Push)</button>
+    <button class="pbtn" id="btnDrop">自由落下 (Drop)</button>
+    <button class="pbtn" id="btnSpring">彈簧振盪 (Spring)</button>
+  </div>
+
+  <div class="btn-row">
+    <span class="btn-group-label">控制操作：</span>
+    <button class="pbtn" id="btnPause">暫停 ⏸</button>
+    <button class="pbtn" id="btnStep">單步 ⏯</button>
+    <button class="pbtn highlight" id="btnNear">定格在靠近中 (z = -0.04m)</button>
+    <button class="pbtn highlight" id="btnFar">定格在遠離中 (z = +0.04m)</button>
+    <button class="pbtn" id="btnFlip">翻轉磁極（N 極朝上）</button>
+  </div>
+
+  <div class="bar" id="sliders"></div>
+
+  <div class="formula" id="formula"></div>
+
+  <div class="note">
+    <b>物理重點：</b>
+    法拉第電磁感應定律指出，當穿過封閉迴路的磁通量隨時間變化時，迴路將產生感應電動勢 <code>ε = −N (dΦ/dt)</code>，其中 N 為匝數。
+    <b>冷次定律</b>確立了感應電流的方向：感應電流所建立的磁場，恆<b>阻礙</b>造成該感應的原始磁通量變化。當磁鐵靠近線圈時，磁通量增加，感應磁場方向相反以抵抗進入；當磁鐵遠離線圈時，磁通量減少，感應磁場方向相同以抵抗離開。此「阻礙」是<b>能量守恆定律</b>的體現：外力將磁鐵推入或拔出時必須對抗磁阻力作功，所作的機械功轉換為電路中的焦耳熱與電能。
+    因此，磁鐵進出線圈時，感應電動勢 ε <b>符號相反</b>（曲線呈現一正一負兩個尖峰）；移動速度越快、線圈匝數越多，感應電動勢越強；若磁鐵相對於線圈靜止（v = 0），即使磁場再強，因 <code>dΦ/dt = 0</code>，感應電流恆為零。
+  </div>
+
+  <footer>
+    <a href="../induction/">← 回到「電磁感應發電機」（轉動線圈版）</a>
+  </footer>
+</div>
+
+<script>
+/*PHYS:BEGIN*/
+// 有效數字格式（公式面板、數值卡共用；驗收會用同一個函式比對畫面上的數字）
+function fmtSig(v, n) {
+  n = n || 3;
+  if (typeof v !== 'number' || !isFinite(v)) return String(v);
+  if (v === 0) return '0';
+  const a = Math.abs(v);
+  if (a >= 1e5 || a < 1e-3) {
+    let e = Math.floor(Math.log10(a)), m = v / Math.pow(10, e);
+    let ms = m.toFixed(n - 1);
+    if (Math.abs(parseFloat(ms)) >= 10) { e += 1; ms = (v / Math.pow(10, e)).toFixed(n - 1); }
+    const SUP = { '-': '⁻', '0': '⁰', '1': '¹', '2': '²', '3': '³', '4': '⁴', '5': '⁵', '6': '⁶', '7': '⁷', '8': '⁸', '9': '⁹' };
+    return ms + '×10' + String(e).split('').map(ch => SUP[ch]).join('');
+  }
+  const s = Number(v.toPrecision(n));
+  return a >= Math.pow(10, n - 1) ? String(Math.round(s)) : s.toPrecision(n);
+}
+
+// 電磁感應 3D：磁鐵沿線圈軸（z 軸，向上為 +）穿過 N 匝圓線圈（圓心在原點、半徑 a）。
+// 磁鐵以磁偶極近似（磁矩 m，m>0 表示 N 極朝 +z）。單匝磁通量 Φ(z) = μ₀·m·a² / (2(a²+z²)^{3/2})（z＝磁鐵中心的高度）。
+// 法拉第定律 ε = −N·dΦ/dt = −N·(dΦ/dz)·v；正的 ε 代表「從上方（+z）往下看逆時針」的電流方向，這個電流在線圈中心產生 +z 的磁場。
+const MU0 = 4 * Math.PI * 1e-7;
+function fluxDipole(z, m, a) { return MU0 * m * a * a / (2 * Math.pow(a * a + z * z, 1.5)); }
+function dFluxdz(z, m, a) { return -3 * MU0 * m * a * a * z / (2 * Math.pow(a * a + z * z, 2.5)); }
+function emfAt(z, v, N, m, a) { return -N * dFluxdz(z, m, a) * v; }
+function coilCurrent(emf, R) { return emf / R; }
+// 冷次定律的文字判斷：磁通量（向 +z 為正）在增加還是減少、感應電流的磁場朝哪裡
+function lenzInfo(z, v, m, a) {
+  const dPhi = dFluxdz(z, m, a) * v;                       // dΦ/dt（單匝）
+  const sense = dPhi > 0 ? -1 : dPhi < 0 ? 1 : 0;          // 電流方向：+1 逆時針（從上往下看）、−1 順時針
+  return { dPhidt: dPhi, change: dPhi > 0 ? '增加' : dPhi < 0 ? '減少' : '不變', sense, inducedB: sense };   // inducedB：+1 表示線圈中心感應磁場朝 +z
+}
+// 磁鐵運動：mode 'push'（等速，z = z0 + v0·t）、'drop'（自由落下，z = z0 − ½gt²，不計磁阻尼）、'spring'（彈簧振盪 z = A·cos ωt）
+function magnetMotion(mode, t, p) {
+  if (mode === 'drop') return { z: p.z0 - 0.5 * p.g * t * t, v: -p.g * t };
+  if (mode === 'spring') { const w = 2 * Math.PI / p.T; return { z: p.A * Math.cos(w * t), v: -p.A * w * Math.sin(w * t) }; }
+  return { z: p.z0 + p.v0 * t, v: p.v0 };
+}
+// 畫磁力線用：把磁鐵當成均勻磁化圓柱（安培模型：側面的面電流）＝ 4 個圓電流環疊在一起，
+// 圓環以 n 邊形近似、每邊用有限直線段的必歐-沙伐解析式。回傳磁鐵座標系（磁鐵中心在原點、N 極朝 +z）的 B 方向即可。
+function segB(p, a, b, I) {
+  const L = [b[0] - a[0], b[1] - a[1], b[2] - a[2]], Ll = Math.hypot(L[0], L[1], L[2]);
+  if (Ll === 0) return [0, 0, 0];
+  const u = [L[0] / Ll, L[1] / Ll, L[2] / Ll], ap = [p[0] - a[0], p[1] - a[1], p[2] - a[2]];
+  const s = ap[0] * u[0] + ap[1] * u[1] + ap[2] * u[2];
+  const perp = [ap[0] - s * u[0], ap[1] - s * u[1], ap[2] - s * u[2]], d = Math.hypot(perp[0], perp[1], perp[2]);
+  if (d < 1e-9) return [0, 0, 0];
+  const c1 = s / Math.hypot(s, d), c2 = (s - Ll) / Math.hypot(s - Ll, d), mag = MU0 * I / (4 * Math.PI * d) * (c1 - c2);
+  const r = [perp[0] / d, perp[1] / d, perp[2] / d];
+  return [mag * (u[1] * r[2] - u[2] * r[1]), mag * (u[2] * r[0] - u[0] * r[2]), mag * (u[0] * r[1] - u[1] * r[0])];
+}
+function magnetFieldLocal(p, len, rad) {
+  const rings = 4, n = 24, B = [0, 0, 0];
+  for (let k = 0; k < rings; k++) {
+    const zc = -len / 2 + len * (k + 0.5) / rings;
+    for (let j = 0; j < n; j++) {
+      const t1 = 2 * Math.PI * j / n, t2 = 2 * Math.PI * (j + 1) / n;
+      const b = segB(p, [rad * Math.cos(t1), rad * Math.sin(t1), zc], [rad * Math.cos(t2), rad * Math.sin(t2), zc], 1);
+      B[0] += b[0]; B[1] += b[1]; B[2] += b[2];
+    }
+  }
+  return B;
+}
+/*PHYS:END*/
+</script>
+
+<script>
+const state = {
+  motion: 'push',
+  speed: 0.8,
+  period: 1.5,
+  N: 200,
+  m: 1.2,
+  a: 3,        // 公分
+  R: 10,       // 歐姆
+  flip: false, // true: N朝下
+  slow: 0.25,
+  paused: false,
+  z: -0.25,
+  v: 0.8,
+  t: 0
+};
+window.state = state;
+
+const sliderConfigs = [
+  { id: 'speed', name: '移動速度 v₀', min: 0.1, max: 2.0, step: 0.05, unit: 'm/s' },
+  { id: 'period', name: '振盪週期 T', min: 0.5, max: 3.0, step: 0.1, unit: 's' },
+  { id: 'N', name: '線圈匝數 N', min: 50, max: 500, step: 10, unit: '匝' },
+  { id: 'm', name: '磁鐵強度 m', min: 0.2, max: 3.0, step: 0.1, unit: 'A·m²' },
+  { id: 'a', name: '線圈半徑 a', min: 2.0, max: 5.0, step: 0.2, unit: 'cm' },
+  { id: 'R', name: '電路電阻 R', min: 1, max: 50, step: 1, unit: 'Ω' },
+  { id: 'slow', name: '時間流速', min: 0.1, max: 1.0, step: 0.05, unit: 'x' }
+];
+
+function buildSliders() {
+  const container = document.getElementById('sliders');
+  container.innerHTML = '';
+  sliderConfigs.forEach(cfg => {
+    const sld = document.createElement('div');
+    sld.className = 'sld';
+    sld.id = `box_${cfg.id}`;
+    sld.innerHTML = `
+      <label><span>${cfg.name}</span><span class="v" id="v_${cfg.id}">${state[cfg.id]} ${cfg.unit}</span></label>
+      <input type="range" id="r_${cfg.id}" min="${cfg.min}" max="${cfg.max}" step="${cfg.step}" value="${state[cfg.id]}">
+    `;
+    const input = sld.querySelector('input');
+    input.addEventListener('input', e => {
+      state[cfg.id] = parseFloat(e.target.value);
+      if (cfg.id === 'speed' && state.motion === 'push' && !state.paused) {
+        state.v = state.speed;
+      }
+      refresh();
+    });
+    container.appendChild(sld);
+  });
+}
+
+function updateSliderDisplays() {
+  sliderConfigs.forEach(cfg => {
+    const input = document.getElementById(`r_${cfg.id}`);
+    const valSpan = document.getElementById(`v_${cfg.id}`);
+    if (input) input.value = state[cfg.id];
+    if (valSpan) valSpan.textContent = `${state[cfg.id]} ${cfg.unit}`;
+  });
+  const spdBox = document.getElementById('box_speed');
+  const perBox = document.getElementById('box_period');
+  if (spdBox) spdBox.style.opacity = state.motion === 'push' ? '1' : '0.5';
+  if (perBox) perBox.style.opacity = state.motion === 'spring' ? '1' : '0.5';
+}
+
+function frow(n, sym, sub, val) {
+  return `<div class="frow"><span class="fname">${n}</span><span class="fsym">${sym}</span><span class="fsub">${sub}</span><span class="fval">${val}</span></div>`;
+}
+
+function updateFormulaPanel(phi, dPhi_dt, emf, I, effM, a_m) {
+  const fEl = document.getElementById('formula');
+  if (!fEl) return;
+  let html = `<h4>📐 計算公式（即時代入　μ₀ = 4π×10⁻⁷ T·m/A，磁鐵以磁偶極近似）</h4>`;
+  html += frow('磁鐵中心位置 z', 'z', `速度 v = ${fmtSig(state.v, 3)} m/s`, `${fmtSig(state.z, 3)} m`);
+  html += frow('單匝磁通量 Φ', 'μ₀·m·a² / [2(a²+z²)^(3/2)]', `m = ${fmtSig(effM, 3)} A·m², a = ${state.a} cm`, `${fmtSig(phi, 3)} Wb`);
+  html += frow('磁通時變率 dΦ/dt', '(dΦ/dz) · v', `單匝磁通對時間微分`, `${fmtSig(dPhi_dt, 3)} Wb/s`);
+  html += frow('感應電動勢 ε', '−N · (dΦ/dt)', `N = ${state.N} 匝`, `${fmtSig(emf, 3)} V`);
+  html += frow('感應電流 I', 'ε / R', `R = ${state.R} Ω`, `${fmtSig(I, 3)} A`);
+  html += `<div class="fnote">註：若 ε > 0 代表從上方 (+z) 往下看為逆時針電流，在線圈中心建立朝上 (+z) 的感應磁場。</div>`;
+  fEl.innerHTML = html;
+}
+
+function updateStatusText(lenz) {
+  const el = document.getElementById('statusText');
+  if (!el) return;
+  if (Math.abs(state.v) < 1e-4) {
+    el.innerHTML = `磁鐵處於靜止狀態 (v = 0) → 磁通量<b>不變</b> → 感應電流從上往下看<b>無感應電流</b> → 感應磁場<b>無</b>（無阻礙作用）`;
+    return;
+  }
+  const chg = lenz.change;
+  const senseStr = lenz.sense > 0 ? '<strong class="hl-ccw">逆時針</strong>' : (lenz.sense < 0 ? '<strong class="hl-cw">順時針</strong>' : '無');
+  const bStr = lenz.inducedB > 0 ? '<strong>朝上 (+z)</strong>' : (lenz.inducedB < 0 ? '<strong>朝下 (-z)</strong>' : '無');
+  el.innerHTML = `磁通量正在<strong>${chg}</strong> → 感應電流從上往下看是${senseStr} → 感應磁場${bStr}，<strong>阻礙變化</strong>`;
+}
+
+// 2D 即時曲線歷史記錄
+const historyData = [];
+let chartCtx = null;
+
+function setupChart() {
+  const cv = document.getElementById('chart');
+  if (!cv || !window.SIM) return;
+  chartCtx = SIM.fit(cv, 2.9);
+}
+
+function recordHistory(t, phi, emf) {
+  historyData.push({ t, phi, emf });
+  while (historyData.length > 0 && historyData[0].t < t - 4.0) {
+    historyData.shift();
+  }
+}
+
+function drawChart(currT, currPhi, currEmf) {
+  if (!chartCtx) return;
+  const ctx = chartCtx;
+  const W = ctx._w, H = ctx._h;
+  ctx.clearRect(0, 0, W, H);
+
+  const padL = 40, padR = 20, padT = 20, padB = 24;
+  const pW = W - padL - padR, pH = H - padT - padB;
+  const cy = padT + pH / 2;
+
+  ctx.strokeStyle = 'rgba(255,255,255,0.08)';
+  ctx.lineWidth = 1;
+  ctx.strokeRect(padL, padT, pW, pH);
+
+  ctx.strokeStyle = 'rgba(255,255,255,0.2)';
+  ctx.setLineDash([4, 4]);
+  ctx.beginPath();
+  ctx.moveTo(padL, cy);
+  ctx.lineTo(padL + pW, cy);
+  ctx.stroke();
+  ctx.setLineDash([]);
+
+  ctx.fillStyle = '#64748b';
+  ctx.font = '10px system-ui';
+  ctx.textAlign = 'right';
+  ctx.fillText('0', padL - 6, cy + 3);
+
+  if (historyData.length < 2) return;
+
+  const tMin = Math.max(0, currT - 4.0);
+  const tMax = Math.max(4.0, currT);
+  const tRange = tMax - tMin || 4.0;
+
+  let maxPhi = 1e-6, maxEmf = 1e-3;
+  for (const d of historyData) {
+    if (Math.abs(d.phi) > maxPhi) maxPhi = Math.abs(d.phi);
+    if (Math.abs(d.emf) > maxEmf) maxEmf = Math.abs(d.emf);
+  }
+  maxPhi *= 1.15;
+  maxEmf *= 1.15;
+
+  // 畫 Φ-t 曲線
+  ctx.strokeStyle = '#38bdf8';
+  ctx.lineWidth = 2;
+  ctx.beginPath();
+  let first = true;
+  for (const d of historyData) {
+    const x = padL + ((d.t - tMin) / tRange) * pW;
+    const y = cy - (d.phi / maxPhi) * (pH * 0.44);
+    if (first) { ctx.moveTo(x, y); first = false; } else { ctx.lineTo(x, y); }
+  }
+  ctx.stroke();
+
+  // 畫 ε-t 曲線
+  ctx.strokeStyle = '#f59e0b';
+  ctx.lineWidth = 2;
+  ctx.beginPath();
+  first = true;
+  for (const d of historyData) {
+    const x = padL + ((d.t - tMin) / tRange) * pW;
+    const y = cy - (d.emf / maxEmf) * (pH * 0.44);
+    if (first) { ctx.moveTo(x, y); first = false; } else { ctx.lineTo(x, y); }
+  }
+  ctx.stroke();
+
+  // 目前時刻直線
+  const currX = padL + ((currT - tMin) / tRange) * pW;
+  ctx.strokeStyle = 'rgba(255,255,255,0.7)';
+  ctx.lineWidth = 1.5;
+  ctx.setLineDash([3, 3]);
+  ctx.beginPath();
+  ctx.moveTo(currX, padT);
+  ctx.lineTo(currX, padT + pH);
+  ctx.stroke();
+  ctx.setLineDash([]);
+}
+
+function refresh() {
+  updateSliderDisplays();
+  const effM = state.flip ? -state.m : state.m;
+  const a_m = state.a / 100;
+  const phi = fluxDipole(state.z, effM, a_m);
+  const emf = emfAt(state.z, state.v, state.N, effM, a_m);
+  const I = coilCurrent(emf, state.R);
+  const lenz = lenzInfo(state.z, state.v, effM, a_m);
+
+  updateFormulaPanel(phi, lenz.dPhidt, emf, I, effM, a_m);
+  updateStatusText(lenz);
+  drawChart(state.t, phi, emf);
+
+  if (window.__render3d) {
+    window.__render3d(state);
+  }
+}
+
+window.setMagnet = function(z, v) {
+  state.paused = true;
+  state.z = z;
+  state.v = v;
+  const btn = document.getElementById('btnPause');
+  if (btn) btn.textContent = '播放 ▶';
+  recordHistory(state.t, fluxDipole(state.z, state.flip ? -state.m : state.m, state.a / 100), emfAt(state.z, state.v, state.N, state.flip ? -state.m : state.m, state.a / 100));
+  refresh();
+};
+
+function setupUI() {
+  buildSliders();
+  setupChart();
+
+  const btnPush = document.getElementById('btnPush');
+  const btnDrop = document.getElementById('btnDrop');
+  const btnSpring = document.getElementById('btnSpring');
+  const btnPause = document.getElementById('btnPause');
+  const btnStep = document.getElementById('btnStep');
+  const btnNear = document.getElementById('btnNear');
+  const btnFar = document.getElementById('btnFar');
+  const btnFlip = document.getElementById('btnFlip');
+
+  function setMotionMode(m) {
+    state.motion = m;
+    state.t = 0;
+    if (m === 'push') {
+      state.z = -0.25;
+      state.v = state.speed;
+    } else if (m === 'drop') {
+      state.z = 0.25;
+      state.v = 0;
+    } else if (m === 'spring') {
+      state.z = 0.12;
+      state.v = 0;
+    }
+    [btnPush, btnDrop, btnSpring].forEach(b => b.classList.remove('on'));
+    if (m === 'push') btnPush.classList.add('on');
+    if (m === 'drop') btnDrop.classList.add('on');
+    if (m === 'spring') btnSpring.classList.add('on');
+    refresh();
+  }
+
+  btnPush.onclick = () => setMotionMode('push');
+  btnDrop.onclick = () => setMotionMode('drop');
+  btnSpring.onclick = () => setMotionMode('spring');
+
+  btnPause.onclick = () => {
+    state.paused = !state.paused;
+    btnPause.textContent = state.paused ? '播放 ▶' : '暫停 ⏸';
+  };
+
+  btnStep.onclick = () => {
+    state.paused = true;
+    btnPause.textContent = '播放 ▶';
+    const dt = 0.02;
+    state.t += dt;
+    stepPhysics(dt);
+    refresh();
+  };
+
+  btnNear.onclick = () => window.setMagnet(-0.04, state.speed);
+  btnFar.onclick = () => window.setMagnet(0.04, state.speed);
+
+  btnFlip.onclick = () => {
+    state.flip = !state.flip;
+    btnFlip.textContent = state.flip ? '翻轉磁極（S 極朝上）' : '翻轉磁極（N 極朝上）';
+    btnFlip.classList.toggle('on', state.flip);
+    refresh();
+  };
+}
+
+function stepPhysics(dt) {
+  const p = { z0: -0.25, v0: state.speed, g: 9.8, A: 0.12, T: state.period };
+  if (state.motion === 'push') {
+    state.t += dt;
+    const mot = magnetMotion('push', state.t, p);
+    state.z = mot.z;
+    state.v = mot.v;
+    if (state.z > 0.25) { state.t = 0; state.z = -0.25; }
+  } else if (state.motion === 'drop') {
+    p.z0 = 0.25;
+    state.t += dt;
+    const mot = magnetMotion('drop', state.t, p);
+    state.z = mot.z;
+    state.v = mot.v;
+    if (state.z < -0.25) { state.t = 0; state.z = 0.25; state.v = 0; }
+  } else if (state.motion === 'spring') {
+    state.t += dt;
+    const mot = magnetMotion('spring', state.t, p);
+    state.z = mot.z;
+    state.v = mot.v;
+  }
+}
+
+window.addEventListener('load', () => {
+  setupUI();
+  refresh();
+});
+
+window.addEventListener('resize', () => {
+  setupChart();
+  const effM = state.flip ? -state.m : state.m;
+  const a_m = state.a / 100;
+  drawChart(state.t, fluxDipole(state.z, effM, a_m), emfAt(state.z, state.v, state.N, effM, a_m));
+});
+</script>
+
+<script type="module">
+import * as THREE from '../assets/vendor/three/three.module.min.js';
+import { createView } from '../assets/orbit3d.js';
+
+const stageEl = document.getElementById('stage');
+const view = createView(THREE, stageEl, {
+  aspect: 1.6,
+  target: [0, 0, 0],
+  distance: 0.58,
+  minDistance: 0.15,
+  maxDistance: 2.5,
+  theta: 0.65,
+  phi: 1.25,
+  background: 0x090d16
+});
+
+let coilMesh = null;
+let coilRadiusCurrent = 0;
+const coilGroup = new THREE.Group();
+view.scene.add(coilGroup);
+
+const DOT_COUNT = 16;
+const dotsArray = [];
+let dotBaseParam = 0;
+const dotGeom = new THREE.SphereGeometry(0.0022, 8, 8);
+const dotMat = new THREE.MeshBasicMaterial({ color: 0x67e8f9 });
+for (let i = 0; i < DOT_COUNT; i++) {
+  const mesh = new THREE.Mesh(dotGeom, dotMat);
+  coilGroup.add(mesh);
+  dotsArray.push(mesh);
+}
+
+class HelixCurve extends THREE.Curve {
+  constructor(r, h, turns) {
+    super();
+    this.r = r;
+    this.h = h;
+    this.turns = turns;
+  }
+  getPoint(t) {
+    const angle = t * this.turns * Math.PI * 2;
+    const x = this.r * Math.cos(angle);
+    const z = this.r * Math.sin(angle);
+    const y = (t - 0.5) * this.h;
+    return new THREE.Vector3(x, y, z);
+  }
+}
+
+function buildCoil(r) {
+  if (coilMesh) coilGroup.remove(coilMesh);
+  const curve = new HelixCurve(r, 0.024, 10);
+  const geom = new THREE.TubeGeometry(curve, 160, 0.0016, 8, false);
+  const mat = new THREE.MeshStandardMaterial({
+    color: 0xd97736,
+    metalness: 0.85,
+    roughness: 0.28
+  });
+  coilMesh = new THREE.Mesh(geom, mat);
+  coilGroup.add(coilMesh);
+  coilRadiusCurrent = r;
+}
+
+const magnetGroup = new THREE.Group();
+view.scene.add(magnetGroup);
+
+const magRadius = 0.01;
+const magHalfLen = 0.03;
+const magGeom = new THREE.CylinderGeometry(magRadius, magRadius, magHalfLen, 24);
+
+const matN = new THREE.MeshStandardMaterial({ color: 0xef4444, metalness: 0.2, roughness: 0.35 });
+const meshN = new THREE.Mesh(magGeom, matN);
+meshN.position.y = magHalfLen / 2;
+magnetGroup.add(meshN);
+
+const matS = new THREE.MeshStandardMaterial({ color: 0x3b82f6, metalness: 0.2, roughness: 0.35 });
+const meshS = new THREE.Mesh(magGeom, matS);
+meshS.position.y = -magHalfLen / 2;
+magnetGroup.add(meshS);
+
+function makePoleTexture(text, bgColor) {
+  const cv = document.createElement('canvas');
+  cv.width = 64; cv.height = 64;
+  const c = cv.getContext('2d');
+  c.fillStyle = bgColor; c.fillRect(0, 0, 64, 64);
+  c.fillStyle = '#ffffff'; c.font = 'bold 36px sans-serif';
+  c.textAlign = 'center'; c.textBaseline = 'middle';
+  c.fillText(text, 32, 32);
+  return new THREE.CanvasTexture(cv);
+}
+const capGeom = new THREE.CircleGeometry(magRadius * 0.96, 24);
+const capN = new THREE.Mesh(capGeom, new THREE.MeshBasicMaterial({ map: makePoleTexture('N', '#dc2626') }));
+capN.rotation.x = -Math.PI / 2;
+capN.position.y = magHalfLen + 0.0001;
+magnetGroup.add(capN);
+
+const capS = new THREE.Mesh(capGeom, new THREE.MeshBasicMaterial({ map: makePoleTexture('S', '#2563eb') }));
+capS.rotation.x = Math.PI / 2;
+capS.position.y = -magHalfLen - 0.0001;
+magnetGroup.add(capS);
+
+// 磁力線群組：在磁鐵座標系追蹤一次
+const fieldLinesGroup = new THREE.Group();
+magnetGroup.add(fieldLinesGroup);
+
+function initFieldLines() {
+  const seeds = [];
+  const rings = [
+    { r: 0.004, count: 4 },
+    { r: 0.008, count: 8 }
+  ];
+  for (const rg of rings) {
+    for (let i = 0; i < rg.count; i++) {
+      const th = (i + (rg.r < 0.006 ? 0.25 : 0)) * 2 * Math.PI / rg.count;
+      seeds.push([rg.r * Math.cos(th), rg.r * Math.sin(th), 0.0305]);
+    }
+  }
+
+  const ds = 0.0022;
+  const maxSteps = 160;
+  const lineMat = new THREE.LineBasicMaterial({
+    color: 0x60a5fa,
+    transparent: true,
+    opacity: 0.55
+  });
+
+  for (const s of seeds) {
+    let p = [s[0], s[1], s[2]];
+    const pts = [new THREE.Vector3(p[0], p[2], p[1])];
+    for (let st = 0; st < maxSteps; st++) {
+      const B1 = window.magnetFieldLocal(p, 0.06, 0.01);
+      const b1 = Math.hypot(B1[0], B1[1], B1[2]);
+      if (b1 < 1e-12) break;
+      const u1 = [B1[0] / b1, B1[1] / b1, B1[2] / b1];
+      const pm = [p[0] + u1[0] * ds * 0.5, p[1] + u1[1] * ds * 0.5, p[2] + u1[2] * ds * 0.5];
+      const B2 = window.magnetFieldLocal(pm, 0.06, 0.01);
+      const b2 = Math.hypot(B2[0], B2[1], B2[2]);
+      if (b2 < 1e-12) break;
+      const u2 = [B2[0] / b2, B2[1] / b2, B2[2] / b2];
+      p = [p[0] + u2[0] * ds, p[1] + u2[1] * ds, p[2] + u2[2] * ds];
+      pts.push(new THREE.Vector3(p[0], p[2], p[1]));
+      if (p[2] <= -0.029 && Math.hypot(p[0], p[1]) <= 0.012) break;
+      if (Math.hypot(p[0], p[1], p[2]) > 0.22) break;
+    }
+    if (pts.length > 2) {
+      const geom = new THREE.BufferGeometry().setFromPoints(pts);
+      const line = new THREE.Line(geom, lineMat);
+      fieldLinesGroup.add(line);
+    }
+  }
+}
+initFieldLines();
+
+// 線圈磁通半透明圓盤
+const fluxDiskGeom = new THREE.CircleGeometry(1, 48);
+const fluxDiskMat = new THREE.MeshBasicMaterial({
+  color: 0x38bdf8,
+  transparent: true,
+  opacity: 0.15,
+  side: THREE.DoubleSide,
+  depthWrite: false
+});
+const fluxDisk = new THREE.Mesh(fluxDiskGeom, fluxDiskMat);
+fluxDisk.rotation.x = Math.PI / 2;
+view.scene.add(fluxDisk);
+
+function create3DArrow(color) {
+  const grp = new THREE.Group();
+  const cGeom = new THREE.CylinderGeometry(0.0016, 0.0016, 1, 12);
+  const cMat = new THREE.MeshBasicMaterial({ color });
+  const cylinder = new THREE.Mesh(cGeom, cMat);
+  grp.add(cylinder);
+
+  const hGeom = new THREE.ConeGeometry(0.004, 0.012, 16);
+  const hMat = new THREE.MeshBasicMaterial({ color });
+  const head = new THREE.Mesh(hGeom, hMat);
+  grp.add(head);
+
+  grp.updateArrow = function(dirY, length) {
+    if (length < 0.002) {
+      grp.visible = false;
+      return;
+    }
+    grp.visible = true;
+    const sign = dirY >= 0 ? 1 : -1;
+    const hl = Math.min(0.014, length * 0.35);
+    const cl = Math.max(0.0001, length - hl);
+
+    cylinder.scale.set(1, cl, 1);
+    cylinder.position.y = sign * (cl / 2);
+
+    head.scale.set(1, hl / 0.012, 1);
+    head.position.y = sign * (cl + hl / 2);
+    head.rotation.x = sign > 0 ? 0 : Math.PI;
+  };
+  return grp;
+}
+
+const arrowB = create3DArrow(0x38bdf8);
+arrowB.position.x = -0.004;
+view.scene.add(arrowB);
+
+const arrowInduced = create3DArrow(0x22c55e);
+arrowInduced.position.x = 0.004;
+view.scene.add(arrowInduced);
+
+// 檢流計儀表板
+const meterGroup = new THREE.Group();
+meterGroup.position.set(0.09, 0, 0);
+view.scene.add(meterGroup);
+
+function createMeterFaceTexture() {
+  const cv = document.createElement('canvas');
+  cv.width = 128; cv.height = 128;
+  const c = cv.getContext('2d');
+  c.fillStyle = '#f8fafc'; c.fillRect(0, 0, 128, 128);
+  c.strokeStyle = '#334155'; c.lineWidth = 4; c.strokeRect(2, 2, 124, 124);
+  c.fillStyle = '#0f172a'; c.font = 'bold 22px sans-serif'; c.textAlign = 'center';
+  c.fillText('G', 64, 46);
+  c.font = '14px sans-serif';
+  c.fillText('0', 64, 76);
+  c.fillText('−', 32, 76);
+  c.fillText('+', 96, 76);
+  return new THREE.CanvasTexture(cv);
+}
+const meterCasing = new THREE.Mesh(
+  new THREE.CylinderGeometry(0.024, 0.024, 0.01, 32),
+  new THREE.MeshStandardMaterial({ color: 0x1e293b, metalness: 0.5, roughness: 0.5 })
+);
+meterCasing.rotation.x = Math.PI / 2;
+meterGroup.add(meterCasing);
+
+const meterFace = new THREE.Mesh(
+  new THREE.CircleGeometry(0.022, 32),
+  new THREE.MeshBasicMaterial({ map: createMeterFaceTexture() })
+);
+meterFace.position.z = 0.0051;
+meterGroup.add(meterFace);
+
+const needleGrp = new THREE.Group();
+needleGrp.position.set(0, -0.006, 0.0055);
+const needleMesh = new THREE.Mesh(
+  new THREE.ConeGeometry(0.0012, 0.018, 8),
+  new THREE.MeshBasicMaterial({ color: 0xef4444 })
+);
+needleMesh.position.y = 0.009;
+needleGrp.add(needleMesh);
+meterGroup.add(needleGrp);
+
+// 連接線
+const wireMat = new THREE.LineBasicMaterial({ color: 0xd97736, linewidth: 2 });
+function updateWires(coilR) {
+  const w1Pts = [
+    new THREE.Vector3(coilR, 0.012, 0),
+    new THREE.Vector3(coilR + 0.025, 0.012, 0.01),
+    new THREE.Vector3(0.08, 0.006, 0.005)
+  ];
+  const w2Pts = [
+    new THREE.Vector3(coilR, -0.012, 0),
+    new THREE.Vector3(coilR + 0.025, -0.012, 0.01),
+    new THREE.Vector3(0.08, -0.006, 0.005)
+  ];
+  if (meterGroup.w1) meterGroup.remove(meterGroup.w1);
+  if (meterGroup.w2) meterGroup.remove(meterGroup.w2);
+  meterGroup.w1 = new THREE.Line(new THREE.BufferGeometry().setFromPoints(w1Pts), wireMat);
+  meterGroup.w2 = new THREE.Line(new THREE.BufferGeometry().setFromPoints(w2Pts), wireMat);
+  meterGroup.add(meterGroup.w1);
+  meterGroup.add(meterGroup.w2);
+}
+
+window.__render3d = function(st) {
+  const r_m = st.a / 100;
+  if (Math.abs(coilRadiusCurrent - r_m) > 1e-4) {
+    buildCoil(r_m);
+    fluxDisk.scale.set(r_m, r_m, 1);
+    meterGroup.position.x = r_m + 0.055;
+    updateWires(r_m);
+  }
+
+  magnetGroup.position.y = st.z;
+  magnetGroup.rotation.z = st.flip ? Math.PI : 0;
+
+  const effM = st.flip ? -st.m : st.m;
+  const phi = window.fluxDipole(st.z, effM, r_m);
+  const emf = window.emfAt(st.z, st.v, st.N, effM, r_m);
+  const I = window.coilCurrent(emf, st.R);
+  const lenz = window.lenzInfo(st.z, st.v, effM, r_m);
+
+  // 磁通半透明盤深淺 ∝ |Φ|
+  const maxPhi = window.fluxDipole(0, st.m, r_m);
+  const pRatio = Math.min(1, Math.abs(phi) / (maxPhi || 1e-6));
+  fluxDiskMat.opacity = 0.06 + 0.65 * pRatio;
+
+  // 穿過線圈的磁場箭頭 (藍)
+  const bLen = Math.min(0.085, pRatio * 0.085);
+  arrowB.updateArrow(phi >= 0 ? 1 : -1, bLen);
+
+  // 感應電流的磁場箭頭 (綠，阻礙變化)
+  const indLen = Math.min(0.085, Math.abs(I) * 1.8);
+  arrowInduced.updateArrow(lenz.inducedB >= 0 ? 1 : -1, indLen);
+
+  // 檢流計指針旋轉
+  const maxDeflection = Math.PI / 3;
+  const needleAngle = Math.max(-maxDeflection, Math.min(maxDeflection, -I * 8.0));
+  needleGrp.rotation.z = needleAngle;
+};
+
+buildCoil(state.a / 100);
+fluxDisk.scale.set(state.a / 100, state.a / 100, 1);
+meterGroup.position.x = state.a / 100 + 0.055;
+updateWires(state.a / 100);
+window.__render3d(state);
+
+// 動畫每格更新
+view.onFrame((dt, elapsed) => {
+  if (!state.paused) {
+    const simDt = dt * state.slow;
+    window.stepPhysics(simDt);
+    const effM = state.flip ? -state.m : state.m;
+    const a_m = state.a / 100;
+    const phi = window.fluxDipole(state.z, effM, a_m);
+    const emf = window.emfAt(state.z, state.v, state.N, effM, a_m);
+    window.recordHistory(state.t, phi, emf);
+    refresh();
+  }
+
+  // 感應電流光點移動
+  const effM = state.flip ? -state.m : state.m;
+  const a_m = state.a / 100;
+  const emf = window.emfAt(state.z, state.v, state.N, effM, a_m);
+  const I = window.coilCurrent(emf, state.R);
+  const lenz = window.lenzInfo(state.z, state.v, effM, a_m);
+
+  if (Math.abs(I) > 1e-5 && coilMesh) {
+    const dotSpeed = lenz.sense * Math.min(2.5, Math.abs(I) * 14.0);
+    dotBaseParam = (dotBaseParam + dt * state.slow * dotSpeed + 1000) % 1;
+    const turns = 10;
+    const h = 0.024;
+    for (let i = 0; i < DOT_COUNT; i++) {
+      const p = (dotBaseParam + i / DOT_COUNT) % 1;
+      const angle = p * turns * Math.PI * 2;
+      dotsArray[i].position.set(a_m * Math.cos(angle), (p - 0.5) * h, a_m * Math.sin(angle));
+      dotsArray[i].visible = true;
+    }
+  } else {
+    for (let i = 0; i < DOT_COUNT; i++) {
+      dotsArray[i].visible = false;
+    }
+  }
+});
+</script>
+</body>
+</html>
