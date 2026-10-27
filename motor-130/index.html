@@ -1,0 +1,294 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>130 小馬達內部 ｜ 弧形磁鐵・三極電樞・換向器與電刷</title>
+<meta name="description" content="仿常見 130 型有刷直流小馬達的剖面模擬：兩片弧形鐵氧體永久磁鐵、三極電樞、三片換向器與兩支電刷。看換向器怎麼適時把線圈電流反向，讓力矩一直朝同一個方向。">
+<link rel="icon" href="../assets/favicon.svg" type="image/svg+xml">
+<link rel="stylesheet" href="../assets/site.css">
+<script src="../assets/sim.js"></script>
+<script defer src="../assets/nav.js"></script>
+<style>
+  *{box-sizing:border-box}
+  html,body{margin:0;padding:0;background:var(--bg);color:var(--txt);font-family:"Noto Sans TC","PingFang TC","Microsoft JhengHei",system-ui,sans-serif}
+  a{color:var(--accent)}
+  .wrap{max-width:1120px;margin:0 auto;padding:18px 16px 60px}
+  header h1{font-size:1.5rem;margin:.2em 0}
+  header p{color:var(--muted);margin:.2em 0 1em;line-height:1.6}
+  .badge{display:inline-block;background:var(--panel2);border:1px solid var(--line);color:var(--muted);font-size:.72rem;padding:2px 8px;border-radius:99px;margin-right:6px}
+  .grid{display:grid;grid-template-columns:1.1fr .9fr;gap:14px}
+  @media(max-width:760px){.grid{grid-template-columns:1fr}}
+  .grid>*{min-width:0}
+  .scene-wrap{border-radius:16px;overflow:hidden;border:1px solid var(--line);box-shadow:0 18px 50px rgba(0,0,0,.45);background:#060a18}
+  canvas{display:block;width:100%}
+  .cap{color:var(--muted);font-size:.8rem;padding:6px 10px}
+  .status{margin-top:10px;padding:9px 12px;border-radius:10px;background:var(--panel);border:1px solid var(--line);font-size:.9rem;line-height:1.6}
+  .row{display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-top:12px}
+  .pbtn{background:var(--panel2);color:var(--txt);border:1px solid var(--line);min-height:44px;padding:8px 13px;border-radius:10px;cursor:pointer;font-size:.86rem;font-family:inherit}
+  .pbtn.on{background:var(--accent);color:#04121c;border-color:var(--accent);font-weight:700}
+  .bar{display:flex;gap:14px;flex-wrap:wrap;align-items:flex-end;background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:14px 16px;margin-top:14px}
+  .sld{flex:1;min-width:160px}
+  .sld label{display:flex;justify-content:space-between;font-size:.82rem;color:var(--muted);margin-bottom:5px}
+  .sld label .v{color:var(--accent);font-variant-numeric:tabular-nums;font-weight:700}
+  .sld input{width:100%;accent-color:var(--accent);min-height:32px}
+  .note{background:var(--panel);border-left:3px solid var(--accent2);border-radius:8px;padding:12px 14px;color:var(--muted);font-size:.86rem;line-height:1.7;margin-top:14px}
+  .note b{color:var(--txt)}.note code{background:var(--bg2);padding:1px 6px;border-radius:5px;color:var(--green);font-size:.85em}
+  footer{color:var(--muted);font-size:.78rem;margin-top:24px;text-align:center;line-height:1.7}
+</style>
+</head>
+<body data-demo="130 小馬達內部">
+<div class="wrap">
+  <header>
+    <span class="badge">電磁・電動機</span>
+    <h1>130 小馬達的內部（永久磁鐵・三極電樞・換向器）</h1>
+    <p>130 型是玩具、科展常用的小型有刷直流馬達。這裡畫的是<b>常見的典型構造</b>：外殼內兩片<b>弧形鐵氧體磁鐵</b>、中間<b>三極轉子</b>（三個極靴各繞一組線圈）、
+       轉軸上<b>三片換向器</b>和<b>兩支電刷</b>。各廠牌細節不同，這個模型<b>不代表任何特定產品的規格</b>，數值是示意單位。</p>
+  </header>
+
+  <div class="grid">
+    <div class="scene-wrap"><canvas id="scene" style="aspect-ratio:1.15"></canvas><div class="cap">剖面圖（慢動作）。換向器實際在轉軸的一端，這裡畫在同一個剖面方便對照。</div></div>
+    <div class="scene-wrap"><canvas id="graph" style="aspect-ratio:1.4"></canvas><div class="cap">力矩–轉角圖：三個極各自的力矩（細線）與總力矩（粗線）；淡色區＝電刷同時碰到兩片換向片（換向中）。</div></div>
+  </div>
+  <div class="status" id="status"></div>
+
+  <div class="row">
+    <button class="pbtn on" id="bPlay">⏸ 暫停</button>
+    <button class="pbtn" id="bStep">單步 +5°</button>
+    <button class="pbtn" id="bPol">電源反接</button>
+    <button class="pbtn" id="bFixed">拿掉換向器（固定接線）</button>
+    <button class="pbtn" id="bReset">重設</button>
+  </div>
+
+  <div class="bar">
+    <div class="sld"><label><span>電壓 V</span><span class="v" id="v_V"></span></label><input type="range" id="r_V" min="0" max="6" step="0.5"></div>
+    <div class="sld"><label><span>轉角 θ（暫停時可拖動）</span><span class="v" id="v_th"></span></label><input type="range" id="r_th" min="0" max="360" step="1"></div>
+  </div>
+
+  <div class="formula" id="formula"></div>
+
+  <div class="note">
+    <b>物理重點：</b>線圈通電後，鐵芯極靴變成電磁鐵（極尖 N 或 S），被兩片永久磁鐵吸引／排斥而轉動；也可以用 <code>F = BIL</code> 看：導線在磁場中受力，左右兩邊的力形成力偶。
+    如果線圈電流方向一直不變，轉過半圈後力矩就反向，轉子只會擺到平衡位置停下來。<b>換向器</b>隨轉軸一起轉、<b>電刷</b>固定不動：每轉 60°，電刷就換碰到另一片換向片，
+    讓適當的線圈電流反向，所以<b>總力矩方向一直不變</b>，只有小小的起伏（漣波）。
+    用<b>三極</b>而不是兩極，是因為任何角度都有力矩，不會卡在「死點」、通電就能自己啟動。電刷同時碰到兩片時，那組線圈被短路（換向瞬間）。
+    <b>電源反接</b>，所有電流反向、力矩反向，轉向就相反。永久磁鐵常用<b>鐵氧體</b>：便宜、不容易退磁。
+  </div>
+  <p style="margin-top:14px;font-size:.9rem"><a href="../motor/">← 回到「直流馬達」</a></p>
+  <footer>純前端 HTML / Canvas（SIM 工具庫）。示意模型：每個極的磁矩正比於線圈電流，力矩 τ = Σ mₖ·B·sin(夾角)，磁場視為均勻；轉動加了阻尼代表摩擦與反電動勢。</footer>
+</div>
+
+<script>
+/*PHYS:BEGIN*/
+// 有效數字格式（公式面板、數值卡共用；驗收會用同一個函式比對畫面上的數字）
+function fmtSig(v, n) {
+  n = n || 3;
+  if (typeof v !== 'number' || !isFinite(v)) return String(v);
+  if (v === 0) return '0';
+  const a = Math.abs(v);
+  if (a >= 1e5 || a < 1e-3) {
+    let e = Math.floor(Math.log10(a)), m = v / Math.pow(10, e);
+    let ms = m.toFixed(n - 1);
+    if (Math.abs(parseFloat(ms)) >= 10) { e += 1; ms = (v / Math.pow(10, e)).toFixed(n - 1); }
+    const SUP = { '-': '⁻', '0': '⁰', '1': '¹', '2': '²', '3': '³', '4': '⁴', '5': '⁵', '6': '⁶', '7': '⁷', '8': '⁸', '9': '⁹' };
+    return ms + '×10' + String(e).split('').map(ch => SUP[ch]).join('');
+  }
+  const s = Number(v.toPrecision(n));
+  return a >= Math.pow(10, n - 1) ? String(Math.round(s)) : s.toPrecision(n);
+}
+
+// 仿 130 型有刷直流小馬達的示意模型（典型構造，不是任何廠牌的規格）：
+// 外殼內兩片弧形鐵氧體磁鐵（左 N、右 S → 轉子區磁場 B 指向 +x），三極電樞（三個 T 形極靴，各繞一組線圈），
+// 三片式換向器、兩支電刷（右 + 、左 −）。座標用數學方向（x 右、y 上、角度逆時針為正）；畫到畫布上時要把 y 反過來。
+// 換向器：片 j 以 θ + 120° + j·120° 為中心、張角 120° − gap；線圈 k（繞在極 k，極 k 指向 θ + k·120°）接在片 k 與片 k+1 之間（三角形接法）。
+// 電刷寬 bw，與片的角範圍重疊就算接觸（一支電刷可能同時碰到兩片＝短路那組線圈，這就是換向瞬間）。
+// 每個極的磁矩 ∝ 線圈電流（正電流使極尖為 N），力矩 τ = Σ mₖ·(ûₖ × B)，z 分量 τₖ = −mₖ·B·sin φₖ。
+function wrapPi(a) { return ((a + Math.PI) % (2 * Math.PI) + 2 * Math.PI) % (2 * Math.PI) - Math.PI; }
+function motorGeom(o) { return Object.assign({ gapDeg: 10, brushDeg: 16, V: 3, r: 1, B: 1 }, o || {}); }
+function segCenter(theta, j) { return theta + 2 * Math.PI / 3 + j * 2 * Math.PI / 3; }
+function brushContacts(theta, brushAngle, g) {   // 回傳這支電刷碰到的換向片編號
+  const h = Math.PI / 3 - g.gapDeg * Math.PI / 360, w = g.brushDeg * Math.PI / 360, out = [];
+  for (let j = 0; j < 3; j++) if (Math.abs(wrapPi(brushAngle - segCenter(theta, j))) <= h + w) out.push(j);
+  return out;
+}
+// polarity：+1 時右刷為正（逆時針轉）、−1 時電源反接
+function motorState(theta, o, polarity) {
+  const g = motorGeom(o), pol = polarity === -1 ? -1 : 1;
+  const Pp = brushContacts(theta, 0, g), Pm = brushContacts(theta, Math.PI, g);
+  const pot = [null, null, null];
+  Pp.forEach(j => { pot[j] = pol > 0 ? g.V : 0; }); Pm.forEach(j => { pot[j] = pol > 0 ? 0 : g.V; });
+  const free = [0, 1, 2].filter(j => pot[j] === null);
+  if (free.length === 1) { const f = free[0], nb = [(f + 1) % 3, (f + 2) % 3].map(j => pot[j]); pot[f] = (nb[0] + nb[1]) / 2; }
+  else if (free.length > 1) free.forEach(j => { pot[j] = 0; });
+  const coil = [0, 1, 2].map(k => (pot[k] - pot[(k + 1) % 3]) / g.r);           // 線圈 k 的電流（片 k → 片 k+1 為正）
+  const poleAngle = [0, 1, 2].map(k => theta + k * 2 * Math.PI / 3);
+  const tau = [0, 1, 2].map(k => -coil[k] * g.B * Math.sin(poleAngle[k]));
+  const supply = Pp.reduce((s, j) => s + [0, 1, 2].reduce((ss, k) => ss + (k === j ? coil[k] : 0) - ((k + 1) % 3 === j ? coil[k] : 0), 0), 0);
+  return { coil, poleAngle, tau, torque: tau[0] + tau[1] + tau[2], brushPlus: Pp, brushMinus: Pm,
+           shorted: [0, 1, 2].filter(k => (Pp.includes(k) && Pp.includes((k + 1) % 3)) || (Pm.includes(k) && Pm.includes((k + 1) % 3))),
+           poleN: coil.map(i => i > 1e-12 ? 1 : i < -1e-12 ? -1 : 0), supplyCurrent: pol * supply };
+}
+// 一圈的力矩曲線（示意單位），用來畫 τ–θ 圖並確認「換向器讓力矩一直同向」
+function torqueCurve(o, polarity, nPts) {
+  const N = nPts || 360, out = [];
+  for (let i = 0; i < N; i++) { const th = 2 * Math.PI * i / N; out.push([th, motorState(th, o, polarity).torque]); }
+  return out;
+}
+// 轉動（示意）：J·ω' = τ − b·ω；反電動勢讓轉速飽和的效果以阻尼 b 代表
+function motorStep(s, dt, o, polarity) {
+  const J = 0.02, b = 0.05, st = motorState(s.theta, o, polarity);
+  const w = s.omega + (st.torque - b * s.omega) / J * dt;
+  return { theta: s.theta + w * dt, omega: w, st };
+}
+
+/*PHYS:END*/
+</script>
+<script>
+const S = SIM;
+const state = { theta: 0.3, V: 3, polarity: 1, playing: true, fixed: false, omega: 0 };
+window.state = state;
+let sc, gc, curve = null, curveKey = '', fixedCoil = null;
+const TAU3 = 2 * Math.PI / 3;
+function setup() { sc = S.fit(document.getElementById('scene'), 1.15); gc = S.fit(document.getElementById('graph'), 1.4); }
+function cur() {   // 目前的電流與力矩：一般模式用換向器；固定接線時電流維持在拿掉換向器那一刻
+  if (!state.fixed) return motorState(state.theta, { V: state.V }, state.polarity);
+  const coil = fixedCoil || motorState(0, { V: state.V }, state.polarity).coil;
+  const poleAngle = [0, 1, 2].map(k => state.theta + k * TAU3);
+  const tau = [0, 1, 2].map(k => -coil[k] * 1 * Math.sin(poleAngle[k]));
+  return { coil, poleAngle, tau, torque: tau[0] + tau[1] + tau[2], brushPlus: [], brushMinus: [], shorted: [], poleN: coil.map(i => i > 1e-12 ? 1 : i < -1e-12 ? -1 : 0), supplyCurrent: NaN };
+}
+const P = (cx, cy, r, a) => [cx + r * Math.cos(a), cy - r * Math.sin(a)];   // 數學角度 → 畫布座標（y 反向）
+function arcPath(c, cx, cy, r1, r2, a1, a2) {
+  c.beginPath(); c.arc(cx, cy, r2, -a1, -a2, true); c.arc(cx, cy, r1, -a2, -a1, false); c.closePath();
+}
+function drawScene() {
+  const c = sc, W = c._w, H = c._h, cx = W / 2, cy = H / 2, R = Math.min(W, H) * 0.44, st = cur();
+  S.scene(c, { skyTop: '#0c1430', skyBottom: '#060a18', vignette: 'rgba(0,0,0,.45)' }, {});
+  // 外殼與磁鐵
+  c.strokeStyle = '#7f8796'; c.lineWidth = R * 0.07; c.beginPath(); c.arc(cx, cy, R, 0, 7); c.stroke();
+  c.fillStyle = 'rgba(255,84,112,.85)'; arcPath(c, cx, cy, R * 0.8, R * 0.95, Math.PI - Math.PI / 3, Math.PI + Math.PI / 3); c.fill();
+  c.fillStyle = 'rgba(76,125,255,.85)'; arcPath(c, cx, cy, R * 0.8, R * 0.95, -Math.PI / 3, Math.PI / 3); c.fill();
+  c.fillStyle = '#fff'; c.font = `bold ${Math.round(R * 0.12)}px system-ui`;
+  c.fillText('N', cx - R * 0.92, cy + R * 0.045); c.fillText('S', cx + R * 0.83, cy + R * 0.045);
+  c.font = '11px system-ui'; c.fillStyle = '#dce6ff'; c.fillText('鐵氧體磁鐵', cx - R * 0.98, cy - R * 0.62); c.fillText('鐵氧體磁鐵', cx + R * 0.55, cy - R * 0.62);
+  // 磁場線（N → S，B 指向 +x）
+  c.strokeStyle = 'rgba(140,195,255,.22)'; c.lineWidth = 1;
+  for (const f of [-0.5, -0.25, 0, 0.25, 0.5]) { c.beginPath(); c.moveTo(cx - R * 0.78, cy + f * R); c.lineTo(cx + R * 0.78, cy + f * R); c.stroke(); }
+  S.arrow(c, cx - R * 0.35, cy + R * 0.72, cx + R * 0.35, cy + R * 0.72, { color: 'rgba(140,195,255,.8)', width: 2, label: 'B' });
+  // 三極電樞
+  for (let k = 0; k < 3; k++) {
+    const a = st.poleAngle[k], i = st.coil[k];
+    const col = Math.abs(i) < 1e-9 ? '#5b6880' : i > 0 ? '#ffb02e' : '#4cd8ff';
+    c.save(); c.translate(cx, cy); c.rotate(-a);
+    c.fillStyle = '#3d4658'; c.fillRect(R * 0.2, -R * 0.07, R * 0.42, R * 0.14);          // 極身
+    c.fillStyle = col; c.globalAlpha = 0.9; c.fillRect(R * 0.27, -R * 0.12, R * 0.3, R * 0.05); c.fillRect(R * 0.27, R * 0.07, R * 0.3, R * 0.05); c.globalAlpha = 1;   // 線圈
+    c.restore();
+    c.fillStyle = '#4a5468'; arcPath(c, cx, cy, R * 0.62, R * 0.72, a - 0.62, a + 0.62); c.fill();   // 極靴
+    const [tx, ty] = P(cx, cy, R * 0.67, a);
+    c.fillStyle = st.poleN[k] > 0 ? '#ff6b9d' : st.poleN[k] < 0 ? '#6cd0ff' : '#8a99ad';
+    c.font = `bold ${Math.round(R * 0.09)}px system-ui`; c.fillText(st.poleN[k] > 0 ? 'N' : st.poleN[k] < 0 ? 'S' : '–', tx - R * 0.03, ty + R * 0.03);
+    // 切向力箭頭（逆時針為正）
+    const L = st.tau[k] * R * 0.18, ex = tx + (-Math.sin(a)) * L, ey = ty + (-Math.cos(a)) * L;
+    if (Math.abs(L) > 2) S.arrow(c, tx, ty, ex, ey, { color: '#7CFFB2', width: 2.5 });
+    if (st.shorted.includes(k)) { c.setLineDash([4, 3]); c.strokeStyle = '#ffce54'; c.lineWidth = 1.5; const [qx, qy] = P(cx, cy, R * 0.42, a); c.strokeRect(qx - R * 0.16, qy - R * 0.16, R * 0.32, R * 0.32); c.setLineDash([]); c.fillStyle = '#ffce54'; c.font = '11px system-ui'; c.fillText('換向中', qx - R * 0.14, qy - R * 0.18); }
+  }
+  // 換向器與電刷
+  const g = motorGeom({ V: state.V }), half = Math.PI / 3 - g.gapDeg * Math.PI / 360;
+  for (let j = 0; j < 3; j++) {
+    const m = segCenter(state.theta, j), lit = st.brushPlus.includes(j) || st.brushMinus.includes(j);
+    c.fillStyle = lit ? '#ffcf7a' : '#b07a3c'; arcPath(c, cx, cy, R * 0.07, R * 0.13, m - half, m + half); c.fill();
+  }
+  c.fillStyle = '#2a2f3a'; c.beginPath(); c.arc(cx, cy, R * 0.06, 0, 7); c.fill();
+  const bw = R * 0.06;
+  c.fillStyle = '#d7dbe3'; c.fillRect(cx + R * 0.135, cy - bw / 2, R * 0.06, bw); c.fillRect(cx - R * 0.195, cy - bw / 2, R * 0.06, bw);
+  c.font = 'bold 12px system-ui'; c.fillStyle = state.polarity > 0 ? '#ff6b9d' : '#6cd0ff'; c.fillText(state.polarity > 0 ? '+' : '−', cx + R * 0.21, cy - R * 0.05);
+  c.fillStyle = state.polarity > 0 ? '#6cd0ff' : '#ff6b9d'; c.fillText(state.polarity > 0 ? '−' : '+', cx - R * 0.25, cy - R * 0.05);
+  // 總力矩彎箭頭
+  const T = st.torque, span = Math.min(1.3, Math.abs(T) * 0.35), r0 = R * 1.06, dir = T >= 0 ? 1 : -1;
+  if (Math.abs(T) > 0.02) {
+    c.strokeStyle = '#7CFFB2'; c.lineWidth = 3; c.beginPath();
+    const a0 = Math.PI / 2 - dir * span / 2, a1 = Math.PI / 2 + dir * span / 2;
+    c.arc(cx, cy, r0, -a0, -a1, dir > 0); c.stroke();
+    const [hx, hy] = P(cx, cy, r0, a1), tdir = [-Math.sin(a1) * dir, -Math.cos(a1) * dir];
+    S.arrow(c, hx - tdir[0] * 10, hy - tdir[1] * 10, hx + tdir[0] * 4, hy + tdir[1] * 4, { color: '#7CFFB2', width: 3 });
+  }
+}
+function buildCurve() {
+  const key = state.V + '|' + state.polarity; if (key === curveKey) return; curveKey = key;
+  const N = 360; curve = [];
+  for (let i = 0; i < N; i++) { const th = 2 * Math.PI * i / N, s = motorState(th, { V: state.V }, state.polarity); curve.push({ th, tau: s.tau, T: s.torque, sh: s.shorted.length > 0 }); }
+}
+function drawGraph() {
+  buildCurve();
+  const c = gc, W = c._w, H = c._h, x0 = 36, x1 = W - 10, y0 = 14, y1 = H - 26;
+  c.fillStyle = '#060a18'; c.fillRect(0, 0, W, H);
+  const maxT = Math.max(1e-6, ...curve.map(p => Math.max(Math.abs(p.T), ...p.tau.map(Math.abs))));
+  const X = th => x0 + (x1 - x0) * th / (2 * Math.PI), Y = v => (y0 + y1) / 2 - v / maxT * (y1 - y0) / 2 * 0.92;
+  curve.forEach(p => { if (p.sh) { c.fillStyle = 'rgba(255,206,84,.10)'; c.fillRect(X(p.th), y0, (x1 - x0) / curve.length + 0.5, y1 - y0); } });
+  c.strokeStyle = 'rgba(255,255,255,.25)'; c.beginPath(); c.moveTo(x0, Y(0)); c.lineTo(x1, Y(0)); c.stroke();
+  const cols = ['#ffb02e', '#ff6b9d', '#8b9cff'];
+  for (let k = 0; k < 3; k++) { c.strokeStyle = cols[k]; c.lineWidth = 1.2; c.beginPath(); curve.forEach((p, i) => i ? c.lineTo(X(p.th), Y(p.tau[k])) : c.moveTo(X(p.th), Y(p.tau[k]))); c.stroke(); }
+  c.strokeStyle = '#7CFFB2'; c.lineWidth = 2.6; c.beginPath(); curve.forEach((p, i) => i ? c.lineTo(X(p.th), Y(p.T)) : c.moveTo(X(p.th), Y(p.T))); c.stroke();
+  const th = ((state.theta % (2 * Math.PI)) + 2 * Math.PI) % (2 * Math.PI);
+  c.strokeStyle = '#fff'; c.lineWidth = 1; c.beginPath(); c.moveTo(X(th), y0); c.lineTo(X(th), y1); c.stroke();
+  c.fillStyle = '#8a99ad'; c.font = '11px system-ui';
+  c.fillText('0°', x0 - 4, H - 8); c.fillText('180°', (x0 + x1) / 2 - 12, H - 8); c.fillText('360°', x1 - 26, H - 8); c.fillText('τ', 8, y0 + 10);
+  c.fillStyle = '#7CFFB2'; c.fillText('總力矩', x1 - 60, y0 + 10);
+}
+function updateFormula() {
+  const st = cur(), deg = ((state.theta * 180 / Math.PI) % 360 + 360) % 360;
+  const row = (n, sym, sub, val) => `<div class="frow"><span class="fname">${n}</span><span class="fsym">${sym}</span><span class="fsub">${sub}</span><span class="fval">${val}</span></div>`;
+  let h = '<h4>📐 計算公式（即時代入，示意單位：電壓 V、線圈電阻 1、磁場 B=1）</h4>';
+  h += row('轉角', 'θ', '', fmtSig(deg, 3) + '°');
+  h += row('線圈電流', 'i₁, i₂, i₃', state.fixed ? '固定接線（拿掉換向器）' : '由電刷碰到哪幾片換向片決定', st.coil.map(v => fmtSig(v, 3)).join('、'));
+  h += row('各極力矩', 'τₖ = −iₖ·B·sinφₖ', 'φₖ＝極 k 的方向角', st.tau.map(v => fmtSig(v, 3)).join('、'));
+  h += row('總力矩', 'τ = Σ τₖ', st.torque >= 0 ? '正＝逆時針' : '負＝順時針', fmtSig(st.torque, 3));
+  if (!state.fixed) h += row('電源電流', 'I', '從 + 電刷流進換向片的電流', fmtSig(st.supplyCurrent, 3));
+  h += `<div class="frel">📈 每個極像一根小磁鐵：極尖的磁矩 m ∝ 線圈電流，τ = m·B·sin(夾角)；換成導線的說法就是 F = BIL 形成力偶。換向器讓總力矩一直同號。</div>`;
+  document.getElementById('formula').innerHTML = h;
+  const brushes = st.brushPlus.length ? `＋電刷碰到換向片 ${st.brushPlus.map(j => j + 1).join('、')}；−電刷碰到 ${st.brushMinus.map(j => j + 1).join('、')}` : '';
+  document.getElementById('status').textContent = state.fixed
+    ? '沒有換向器：線圈電流固定，力矩在半圈後反向，轉子只會來回擺動，最後停在平衡位置。'
+    : `${brushes}。${st.shorted.length ? '電刷同時碰到兩片：線圈 ' + st.shorted.map(k => k + 1).join('、') + ' 被短路（換向中）。' : ''}總力矩 ${st.torque >= 0 ? '逆時針' : '順時針'}。`;
+}
+function refresh() {
+  document.getElementById('r_V').value = state.V; document.getElementById('v_V').textContent = fmtSig(state.V, 3) + ' V';
+  const deg = ((state.theta * 180 / Math.PI) % 360 + 360) % 360;
+  document.getElementById('r_th').value = Math.round(deg); document.getElementById('v_th').textContent = fmtSig(deg, 3) + '°';
+  document.getElementById('bPlay').textContent = state.playing ? '⏸ 暫停' : '▶ 播放';
+  document.getElementById('bPol').classList.toggle('on', state.polarity < 0);
+  document.getElementById('bFixed').classList.toggle('on', state.fixed);
+  updateFormula(); if (sc) { drawScene(); drawGraph(); }
+}
+const SLOW = 0.08;   // 慢動作倍率（畫面時間 × 0.08 ＝ 模擬時間）
+let last = 0;
+function loop(now) {
+  const dt = Math.min(0.05, last ? (now - last) / 1000 : 0); last = now;
+  if (state.playing && dt > 0) {
+    const sub = 8, h = dt * SLOW / sub;
+    for (let i = 0; i < sub; i++) {
+      if (state.fixed) { const t = cur().torque; state.omega += (t - 0.05 * state.omega) / 0.02 * h; state.theta += state.omega * h; }
+      else { const s = motorStep({ theta: state.theta, omega: state.omega }, h, { V: state.V }, state.polarity); state.theta = s.theta; state.omega = s.omega; }
+    }
+    state.theta = ((state.theta % (2 * Math.PI)) + 2 * Math.PI) % (2 * Math.PI);
+    refresh();
+  }
+  requestAnimationFrame(loop);
+}
+document.getElementById('r_V').addEventListener('input', e => { state.V = +e.target.value; fixedCoil = null; refresh(); });
+document.getElementById('r_th').addEventListener('input', e => { state.theta = +e.target.value * Math.PI / 180; state.omega = 0; refresh(); });
+document.getElementById('bPlay').onclick = () => { state.playing = !state.playing; refresh(); };
+document.getElementById('bStep').onclick = () => { state.playing = false; state.theta += 5 * Math.PI / 180; state.omega = 0; refresh(); };
+document.getElementById('bPol').onclick = () => { state.polarity *= -1; fixedCoil = null; refresh(); };
+document.getElementById('bFixed').onclick = () => {
+  state.fixed = !state.fixed;
+  fixedCoil = state.fixed ? motorState(state.theta, { V: state.V }, state.polarity).coil.slice() : null;
+  refresh();
+};
+document.getElementById('bReset').onclick = () => { Object.assign(state, { theta: 0.3, V: 3, polarity: 1, playing: true, fixed: false, omega: 0 }); fixedCoil = null; refresh(); };
+window.addEventListener('load', () => { setup(); refresh(); requestAnimationFrame(loop); });
+window.addEventListener('resize', () => { setup(); curveKey = ''; refresh(); });
+</script>
+</body>
+</html>
+
