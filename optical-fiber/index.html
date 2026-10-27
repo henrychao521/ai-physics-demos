@@ -409,6 +409,7 @@ function drawFiberScene() {
   if (!sc) return;
   const ctx = sc;
   const W = ctx._w, H = ctx._h;
+  const isSmall = W < 520;
 
   ctx.clearRect(0, 0, W, H);
   const bg = ctx.createLinearGradient(0, 0, 0, H);
@@ -429,8 +430,8 @@ function drawFiberScene() {
 
   // 空氣區（左側）
   ctx.fillStyle = 'rgba(160, 190, 240, 0.7)';
-  ctx.font = '12px system-ui';
-  ctx.fillText('空氣 Air (n₀ = 1.000)', 14, 26);
+  ctx.font = isSmall ? '11px system-ui' : '12px system-ui';
+  ctx.fillText(isSmall ? '空氣' : '空氣 Air (n₀ = 1.000)', isSmall ? 8 : 14, isSmall ? 15 : 26);
 
   // 披覆層（上下兩層，深色石英）
   ctx.fillStyle = '#0f182c';
@@ -442,8 +443,10 @@ function drawFiberScene() {
   ctx.strokeRect(x0, cladTop, x1 - x0, cladBot - cladTop);
 
   ctx.fillStyle = 'rgba(130, 170, 230, 0.8)';
-  ctx.fillText('披覆層 Cladding (n₂ = ' + fmtSig(state.n2, 3) + ')', x0 + 16, cladTop + 20);
-  ctx.fillText('披覆層 Cladding (n₂ = ' + fmtSig(state.n2, 3) + ')', x0 + 16, cladBot - 10);
+  ctx.font = isSmall ? '11px system-ui' : '12px system-ui';
+  const cladTxt = isSmall ? '披覆層 (n₂ = ' + fmtSig(state.n2, 3) + ')' : '披覆層 Cladding (n₂ = ' + fmtSig(state.n2, 3) + ')';
+  ctx.fillText(cladTxt, x0 + (isSmall ? 10 : 16), cladTop + (isSmall ? 18 : 20));
+  ctx.fillText(cladTxt, x0 + (isSmall ? 10 : 16), cladBot - 10);
 
   // 纖芯（淺色石英，高折射率）
   ctx.fillStyle = '#182b4c';
@@ -467,8 +470,9 @@ function drawFiberScene() {
   ctx.setLineDash([]);
 
   ctx.fillStyle = '#8ec5ff';
-  ctx.font = 'bold 12px system-ui';
-  ctx.fillText('纖芯 Core (n₁ = ' + fmtSig(state.n1, 3) + ')', x1 - 180, cy - coreH * 0.25);
+  ctx.font = isSmall ? 'bold 11px system-ui' : 'bold 12px system-ui';
+  const coreTxt = isSmall ? '纖芯 Core (n₁=' + fmtSig(state.n1, 3) + ')' : '纖芯 Core (n₁ = ' + fmtSig(state.n1, 3) + ')';
+  ctx.fillText(coreTxt, isSmall ? Math.max(x0 + 10, x1 - 145) : x1 - 180, cy - coreH * 0.25);
 
   // 端面
   ctx.strokeStyle = '#70a5ff';
@@ -477,8 +481,8 @@ function drawFiberScene() {
   ctx.moveTo(x0, cladTop); ctx.lineTo(x0, cladBot);
   ctx.stroke();
   ctx.fillStyle = '#a0c4ff';
-  ctx.font = '12px system-ui';
-  ctx.fillText('端面', x0 - 30, cladTop + 16);
+  ctx.font = isSmall ? '11px system-ui' : '12px system-ui';
+  ctx.fillText('端面', isSmall ? x0 - 26 : x0 - 30, isSmall ? cladTop + 14 : cladTop + 16);
 
   // 接受錐（Acceptance Cone）
   if (state.n2 < state.n1) {
@@ -511,8 +515,14 @@ function drawFiberScene() {
       ctx.stroke();
 
       ctx.fillStyle = '#00e5ff';
-      ctx.font = '12px system-ui';
-      ctx.fillText('接受錐 θa = ' + fmtSig(acc, 3) + '°', x0 - coneR - 10, cy - coneR * 0.6 - 6);
+      if (isSmall) {
+        ctx.font = '11px system-ui';
+        ctx.fillText('接受錐', 8, Math.round(cy - coneR * 0.6 - 13));
+        ctx.fillText('θa = ' + fmtSig(acc, 3) + '°', 8, Math.round(cy - coneR * 0.6 - 1));
+      } else {
+        ctx.font = '12px system-ui';
+        ctx.fillText('接受錐 θa = ' + fmtSig(acc, 3) + '°', x0 - coneR - 10, cy - coneR * 0.6 - 6);
+      }
       ctx.restore();
     }
   }
@@ -544,16 +554,16 @@ function drawFiberScene() {
     ctx.arc(x0, cy, 30, Math.PI - thRad, Math.PI, false);
     ctx.stroke();
     ctx.fillStyle = '#ffe247';
-    ctx.font = 'bold 12px system-ui';
-    ctx.fillText('θ=' + thDeg + '°', x0 - 58, cy - 8);
+    ctx.font = isSmall ? 'bold 11px system-ui' : 'bold 12px system-ui';
+    ctx.fillText('θ=' + thDeg + '°', isSmall ? x0 - 56 : x0 - 58, isSmall ? cy - 6 : cy - 8);
   }
   ctx.restore();
 
   // 纖芯內部前進
   if (state.n2 >= state.n1) {
     ctx.fillStyle = '#ff5470';
-    ctx.font = 'bold 14px system-ui';
-    ctx.fillText('⚠️ 披覆層必須比纖芯小（n₂ ≥ n₁ 無法形成全反射）', x0 + 40, cy);
+    ctx.font = isSmall ? 'bold 11px system-ui' : 'bold 14px system-ui';
+    ctx.fillText(isSmall ? '⚠️ n₂ ≥ n₁ 無法形成全反射' : '⚠️ 披覆層必須比纖芯小（n₂ ≥ n₁ 無法形成全反射）', isSmall ? x0 + 10 : x0 + 40, cy);
     document.getElementById('sub').textContent = '披覆折射率 n₂ 大於或等於纖芯 n₁，界面不具備全反射條件，光線無法被約束在纖芯。';
   } else if (thDeg === 0) {
     ctx.strokeStyle = '#ffe247';
@@ -625,8 +635,11 @@ function drawFiberScene() {
 
           if (bounce === 1) {
             ctx.fillStyle = '#ff5470';
-            ctx.font = 'bold 12px system-ui';
-            ctx.fillText('不符合全反射，光漏出去', leakX + 8, leakY + (dirY > 0 ? 14 : -6));
+            ctx.font = isSmall ? 'bold 11px system-ui' : 'bold 12px system-ui';
+            const leakTxt = isSmall ? '光漏出' : '不符合全反射，光漏出去';
+            const leakTxtW = isSmall ? 40 : 130;
+            const leakTxtX = Math.min(W - leakTxtW - 8, leakX + 8);
+            ctx.fillText(leakTxt, leakTxtX, leakY + (dirY > 0 ? 14 : -6));
           }
           ctx.restore();
         }
@@ -644,8 +657,10 @@ function drawFiberScene() {
         ctx.setLineDash([]);
 
         ctx.fillStyle = ray.tir ? '#7CFFB2' : '#ff5470';
-        ctx.font = '12px system-ui';
-        ctx.fillText('界面入射角 θ_inc = ' + fmtSig(ray.incidence, 3) + '° (' + (ray.tir ? '≥ θc 全反射' : '< θc 折射漏失') + ')', nextX - 35, nextY + (dirY > 0 ? -12 : 20));
+        ctx.font = isSmall ? '11px system-ui' : '12px system-ui';
+        const incTxt = isSmall ? 'θ_inc = ' + fmtSig(ray.incidence, 3) + '° (' + (ray.tir ? '全反射' : '漏光') + ')' : '界面入射角 θ_inc = ' + fmtSig(ray.incidence, 3) + '° (' + (ray.tir ? '≥ θc 全反射' : '< θc 折射漏失') + ')';
+        const incX = isSmall ? Math.max(x0 + 8, Math.min(W - 125, nextX - 35)) : nextX - 35;
+        ctx.fillText(incTxt, incX, nextY + (dirY > 0 ? -12 : 20));
         ctx.restore();
       }
 
@@ -666,6 +681,7 @@ function drawOffsetScene() {
   if (!scOffset) return;
   const ctx = scOffset;
   const W = ctx._w, H = ctx._h;
+  const isSmall = W < 520;
 
   ctx.clearRect(0, 0, W, H);
   ctx.fillStyle = '#0a1020';
@@ -717,15 +733,19 @@ function drawOffsetScene() {
     drawArrowHead(ctx, dimX, cy + shiftY / 2, Math.PI / 2, '#ffb02e');
 
     ctx.fillStyle = '#ffb02e';
-    ctx.font = '12px system-ui';
-    ctx.fillText('d = ' + fmtSig(d_um, 3) + ' μm', dimX + 8, cy + 4);
+    ctx.font = isSmall ? '11px system-ui' : '12px system-ui';
+    ctx.fillText('d = ' + fmtSig(d_um, 3) + ' μm', dimX + (isSmall ? 4 : 8), cy + 4);
   }
 
   ctx.fillStyle = '#00e5ff';
-  ctx.font = '12px system-ui';
-  ctx.fillText('光纖 1 模場 (MFD=' + fmtSig(mfd_um, 3) + 'μm)', cx - 80, cy - shiftY / 2 - spotR - 8);
+  ctx.font = isSmall ? '11px system-ui' : '12px system-ui';
+  const mfdTxt1 = isSmall ? '光纖 1 (MFD=' + fmtSig(mfd_um, 3) + 'μm)' : '光纖 1 模場 (MFD=' + fmtSig(mfd_um, 3) + 'μm)';
+  ctx.fillText(mfdTxt1, Math.max(8, cx - (isSmall ? 70 : 80)), Math.max(14, cy - shiftY / 2 - spotR - (isSmall ? 4 : 8)));
+
   ctx.fillStyle = '#ff7a45';
-  ctx.fillText('光纖 2 模場 (錯開 d)', cx - 80, cy + shiftY / 2 + spotR + 18);
+  ctx.font = isSmall ? '11px system-ui' : '12px system-ui';
+  const mfdTxt2 = isSmall ? '光纖 2 (錯開 d)' : '光纖 2 模場 (錯開 d)';
+  ctx.fillText(mfdTxt2, Math.max(8, cx - (isSmall ? 70 : 80)), Math.min(H - 6, cy + shiftY / 2 + spotR + (isSmall ? 14 : 18)));
 
   // 2. 右側接合端面縱向示意
   const rx1 = W * 0.58, rx2 = W * 0.94;
@@ -758,14 +778,16 @@ function drawOffsetScene() {
   ctx.stroke();
 
   ctx.fillStyle = '#ffd13b';
-  ctx.font = '12px system-ui';
-  ctx.fillText('熔接端面', rmid - 24, cy - 66);
+  ctx.font = isSmall ? '11px system-ui' : '12px system-ui';
+  ctx.fillText('熔接端面', rmid - (isSmall ? 22 : 24), Math.max(14, cy - 66));
 
   const loss = offsetLossDB(d_um, mfd_um);
   const eta = dBtoT(loss) * 100;
   ctx.fillStyle = '#7CFFB2';
-  ctx.font = 'bold 13px system-ui';
-  ctx.fillText('接續損耗: ' + fmtSig(loss, 3) + ' dB　(耦合效率 η ≈ ' + fmtSig(eta, 3) + '%)', rx1, 26);
+  ctx.font = isSmall ? 'bold 11px system-ui' : 'bold 13px system-ui';
+  const bannerTxt = isSmall ? '損耗: ' + fmtSig(loss, 3) + ' dB (η≈' + fmtSig(eta, 3) + '%)' : '接續損耗: ' + fmtSig(loss, 3) + ' dB　(耦合效率 η ≈ ' + fmtSig(eta, 3) + '%)';
+  const bannerX = isSmall ? Math.max(8, Math.min(W - 190, rx1)) : rx1;
+  ctx.fillText(bannerTxt, bannerX, isSmall ? 18 : 26);
 }
 
 function refresh() {
@@ -836,7 +858,7 @@ function refresh() {
   const r_spdb = document.getElementById('r_spliceDB');
   if (r_spdb) r_spdb.value = state.spliceDB;
   const r_ncn = document.getElementById('r_nConn');
-  if (r_ncn) r_ncn.value = state.nConn;
+  if (r_ncn) r_nConn.value = state.nConn;
   const r_cndb = document.getElementById('r_connDB');
   if (r_cndb) r_cndb.value = state.connDB;
 

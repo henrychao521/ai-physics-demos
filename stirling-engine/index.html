@@ -503,7 +503,7 @@ function drawEngine() {
     ctx.stroke();
   }
   ctx.fillStyle = '#ff6b81';
-  ctx.font = 'bold 12px system-ui';
+  ctx.font = (W < 520) ? 'bold 11px system-ui' : 'bold 12px system-ui';
   ctx.fillText('🔥 熱端 (Th=' + state.Th + ' K)', cx - cylR - 8, cyTop - 12);
 
   const coldY = cyTop + hotH;
@@ -517,7 +517,7 @@ function drawEngine() {
     ctx.fillRect(cx + cylR + 2, fy, 14, 4);
   }
   ctx.fillStyle = '#7dd3fc';
-  ctx.font = 'bold 12px system-ui';
+  ctx.font = (W < 520) ? 'bold 11px system-ui' : 'bold 12px system-ui';
   ctx.fillText('❄️ 冷端 (Tc=' + state.Tc + ' K)', cx - cylR - 8, cyBot + 16);
 
   const regX = cx + cylR + 22;
@@ -678,32 +678,65 @@ function drawEngine() {
   ctx.fillStyle = '#cbd5e1';
   ctx.beginPath(); ctx.arc(flyX, flyY, 5, 0, Math.PI * 2); ctx.fill();
 
-  ctx.font = '12px system-ui';
+  if (W < 520) {
+    ctx.font = '11px system-ui';
 
-  ctx.fillStyle = '#eab308';
-  ctx.fillText('回熱器 (細網格)', regX - 10, regTop - 6);
+    ctx.fillStyle = '#eab308';
+    ctx.fillText('回熱器 (細網格)', Math.max(8, regX - 10), regTop - 6);
 
-  ctx.fillStyle = '#cbd5e1';
-  const tagDispY = Math.max(cyTop + 36, dispY + dispH / 2);
-  ctx.fillText('配氣活塞：把氣體在熱端與冷端之間推來推去', cx - cylR - 10, tagDispY - 14);
-  ctx.strokeStyle = 'rgba(203, 213, 225, 0.4)';
-  ctx.lineWidth = 1;
-  ctx.beginPath();
-  ctx.moveTo(cx - cylR - 10, tagDispY - 8);
-  ctx.lineTo(cx - cylR + 6, dispY + dispH / 2);
-  ctx.stroke();
+    const tagX = 8;
+    ctx.fillStyle = '#cbd5e1';
+    const tagDispY = Math.max(cyTop + 36, dispY + dispH / 2);
+    ctx.fillText('配氣活塞', tagX, tagDispY - 12);
+    ctx.fillText('推移氣體', tagX, tagDispY + 2);
+    ctx.strokeStyle = 'rgba(203, 213, 225, 0.4)';
+    ctx.lineWidth = 1;
+    ctx.beginPath();
+    ctx.moveTo(tagX + 48, tagDispY - 5);
+    ctx.lineTo(cx - cylR + 4, dispY + dispH / 2);
+    ctx.stroke();
 
-  ctx.fillStyle = '#38bdf8';
-  const tagPwrY = Math.max(cyTop + cylH * 0.72, pwrY + pwrH / 2);
-  ctx.fillText('動力活塞：對外做功', cx - cylR - 10, tagPwrY + 14);
-  ctx.strokeStyle = 'rgba(56, 189, 248, 0.4)';
-  ctx.beginPath();
-  ctx.moveTo(cx - cylR - 10, tagPwrY + 8);
-  ctx.lineTo(cx - cylR + 4, pwrY + pwrH / 2);
-  ctx.stroke();
+    ctx.fillStyle = '#38bdf8';
+    const tagPwrY = Math.max(cyTop + cylH * 0.72, pwrY + pwrH / 2);
+    ctx.fillText('動力活塞', tagX, tagPwrY - 10);
+    ctx.fillText('對外做功', tagX, tagPwrY + 4);
+    ctx.strokeStyle = 'rgba(56, 189, 248, 0.4)';
+    ctx.beginPath();
+    ctx.moveTo(tagX + 48, tagPwrY - 3);
+    ctx.lineTo(cx - cylR + 4, pwrY + pwrH / 2);
+    ctx.stroke();
 
-  ctx.fillStyle = '#94a3b8';
-  ctx.fillText('曲軸飛輪 (配氣活塞領先 90°)', flyX + flyR + 8, flyY + 4);
+    ctx.fillStyle = '#94a3b8';
+    ctx.fillText('曲軸飛輪', flyX + flyR + 8, flyY - 2);
+    ctx.fillText('(領先 90°)', flyX + flyR + 8, flyY + 12);
+  } else {
+    ctx.font = '12px system-ui';
+
+    ctx.fillStyle = '#eab308';
+    ctx.fillText('回熱器 (細網格)', regX - 10, regTop - 6);
+
+    ctx.fillStyle = '#cbd5e1';
+    const tagDispY = Math.max(cyTop + 36, dispY + dispH / 2);
+    ctx.fillText('配氣活塞：把氣體在熱端與冷端之間推來推去', cx - cylR - 10, tagDispY - 14);
+    ctx.strokeStyle = 'rgba(203, 213, 225, 0.4)';
+    ctx.lineWidth = 1;
+    ctx.beginPath();
+    ctx.moveTo(cx - cylR - 10, tagDispY - 8);
+    ctx.lineTo(cx - cylR + 6, dispY + dispH / 2);
+    ctx.stroke();
+
+    ctx.fillStyle = '#38bdf8';
+    const tagPwrY = Math.max(cyTop + cylH * 0.72, pwrY + pwrH / 2);
+    ctx.fillText('動力活塞：對外做功', cx - cylR - 10, tagPwrY + 14);
+    ctx.strokeStyle = 'rgba(56, 189, 248, 0.4)';
+    ctx.beginPath();
+    ctx.moveTo(cx - cylR - 10, tagPwrY + 8);
+    ctx.lineTo(cx - cylR + 4, pwrY + pwrH / 2);
+    ctx.stroke();
+
+    ctx.fillStyle = '#94a3b8';
+    ctx.fillText('曲軸飛輪 (配氣活塞領先 90°)', flyX + flyR + 8, flyY + 4);
+  }
 }
 
 function drawPV() {
@@ -741,7 +774,8 @@ function drawPV() {
 
   ctx.strokeStyle = 'rgba(160, 180, 255, 0.12)';
   ctx.lineWidth = 1;
-  ctx.font = '12px system-ui';
+  const isNarrow = W < 520;
+  ctx.font = isNarrow ? '11px system-ui' : '12px system-ui';
   ctx.fillStyle = '#94a3b8';
 
   for (let k = 1; k <= 4; k++) {
@@ -844,18 +878,20 @@ function drawPV() {
       const x = vx(pt.p.V), y = py(pt.p.P);
       ctx.fillStyle = pt.col;
       ctx.beginPath(); ctx.arc(x, y, 4.5, 0, Math.PI * 2); ctx.fill();
-      ctx.font = 'bold 13px system-ui';
+      ctx.font = isNarrow ? 'bold 12px system-ui' : 'bold 13px system-ui';
       ctx.fillText(pt.txt, x + pt.ox, y + pt.oy);
     });
 
-    ctx.font = '12px system-ui';
+    ctx.font = isNarrow ? '11px system-ui' : '12px system-ui';
     ctx.fillStyle = 'rgba(255, 84, 112, 0.85)';
-    ctx.fillText('等溫線 Th = ' + state.Th + ' K', vx(states[1].V) - 40, py(states[1].P) - 16);
+    const thX = isNarrow ? Math.min(vx(states[1].V) - 40, W - padR - 92) : vx(states[1].V) - 40;
+    ctx.fillText('等溫線 Th = ' + state.Th + ' K', thX, py(states[1].P) - 16);
     ctx.fillStyle = 'rgba(76, 194, 255, 0.85)';
-    ctx.fillText('等溫線 Tc = ' + state.Tc + ' K', vx(states[2].V) - 40, py(states[2].P) + 24);
+    const tcX = isNarrow ? Math.min(vx(states[2].V) - 40, W - padR - 92) : vx(states[2].V) - 40;
+    ctx.fillText('等溫線 Tc = ' + state.Tc + ' K', tcX, py(states[2].P) + 24);
 
     ctx.fillStyle = 'var(--accent,#00e5a3)';
-    ctx.font = 'bold 13px system-ui';
+    ctx.font = isNarrow ? 'bold 12px system-ui' : 'bold 13px system-ui';
     const midX = (vx(states[0].V) + vx(states[1].V)) / 2 - 30;
     const midY = (py(states[0].P) + py(states[2].P)) / 2;
     ctx.fillText('淨功 W = ' + fmtSig(res.W, 3) + ' J', midX, midY);
@@ -891,10 +927,10 @@ function drawPV() {
     const W_s = schmidtWork(G_SCHMIDT, N_SCHMIDT, state.Th, state.Tc, 180);
 
     ctx.fillStyle = '#ffb02e';
-    ctx.font = 'bold 13px system-ui';
+    ctx.font = isNarrow ? 'bold 12px system-ui' : 'bold 13px system-ui';
     ctx.fillText('施密特 P–V 環（正弦連續運動）', padL + 16, padT + 24);
     ctx.fillStyle = '#cbd5e1';
-    ctx.font = '12px system-ui';
+    ctx.font = isNarrow ? '11px system-ui' : '12px system-ui';
     ctx.fillText('施密特淨功 W = ' + fmtSig(W_s, 3) + ' J', padL + 16, padT + 44);
     ctx.fillStyle = 'rgba(255, 255, 255, 0.65)';
     ctx.fillText('因活塞連續簡諧運動無停頓，轉角圓滑鈍化，', padL + 16, padT + 64);
@@ -939,7 +975,8 @@ function drawBar() {
 }
 
 function drawEnergyBars(ctx, x, y, w, h, res) {
-  ctx.font = 'bold 12px system-ui';
+  const isNarrow = ctx._w < 520;
+  ctx.font = isNarrow ? 'bold 11px system-ui' : 'bold 12px system-ui';
   ctx.fillStyle = '#cbd5e1';
   ctx.fillText('🔥 熱量與做功分配 (單位：J)', x, y + 12);
 
@@ -957,7 +994,7 @@ function drawEnergyBars(ctx, x, y, w, h, res) {
 
   items.forEach((it, idx) => {
     const by = barAreaY + idx * gap;
-    ctx.font = '12px system-ui';
+    ctx.font = isNarrow ? '11px system-ui' : '12px system-ui';
     ctx.fillStyle = '#94a3b8';
     ctx.fillText(it.label, x, by + 11);
 
@@ -971,17 +1008,22 @@ function drawEnergyBars(ctx, x, y, w, h, res) {
     ctx.fillRect(bx, by, barW, barH);
 
     ctx.fillStyle = '#ffffff';
-    ctx.font = '12px system-ui';
+    ctx.font = isNarrow ? '11px system-ui' : '12px system-ui';
     ctx.fillText(fmtSig(it.val, 3) + ' J', bx + barW + 6, by + 11);
   });
 }
 
 function drawEfficiencyBars(ctx, x, y, w, h, res, res0) {
-  ctx.font = 'bold 12px system-ui';
+  const isNarrow = ctx._w < 520;
+  ctx.font = isNarrow ? 'bold 11px system-ui' : 'bold 12px system-ui';
   ctx.fillStyle = '#cbd5e1';
   ctx.fillText('📈 熱機效率比較 (與卡諾極限)', x, y + 12);
 
-  const items = [
+  const items = isNarrow ? [
+    { label: `η (ε=${fmtSig(state.regen, 2)})`, val: res.eta * 100, col: 'var(--accent,#00e5a3)' },
+    { label: 'η (ε=0)', val: res0.eta * 100, col: '#f59e0b' },
+    { label: '卡諾極限 η', val: res.etaCarnot * 100, col: '#f43f5e' }
+  ] : [
     { label: `η (當前 ε=${fmtSig(state.regen, 2)})`, val: res.eta * 100, col: 'var(--accent,#00e5a3)' },
     { label: 'η (無回熱 ε=0)', val: res0.eta * 100, col: '#f59e0b' },
     { label: '卡諾極限 η_Carnot', val: res.etaCarnot * 100, col: '#f43f5e' }
@@ -993,7 +1035,7 @@ function drawEfficiencyBars(ctx, x, y, w, h, res, res0) {
 
   items.forEach((it, idx) => {
     const by = barAreaY + idx * gap;
-    ctx.font = '12px system-ui';
+    ctx.font = isNarrow ? '11px system-ui' : '12px system-ui';
     ctx.fillStyle = '#94a3b8';
     ctx.fillText(it.label, x, by + 12);
 
@@ -1008,7 +1050,7 @@ function drawEfficiencyBars(ctx, x, y, w, h, res, res0) {
     ctx.fillRect(bx, by, barW, barH);
 
     ctx.fillStyle = '#ffffff';
-    ctx.font = 'bold 12px system-ui';
+    ctx.font = isNarrow ? 'bold 11px system-ui' : 'bold 12px system-ui';
     ctx.fillText(fmtSig(it.val, 3) + ' %', bx + barW + 6, by + 12);
   });
 

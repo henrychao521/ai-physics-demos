@@ -372,6 +372,7 @@ function drawCircuit(ctx) {
 
 // 繪製 555 電路
 function draw555Circuit(ctx, W, H) {
+  const isNarrow = W < 520;
   const res = ne555(state.R1 * 1e3, state.R2 * 1e3, state.C * 1e-6);
   const ph = state.simTime % res.T;
   const isHigh = ph < res.tH;
@@ -387,22 +388,26 @@ function draw555Circuit(ctx, W, H) {
 
   // 匯流排
   const yVcc = 26, yGnd = H - 24;
+  const marginX = isNarrow ? 12 : 25;
   ctx.lineWidth = 2.5; ctx.lineCap = 'round';
   // Vcc 線
   ctx.strokeStyle = '#ff5470';
-  ctx.beginPath(); ctx.moveTo(25, yVcc); ctx.lineTo(W - 25, yVcc); ctx.stroke();
-  ctx.fillStyle = '#ff5470'; ctx.font = 'bold 12px monospace';
-  ctx.fillText(`+Vcc (${state.Vcc}V)`, 25, yVcc - 8);
+  ctx.beginPath(); ctx.moveTo(marginX, yVcc); ctx.lineTo(W - marginX, yVcc); ctx.stroke();
+  ctx.fillStyle = '#ff5470'; ctx.font = isNarrow ? 'bold 11px monospace' : 'bold 12px monospace';
+  ctx.fillText(`+Vcc (${state.Vcc}V)`, marginX, yVcc - 8);
 
   // GND 線
   ctx.strokeStyle = '#4cc2ff';
-  ctx.beginPath(); ctx.moveTo(25, yGnd); ctx.lineTo(W - 25, yGnd); ctx.stroke();
-  ctx.fillStyle = '#4cc2ff'; ctx.font = 'bold 12px monospace';
-  ctx.fillText('GND (0V)', 25, yGnd + 16);
+  ctx.beginPath(); ctx.moveTo(marginX, yGnd); ctx.lineTo(W - marginX, yGnd); ctx.stroke();
+  ctx.fillStyle = '#4cc2ff'; ctx.font = isNarrow ? 'bold 11px monospace' : 'bold 12px monospace';
+  // 窄螢幕時將 GND 標籤移至線條上方，避免與底部狀態文字衝突
+  ctx.fillText('GND (0V)', marginX, isNarrow ? yGnd - 5 : yGnd + 16);
 
   // 555 IC 方塊（置中稍偏右）
-  const icW = Math.min(W * 0.44, 250), icH = Math.min(H * 0.64, 210);
-  const icX = W * 0.43 - icW / 2, icY = H * 0.5 - icH / 2 + 2;
+  const icW = isNarrow ? Math.min(W * 0.47, 250) : Math.min(W * 0.44, 250);
+  const icH = Math.min(H * 0.64, 210);
+  const icX = isNarrow ? (W * 0.46 - icW / 2) : (W * 0.43 - icW / 2);
+  const icY = H * 0.5 - icH / 2 + 2;
 
   // IC 外殼陰影與本體
   ctx.fillStyle = '#121b32';
@@ -410,13 +415,10 @@ function draw555Circuit(ctx, W, H) {
   ctx.beginPath(); ctx.roundRect(icX, icY, icW, icH, 10); ctx.fill(); ctx.stroke();
 
   // IC 標題與標記
-  ctx.fillStyle = '#9cb5dd'; ctx.font = 'bold 13px system-ui';
-  ctx.fillText('NE555 計時器', icX + 16, icY + 22);
+  ctx.fillStyle = '#9cb5dd'; ctx.font = isNarrow ? 'bold 11px system-ui' : 'bold 13px system-ui';
+  ctx.fillText('NE555 計時器', isNarrow ? icX + 10 : icX + 16, isNarrow ? icY + 18 : icY + 22);
 
   // 8 個引腳位置
-  // 左側：8 VCC(上), 4 RESET(中上), 7 DIS(中), 6 THR(中下), 2 TRIG(下)
-  // 底部：1 GND
-  // 右側：5 CTRL(上), 3 OUT(中)
   const pin8Y = icY + icH * 0.16;
   const pin4Y = icY + icH * 0.33;
   const pin7Y = icY + icH * 0.50;
@@ -431,14 +433,15 @@ function draw555Circuit(ctx, W, H) {
   const drawPinL = (num, name, py) => {
     ctx.strokeStyle = '#5a72a5'; ctx.lineWidth = 2;
     ctx.beginPath(); ctx.moveTo(icX - 10, py); ctx.lineTo(icX, py); ctx.stroke();
-    ctx.fillStyle = '#ffce54'; ctx.fillText(num, icX + 5, py + 4);
-    ctx.fillStyle = '#dce6ff'; ctx.fillText(name, icX + 20, py + 4);
+    ctx.fillStyle = '#ffce54'; ctx.fillText(num, isNarrow ? icX + 3 : icX + 5, py + 4);
+    ctx.fillStyle = '#dce6ff'; ctx.fillText(name, isNarrow ? icX + 15 : icX + 20, py + 4);
   };
   const drawPinR = (num, name, py) => {
     ctx.strokeStyle = '#5a72a5'; ctx.lineWidth = 2;
     ctx.beginPath(); ctx.moveTo(icX + icW, py); ctx.lineTo(icX + icW + 10, py); ctx.stroke();
-    ctx.fillStyle = '#ffce54'; ctx.fillText(num, icX + icW - 14, py + 4);
-    ctx.fillStyle = '#dce6ff'; ctx.fillText(name, icX + icW - 54, py + 4);
+    ctx.fillStyle = '#ffce54'; ctx.fillText(num, isNarrow ? icX + icW - 12 : icX + icW - 14, py + 4);
+    const nameX = isNarrow ? (icX + icW - (name === 'CTRL' ? 44 : 36)) : (icX + icW - 54);
+    ctx.fillStyle = '#dce6ff'; ctx.fillText(name, nameX, py + 4);
   };
 
   drawPinL('8', 'VCC', pin8Y);
@@ -456,33 +459,42 @@ function draw555Circuit(ctx, W, H) {
   ctx.fillStyle = '#dce6ff'; ctx.fillText('GND', pin1X - 10, icY + icH - 18);
 
   // 內部方塊示意：兩個比較器、正反器、門檻標記
-  const blkX = icX + 66, blkW = icW - 128;
+  const blkX = isNarrow ? icX + 50 : icX + 66;
+  const blkW = isNarrow ? icW - 96 : icW - 128;
+  const cmpH = isNarrow ? 22 : 24;
+
   // 上比較器
+  const cmp1Y = icY + icH * 0.44;
   ctx.fillStyle = 'rgba(255, 122, 69, 0.15)'; ctx.strokeStyle = 'rgba(255, 122, 69, 0.6)'; ctx.lineWidth = 1;
-  ctx.strokeRect(blkX, icY + icH * 0.44, blkW, 24); ctx.fillRect(blkX, icY + icH * 0.44, blkW, 24);
-  ctx.fillStyle = '#ff9f7a'; ctx.font = '10px system-ui';
-  ctx.fillText('上門檻 2/3 Vcc', blkX + 4, icY + icH * 0.44 + 16);
+  ctx.strokeRect(blkX, cmp1Y, blkW, cmpH); ctx.fillRect(blkX, cmp1Y, blkW, cmpH);
+  ctx.fillStyle = '#ff9f7a'; ctx.font = isNarrow ? '11px system-ui' : '10px system-ui';
+  ctx.fillText(isNarrow ? '2/3Vcc門檻' : '上門檻 2/3 Vcc', blkX + 4, cmp1Y + (isNarrow ? 15 : 16));
 
   // 下比較器
+  const cmp2Y = icY + icH * 0.70;
   ctx.fillStyle = 'rgba(76, 194, 255, 0.15)'; ctx.strokeStyle = 'rgba(76, 194, 255, 0.6)'; ctx.lineWidth = 1;
-  ctx.strokeRect(blkX, icY + icH * 0.70, blkW, 24); ctx.fillRect(blkX, icY + icH * 0.70, blkW, 24);
-  ctx.fillStyle = '#8bd8ff'; ctx.font = '10px system-ui';
-  ctx.fillText('下門檻 1/3 Vcc', blkX + 4, icY + icH * 0.70 + 16);
+  ctx.strokeRect(blkX, cmp2Y, blkW, cmpH); ctx.fillRect(blkX, cmp2Y, blkW, cmpH);
+  ctx.fillStyle = '#8bd8ff'; ctx.font = isNarrow ? '11px system-ui' : '10px system-ui';
+  ctx.fillText(isNarrow ? '1/3Vcc門檻' : '下門檻 1/3 Vcc', blkX + 4, cmp2Y + (isNarrow ? 15 : 16));
 
-  // RS 正反器
+  // RS 正反器：窄螢幕調高位置並調整寬度，徹底避開 5 腳 CTRL
+  const rsY = isNarrow ? icY + 24 : icY + 36;
+  const rsH = isNarrow ? 22 : 28;
   ctx.fillStyle = 'rgba(124, 255, 178, 0.12)'; ctx.strokeStyle = 'rgba(124, 255, 178, 0.4)'; ctx.lineWidth = 1;
-  ctx.strokeRect(blkX + 4, icY + 36, blkW - 8, 28); ctx.fillRect(blkX + 4, icY + 36, blkW - 8, 28);
-  ctx.fillStyle = '#7CFFB2'; ctx.font = '10px system-ui';
-  ctx.fillText('RS 正反器', blkX + 10, icY + 54);
+  ctx.strokeRect(blkX + (isNarrow ? 2 : 4), rsY, blkW - (isNarrow ? 4 : 8), rsH);
+  ctx.fillRect(blkX + (isNarrow ? 2 : 4), rsY, blkW - (isNarrow ? 4 : 8), rsH);
+  ctx.fillStyle = '#7CFFB2'; ctx.font = isNarrow ? '11px system-ui' : '10px system-ui';
+  ctx.fillText(isNarrow ? 'RS正反器' : 'RS 正反器', blkX + (isNarrow ? 6 : 10), isNarrow ? rsY + 15 : icY + 54);
 
   // 外部接線與元件
-  const wireLX = Math.max(icX - 60, 48); // 左側主要連接縱線
+  const wireLX = isNarrow ? Math.max(icX - 44, 38) : Math.max(icX - 60, 48); // 左側主要連接縱線
   ctx.strokeStyle = '#8fa4c8'; ctx.lineWidth = 2;
 
   // 1. Pin 8 與 Pin 4 接 Vcc
+  const vccWireX = isNarrow ? wireLX + 18 : wireLX + 25;
   ctx.beginPath();
-  ctx.moveTo(icX - 10, pin8Y); ctx.lineTo(wireLX + 25, pin8Y); ctx.lineTo(wireLX + 25, yVcc);
-  ctx.moveTo(icX - 10, pin4Y); ctx.lineTo(wireLX + 25, pin4Y);
+  ctx.moveTo(icX - 10, pin8Y); ctx.lineTo(vccWireX, pin8Y); ctx.lineTo(vccWireX, yVcc);
+  ctx.moveTo(icX - 10, pin4Y); ctx.lineTo(vccWireX, pin4Y);
   ctx.stroke();
 
   // 2. Pin 1 接 GND
@@ -527,51 +539,65 @@ function draw555Circuit(ctx, W, H) {
 
   // 6. 輸出 3 腳接 LED（高電位亮）
   const outWireX = icX + icW + 10;
-  const ledX = Math.min(W - 46, outWireX + 60);
+  const ledX = isNarrow ? Math.min(W - 32, outWireX + 44) : Math.min(W - 46, outWireX + 60);
   ctx.beginPath();
   ctx.moveTo(outWireX, pin3Y); ctx.lineTo(ledX, pin3Y);
   ctx.stroke();
 
   // 輸出電阻 + LED
-  const rLedBot = pin3Y + 36;
+  const rLedBot = pin3Y + (isNarrow ? 30 : 36);
   drawResistor(ctx, ledX, pin3Y + 2, ledX, rLedBot, '1kΩ');
-  const ledBot = rLedBot + 32;
+  const ledBot = rLedBot + (isNarrow ? 28 : 32);
   drawLED(ctx, ledX, rLedBot + 2, ledBot, isHigh, isHigh ? '#7CFFB2' : '#2a443a');
   ctx.beginPath(); ctx.moveTo(ledX, ledBot); ctx.lineTo(ledX, yGnd); ctx.stroke();
 
-  // 電容電壓即時標籤
+  // 電容電壓即時標籤：窄螢幕移至電容上方，不擠在電路底部
   ctx.fillStyle = '#7CFFB2'; ctx.font = 'bold 11px system-ui';
-  ctx.fillText(`v_C: ${fmtSig(vCap, 3)}V`, wireLX + 8, capBotY + 16);
-
-  // 充放電流向示意
-  ctx.fillStyle = isHigh ? '#7CFFB2' : '#ff7a45';
-  ctx.font = 'bold 12px system-ui';
-  if (isHigh) {
-    ctx.fillText('▶ 充電中：Vcc 經 R₁+R₂ → 電容 C（OUT=HIGH LED亮）', icX - 10, H - 8);
+  if (isNarrow) {
+    ctx.fillText(`v_C: ${fmtSig(vCap, 3)}V`, wireLX + 8, capTopY - 4);
   } else {
-    ctx.fillText('◀ 放電中：電容 C 經 R₂ → 7腳 DIS 接地（OUT=LOW LED滅）', icX - 10, H - 8);
+    ctx.fillText(`v_C: ${fmtSig(vCap, 3)}V`, wireLX + 8, capBotY + 16);
+  }
+
+  // 充放電流向示意：窄螢幕縮短文案並留足左右邊距
+  ctx.fillStyle = isHigh ? '#7CFFB2' : '#ff7a45';
+  ctx.font = isNarrow ? 'bold 11px system-ui' : 'bold 12px system-ui';
+  if (isNarrow) {
+    if (isHigh) {
+      ctx.fillText('▶ 充電：Vcc 經 R₁+R₂ → C (LED亮)', 12, H - 6);
+    } else {
+      ctx.fillText('◀ 放電：C 經 R₂ → 7腳接地 (LED滅)', 12, H - 6);
+    }
+  } else {
+    if (isHigh) {
+      ctx.fillText('▶ 充電中：Vcc 經 R₁+R₂ → 電容 C（OUT=HIGH LED亮）', icX - 10, H - 8);
+    } else {
+      ctx.fillText('◀ 放電中：電容 C 經 R₂ → 7腳 DIS 接地（OUT=LOW LED滅）', icX - 10, H - 8);
+    }
   }
 }
 
 // 繪製雙電晶體非穩態電路
 function drawBjtCircuit(ctx, W, H) {
+  const isNarrow = W < 520;
   const p = { RB1: state.RB1 * 1e3, C1: state.C1 * 1e-6, RB2: state.RB2 * 1e3, C2: state.C2 * 1e-6, RC: 1000, Vcc: state.Vcc, Vbe: state.Vbe };
   const resB = bjtAstable(p.RB1, p.C1, p.RB2, p.C2, p.Vcc, p.Vbe);
   const ph = state.simTime % resB.T;
   const q1On = ph < resB.t2; // 0 ≤ ph < t2: Q1 導通、Q2 截止
 
   const yVcc = 26, yGnd = H - 24;
+  const marginX = isNarrow ? 12 : 25;
   // 電源線
   ctx.lineWidth = 2.5; ctx.lineCap = 'round';
   ctx.strokeStyle = '#ff5470';
-  ctx.beginPath(); ctx.moveTo(25, yVcc); ctx.lineTo(W - 25, yVcc); ctx.stroke();
-  ctx.fillStyle = '#ff5470'; ctx.font = 'bold 12px monospace';
-  ctx.fillText(`+Vcc (${state.Vcc}V)`, 25, yVcc - 8);
+  ctx.beginPath(); ctx.moveTo(marginX, yVcc); ctx.lineTo(W - marginX, yVcc); ctx.stroke();
+  ctx.fillStyle = '#ff5470'; ctx.font = isNarrow ? 'bold 11px monospace' : 'bold 12px monospace';
+  ctx.fillText(`+Vcc (${state.Vcc}V)`, marginX, yVcc - 8);
 
   ctx.strokeStyle = '#4cc2ff';
-  ctx.beginPath(); ctx.moveTo(25, yGnd); ctx.lineTo(W - 25, yGnd); ctx.stroke();
-  ctx.fillStyle = '#4cc2ff'; ctx.font = 'bold 12px monospace';
-  ctx.fillText('GND (0V)', 25, yGnd + 16);
+  ctx.beginPath(); ctx.moveTo(marginX, yGnd); ctx.lineTo(W - marginX, yGnd); ctx.stroke();
+  ctx.fillStyle = '#4cc2ff'; ctx.font = isNarrow ? 'bold 11px monospace' : 'bold 12px monospace';
+  ctx.fillText('GND (0V)', marginX, isNarrow ? yGnd - 5 : yGnd + 16);
 
   // 左右對稱座標
   const cx = W / 2;
@@ -611,8 +637,6 @@ function drawBjtCircuit(ctx, W, H) {
   ctx.stroke();
 
   // 5. 交叉耦合電容：
-  // C1: Q1 集極 -> Q2 基極
-  // C2: Q2 集極 -> Q1 基極
   const colNodeY = qY - 14;
   const c1Y = qY - 32;
   const c2Y = qY + 2;
@@ -637,13 +661,21 @@ function drawBjtCircuit(ctx, W, H) {
   ctx.moveTo(cx + 10, c2Y); ctx.lineTo(rb1X, c2Y); ctx.lineTo(rb1X, rbBot); ctx.lineTo(q1X - 2, rbBot);
   ctx.stroke();
 
-  // 標記目前導通狀態
+  // 標記目前導通狀態：窄螢幕縮短文案並防邊界裁切
   ctx.fillStyle = q1On ? '#7CFFB2' : '#ff7a45';
-  ctx.font = 'bold 12px system-ui';
-  if (q1On) {
-    ctx.fillText('⚡ 狀態：Q1 導通（LED1 亮）／ Q2 截止（C1 充電等待翻轉）', 25, H - 8);
+  ctx.font = isNarrow ? 'bold 11px system-ui' : 'bold 12px system-ui';
+  if (isNarrow) {
+    if (q1On) {
+      ctx.fillText('⚡ Q1 導通 (LED1亮) / Q2 截止 (C1充電)', 12, H - 6);
+    } else {
+      ctx.fillText('⚡ Q2 導通 (LED2亮) / Q1 截止 (C2充電)', 12, H - 6);
+    }
   } else {
-    ctx.fillText('⚡ 狀態：Q2 導通（LED2 亮）／ Q1 截止（C2 充電等待翻轉）', 25, H - 8);
+    if (q1On) {
+      ctx.fillText('⚡ 狀態：Q1 導通（LED1 亮）／ Q2 截止（C1 充電等待翻轉）', 25, H - 8);
+    } else {
+      ctx.fillText('⚡ 狀態：Q2 導通（LED2 亮）／ Q1 截止（C2 充電等待翻轉）', 25, H - 8);
+    }
   }
 }
 
@@ -781,11 +813,12 @@ function drawWave(ctx) {
 
 // 555 波形繪製
 function draw555Wave(ctx, W, H) {
+  const isNarrow = W < 520;
   const res = ne555(state.R1 * 1e3, state.R2 * 1e3, state.C * 1e-6);
   const tEnd = 3.2 * res.T;
   const sim = sim555(state.R1 * 1e3, state.R2 * 1e3, state.C * 1e-6, state.Vcc, tEnd, 600);
 
-  const padL = 48, padR = 24, padT = 30, padB = 40;
+  const padL = isNarrow ? 40 : 48, padR = isNarrow ? 14 : 24, padT = isNarrow ? 26 : 30, padB = isNarrow ? 34 : 40;
   const pW = W - padL - padR, pH = H - padT - padB;
   const vMax = state.Vcc * 1.15;
   const toX = t => padL + (t / tEnd) * pW;
@@ -806,19 +839,19 @@ function draw555Wave(ctx, W, H) {
   ctx.strokeStyle = '#ff7a45'; ctx.lineWidth = 1.5;
   ctx.beginPath(); ctx.moveTo(padL, toY(vHigh)); ctx.lineTo(padL + pW, toY(vHigh)); ctx.stroke();
   ctx.fillStyle = '#ff7a45'; ctx.font = '11px system-ui';
-  ctx.fillText(`上門檻 2/3 Vcc (${fmtSig(vHigh, 3)}V)`, padL + 6, toY(vHigh) - 5);
+  ctx.fillText(isNarrow ? `2/3 Vcc (${fmtSig(vHigh, 3)}V)` : `上門檻 2/3 Vcc (${fmtSig(vHigh, 3)}V)`, padL + 6, toY(vHigh) - 5);
 
   // 下門檻
   ctx.strokeStyle = '#4cc2ff'; ctx.lineWidth = 1.5;
   ctx.beginPath(); ctx.moveTo(padL, toY(vLow)); ctx.lineTo(padL + pW, toY(vLow)); ctx.stroke();
   ctx.fillStyle = '#4cc2ff'; ctx.font = '11px system-ui';
-  ctx.fillText(`下門檻 1/3 Vcc (${fmtSig(vLow, 3)}V)`, padL + 6, toY(vLow) - 5);
+  ctx.fillText(isNarrow ? `1/3 Vcc (${fmtSig(vLow, 3)}V)` : `下門檻 1/3 Vcc (${fmtSig(vLow, 3)}V)`, padL + 6, toY(vLow) - 5);
   ctx.restore();
 
   // 0V 與 Vcc 標籤
   ctx.fillStyle = '#6b7d9b'; ctx.font = '10px monospace';
-  ctx.fillText('0V', padL - 26, toY(0) + 4);
-  ctx.fillText(state.Vcc + 'V', padL - 28, toY(state.Vcc) + 4);
+  ctx.fillText('0V', padL - (isNarrow ? 22 : 26), toY(0) + 4);
+  ctx.fillText(state.Vcc + 'V', padL - (isNarrow ? 26 : 28), toY(state.Vcc) + 4);
 
   // 1. 輸出方波 (金黃色)
   ctx.strokeStyle = '#ffb02e'; ctx.lineWidth = 2; ctx.beginPath();
@@ -847,16 +880,28 @@ function draw555Wave(ctx, W, H) {
     ctx.moveTo(xH1, annY - 4); ctx.lineTo(xH1, annY + 4);
     ctx.moveTo(xH2, annY - 4); ctx.lineTo(xH2, annY + 4);
     ctx.stroke();
-    ctx.fillStyle = '#ffce54'; ctx.font = 'bold 11px system-ui';
-    ctx.fillText(`t_H = ${fmtSig(res.tH, 3)}s`, (xH1 + xH2) / 2 - 24, annY - 5);
 
     ctx.strokeStyle = '#8bd8ff';
     ctx.beginPath();
     ctx.moveTo(xH2, annY); ctx.lineTo(xL2, annY);
     ctx.moveTo(xL2, annY - 4); ctx.lineTo(xL2, annY + 4);
     ctx.stroke();
-    ctx.fillStyle = '#8bd8ff';
-    ctx.fillText(`t_L = ${fmtSig(res.tL, 3)}s`, (xH2 + xL2) / 2 - 24, annY - 5);
+
+    // 窄螢幕時交錯高度並置中對齊，徹底解決「t_H = 0.0762s0.0693s」擠在一起重疊問題
+    if (isNarrow) {
+      ctx.font = 'bold 11px system-ui';
+      ctx.textAlign = 'center';
+      ctx.fillStyle = '#ffce54';
+      ctx.fillText(`t_H=${fmtSig(res.tH, 3)}s`, (xH1 + xH2) / 2, annY - 14);
+      ctx.fillStyle = '#8bd8ff';
+      ctx.fillText(`t_L=${fmtSig(res.tL, 3)}s`, (xH2 + xL2) / 2, annY - 3);
+      ctx.textAlign = 'start';
+    } else {
+      ctx.fillStyle = '#ffce54'; ctx.font = 'bold 11px system-ui';
+      ctx.fillText(`t_H = ${fmtSig(res.tH, 3)}s`, (xH1 + xH2) / 2 - 24, annY - 5);
+      ctx.fillStyle = '#8bd8ff';
+      ctx.fillText(`t_L = ${fmtSig(res.tL, 3)}s`, (xH2 + xL2) / 2 - 24, annY - 5);
+    }
   }
 
   // 即時掃描指標線
@@ -880,18 +925,19 @@ function draw555Wave(ctx, W, H) {
 
   // 圖例
   ctx.font = 'bold 11px system-ui';
-  ctx.fillStyle = '#7CFFB2'; ctx.fillText('― 電容電壓 v_C', padL + 8, H - 12);
-  ctx.fillStyle = '#ffb02e'; ctx.fillText('― 輸出方波 OUT (3腳)', padL + 130, H - 12);
+  ctx.fillStyle = '#7CFFB2'; ctx.fillText('― 電容電壓 v_C', padL + (isNarrow ? 6 : 8), H - 12);
+  ctx.fillStyle = '#ffb02e'; ctx.fillText('― 輸出方波 OUT (3腳)', padL + (isNarrow ? 115 : 130), H - 12);
 }
 
 // 雙電晶體波形繪製
 function drawBjtWave(ctx, W, H) {
+  const isNarrow = W < 520;
   const p = { RB1: state.RB1 * 1e3, C1: state.C1 * 1e-6, RB2: state.RB2 * 1e3, C2: state.C2 * 1e-6, RC: 1000, Vcc: state.Vcc, Vbe: state.Vbe };
   const resB = bjtAstable(p.RB1, p.C1, p.RB2, p.C2, p.Vcc, p.Vbe);
   const tEnd = 2.8 * resB.T;
   const sim = simBJT(p, tEnd, 600);
 
-  const padL = 48, padR = 24, padT = 24, padB = 34;
+  const padL = isNarrow ? 40 : 48, padR = isNarrow ? 14 : 24, padT = 24, padB = isNarrow ? 28 : 34;
   const pW = W - padL - padR, pH = H - padT - padB;
   const midH = pH / 2;
 
@@ -910,19 +956,19 @@ function drawBjtWave(ctx, W, H) {
 
   // 上半部集極標記
   ctx.fillStyle = '#8fa4c8'; ctx.font = '10px monospace';
-  ctx.fillText(state.Vcc + 'V', padL - 26, toYCol(state.Vcc) + 4);
-  ctx.fillText('0V', padL - 22, toYCol(0) + 4);
+  ctx.fillText(state.Vcc + 'V', padL - (isNarrow ? 24 : 26), toYCol(state.Vcc) + 4);
+  ctx.fillText('0V', padL - (isNarrow ? 20 : 22), toYCol(0) + 4);
 
   // 下半部基極門檻線 Vbe (0.65V) 虛線
   ctx.save(); ctx.setLineDash([4, 4]);
   ctx.strokeStyle = '#ffb02e'; ctx.lineWidth = 1.2;
   ctx.beginPath(); ctx.moveTo(padL, toYBase(state.Vbe)); ctx.lineTo(padL + pW, toYBase(state.Vbe)); ctx.stroke();
-  ctx.fillStyle = '#ffb02e'; ctx.font = '10px system-ui';
-  ctx.fillText('V_BE 門檻 (0.65V)', padL + 6, toYBase(state.Vbe) - 4);
+  ctx.fillStyle = '#ffb02e'; ctx.font = isNarrow ? '11px system-ui' : '10px system-ui';
+  ctx.fillText(isNarrow ? 'V_BE (0.65V)' : 'V_BE 門檻 (0.65V)', padL + 6, toYBase(state.Vbe) - 4);
   ctx.restore();
 
-  ctx.fillStyle = '#8fa4c8'; ctx.font = '10px monospace';
-  ctx.fillText('V_BE-Vcc', padL - 44, toYBase(vMinBase) + 4);
+  ctx.fillStyle = '#8fa4c8'; ctx.font = isNarrow ? '10px monospace' : '10px monospace';
+  ctx.fillText(isNarrow ? 'Vbe-Vcc' : 'V_BE-Vcc', padL - (isNarrow ? 36 : 44), toYBase(vMinBase) + 4);
 
   // 1. 集極波形 Vc1 (紅) 與 Vc2 (藍)
   ctx.strokeStyle = '#ff4d6d'; ctx.lineWidth = 2; ctx.beginPath();
@@ -962,8 +1008,13 @@ function drawBjtWave(ctx, W, H) {
 
   // 圖例
   ctx.font = 'bold 11px system-ui';
-  ctx.fillStyle = '#ff4d6d'; ctx.fillText('― Q1 集極 Vc1 / 基極 Vb1', padL + 8, H - 10);
-  ctx.fillStyle = '#4cc2ff'; ctx.fillText('― Q2 集極 Vc2 / 基極 Vb2', padL + 180, H - 10);
+  if (isNarrow) {
+    ctx.fillStyle = '#ff4d6d'; ctx.fillText('― Q1 Vc1 / Vb1', padL + 6, H - 8);
+    ctx.fillStyle = '#4cc2ff'; ctx.fillText('― Q2 Vc2 / Vb2', padL + 115, H - 8);
+  } else {
+    ctx.fillStyle = '#ff4d6d'; ctx.fillText('― Q1 集極 Vc1 / 基極 Vb1', padL + 8, H - 10);
+    ctx.fillStyle = '#4cc2ff'; ctx.fillText('― Q2 集極 Vc2 / 基極 Vb2', padL + 180, H - 10);
+  }
 }
 
 // ---------------- 動畫迴圈 ----------------

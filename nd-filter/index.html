@@ -291,6 +291,7 @@ function updateFormula() {
 function drawMain() {
   const ctx = ctxMain, W = ctx._w, H = ctx._h;
   ctx.clearRect(0, 0, W, H);
+  const isNarrow = W < 520;
 
   // 背景
   const bgGrad = ctx.createLinearGradient(0, 0, 0, H);
@@ -314,8 +315,8 @@ function drawMain() {
   ctx.fillStyle = srcGrad; ctx.beginPath(); ctx.arc(srcX, cy, srcR * 1.5, 0, Math.PI * 2); ctx.fill();
 
   ctx.fillStyle = '#ffeed0'; ctx.beginPath(); ctx.arc(srcX, cy, srcR * 0.7, 0, Math.PI * 2); ctx.fill();
-  ctx.fillStyle = '#8ca2c4'; ctx.font = '12px system-ui'; ctx.textAlign = 'center';
-  ctx.fillText('白光光源', srcX, cy + srcR + 18);
+  ctx.fillStyle = '#8ca2c4'; ctx.font = (isNarrow ? '11px' : '12px') + ' system-ui'; ctx.textAlign = 'center';
+  ctx.fillText(isNarrow ? '白光' : '白光光源', srcX, cy + srcR + (isNarrow ? 15 : 18));
 
   // 濾鏡槽位置（最多 3 片）
   const slotXs = [W * 0.32, W * 0.47, W * 0.62];
@@ -388,14 +389,14 @@ function drawMain() {
       ctx.fillRect(sx - slotW / 2 + 1, cy - slotH / 2 + 1, slotW - 2, slotH - 2);
 
       // 標籤
-      ctx.fillStyle = '#fff'; ctx.font = 'bold 12px system-ui'; ctx.textAlign = 'center';
-      const label = (isColor && idx === 0) ? '綠色濾鏡' : `ND${Math.round(1 / ndT(od))}`;
-      ctx.fillText(label, sx, cy - slotH / 2 - 10);
+      ctx.fillStyle = '#fff'; ctx.font = (isNarrow ? 'bold 11px' : 'bold 12px') + ' system-ui'; ctx.textAlign = 'center';
+      const label = (isColor && idx === 0) ? (isNarrow ? '綠濾鏡' : '綠色濾鏡') : `ND${Math.round(1 / ndT(od))}`;
+      ctx.fillText(label, sx, cy - slotH / 2 - (isNarrow ? 8 : 10));
       ctx.fillStyle = 'var(--accent2)'; ctx.font = '11px system-ui';
-      ctx.fillText(`OD ${fmtSig(od, 2)}`, sx, cy + slotH / 2 + 16);
+      ctx.fillText(`OD ${fmtSig(od, 2)}`, sx, cy + slotH / 2 + (isNarrow ? 14 : 16));
     } else {
-      ctx.fillStyle = 'rgba(140,175,255,0.4)'; ctx.font = '12px system-ui'; ctx.textAlign = 'center';
-      ctx.fillText(`槽 ${idx + 1}`, sx, cy + slotH / 2 + 16);
+      ctx.fillStyle = 'rgba(140,175,255,0.4)'; ctx.font = (isNarrow ? '11px' : '12px') + ' system-ui'; ctx.textAlign = 'center';
+      ctx.fillText(`槽 ${idx + 1}`, sx, cy + slotH / 2 + (isNarrow ? 14 : 16));
       ctx.fillStyle = 'rgba(140,175,255,0.18)';
       ctx.fillText('(空)', sx, cy + 4);
     }
@@ -412,8 +413,8 @@ function drawMain() {
   for (let gy = cy - sensorH / 2 + 8; gy < cy + sensorH / 2; gy += 10) {
     ctx.beginPath(); ctx.moveTo(sensorX + 2, gy); ctx.lineTo(sensorX + sensorW - 2, gy); ctx.stroke();
   }
-  ctx.fillStyle = '#8ca2c4'; ctx.font = '12px system-ui'; ctx.textAlign = 'center';
-  ctx.fillText('感光元件', sensorX + sensorW / 2, cy + sensorH / 2 + 18);
+  ctx.fillStyle = '#8ca2c4'; ctx.font = (isNarrow ? '11px' : '12px') + ' system-ui'; ctx.textAlign = 'center';
+  ctx.fillText('感光元件', sensorX + sensorW / 2, cy + sensorH / 2 + (isNarrow ? 15 : 18));
 
   // 右側亮度長條計 (Meter)
   const meterX = W * 0.92, meterW = 16, meterH = sensorH;
@@ -429,10 +430,22 @@ function drawMain() {
   ctx.fillStyle = mGrad;
   ctx.fillRect(meterX + 1, cy + meterH / 2 - fillH, meterW - 2, fillH);
 
-  // 剩下 xx% 標籤
-  ctx.fillStyle = '#ffcf56'; ctx.font = 'bold 12px system-ui'; ctx.textAlign = 'left';
-  ctx.fillText(`剩下`, meterX - 10, cy - meterH / 2 - 18);
-  ctx.fillText(`${fmtSig(totalT * 100, 3)}%`, meterX - 18, cy - meterH / 2 - 5);
+  // 剩下 xx% 標籤（手機寬度 < 520px 時調整字型、位置與邊距，避免被頂部裁切）
+  if (isNarrow) {
+    ctx.fillStyle = '#ffcf56';
+    ctx.font = 'bold 11px system-ui';
+    ctx.textAlign = 'right';
+    const tagX = Math.min(W - 8, meterX + meterW);
+    const topY = Math.max(14, cy - meterH / 2 - 13);
+    ctx.fillText(`剩餘 T`, tagX, topY);
+    ctx.fillText(`${fmtSig(totalT * 100, 3)}%`, tagX, topY + 12);
+  } else {
+    ctx.fillStyle = '#ffcf56';
+    ctx.font = 'bold 12px system-ui';
+    ctx.textAlign = 'left';
+    ctx.fillText(`剩下`, meterX - 10, cy - meterH / 2 - 18);
+    ctx.fillText(`${fmtSig(totalT * 100, 3)}%`, meterX - 18, cy - meterH / 2 - 5);
+  }
 }
 
 function drawBeamStrip(ctx, x1, y, x2, y2, color, trans) {
@@ -449,9 +462,10 @@ function drawBeamStrip(ctx, x1, y, x2, y2, color, trans) {
 function drawSpectrum() {
   const ctx = ctxSpec, W = ctx._w, H = ctx._h;
   ctx.clearRect(0, 0, W, H);
+  const isNarrow = W < 520;
 
   // 留邊距
-  const padL = 60, padR = 24, padT = 24, padB = 42;
+  const padL = isNarrow ? 50 : 60, padR = isNarrow ? 18 : 24, padT = 24, padB = 42;
   const gw = W - padL - padR, gh = H - padT - padB;
 
   // 背景網格
@@ -468,14 +482,14 @@ function drawSpectrum() {
     for (let p = 0; p <= 100; p += 25) {
       const y = padT + gh * (1 - p / 100);
       ctx.beginPath(); ctx.moveTo(padL, y); ctx.lineTo(padL + gw, y); ctx.stroke();
-      ctx.fillText(`${p}%`, padL - 8, y + 4);
+      ctx.fillText(`${p}%`, padL - 6, y + 4);
     }
   } else {
     // OD 對數座標 (0 到 3.0)
     for (let odVal = 0; odVal <= 3.0; odVal += 1.0) {
       const y = padT + gh * (odVal / 3.0); // 0 在上方或下方皆可，這裡 0 在頂端 (高穿透)，3 在底端
       ctx.beginPath(); ctx.moveTo(padL, y); ctx.lineTo(padL + gw, y); ctx.stroke();
-      ctx.fillText(`OD ${odVal.toFixed(1)}`, padL - 8, y + 4);
+      ctx.fillText(`OD ${odVal.toFixed(1)}`, padL - 6, y + 4);
     }
   }
 
@@ -553,12 +567,12 @@ function drawSpectrum() {
   }
 
   // 圖例說明
-  ctx.font = '12px system-ui'; ctx.textAlign = 'left';
+  ctx.font = (isNarrow ? '11px' : '12px') + ' system-ui'; ctx.textAlign = 'left';
   ctx.fillStyle = '#4cc2ff';
-  ctx.fillText(`— ND 減光鏡（平直中性直線，OD=${fmtSig(totOD, 2)}）`, padL + 12, padT + 20);
+  ctx.fillText(isNarrow ? `— ND (平直直線, OD=${fmtSig(totOD, 2)})` : `— ND 減光鏡（平直中性直線，OD=${fmtSig(totOD, 2)}）`, padL + 10, padT + (isNarrow ? 16 : 20));
   if (state.filterType === 'color') {
     ctx.fillStyle = '#2ed573';
-    ctx.fillText(`-- 彩色濾鏡（高斯鐘形穿透，中心 530nm）`, padL + 12, padT + 38);
+    ctx.fillText(isNarrow ? `-- 彩色濾鏡 (530nm)` : `-- 彩色濾鏡（高斯鐘形穿透，中心 530nm）`, padL + 10, padT + (isNarrow ? 32 : 38));
   }
 }
 
@@ -566,6 +580,7 @@ function drawSpectrum() {
 function drawPolarizer() {
   const ctx = ctxPol, W = ctx._w, H = ctx._h;
   ctx.clearRect(0, 0, W, H);
+  const isNarrow = W < 520;
 
   const bgGrad = ctx.createLinearGradient(0, 0, 0, H);
   bgGrad.addColorStop(0, '#0c1224'); bgGrad.addColorStop(1, '#060a14');
@@ -579,7 +594,7 @@ function drawPolarizer() {
   const srcX = benchW * 0.12;
   ctx.fillStyle = '#ffeed0'; ctx.beginPath(); ctx.arc(srcX, cy, 14, 0, Math.PI * 2); ctx.fill();
   ctx.fillStyle = '#8ca2c4'; ctx.font = '11px system-ui'; ctx.textAlign = 'center';
-  ctx.fillText('非偏振光', srcX, cy + 32);
+  ctx.fillText(isNarrow ? '非偏振' : '非偏振光', srcX, cy + 32);
 
   // 非偏振光振動箭頭（星狀）
   ctx.strokeStyle = '#ffcf56'; ctx.lineWidth = 1.2;
@@ -590,7 +605,7 @@ function drawPolarizer() {
 
   // 第一片偏振片（垂直軸 0°）
   const pol1X = benchW * 0.38, polR = Math.min(38, H * 0.28);
-  drawPolarizerDisc(ctx, pol1X, cy, polR, 0, '固定垂直軸 (0°)');
+  drawPolarizerDisc(ctx, pol1X, cy, polR, 0, isNarrow ? '垂直 (0°)' : '固定垂直軸 (0°)');
 
   // 中間光束（垂直偏振）
   ctx.strokeStyle = 'rgba(76,194,255,0.7)'; ctx.lineWidth = 3;
@@ -604,7 +619,7 @@ function drawPolarizer() {
 
   // 第二片可轉偏振片
   const pol2X = benchW * 0.68;
-  drawPolarizerDisc(ctx, pol2X, cy, polR, state.theta, `旋轉軸 θ=${state.theta}°`);
+  drawPolarizerDisc(ctx, pol2X, cy, polR, state.theta, isNarrow ? `θ=${state.theta}°` : `旋轉軸 θ=${state.theta}°`);
 
   // 出射光與馬呂斯結果
   const cnd = crossedND(1.0, state.theta);
@@ -637,7 +652,7 @@ function drawPolarizer() {
   }
 
   // ----------------- 右半邊：馬呂斯定律曲線 -----------------
-  const gLeft = benchW + 36, gRight = W - 24, gTop = 32, gBottom = H - 36;
+  const gLeft = benchW + (isNarrow ? 28 : 36), gRight = W - (isNarrow ? 12 : 24), gTop = 32, gBottom = H - 36;
   const gw = gRight - gLeft, gh = gBottom - gTop;
 
   // 曲線座標框
@@ -647,15 +662,15 @@ function drawPolarizer() {
 
   // 曲線坐標軸標籤
   ctx.fillStyle = '#8ca2c4'; ctx.font = '11px system-ui'; ctx.textAlign = 'right';
-  ctx.fillText('50% I₀', gLeft - 6, gTop + 10);
-  ctx.fillText('25%', gLeft - 6, gTop + gh * 0.5 + 4);
-  ctx.fillText('0', gLeft - 6, gBottom);
+  ctx.fillText(isNarrow ? '50%' : '50% I₀', gLeft - 4, gTop + 10);
+  ctx.fillText('25%', gLeft - 4, gTop + gh * 0.5 + 4);
+  ctx.fillText('0', gLeft - 4, gBottom);
 
   ctx.textAlign = 'center';
-  ctx.fillText('0°', gLeft, gBottom + 16);
-  ctx.fillText('45°', gLeft + gw * 0.5, gBottom + 16);
-  ctx.fillText('90°', gRight, gBottom + 16);
-  ctx.fillText('偏振片夾角 θ', gLeft + gw * 0.5, gBottom + 28);
+  ctx.fillText('0°', gLeft, gBottom + 14);
+  ctx.fillText('45°', gLeft + gw * 0.5, gBottom + 14);
+  ctx.fillText('90°', gRight, gBottom + 14);
+  ctx.fillText(isNarrow ? '夾角 θ' : '偏振片夾角 θ', gLeft + gw * 0.5, gBottom + 26);
 
   // 馬呂斯曲線 (I₀/2)·cos²θ
   ctx.strokeStyle = '#7cffb2'; ctx.lineWidth = 2.5;
@@ -678,8 +693,14 @@ function drawPolarizer() {
   ctx.setLineDash([]);
 
   ctx.fillStyle = '#ffcf56'; ctx.beginPath(); ctx.arc(curX, curY, 5, 0, Math.PI * 2); ctx.fill();
-  ctx.font = 'bold 11px system-ui'; ctx.textAlign = 'left';
-  ctx.fillText(`${fmtSig(cnd.T * 100, 3)}%`, curX + 8, curY - 4);
+  ctx.font = 'bold 11px system-ui';
+  if (isNarrow && curX > gRight - 28) {
+    ctx.textAlign = 'right';
+    ctx.fillText(`${fmtSig(cnd.T * 100, 3)}%`, curX - 8, curY - 4);
+  } else {
+    ctx.textAlign = 'left';
+    ctx.fillText(`${fmtSig(cnd.T * 100, 3)}%`, curX + 8, curY - 4);
+  }
 }
 
 function drawPolarizerDisc(ctx, cx, cy, r, angleDeg, label) {
@@ -703,7 +724,7 @@ function drawPolarizerDisc(ctx, cx, cy, r, angleDeg, label) {
   ctx.restore();
 
   ctx.fillStyle = '#8ca2c4'; ctx.font = '11px system-ui'; ctx.textAlign = 'center';
-  ctx.fillText(label, cx, cy + r + 18);
+  ctx.fillText(label, cx, cy + r + (ctx._w < 520 ? 15 : 18));
 }
 
 // ---- 第三部分：長曝光瀑布動畫模擬 ----
@@ -728,6 +749,7 @@ function animWaterfall() {
 function drawWaterfallScene() {
   const ctx = ctxWater, W = ctx._w, H = ctx._h;
   ctx.clearRect(0, 0, W, H);
+  const isNarrow = W < 520;
 
   // 背景：深色峽谷岩壁
   const rockGrad = ctx.createLinearGradient(0, 0, W, 0);
@@ -796,14 +818,15 @@ function drawWaterfallScene() {
   ctx.beginPath(); ctx.ellipse(W * 0.5, H - 28, fallW * 0.75, 18, 0, 0, Math.PI * 2); ctx.fill();
 
   // 視窗資訊浮水標籤
+  const boxW = isNarrow ? Math.min(250, W - 32) : 260;
   ctx.fillStyle = 'rgba(8, 12, 22, 0.75)';
   ctx.strokeStyle = 'rgba(140,175,255,0.25)'; ctx.lineWidth = 1;
-  ctx.fillRect(16, 16, 260, 48); ctx.strokeRect(16, 16, 260, 48);
+  ctx.fillRect(16, 16, boxW, 48); ctx.strokeRect(16, 16, boxW, 48);
 
-  ctx.fillStyle = '#ffcf56'; ctx.font = 'bold 12px system-ui'; ctx.textAlign = 'left';
-  ctx.fillText(`快門：${fmtShutter(tAft)}（補償 +${fmtSig(ndStops(totOD), 2)} EV）`, 26, 35);
+  ctx.fillStyle = '#ffcf56'; ctx.font = (isNarrow ? 'bold 11px' : 'bold 12px') + ' system-ui'; ctx.textAlign = 'left';
+  ctx.fillText(isNarrow ? `快門：${fmtShutter(tAft)}（+${fmtSig(ndStops(totOD), 1)} EV）` : `快門：${fmtShutter(tAft)}（補償 +${fmtSig(ndStops(totOD), 2)} EV）`, 24, 35);
   ctx.fillStyle = '#8ca2c4'; ctx.font = '11px system-ui';
-  ctx.fillText(blurFactor > 0.4 ? '📷 長曝光效果：流水柔化成絲絹狀' : '📷 高速快門效果：水珠清晰定格', 26, 52);
+  ctx.fillText(blurFactor > 0.4 ? (isNarrow ? '📷 長曝光：流水柔化絲絹' : '📷 長曝光效果：流水柔化成絲絹狀') : (isNarrow ? '📷 高速快門：水珠定格' : '📷 高速快門效果：水珠清晰定格'), 24, 52);
 }
 
 // ---- 全域更新函式 refresh() ----
