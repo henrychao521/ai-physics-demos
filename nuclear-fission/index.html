@@ -93,8 +93,8 @@
   <div class="note">
     <b>物理重點：</b>
     依據<b>國際原子能總署（IAEA）</b>與核數據庫 <b>ENDF/B-VIII.0</b> 評估數據，熱中子引發 <b>U-235</b> 分裂時，平均放出約 <b>ν ≈ 2.43 個快中子</b>（隨機釋出 2 或 3 顆）。
-    新產生的中子在反應爐內移動，若未被<b>控制棒吸收</b>（吸收比例 <code>rod</code>）且未<b>逸散出爐心邊界</b>（逸散比例 <code>leak</code>），便會再撞擊其他鈾核引發下一代分裂。
-    此時<b>有效增殖因數</b>為 <code>k = ν·(1−rod)·(1−leak)</code>，第 n 代的預期分裂數遵循 <code>N<sub>n</sub> = N₀·k<sup>n</sup></code>。
+    分裂放出的是<b>快中子</b>，實際的熱中子反應爐要先用<b>減速劑（緩和劑，如水、重水、石墨）</b>把它減速成熱中子，才容易引發下一次 U-235 分裂（本模擬省略減速過程）。新產生的中子在反應爐內移動，若未被<b>控制棒吸收</b>（吸收比例 <code>rod</code>）且未<b>逸散出爐心邊界</b>（逸散比例 <code>leak</code>），便會再撞擊其他鈾核引發下一代分裂。
+    此時<b>有效增殖因數</b>為 <code>k = ν·(1−rod)·(1−leak)</code>，以射入中子引發的第一次分裂為第 1 代（N₀=1），第 n 代的預期分裂數為 <code>N<sub>n</sub> = N₀·k<sup>n−1</sup></code>。
     <br>
     • <b>k &lt; 1 次臨界</b>：中子數逐代遞減而熄滅；<br>
     • <b>k = 1 臨界</b>：反應以穩定速率自我維持（核反應爐透過微調控制棒將 k 精確維持在 1.000）；<br>
@@ -191,15 +191,15 @@ function updateFormula() {
   }
 
   const curGen = maxGen || 1;
-  const curExpected = expectedFissions(curGen, 1, k).toFixed(2);
+  const curExpected = expectedFissions(curGen - 1, 1, k).toFixed(2);   // 第 1 代＝射入中子引發的第一次分裂（N₀=1）
   const n5 = expectedFissions(5, 1, k).toFixed(2);
 
   document.getElementById('formula').innerHTML =
     `<h4>📐 計算公式（即時代入　核分裂連鎖反應）</h4>`
     + frow('有效增殖因數 k', 'k = ν·(1−吸收)·(1−逸散)', `${NU} × (1−${rod.toFixed(2)}) × (1−${leak.toFixed(2)})`, `k = ${k.toFixed(3)}`)
     + frow('臨界狀態判定', 'k 與 1 比較', `k = ${k.toFixed(2)}`, stt)
-    + frow('第 n 代分裂數', 'N(n) = N₀ · kⁿ', `N₀=1, 第 ${curGen} 代: 1 × ${k.toFixed(2)}^${curGen}`, `${curExpected} 個`)
-    + frow('第 5 代分裂數', 'k⁵', `${k.toFixed(2)}⁵`, `${n5} 倍`)
+    + frow('第 n 代分裂數', 'N(n) = N₀ · k^(n−1)', `N₀=1（第 1 代）, 第 ${curGen} 代: 1 × ${k.toFixed(2)}^${curGen - 1}`, `${curExpected} 個`)
+    + frow('再經 5 代的倍率', 'k⁵', `${k.toFixed(2)}⁵`, `${n5} 倍`)
     + frow('單次分裂釋能', 'E ≈ 200 MeV', '質量虧損 Δm·c²', '≈ 3.204×10⁻¹¹ J')
     + frow('1 克 U-235 全分裂', '≈ 2.56×10²¹ 顆 × 200 MeV', '', '≈ 8.2×10¹⁰ J（約當燃燒 2.5 噸煤）')
     + `<div class="frel">📈 <b>核心原理</b>：熱中子撞擊 U-235 分裂平均放出 <b>ν ≈ 2.43 個中子</b>（IAEA/ENDF 核數據庫）。扣除控制棒吸收（rod）與幾何逸散（leak）後，每顆中子引發的下一代分裂數即為 <b>k</b>。<b>k&lt;1 熄滅、k=1 穩定維持、k&gt;1 指數爆增</b>（第 n 代 ∝ kⁿ）。每次分裂約 200 MeV 來自分裂前後的<b>質量虧損 E=Δmc²</b>。</div>`;
@@ -303,8 +303,10 @@ function fission(n, inGen = 1) {
   n.fis = true;
   n.fl = 1.0;
   fissions++;
+  const prevGen = maxGen;
   maxGen = Math.max(maxGen, inGen);
   gen = maxGen;
+  if (maxGen !== prevGen) updateFormula();   // 代數變了，公式面板跟著更新
 
   flashes.push({ x: n.x, y: n.y, r: 8, maxR: 35, a: 1.0 });
 
