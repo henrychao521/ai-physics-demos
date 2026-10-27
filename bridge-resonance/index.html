@@ -559,8 +559,9 @@ function drawBridgeScene() {
 
   // 畫布上方小字
   scCtx.font = '12px system-ui, sans-serif';
+  scCtx.textAlign = 'left';
   scCtx.fillStyle = 'rgba(255,255,255,0.75)';
-  scCtx.fillText(`中央位移 x(t)：${(dispCm >= 0 ? '+' : '')}${fmtSig(dispCm, 3)} cm（視覺放大 ×${fmtSig(visGain, 2)}）`, midX - 110, deckBaseY - 32);
+  scCtx.fillText(`中央位移 x(t)：${(dispCm >= 0 ? '+' : '')}${fmtSig(dispCm, 3)} cm（視覺放大 ×${fmtSig(visGain, 2)}）`, 10, 18);   // 放在畫布左上角，不壓在橋面與吊索上
   if (state.lateral) {
     scCtx.fillStyle = '#ffce54';
     scCtx.fillText(`【側向擺動模式】步頻減半（${fmtSig(state.fs / 2, 3)} Hz）、每人推力 35 N`, midX - 120, deckBaseY - 14);
