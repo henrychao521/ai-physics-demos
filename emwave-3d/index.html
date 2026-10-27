@@ -1,0 +1,319 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>電磁波 3D ｜ E⊥B⊥傳播方向・線偏振／圓偏振・偏振片</title>
+<meta name="description" content="可旋轉的 3D 電磁波模擬：電場 E（紅）與磁場 B（藍）互相垂直、也都垂直於傳播方向，同相前進。可調頻率與振幅、切換線偏振、圓偏振、橢圓偏振，加上偏振片看馬呂斯定律。">
+<link rel="icon" href="../assets/favicon.svg" type="image/svg+xml">
+<link rel="stylesheet" href="../assets/site.css">
+<script src="../assets/sim.js"></script>
+<script defer src="../assets/nav.js"></script>
+<style>
+  *{box-sizing:border-box}
+  html,body{margin:0;padding:0;background:var(--bg);color:var(--txt);font-family:"Noto Sans TC","PingFang TC","Microsoft JhengHei",system-ui,sans-serif}
+  a{color:var(--accent)}
+  .wrap{max-width:1120px;margin:0 auto;padding:18px 16px 60px}
+  header h1{font-size:1.5rem;margin:.2em 0}
+  header p{color:var(--muted);margin:.2em 0 1em;line-height:1.6}
+  .badge{display:inline-block;background:var(--panel2);border:1px solid var(--line);color:var(--muted);font-size:.72rem;padding:2px 8px;border-radius:99px;margin-right:6px}
+  #stage{border-radius:16px;overflow:hidden;border:1px solid var(--line);box-shadow:0 18px 50px rgba(0,0,0,.45);background:#0a0e17}
+  .hint{color:var(--muted);font-size:.8rem;margin:6px 2px 0}
+  .legend{display:flex;gap:14px;flex-wrap:wrap;font-size:.85rem;margin-top:8px}
+  .legend b.e{color:#ff5470}.legend b.b{color:#4cc2ff}
+  .grid{display:grid;grid-template-columns:240px 1fr;gap:14px;margin-top:12px;align-items:start}
+  @media(max-width:640px){.grid{grid-template-columns:1fr}}
+  .grid>*{min-width:0}
+  .endon{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:8px}
+  .endon canvas{display:block;width:100%}
+  .endon .cap{color:var(--muted);font-size:.78rem;margin-top:4px;line-height:1.5}
+  .row{display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-top:10px}
+  .row span.lab{color:var(--muted);font-size:.82rem}
+  .pbtn{background:var(--panel2);color:var(--txt);border:1px solid var(--line);min-height:44px;padding:8px 12px;border-radius:10px;cursor:pointer;font-size:.85rem;font-family:inherit}
+  .pbtn.on{background:var(--accent);color:#04121c;border-color:var(--accent);font-weight:700}
+  .bar{display:flex;gap:14px;flex-wrap:wrap;align-items:flex-end;background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:14px 16px;margin-top:14px}
+  .sld{flex:1;min-width:160px}
+  .sld label{display:flex;justify-content:space-between;font-size:.82rem;color:var(--muted);margin-bottom:5px}
+  .sld label .v{color:var(--accent);font-variant-numeric:tabular-nums;font-weight:700}
+  .sld input{width:100%;accent-color:var(--accent);min-height:32px}
+  .note{background:var(--panel);border-left:3px solid var(--accent2);border-radius:8px;padding:12px 14px;color:var(--muted);font-size:.86rem;line-height:1.7;margin-top:14px}
+  .note b{color:var(--txt)}.note code{background:var(--bg2);padding:1px 6px;border-radius:5px;color:var(--green);font-size:.85em}
+  footer{color:var(--muted);font-size:.78rem;margin-top:24px;text-align:center;line-height:1.7}
+</style>
+</head>
+<body data-demo="電磁波 3D">
+<div class="wrap">
+  <header>
+    <span class="badge">電磁・電磁波・3D</span>
+    <h1>電磁波 3D（E ⊥ B ⊥ 傳播方向・偏振）</h1>
+    <p>電磁波沿 <b>+z</b> 前進：電場 <b style="color:#ff5470">E</b> 與磁場 <b style="color:#4cc2ff">B</b> <b>互相垂直</b>、也都<b>垂直於傳播方向</b>，同相振盪，B = ẑ × E / c。
+       <b>偏振</b>就是 E 的振動方向：可以切換線偏振、圓偏振、橢圓偏振，再放一片偏振片看穿透強度（馬呂斯定律）。</p>
+  </header>
+
+  <div id="stage"></div>
+  <p class="hint">拖曳旋轉、雙指或滾輪縮放、雙擊重設視角。畫面已放慢與縮放（一律 4 格一個波長、每秒前進 <span id="spdTxt">0.5</span> 個週期），B 已乘以 c 方便和 E 比較；公式面板是真實值。</p>
+  <div class="legend"><span><b class="e">紅＝電場 E</b></span><span><b class="b">藍＝磁場 B（×c）</b></span><span>白色箭頭＝傳播方向 k</span></div>
+
+  <div class="row"><span class="lab">偏振：</span>
+    <button class="pbtn" data-pol="linear">線偏振</button><button class="pbtn" data-pol="circular">圓偏振</button><button class="pbtn" data-pol="elliptical">橢圓偏振</button>
+    <button class="pbtn" id="bHand">旋轉方向反過來</button>
+    <button class="pbtn" id="bPolz">偏振片：關</button>
+    <button class="pbtn" id="bPlay">⏸ 暫停</button>
+  </div>
+  <div class="row"><span class="lab">視角：</span>
+    <button class="pbtn" data-view="oblique">斜視</button><button class="pbtn" data-view="topE">側看 E</button><button class="pbtn" data-view="sideB">側看 B</button><button class="pbtn" data-view="face">迎著光看</button><button class="pbtn" data-view="reset">重設</button>
+  </div>
+  <div class="row"><span class="lab">頻率：</span>
+    <button class="pbtn" data-f="8">FM 廣播 100 MHz</button><button class="pbtn" data-f="9.389">微波爐 2.45 GHz</button><button class="pbtn" data-f="13.5">紅外線</button>
+    <button class="pbtn" data-f="14.736">可見光 550 nm</button><button class="pbtn" data-f="15.5">紫外線</button><button class="pbtn" data-f="18">X 射線</button>
+  </div>
+
+  <div class="grid">
+    <div class="endon"><canvas id="endon" style="aspect-ratio:1"></canvas><div class="cap" id="endCap"></div></div>
+    <div>
+      <div class="bar" style="margin-top:0">
+        <div class="sld"><label><span>頻率 f（對數）</span><span class="v" id="v_logf"></span></label><input type="range" id="r_logf" min="6" max="20" step="0.01"></div>
+        <div class="sld"><label><span>電場振幅 E₀</span><span class="v" id="v_E0"></span></label><input type="range" id="r_E0" min="1" max="100" step="1"></div>
+        <div class="sld"><label><span>線偏振角 α</span><span class="v" id="v_angle"></span></label><input type="range" id="r_angle" min="0" max="180" step="1"></div>
+        <div class="sld"><label><span>橢圓短長軸比</span><span class="v" id="v_ratio"></span></label><input type="range" id="r_ratio" min="0.1" max="1" step="0.05"></div>
+        <div class="sld"><label><span>偏振片透射軸 β</span><span class="v" id="v_axis"></span></label><input type="range" id="r_axis" min="0" max="180" step="1"></div>
+        <div class="sld"><label><span>動畫速度（週期/秒）</span><span class="v" id="v_speed"></span></label><input type="range" id="r_speed" min="0.2" max="2" step="0.1"></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="formula" id="formula"></div>
+
+  <div class="note">
+    <b>物理重點：</b>電磁波的 <b>E ⊥ B ⊥ 傳播方向 k</b>，而且 <code>|B| = |E|/c</code>、兩者<b>同相</b>（同時最大、同時為零）；真空中不論頻率高低，速度都是 <code>c = λf</code>。
+    <b>偏振</b>描述 E 的振動方向：線偏振的 E 在一個固定平面內來回；<b>圓偏振</b>是兩個互相垂直、振幅相同、相位差 90° 的線偏振疊加，E 的箭頭大小不變、方向一直轉；振幅不同就是橢圓偏振。
+    偏振片只讓沿<b>透射軸</b>的電場分量通過：線偏振光入射時穿透強度遵守<b>馬呂斯定律</b> <code>I = I₀·cos²θ</code>（θ 是偏振方向與透射軸的夾角）；圓偏振光不論透射軸轉到哪裡都剩一半。
+    強度 <code>I = ½·c·ε₀·E₀²</code> 正比於振幅平方；把電磁波看成光子時，每個光子的能量 <code>E = hf</code>。
+  </div>
+  <p style="margin-top:14px;font-size:.9rem"><a href="../emwave/">← 回到 2D 版「電磁波」</a>　<a href="../polarization/">偏振 →</a></p>
+  <footer>3D 繪圖使用本站內建的 three.js r160（MIT 授權，assets/vendor/three/）；E、B 向量由平面波公式逐點計算，畫面只做時間放慢與長度縮放。</footer>
+</div>
+
+<script>
+/*PHYS:BEGIN*/
+// 有效數字格式（公式面板、數值卡共用；驗收會用同一個函式比對畫面上的數字）
+function fmtSig(v, n) {
+  n = n || 3;
+  if (typeof v !== 'number' || !isFinite(v)) return String(v);
+  if (v === 0) return '0';
+  const a = Math.abs(v);
+  if (a >= 1e5 || a < 1e-3) {
+    let e = Math.floor(Math.log10(a)), m = v / Math.pow(10, e);
+    let ms = m.toFixed(n - 1);
+    if (Math.abs(parseFloat(ms)) >= 10) { e += 1; ms = (v / Math.pow(10, e)).toFixed(n - 1); }
+    const SUP = { '-': '⁻', '0': '⁰', '1': '¹', '2': '²', '3': '³', '4': '⁴', '5': '⁵', '6': '⁶', '7': '⁷', '8': '⁸', '9': '⁹' };
+    return ms + '×10' + String(e).split('').map(ch => SUP[ch]).join('');
+  }
+  const s = Number(v.toPrecision(n));
+  return a >= Math.pow(10, n - 1) ? String(Math.round(s)) : s.toPrecision(n);
+}
+
+// 電磁波 3D：沿 +z 傳播的平面波。E 在 x–y 平面，B = (1/c)·ẑ × E，所以 E ⊥ B ⊥ 傳播方向，且 |B| = |E|/c。
+const C0 = 299792458, EPS0 = 8.8541878128e-12, H_PLANCK = 6.62607015e-34, EV = 1.602176634e-19;
+function waveNumbers(f) { const lambda = C0 / f; return { lambda, k: 2 * Math.PI / lambda, omega: 2 * Math.PI * f, T: 1 / f }; }
+// 偏振：p = {E0, pol:'linear'|'circular'|'elliptical', angle（線偏振方向，從 x 軸起算的角度，度）, hand（+1 或 −1）, ratio（橢圓短軸／長軸，0–1）}
+function polAmps(p) {
+  if (p.pol === 'linear') { const a = p.angle * Math.PI / 180; return { ax: p.E0 * Math.cos(a), ay: p.E0 * Math.sin(a), dphi: 0 }; }
+  const s = p.hand >= 0 ? 1 : -1;
+  if (p.pol === 'circular') return { ax: p.E0, ay: p.E0, dphi: s * Math.PI / 2 };
+  return { ax: p.E0, ay: p.E0 * p.ratio, dphi: s * Math.PI / 2 };
+}
+// 位置 z（m）、時間 t（s）的 E（V/m）與 B（T）
+function waveFields(z, t, f, p) {
+  const w = waveNumbers(f), ph = w.k * z - w.omega * t, A = polAmps(p);
+  const Ex = A.ax * Math.cos(ph), Ey = A.ay * Math.cos(ph - A.dphi);
+  return { E: [Ex, Ey, 0], B: [-Ey / C0, Ex / C0, 0] };
+}
+// 迎著光（站在 +z 往 −z 看，x 向右、y 向上）時 E 箭頭的旋轉方向：+1 逆時針、−1 順時針、0 不旋轉（線偏振）
+function rotationSense(p) { const A = polAmps(p); return A.dphi === 0 || A.ax === 0 || A.ay === 0 ? 0 : (Math.sin(A.dphi) > 0 ? -1 : 1); }
+// 強度（時間平均坡印廷向量大小）I = ½·c·ε₀·(Ex0² + Ey0²)
+function intensity(p) { const A = polAmps(p); return 0.5 * C0 * EPS0 * (A.ax * A.ax + A.ay * A.ay); }
+// 偏振片（透射軸與 x 軸夾 axisDeg 度）：透射振幅與強度比；線偏振入射即馬呂斯定律 cos²(α−β)
+function polarizerOut(p, axisDeg) {
+  const A = polAmps(p), b = axisDeg * Math.PI / 180, cb = Math.cos(b), sb = Math.sin(b);
+  const amp2 = (A.ax * cb) ** 2 + (A.ay * sb) ** 2 + 2 * A.ax * A.ay * cb * sb * Math.cos(A.dphi);
+  const tot = A.ax * A.ax + A.ay * A.ay;
+  return { amp: Math.sqrt(Math.max(0, amp2)), ratio: tot > 0 ? amp2 / tot : 0 };
+}
+function photonEnergyEV(f) { return H_PLANCK * f / EV; }
+function bandName(f) {
+  if (f < 3e8) return '無線電波'; if (f < 3e11) return '微波'; if (f < 4e14) return '紅外線';
+  if (f < 7.9e14) return '可見光'; if (f < 3e16) return '紫外線'; if (f < 3e19) return 'X 射線'; return 'γ 射線';
+}
+
+/*PHYS:END*/
+</script>
+<script>
+const state = { logf: Math.log10(2.45e9), E0: 10, pol: 'linear', angle: 0, hand: 1, ratio: 0.5, polarizer: false, axis: 45, speed: 0.5, playing: true };
+window.state = state;
+window.__emT = 0;                 // 顯示時間（單位：週期）
+function freq() { return Math.pow(10, state.logf); }
+function polParams() { return { E0: state.E0, pol: state.pol, angle: state.angle, hand: state.hand, ratio: state.ratio }; }
+function fmtF(f) { return f >= 1e12 ? fmtSig(f / 1e12, 3) + ' THz' : f >= 1e9 ? fmtSig(f / 1e9, 3) + ' GHz' : f >= 1e6 ? fmtSig(f / 1e6, 3) + ' MHz' : fmtSig(f, 3) + ' Hz'; }
+const row = (n, sym, sub, val) => `<div class="frow"><span class="fname">${n}</span><span class="fsym">${sym}</span><span class="fsub">= ${sub}</span><span class="fval">${val}</span></div>`;
+function updateFormula() {
+  const f = freq(), w = waveNumbers(f), p = polParams(), A = polAmps(p);
+  let h = '<h4>📐 計算公式（即時代入，真實數值）</h4>';
+  h += row('頻率', 'f', `10^${state.logf.toFixed(2)} Hz`, fmtF(f) + '（' + bandName(f) + '）');
+  h += row('波長', 'λ = c/f', `2.998×10⁸ / ${fmtSig(f, 3)}`, fmtSig(w.lambda, 3) + ' m');
+  h += row('波數、角頻率', 'k = 2π/λ、ω = 2πf', '', `k = ${fmtSig(w.k, 3)} rad/m、ω = ${fmtSig(w.omega, 3)} rad/s`);
+  h += row('光子能量', 'E = hf', `6.626×10⁻³⁴ × ${fmtSig(f, 3)}`, fmtSig(photonEnergyEV(f), 3) + ' eV');
+  h += row('磁場振幅', 'B₀ = E₀/c', `${state.E0} / 2.998×10⁸`, fmtSig(state.E0 / C0, 3) + ' T');
+  h += row('強度', 'I = ½cε₀(E₀ₓ² + E₀ᵧ²)', `E₀ₓ = ${fmtSig(A.ax, 3)}、E₀ᵧ = ${fmtSig(A.ay, 3)} V/m`, fmtSig(intensity(p), 3) + ' W/m²');
+  if (state.polarizer) {
+    const o = polarizerOut(p, state.axis);
+    if (state.pol === 'linear') {
+      const th = state.angle - state.axis;
+      h += row('穿透比 I/I₀', 'I = I₀·cos²θ（馬呂斯定律）', `cos²(${fmtSig(state.angle, 3)}° − ${fmtSig(state.axis, 3)}°)`, fmtSig(o.ratio, 3));
+      h += `<div class="frel">θ = ${fmtSig(th, 3)}°：偏振方向和透射軸平行時全過、垂直時全暗。</div>`;
+    } else {
+      h += row('穿透比 I/I₀', '只留下沿透射軸的分量', state.pol === 'circular' ? '圓偏振：任何角度都一樣' : '橢圓偏振：看透射軸和長軸的夾角', fmtSig(o.ratio, 3));
+    }
+    h += row('穿透後強度', 'I', `${fmtSig(intensity(p), 3)} × ${fmtSig(o.ratio, 3)}`, fmtSig(intensity(p) * o.ratio, 3) + ' W/m²');
+  }
+  document.getElementById('formula').innerHTML = h;
+}
+// 迎著光看（站在 +z 往 −z 看，x 向右、y 向上）的 E 軌跡
+let ec;
+function drawEndOn() {
+  if (!ec) return;
+  const c = ec, W = c._w, H = c._h, cx = W / 2, cy = H / 2, R = W * 0.38, p = polParams(), A = polAmps(p), s = Math.max(A.ax, A.ay, 1e-9);
+  c.fillStyle = '#0a0e17'; c.fillRect(0, 0, W, H);
+  c.strokeStyle = 'rgba(255,255,255,.18)'; c.lineWidth = 1; c.beginPath(); c.moveTo(8, cy); c.lineTo(W - 8, cy); c.moveTo(cx, 8); c.lineTo(cx, H - 8); c.stroke();
+  c.fillStyle = '#8a99ad'; c.font = '11px system-ui'; c.fillText('x', W - 16, cy - 6); c.fillText('y', cx + 6, 16);
+  c.strokeStyle = 'rgba(255,84,112,.55)'; c.lineWidth = 2; c.beginPath();
+  for (let i = 0; i <= 120; i++) { const t = i / 120 / freq(), e = waveFields(0, t, freq(), p).E; const x = cx + e[0] / s * R, y = cy - e[1] / s * R; i ? c.lineTo(x, y) : c.moveTo(x, y); }
+  c.stroke();
+  const e = waveFields(0, window.__emT / freq(), freq(), p).E;
+  SIM.arrow(c, cx, cy, cx + e[0] / s * R, cy - e[1] / s * R, { color: '#ff5470', width: 3 });
+  if (state.polarizer) {
+    const b = state.axis * Math.PI / 180, o = polarizerOut(p, state.axis), L = o.amp / s * R;
+    c.setLineDash([5, 4]); c.strokeStyle = '#ffce54'; c.lineWidth = 2; c.beginPath(); c.moveTo(cx - Math.cos(b) * R * 1.1, cy + Math.sin(b) * R * 1.1); c.lineTo(cx + Math.cos(b) * R * 1.1, cy - Math.sin(b) * R * 1.1); c.stroke(); c.setLineDash([]);
+    c.strokeStyle = '#ffce54'; c.lineWidth = 5; c.globalAlpha = 0.5; c.beginPath(); c.moveTo(cx - Math.cos(b) * L, cy + Math.sin(b) * L); c.lineTo(cx + Math.cos(b) * L, cy - Math.sin(b) * L); c.stroke(); c.globalAlpha = 1;
+  }
+  const rs = rotationSense(p);
+  document.getElementById('endCap').innerHTML = `迎著光看（站在 +z 往 −z 看）：E 尖端的軌跡${rs === 0 ? '是一條線（不旋轉）' : rs > 0 ? '逆時針旋轉' : '順時針旋轉'}。${state.polarizer ? '黃色虛線＝偏振片透射軸，黃色粗線＝穿過偏振片後剩下的振動。' : ''}`;
+}
+function setupEnd() { ec = SIM.fit(document.getElementById('endon'), 1); }
+function refresh() {
+  const set = (id, v, txt) => { document.getElementById('r_' + id).value = v; document.getElementById('v_' + id).textContent = txt; };
+  set('logf', state.logf, fmtF(freq())); set('E0', state.E0, state.E0 + ' V/m'); set('angle', state.angle, state.angle + '°');
+  set('ratio', state.ratio, fmtSig(state.ratio, 3)); set('axis', state.axis, state.axis + '°'); set('speed', state.speed, fmtSig(state.speed, 3));
+  document.getElementById('spdTxt').textContent = fmtSig(state.speed, 3);
+  document.querySelectorAll('[data-pol]').forEach(b => b.classList.toggle('on', b.dataset.pol === state.pol));
+  document.getElementById('bPolz').textContent = '偏振片：' + (state.polarizer ? '開' : '關'); document.getElementById('bPolz').classList.toggle('on', state.polarizer);
+  document.getElementById('bPlay').textContent = state.playing ? '⏸ 暫停' : '▶ 播放';
+  updateFormula(); drawEndOn();
+  window.__render3d && window.__render3d(state);
+}
+['logf', 'E0', 'angle', 'ratio', 'axis', 'speed'].forEach(k => document.getElementById('r_' + k).addEventListener('input', e => { state[k] = +e.target.value; refresh(); }));
+document.querySelectorAll('[data-pol]').forEach(b => b.addEventListener('click', () => { state.pol = b.dataset.pol; refresh(); }));
+document.querySelectorAll('[data-f]').forEach(b => b.addEventListener('click', () => { state.logf = +b.dataset.f; refresh(); }));
+document.getElementById('bHand').onclick = () => { state.hand *= -1; refresh(); };
+document.getElementById('bPolz').onclick = () => { state.polarizer = !state.polarizer; refresh(); };
+document.getElementById('bPlay').onclick = () => { state.playing = !state.playing; refresh(); };
+document.querySelectorAll('[data-view]').forEach(b => b.addEventListener('click', () => window.__setView3d && window.__setView3d(b.dataset.view)));
+let last = 0;
+function tick(now) {
+  const dt = Math.min(0.05, last ? (now - last) / 1000 : 0); last = now;
+  if (state.playing) { window.__emT += dt * state.speed; drawEndOn(); }
+  requestAnimationFrame(tick);
+}
+window.addEventListener('load', () => { setupEnd(); refresh(); requestAnimationFrame(tick); });
+window.addEventListener('resize', () => { setupEnd(); drawEndOn(); });
+</script>
+<script type="module">
+import * as THREE from '../assets/vendor/three/three.module.min.js';
+import { createView } from '../assets/orbit3d.js';
+const view = createView(THREE, document.getElementById('stage'), { aspect: 1.6, distance: 15, theta: 0.85, phi: 1.12 });
+if (view.ok) {
+  const S = view.scene, N = 72, ZMIN = -6, ZMAX = 6;           // 顯示座標：4 單位＝1 波長
+  // 物理 (x, y, z) → 場景 (z, y, −x)（保持右手座標）
+  const toScene = (x, y, z) => new THREE.Vector3(z, y, -x);
+  const matE = new THREE.MeshStandardMaterial({ color: 0xff5470, roughness: 0.5 }), matB = new THREE.MeshStandardMaterial({ color: 0x4cc2ff, roughness: 0.5 });
+  const shaft = new THREE.CylinderGeometry(0.035, 0.035, 1, 6), head = new THREE.ConeGeometry(0.1, 0.24, 8);
+  const mk = (geo, mat) => { const m = new THREE.InstancedMesh(geo, mat, N); m.instanceMatrix.setUsage(THREE.DynamicDrawUsage); S.add(m); return m; };
+  const eS = mk(shaft, matE), eH = mk(head, matE), bS = mk(shaft, matB), bH = mk(head, matB);
+  const lineOf = col => { const g = new THREE.BufferGeometry(); g.setAttribute('position', new THREE.BufferAttribute(new Float32Array(N * 3), 3)); const l = new THREE.Line(g, new THREE.LineBasicMaterial({ color: col })); S.add(l); return l; };
+  const eLine = lineOf(0xff8fa3), bLine = lineOf(0x8fd8ff);
+  // 傳播軸與箭頭
+  const axisMat = new THREE.LineBasicMaterial({ color: 0xdfe8ff });
+  S.add(new THREE.Line(new THREE.BufferGeometry().setFromPoints([new THREE.Vector3(ZMIN - 0.5, 0, 0), new THREE.Vector3(ZMAX + 0.6, 0, 0)]), axisMat));
+  const kHead = new THREE.Mesh(new THREE.ConeGeometry(0.16, 0.45, 12), new THREE.MeshStandardMaterial({ color: 0xffffff }));
+  kHead.position.set(ZMAX + 0.8, 0, 0); kHead.rotation.z = -Math.PI / 2; S.add(kHead);
+  function label(text, color, pos, scale) {
+    const cv = document.createElement('canvas'); cv.width = 256; cv.height = 64; const g = cv.getContext('2d');
+    if (g && g.fillText) { g.font = 'bold 34px system-ui'; g.fillStyle = color; g.fillText(text, 6, 44); }
+    const sp = new THREE.Sprite(new THREE.SpriteMaterial({ map: new THREE.CanvasTexture(cv), transparent: true, depthWrite: false }));
+    sp.position.copy(pos); sp.scale.set(scale * 4, scale, 1); S.add(sp); return sp;
+  }
+  label('傳播方向 k', '#dfe8ff', new THREE.Vector3(ZMAX + 0.4, -0.55, 0), 0.5);
+  label('E', '#ff5470', new THREE.Vector3(ZMIN - 0.6, 0.3, -1.9), 0.55);
+  label('B', '#4cc2ff', new THREE.Vector3(ZMIN - 0.6, 1.9, 0.3), 0.55);
+  // 偏振片
+  const polGroup = new THREE.Group(); S.add(polGroup);
+  const plate = new THREE.Mesh(new THREE.PlaneGeometry(4.2, 4.2), new THREE.MeshStandardMaterial({ color: 0xffe08a, transparent: true, opacity: 0.18, side: THREE.DoubleSide, depthWrite: false }));
+  plate.rotation.y = Math.PI / 2; polGroup.add(plate);
+  const axisLine = new THREE.Line(new THREE.BufferGeometry().setFromPoints([new THREE.Vector3(), new THREE.Vector3()]), new THREE.LineBasicMaterial({ color: 0xffce54 }));
+  polGroup.add(axisLine);
+  const grid = new THREE.GridHelper(12, 12, 0x28324a, 0x1a2233); grid.position.y = -2.4; S.add(grid);
+  const up = new THREE.Vector3(0, 1, 0), q = new THREE.Quaternion(), M = new THREE.Matrix4(), sc = new THREE.Vector3();
+  function place(mesh, hmesh, i, from, vec) {
+    const L = vec.length();
+    if (L < 1e-4) { M.makeScale(0, 0, 0); mesh.setMatrixAt(i, M); hmesh.setMatrixAt(i, M); return; }
+    const d = vec.clone().divideScalar(L); q.setFromUnitVectors(up, d);
+    const sl = Math.max(0.001, L - 0.2);
+    M.compose(from.clone().addScaledVector(d, sl / 2), q, sc.set(1, sl, 1)); mesh.setMatrixAt(i, M);
+    M.compose(from.clone().addScaledVector(d, sl + 0.1), q, sc.set(1, 1, 1)); hmesh.setMatrixAt(i, M);
+  }
+  let st = window.state;
+  function frame() {
+    st = window.state; if (!st) return;
+    const f = Math.pow(10, st.logf), lam = C0 / f, T = 1 / f, t = (window.__emT || 0) * T;
+    const p = { E0: st.E0, pol: st.pol, angle: st.angle, hand: st.hand, ratio: st.ratio }, A = polAmps(p);
+    const s = Math.max(A.ax, A.ay, 1e-9), disp = 1.8 * (0.35 + 0.65 * st.E0 / 100) / s;   // 顯示長度：振幅越大越長
+    let out = null;
+    if (st.polarizer) {
+      const b = st.axis * Math.PI / 180, o = polarizerOut(p, st.axis);
+      const re = A.ax * Math.cos(b) + A.ay * Math.sin(b) * Math.cos(A.dphi), im = A.ay * Math.sin(b) * Math.sin(A.dphi);
+      out = { u: [Math.cos(b), Math.sin(b)], amp: o.amp, delta: Math.atan2(im, re) };
+    }
+    const eP = eLine.geometry.attributes.position, bP = bLine.geometry.attributes.position;
+    for (let i = 0; i < N; i++) {
+      const zd = ZMIN + (ZMAX - ZMIN) * i / (N - 1), z = zd / 4 * lam;
+      let E;
+      if (out && zd > 0) { const w = waveNumbers(f), ph = w.k * z - w.omega * t, v = out.amp * Math.cos(ph - out.delta); E = [v * out.u[0], v * out.u[1], 0]; }
+      else E = waveFields(z, t, f, p).E;
+      const Bc = [-E[1], E[0], 0];                                // B·c = ẑ × E
+      const o0 = new THREE.Vector3(zd, 0, 0);
+      const ev = toScene(E[0] * disp, E[1] * disp, 0), bv = toScene(Bc[0] * disp, Bc[1] * disp, 0);
+      place(eS, eH, i, o0, ev); place(bS, bH, i, o0, bv);
+      eP.setXYZ(i, zd + ev.x, ev.y, ev.z); bP.setXYZ(i, zd + bv.x, bv.y, bv.z);
+    }
+    for (const m of [eS, eH, bS, bH]) m.instanceMatrix.needsUpdate = true;
+    eP.needsUpdate = true; bP.needsUpdate = true;
+  }
+  window.__render3d = function (s) {
+    st = s || window.state;
+    polGroup.visible = !!(st && st.polarizer);
+    if (st) { const b = st.axis * Math.PI / 180, a = toScene(Math.cos(b) * 2.1, Math.sin(b) * 2.1, 0);
+      axisLine.geometry.setFromPoints([new THREE.Vector3(0, -a.y, -a.z), new THREE.Vector3(0, a.y, a.z)]); }
+    frame();
+  };
+  window.__setView3d = function (v) {
+    if (v === 'reset') return view.resetView();
+    const P = { oblique: [0.85, 1.12, 15], topE: [0.0001, 0.06, 15], sideB: [0, Math.PI / 2, 15], face: [Math.PI / 2, Math.PI / 2, 13] }[v];
+    if (P) view.setView(P[0], P[1], P[2]);
+  };
+  view.onFrame(() => frame());
+  window.__render3d(window.state);
+}
+</script>
+</body>
+</html>
+
