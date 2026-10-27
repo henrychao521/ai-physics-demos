@@ -1,0 +1,936 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>光纖與熔接 ｜ 數值孔徑 NA=√(n₁²−n₂²)・接受角・熔接步驟與損耗</title>
+<meta name="description" content="光纖全反射導光原理與光纖熔接互動模擬：數值孔徑 NA、端面接受錐、纖芯全反射臨界角、光纖熔接 SOP 步驟、對芯偏移損耗（Marcuse 高斯模態模型）與鏈路預算計算。">
+<link rel="icon" href="../assets/favicon.svg" type="image/svg+xml">
+<link rel="stylesheet" href="../assets/site.css">
+<script src="../assets/sim.js"></script>
+<script defer src="../assets/nav.js"></script>
+<style>
+  *{box-sizing:border-box}
+  html,body{margin:0;padding:0;background:var(--bg);color:var(--txt);font-family:"Noto Sans TC","PingFang TC","Microsoft JhengHei",system-ui,sans-serif}
+  a{color:var(--accent)}
+  .wrap{max-width:1120px;margin:0 auto;padding:18px 16px 60px}
+  header h1{font-size:1.5rem;margin:.2em 0}
+  header p{color:var(--muted);margin:.2em 0 1em;line-height:1.6}
+  .badge{display:inline-block;background:var(--panel2);border:1px solid var(--line);color:var(--muted);font-size:.75rem;padding:3px 10px;border-radius:99px;margin-right:6px}
+  
+  .scene-wrap{border-radius:16px;overflow:hidden;border:1px solid var(--line);box-shadow:0 18px 50px rgba(0,0,0,.45);background:var(--panel)}
+  #scene{display:block;width:100%;touch-action:none}
+  #sceneOffset{display:block;width:100%;touch-action:none}
+  
+  .scene-bar{display:flex;gap:8px;flex-wrap:wrap;align-items:center;padding:10px 14px;background:var(--panel2);border-bottom:1px solid var(--line)}
+  .scene-bar span{color:var(--muted);font-size:.85rem}
+  .scene-status{padding:10px 14px;background:var(--panel2);border-top:1px solid var(--line);color:var(--txt);font-size:.85rem;line-height:1.5}
+  
+  .pbtn{background:var(--panel);color:var(--txt);border:1px solid var(--line);padding:8px 14px;border-radius:9px;cursor:pointer;font-size:.85rem;font-family:inherit;min-height:44px;display:inline-flex;align-items:center;justify-content:center;transition:border-color .15s,background .15s}
+  .pbtn:hover{border-color:var(--accent)}
+  .pbtn.on{background:var(--accent);color:#04121c;border-color:var(--accent);font-weight:700}
+  
+  .bar{display:flex;gap:14px;flex-wrap:wrap;align-items:flex-end;background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:14px 16px;margin-top:14px}
+  .sld{flex:1;min-width:180px}
+  .sld label{display:flex;justify-content:space-between;font-size:.85rem;color:var(--muted);margin-bottom:6px}
+  .sld label .v{color:var(--accent);font-variant-numeric:tabular-nums;font-weight:700}
+  .sld input{width:100%;accent-color:var(--accent);min-height:36px;cursor:pointer}
+  
+  .warn-box{background:rgba(255,84,112,.15);border:1px solid #ff5470;border-radius:10px;padding:10px 14px;color:#ff8598;font-size:.88rem;margin-top:12px;display:none;font-weight:600}
+  
+  .formula{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:14px 18px;margin-top:14px}
+  .formula h4{margin:0 0 10px;font-size:1rem;color:var(--txt)}
+  .frow{display:flex;flex-wrap:wrap;align-items:baseline;gap:6px 12px;padding:6px 0;border-bottom:1px solid rgba(255,255,255,.05);font-size:.88rem}
+  .frow:last-of-type{border-bottom:none}
+  .fname{color:var(--muted);min-width:140px}
+  .fsym{color:var(--accent);font-family:monospace;font-weight:700}
+  .fsub{color:var(--muted);font-size:.82rem}
+  .fval{margin-left:auto;color:var(--green);font-weight:700;font-variant-numeric:tabular-nums}
+  .frel{margin-top:12px;padding-top:10px;border-top:1px dashed var(--line);font-size:.85rem;color:var(--muted);line-height:1.6}
+  .frel b{color:var(--txt)}
+  
+  .note{background:var(--panel);border-left:3px solid var(--accent2);border-radius:8px;padding:12px 14px;color:var(--muted);font-size:.88rem;line-height:1.7;margin-top:14px}
+  .note b{color:var(--txt)}.note code{background:var(--bg2);padding:1px 6px;border-radius:5px;color:var(--green);font-size:.85em}
+  
+  .card{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:16px 18px;margin-top:16px}
+  .card h3{margin-top:0;font-size:1.15rem;color:var(--txt);border-bottom:1px solid var(--line);padding-bottom:8px}
+  
+  .step-list{margin:0;padding-left:22px;line-height:1.8;font-size:.9rem;color:var(--txt)}
+  .step-list li{margin-bottom:8px}
+  .step-list b{color:var(--accent)}
+  
+  .data-list{margin:0;padding-left:20px;line-height:1.8;font-size:.9rem;color:var(--txt)}
+  .data-list li{margin-bottom:6px}
+  .data-list b{color:var(--accent2)}
+  
+  .meter-wrap{background:var(--bg2);border-radius:99px;height:16px;overflow:hidden;border:1px solid var(--line);margin:10px 0}
+  .meter-fill{height:100%;background:linear-gradient(90deg,var(--accent2),var(--accent));width:100%;transition:width .15s}
+  
+  .grid-calc{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:12px;margin-top:10px}
+  .calc-item{background:var(--panel2);border:1px solid var(--line);border-radius:10px;padding:10px 14px}
+  .calc-item .title{font-size:.82rem;color:var(--muted)}
+  .calc-item .num{font-size:1.15rem;font-weight:700;color:var(--accent);margin-top:4px}
+  
+  footer{color:var(--muted);font-size:.8rem;margin-top:30px;text-align:center;line-height:1.7}
+</style>
+</head>
+<body data-demo="光纖與熔接">
+<div class="wrap">
+  <header>
+    <span class="badge">光學・全反射</span>
+    <h1>光纖的全反射與熔接</h1>
+    <p>光纖利用<b>纖芯（Core, n₁）折射率高於披覆層（Cladding, n₂）</b>的全反射效應將光波局限於纖芯內長途傳導。入射端面的<b>接受角（Acceptance Angle）</b>與<b>數值孔徑（NA）</b>決定了多少角度的光能被有效耦合進入光纖；而在長途布線與網路鋪設中，<b>光纖熔接（Fusion Splicing）</b>更是達成微小插入損耗的關鍵工藝。</p>
+  </header>
+
+  <!-- 第一部分：光纖裡的全反射 -->
+  <div class="scene-wrap">
+    <div class="scene-bar">
+      <span>光纖規格預設：</span>
+      <button class="pbtn on" id="btnTeach" onclick="applyPreset('teach')">教學用（1.50／1.40）</button>
+      <button class="pbtn" id="btnSMF" onclick="applyPreset('smf')">單模光纖（NA≈0.14，示意）</button>
+      <button class="pbtn" id="btnMMF" onclick="applyPreset('mmf')">多模光纖（NA≈0.20，示意）</button>
+    </div>
+    <canvas id="scene" style="width:100%;aspect-ratio:2.2"></canvas>
+    <div class="scene-status" id="sub">光纖全反射模擬載入中...</div>
+  </div>
+
+  <div id="nWarn" class="warn-box">⚠️ 披覆層必須比纖芯小（n₂ < n₁ 才能形成全反射）</div>
+
+  <div class="bar" id="mainSliders">
+    <div class="sld">
+      <label><span>纖芯折射率 n₁</span><span class="v" id="v_n1">1.50</span></label>
+      <input type="range" id="r_n1" min="1.40" max="1.60" step="0.005" value="1.50">
+    </div>
+    <div class="sld">
+      <label><span>披覆折射率 n₂</span><span class="v" id="v_n2">1.40</span></label>
+      <input type="range" id="r_n2" min="1.30" max="1.55" step="0.005" value="1.40">
+    </div>
+    <div class="sld">
+      <label><span>端面入射角 θ（與軸夾角）</span><span class="v" id="v_theta">10.0°</span></label>
+      <input type="range" id="r_theta" min="0" max="60" step="1" value="10">
+    </div>
+  </div>
+
+  <!-- 公式面板 -->
+  <div class="formula" id="formula"></div>
+
+  <!-- 物理重點 -->
+  <div class="note">
+    <b>物理重點：</b>光纖靠纖芯 n1 > 披覆 n2 的全反射導光；NA 越大越容易把光收進去（但多模光纖的模態色散也越大）；熔接的關鍵是端面平整與纖芯對準。
+  </div>
+
+  <!-- 第二部分：光纖熔接 -->
+  <div class="card">
+    <h3>光纖熔接標準作業步驟（Fusion Splicing SOP）</h3>
+    <ol class="step-list">
+      <li><b>剝除外被與緩衝被覆</b>：使用光纖剝線鉗，小心剝除最外層的 3 mm / 2 mm 防護外被與 250 μm / 900 μm 緩衝塑膠層，露出 125 μm 石英玻璃裸光纖。</li>
+      <li><b>用酒精清潔裸光纖</b>：使用 99% 高純度異丙醇（IPA）或無水酒精沾濕無塵紙，單向擦拭裸光纖表面，徹底清除殘留的塗覆碎屑、灰塵與指紋油脂。</li>
+      <li><b>用精密切割刀切出平整、垂直的端面</b>：使用專用光纖切割刀，利用微刻痕拉斷法折斷玻璃纖維，確保端面垂直度 &lt; 1° 且無崩角或凸刺。</li>
+      <li><b>兩根光纖放進熔接機的 V 形槽夾好</b>：將切好的兩端光纖精準放入熔接機高精度陶瓷 V 形槽（V-groove）內，並確實蓋上防風罩夾具固定。</li>
+      <li><b>選擇對應光纖種類的程式</b>：依據光纖類別（如 ITU-T G.652 單模光纖、NZDSF、MMF 等）在熔接機中選定對應的放電時間與推進重疊量等熔接參數。</li>
+      <li><b>熔接機顯示端面影像、檢查切割品質（不合格就重切）</b>：機內雙軸顯微鏡相機自動辨識兩端端面的切割角度與平整度，若不符合合格標準即提示警報退回重切。</li>
+      <li><b>預熔放電清潔端面</b>：熔接機施加微弱電弧進行瞬間閃爍放電（Cleaning Arc），燒除端面殘留微粒雜質並鈍化微小毛邊。</li>
+      <li><b>自動對芯（core alignment）</b>：高精密步進馬達利用輪廓對準系統（PAS）或局部注入檢測技術，在 X、Y 軸精密微調，使兩側纖芯達到微米級中心對齊。</li>
+      <li><b>放電熔接、把兩端推在一起</b>：主電弧放電（約 2000°C 熔融二氧化矽），步進馬達同步向中心推進微幅擠壓，消除交界面熔融接合為一體。</li>
+      <li><b>熔接機估計損耗（不合格重做）</b>：熔接機依據端面光折射紋路、軸向偏移與變形幾何特徵演算法估算接續損耗；若預估值超標則須切除重新熔接。</li>
+      <li><b>套上熱縮保護套加熱</b>：打開防風罩，將預先套在光纖上的熱縮保護套（內含不鏽鋼抗彎補強針）移到熔接點中央，放入機載加熱槽熱縮烘烤固定。</li>
+      <li><b>收進熔接盤</b>：待保護套冷卻固定後，將光纖依照大於最小彎曲半徑（通常 ≥ 30 mm）規律盤繞收容至配線架或接續盒的熔接盤（Splice Tray）中卡槽定位。</li>
+    </ol>
+    <div class="note" style="margin-top:12px">
+      <b>重要驗收原則：</b>熔接機顯示的損耗只是估計，正式驗收要用 OTDR（光時域反射儀）從兩個方向量測再取平均。
+    </div>
+  </div>
+
+  <div class="card">
+    <h3>光纖工程典型損耗規範數值</h3>
+    <ul class="data-list">
+      <li><b>TIA-568 布線標準</b>：規定每個熔接或機械接續點損耗不得超過 <b>0.3 dB</b>（光纖協會 FOA 對 TIA-568-B.3 的整理）。</li>
+      <li><b>熔接機廠商規格標示</b>：熔接機廠商標示的平均熔接損耗，以 <b>Fujikura 90S+</b> 為例對 ITU-T G.652 單模光纖約 <b>0.02 dB</b>（產品規格表）。</li>
+      <li><b>鏈路衰減與連接器標準</b>：TIA-568 也列出室外單模光纖最大衰減 <b>0.5 dB/km</b>、連接器每對最大 <b>0.75 dB</b>。</li>
+    </ul>
+  </div>
+
+  <!-- 小互動一：dB ↔ 穿透率換算 -->
+  <div class="card">
+    <h3>小互動一：分貝（dB）↔ 穿透率（T）換算器</h3>
+    <p style="font-size:.86rem;color:var(--muted)">損耗公式：<code>T = 10^(−dB / 10)</code>。光學損耗以分貝表示時，每增加 3 dB 代表功率減半；0.02 dB 與 0.3 dB 的光穿透效率如下：</p>
+    <div class="bar" style="margin-top:8px">
+      <div class="sld">
+        <label><span>接續損耗（dB）</span><span class="v" id="v_lossDB">0.02 dB</span></label>
+        <input type="range" id="r_lossDB" min="0" max="1.0" step="0.01" value="0.02">
+      </div>
+      <div style="display:flex;gap:8px;flex-wrap:wrap">
+        <button class="pbtn" onclick="setLossDB(0.02)">Fujikura 典型 0.02 dB</button>
+        <button class="pbtn" onclick="setLossDB(0.30)">TIA-568 上限 0.30 dB</button>
+        <button class="pbtn" onclick="setLossDB(0.75)">連接器上限 0.75 dB</button>
+      </div>
+    </div>
+    <div class="meter-wrap">
+      <div class="meter-fill" id="meterFill" style="width:99.54%"></div>
+    </div>
+    <div class="grid-calc">
+      <div class="calc-item">
+        <div class="title">輸入光損耗</div>
+        <div class="num" id="calc_db">0.02 dB</div>
+      </div>
+      <div class="calc-item">
+        <div class="title">光功率穿透率 T (P_out / P_in)</div>
+        <div class="num" id="calc_t">99.5 %</div>
+      </div>
+      <div class="calc-item">
+        <div class="title">損失光功率比例</div>
+        <div class="num" id="calc_loss" style="color:var(--force)">0.459 %</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 小互動二：對芯偏移造成的損耗 -->
+  <div class="card">
+    <h3>小互動二：單模光纖對芯偏移損耗模擬（Marcuse 高斯模態近似）</h3>
+    <p style="font-size:.86rem;color:var(--muted)">單模光纖的光場分佈近似高斯光束。兩根光纖端面若發生微小徑向錯位（Offset d），耦合效率急劇衰退。高斯模態近似公式：<code>η = exp(−(d / w)²)</code>，<code>w = MFD / 2</code>，損耗 <code>Loss = −10·log₁₀(η) ≈ 4.343·(d/w)² dB</code>。</p>
+    <canvas id="sceneOffset" style="width:100%;aspect-ratio:2.4"></canvas>
+    <div class="bar" style="margin-top:10px">
+      <div class="sld">
+        <label><span>對芯軸向偏移量 d（μm）</span><span class="v" id="v_dOffset">1.0 μm</span></label>
+        <input type="range" id="r_dOffset" min="0" max="3.0" step="0.1" value="1.0">
+      </div>
+      <div class="sld">
+        <label><span>模場直徑 MFD（μm）</span><span class="v" id="v_mfd">9.2 μm</span></label>
+        <input type="range" id="r_mfd" min="8.0" max="11.0" step="0.1" value="9.2">
+      </div>
+    </div>
+    <div class="grid-calc">
+      <div class="calc-item">
+        <div class="title">對芯偏移量 d</div>
+        <div class="num" id="calc_d">1.0 μm</div>
+      </div>
+      <div class="calc-item">
+        <div class="title">計算接續損耗</div>
+        <div class="num" id="calc_offsetLoss">0.205 dB</div>
+      </div>
+      <div class="calc-item">
+        <div class="title">模態耦合效率 η</div>
+        <div class="num" id="calc_eta">95.4 %</div>
+      </div>
+    </div>
+    <div class="note" style="margin-top:12px">
+      <b>物理重點說明：</b>單模纖芯只有約 9 μm，偏 1 μm 就有約 0.2 dB 損耗！這說明了為何熔接必須依賴顯微高精度步進馬達進行自動對芯。
+      <br><span style="font-size:.82rem;color:var(--muted)">註明：高斯模態近似，D. Marcuse, Bell System Technical Journal 56, 703（1977）。</span>
+    </div>
+  </div>
+
+  <!-- 小互動三：鏈路預算 linkBudget -->
+  <div class="card">
+    <h3>小互動三：光纖傳輸鏈路損耗預算計算機（Link Budget）</h3>
+    <p style="font-size:.86rem;color:var(--muted)">光纖鏈路總衰減預算 = 光纖本體衰減（長度 × 衰減率）＋ 熔接接續損耗（點數 × 每點損耗）＋ 連接器接頭損耗（對數 × 每對損耗）。</p>
+    <div class="bar">
+      <div class="sld">
+        <label><span>光纖總長度（km）</span><span class="v" id="v_km">20 km</span></label>
+        <input type="range" id="r_km" min="1" max="100" step="1" value="20">
+      </div>
+      <div class="sld">
+        <label><span>光纖每公里衰減（dB/km）</span><span class="v" id="v_dBperKm">0.50 dB/km</span></label>
+        <input type="range" id="r_dBperKm" min="0.15" max="1.0" step="0.05" value="0.5">
+      </div>
+      <div class="sld">
+        <label><span>熔接點數量（處）</span><span class="v" id="v_nSplice">4 處</span></label>
+        <input type="range" id="r_nSplice" min="0" max="20" step="1" value="4">
+      </div>
+      <div class="sld">
+        <label><span>每點熔接損耗（dB）</span><span class="v" id="v_spliceDB">0.05 dB</span></label>
+        <input type="range" id="r_spliceDB" min="0.01" max="0.30" step="0.01" value="0.05">
+      </div>
+      <div class="sld">
+        <label><span>連接器接頭對數（對）</span><span class="v" id="v_nConn">2 對</span></label>
+        <input type="range" id="r_nConn" min="0" max="10" step="1" value="2">
+      </div>
+      <div class="sld">
+        <label><span>每對連接器損耗（dB）</span><span class="v" id="v_connDB">0.75 dB</span></label>
+        <input type="range" id="r_connDB" min="0.1" max="1.5" step="0.05" value="0.75">
+      </div>
+    </div>
+    <div class="grid-calc">
+      <div class="calc-item">
+        <div class="title">光纖本體總衰減</div>
+        <div class="num" id="calc_fiberLoss">10.0 dB</div>
+      </div>
+      <div class="calc-item">
+        <div class="title">熔接點總損耗</div>
+        <div class="num" id="calc_spliceLoss">0.200 dB</div>
+      </div>
+      <div class="calc-item">
+        <div class="title">連接器總損耗</div>
+        <div class="num" id="calc_connLoss">1.50 dB</div>
+      </div>
+      <div class="calc-item" style="border-color:var(--accent)">
+        <div class="title">鏈路總損耗預算</div>
+        <div class="num" id="calc_totalBudget" style="color:var(--accent)">11.7 dB</div>
+      </div>
+      <div class="calc-item" style="border-color:var(--green)">
+        <div class="title">終端到達光功率比 (T)</div>
+        <div class="num" id="calc_totalT" style="color:var(--green)">6.76 %</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 出處與文獻 -->
+  <div class="card">
+    <h3>出處與參考文獻</h3>
+    <ul class="data-list" style="font-size:.85rem;color:var(--muted)">
+      <li>光纖協會（The Fiber Optic Association, FOA）熔接步驟說明與 TIA-568-B.3 規格整理。</li>
+      <li>Fujikura 90S+ 核心對準光纖熔接機規格手冊（Fujikura Ltd. Product Specification）。</li>
+      <li>Corning SMF-28 Ultra 單模光纖產品技術資料（模場直徑 MFD 9.2 μm、披覆直徑 125 μm）。</li>
+      <li>D. Marcuse, "Loss Analysis of Single-Mode Fiber Splices," <i>Bell System Technical Journal</i>, vol. 56, no. 5, pp. 703–718 (1977).</li>
+    </ul>
+  </div>
+
+  <!-- 延伸閱讀連結 -->
+  <p class="ext-links" style="margin-top:20px;font-size:.9rem;color:var(--muted)">
+    延伸學習：<a href="../refraction/">← 回到「折射與全反射」</a> ｜ <a href="../refraction-multilayer/">多層介質折射 →</a>
+  </p>
+
+  <footer>純前端 HTML / Canvas 互動物理模擬（SIM 工具庫）。依司乃耳定律、全反射臨界角與高斯模態耦合模型精確計算。</footer>
+</div>
+
+<script>
+/*PHYS:BEGIN*/
+// 有效數字格式（公式面板、數值卡共用；驗收會用同一個函式比對畫面上的數字）
+function fmtSig(v, n) {
+  n = n || 3;
+  if (typeof v !== 'number' || !isFinite(v)) return String(v);
+  if (v === 0) return '0';
+  const a = Math.abs(v);
+  if (a >= 1e5 || a < 1e-3) {
+    let e = Math.floor(Math.log10(a)), m = v / Math.pow(10, e);
+    let ms = m.toFixed(n - 1);
+    if (Math.abs(parseFloat(ms)) >= 10) { e += 1; ms = (v / Math.pow(10, e)).toFixed(n - 1); }
+    const SUP = { '-': '⁻', '0': '⁰', '1': '¹', '2': '²', '3': '³', '4': '⁴', '5': '⁵', '6': '⁶', '7': '⁷', '8': '⁸', '9': '⁹' };
+    return ms + '×10' + String(e).split('').map(ch => SUP[ch]).join('');
+  }
+  const s = Number(v.toPrecision(n));
+  return a >= Math.pow(10, n - 1) ? String(Math.round(s)) : s.toPrecision(n);
+}
+
+// 光纖的全反射：纖芯折射率 n1 > 披覆層 n2，外面（入射端）介質 n0。
+// 端面入射角 θ（與光纖軸的夾角）→ 進入纖芯的折射角 θt：n0·sinθ = n1·sinθt；打到纖芯–披覆界面的入射角 = 90° − θt。
+// 全反射條件 sin(90° − θt) ≥ n2/n1 ⇔ n0·sinθ ≤ √(n1² − n2²)。數值孔徑 NA = √(n1² − n2²)，接受角 θa = arcsin(NA/n0)。
+function fiberNA(n1, n2) { return Math.sqrt(Math.max(0, n1 * n1 - n2 * n2)); }
+function acceptDeg(n1, n2, n0) { const s = fiberNA(n1, n2) / (n0 || 1); return s >= 1 ? 90 : Math.asin(s) * 180 / Math.PI; }
+function fiberRay(n0, n1, n2, thetaDeg) {
+  const st = n0 * Math.sin(thetaDeg * Math.PI / 180) / n1, tt = Math.asin(Math.min(1, st)) * 180 / Math.PI;
+  const inc = 90 - tt, crit = Math.asin(n2 / n1) * 180 / Math.PI;
+  return { thetaCore: tt, incidence: inc, critical: crit, tir: inc >= crit };
+}
+// 光線在長 L、纖芯直徑 dCore 的直光纖中的反射次數（幾何光學，子午光線）
+function bounceCount(L, dCore, thetaCoreDeg) { const t = Math.tan(thetaCoreDeg * Math.PI / 180); return t <= 0 ? 0 : Math.floor(L * t / dCore + 0.5); }
+// 損耗換算：dB ↔ 穿透率 T = 10^(−dB/10)
+function dBtoT(dB) { return Math.pow(10, -dB / 10); }
+function TtodB(T) { return -10 * Math.log10(T); }
+// 單模光纖對芯偏移（橫向偏移 d）的接續損耗，高斯模態近似（D. Marcuse, Bell Syst. Tech. J. 56, 703, 1977）：
+// 耦合效率 η = exp(−(d/w)²)，w = 模場直徑 MFD/2 → 損耗 = −10·log10(η) ≈ 4.343·(d/w)² dB
+function offsetLossDB(d, mfd) { const w = mfd / 2; return -10 * Math.log10(Math.exp(-((d / w) ** 2))); }
+// 簡化鏈路損耗預算：光纖衰減 × 長度 ＋ 接續點數 × 每點損耗 ＋ 連接器數 × 每個損耗
+function linkBudget(km, dBperKm, nSplice, spliceDB, nConn, connDB) { return km * dBperKm + nSplice * spliceDB + nConn * connDB; }
+/*PHYS:END*/
+
+// 全域狀態物件
+const state = {
+  n1: 1.50,
+  n2: 1.40,
+  theta: 10,
+  lossDB: 0.02,
+  dOffset: 1.0,
+  mfd: 9.2,
+  km: 20,
+  dBperKm: 0.5,
+  nSplice: 4,
+  spliceDB: 0.05,
+  nConn: 2,
+  connDB: 0.75,
+};
+window.state = state;
+
+let sc, scOffset;
+
+function setupCanvases() {
+  sc = SIM.fit(document.getElementById('scene'), 2.2);
+  scOffset = SIM.fit(document.getElementById('sceneOffset'), 2.4);
+}
+
+function frow(n, sym, sub, val) {
+  return `<div class="frow"><span class="fname">${n}</span><span class="fsym">${sym}</span><span class="fsub">= ${sub}</span><span class="fval">${val}</span></div>`;
+}
+
+function updateFormula() {
+  const n1 = state.n1, n2 = state.n2, th = state.theta;
+  const isInvalid = n2 >= n1;
+  const NA = fiberNA(n1, n2);
+  const acc = acceptDeg(n1, n2, 1);
+  const ray = fiberRay(1, n1, n2, th);
+
+  let html = `<h4>📐 計算公式（即時代入　外介質空氣 n₀ = 1.000）</h4>`;
+  html += frow('數值孔徑 NA', '√(n₁² − n₂²)', `√(${fmtSig(n1, 3)}² − ${fmtSig(n2, 3)}²)`, fmtSig(NA, 3));
+  html += frow('端面接受角 θa', 'arcsin(NA / n₀)', `arcsin(${fmtSig(NA, 3)} / 1.00)`, `${fmtSig(acc, 3)}°`);
+  html += frow('纖芯折射角 θt', 'arcsin(n₀·sinθ / n₁)', `arcsin(1.00·sin(${fmtSig(th, 3)}°) / ${fmtSig(n1, 3)})`, `${fmtSig(ray.thetaCore, 3)}°`);
+  html += frow('界面入射角 θ_inc', '90° − θt', `90° − ${fmtSig(ray.thetaCore, 3)}°`, `${fmtSig(ray.incidence, 3)}°`);
+  html += frow('界面臨界角 θc', 'arcsin(n₂ / n₁)', isInvalid ? `arcsin(${fmtSig(n2, 3)} / ${fmtSig(n1, 3)})` : `arcsin(${fmtSig(n2, 3)} / ${fmtSig(n1, 3)})`, isInvalid ? '無解（披覆層必須比纖芯小）' : `${fmtSig(ray.critical, 3)}°`);
+  html += frow('是否全反射', 'θ_inc ≥ θc', isInvalid ? '不滿足 n₁ > n₂' : `${fmtSig(ray.incidence, 3)}° ${ray.tir ? '≥' : '<'} ${fmtSig(ray.critical, 3)}°`, ray.tir ? '✅ 符合全反射（光波鎖在纖芯內傳播）' : '❌ 不符合全反射，光漏出去');
+
+  html += `<div class="frel">
+    📈 <b>數值孔徑（NA）與接受錐</b>：NA 決定了光纖端面能將多大角度的光收集進纖芯。入射錐半角滿足 <code>sinθa = NA = √(n₁² − n₂²)</code>。當端面入射角在錐內（θ ≤ θa），光進入纖芯後打到纖芯–披覆界面的入射角才會大於臨界角 θc，滿足全反射條件。<br>
+    💡 <b>折射率差 Δn</b>：全反射的先決條件是纖芯 n₁ 大於披覆 n₂。若 n₂ ≥ n₁，介質為光疏進入光密，絕無全反射。單模光纖為了消除模態色散，纖芯做得很細且 NA 約僅 0.14。
+  </div>`;
+  document.getElementById('formula').innerHTML = html;
+}
+
+function drawArrowHead(ctx, x, y, ang, color) {
+  ctx.save();
+  ctx.fillStyle = color;
+  ctx.beginPath();
+  ctx.moveTo(x, y);
+  ctx.lineTo(x - 8 * Math.cos(ang - 0.45), y - 8 * Math.sin(ang - 0.45));
+  ctx.lineTo(x - 8 * Math.cos(ang + 0.45), y - 8 * Math.sin(ang + 0.45));
+  ctx.closePath();
+  ctx.fill();
+  ctx.restore();
+}
+
+function drawFiberScene() {
+  if (!sc) return;
+  const ctx = sc;
+  const W = ctx._w, H = ctx._h;
+
+  ctx.clearRect(0, 0, W, H);
+  const bg = ctx.createLinearGradient(0, 0, 0, H);
+  bg.addColorStop(0, '#070c18');
+  bg.addColorStop(1, '#0c152a');
+  ctx.fillStyle = bg;
+  ctx.fillRect(0, 0, W, H);
+
+  const x0 = Math.round(W * 0.22);
+  const x1 = Math.round(W * 0.95);
+  const cy = H * 0.5;
+  const coreH = Math.round(H * 0.32);
+  const coreTop = cy - coreH / 2;
+  const coreBot = cy + coreH / 2;
+  const cladH = Math.round(H * 0.26);
+  const cladTop = coreTop - cladH;
+  const cladBot = coreBot + cladH;
+
+  // 空氣區（左側）
+  ctx.fillStyle = 'rgba(160, 190, 240, 0.7)';
+  ctx.font = '12px system-ui';
+  ctx.fillText('空氣 Air (n₀ = 1.000)', 14, 26);
+
+  // 披覆層（上下兩層，深色石英）
+  ctx.fillStyle = '#0f182c';
+  ctx.fillRect(x0, cladTop, x1 - x0, cladH);
+  ctx.fillRect(x0, coreBot, x1 - x0, cladH);
+
+  ctx.strokeStyle = 'rgba(100, 140, 200, 0.3)';
+  ctx.lineWidth = 1.5;
+  ctx.strokeRect(x0, cladTop, x1 - x0, cladBot - cladTop);
+
+  ctx.fillStyle = 'rgba(130, 170, 230, 0.8)';
+  ctx.fillText('披覆層 Cladding (n₂ = ' + fmtSig(state.n2, 3) + ')', x0 + 16, cladTop + 20);
+  ctx.fillText('披覆層 Cladding (n₂ = ' + fmtSig(state.n2, 3) + ')', x0 + 16, cladBot - 10);
+
+  // 纖芯（淺色石英，高折射率）
+  ctx.fillStyle = '#182b4c';
+  ctx.fillRect(x0, coreTop, x1 - x0, coreH);
+
+  // 纖芯–披覆界面
+  ctx.strokeStyle = '#4ea1ff';
+  ctx.lineWidth = 1.8;
+  ctx.beginPath();
+  ctx.moveTo(x0, coreTop); ctx.lineTo(x1, coreTop);
+  ctx.moveTo(x0, coreBot); ctx.lineTo(x1, coreBot);
+  ctx.stroke();
+
+  // 中心光軸
+  ctx.strokeStyle = 'rgba(255, 255, 255, 0.2)';
+  ctx.lineWidth = 1;
+  ctx.setLineDash([6, 6]);
+  ctx.beginPath();
+  ctx.moveTo(x0, cy); ctx.lineTo(x1, cy);
+  ctx.stroke();
+  ctx.setLineDash([]);
+
+  ctx.fillStyle = '#8ec5ff';
+  ctx.font = 'bold 12px system-ui';
+  ctx.fillText('纖芯 Core (n₁ = ' + fmtSig(state.n1, 3) + ')', x1 - 180, cy - coreH * 0.25);
+
+  // 端面
+  ctx.strokeStyle = '#70a5ff';
+  ctx.lineWidth = 2.5;
+  ctx.beginPath();
+  ctx.moveTo(x0, cladTop); ctx.lineTo(x0, cladBot);
+  ctx.stroke();
+  ctx.fillStyle = '#a0c4ff';
+  ctx.font = '12px system-ui';
+  ctx.fillText('端面', x0 - 30, cladTop + 16);
+
+  // 接受錐（Acceptance Cone）
+  if (state.n2 < state.n1) {
+    const acc = acceptDeg(state.n1, state.n2, 1);
+    const accRad = acc * Math.PI / 180;
+    const coneR = Math.min(x0 - 20, 110);
+    if (coneR > 20 && acc > 0) {
+      ctx.save();
+      ctx.beginPath();
+      ctx.moveTo(x0, cy);
+      ctx.arc(x0, cy, coneR, Math.PI - accRad, Math.PI + accRad, false);
+      ctx.closePath();
+      ctx.fillStyle = 'rgba(0, 220, 255, 0.08)';
+      ctx.fill();
+
+      // 錐外緣兩條虛線
+      ctx.strokeStyle = '#00e5ff';
+      ctx.lineWidth = 1.6;
+      ctx.setLineDash([4, 4]);
+      ctx.beginPath();
+      ctx.moveTo(x0, cy); ctx.lineTo(x0 - coneR * Math.cos(accRad), cy - coneR * Math.sin(accRad));
+      ctx.moveTo(x0, cy); ctx.lineTo(x0 - coneR * Math.cos(accRad), cy + coneR * Math.sin(accRad));
+      ctx.stroke();
+      ctx.setLineDash([]);
+
+      ctx.strokeStyle = 'rgba(0, 229, 255, 0.6)';
+      ctx.lineWidth = 1.2;
+      ctx.beginPath();
+      ctx.arc(x0, cy, coneR * 0.6, Math.PI - accRad, Math.PI + accRad, false);
+      ctx.stroke();
+
+      ctx.fillStyle = '#00e5ff';
+      ctx.font = '12px system-ui';
+      ctx.fillText('接受錐 θa = ' + fmtSig(acc, 3) + '°', x0 - coneR - 10, cy - coneR * 0.6 - 6);
+      ctx.restore();
+    }
+  }
+
+  // 光線追跡
+  const ray = fiberRay(1, state.n1, state.n2, state.theta);
+  const thDeg = state.theta;
+  const thRad = thDeg * Math.PI / 180;
+
+  // 端面外空氣入射光線
+  const Lin = Math.min(x0 - 15, 95);
+  const xin = x0 - Lin * Math.cos(thRad);
+  const yin = cy - Lin * Math.sin(thRad);
+
+  ctx.save();
+  ctx.strokeStyle = '#ffe247';
+  ctx.lineWidth = 2.6;
+  ctx.beginPath();
+  ctx.moveTo(xin, yin); ctx.lineTo(x0, cy);
+  ctx.stroke();
+
+  const inAng = Math.atan2(cy - yin, x0 - xin);
+  drawArrowHead(ctx, (xin + x0) / 2, (yin + cy) / 2, inAng, '#ffe247');
+
+  if (thDeg > 0) {
+    ctx.strokeStyle = 'rgba(255, 226, 71, 0.7)';
+    ctx.lineWidth = 1.2;
+    ctx.beginPath();
+    ctx.arc(x0, cy, 30, Math.PI - thRad, Math.PI, false);
+    ctx.stroke();
+    ctx.fillStyle = '#ffe247';
+    ctx.font = 'bold 12px system-ui';
+    ctx.fillText('θ=' + thDeg + '°', x0 - 58, cy - 8);
+  }
+  ctx.restore();
+
+  // 纖芯內部前進
+  if (state.n2 >= state.n1) {
+    ctx.fillStyle = '#ff5470';
+    ctx.font = 'bold 14px system-ui';
+    ctx.fillText('⚠️ 披覆層必須比纖芯小（n₂ ≥ n₁ 無法形成全反射）', x0 + 40, cy);
+    document.getElementById('sub').textContent = '披覆折射率 n₂ 大於或等於纖芯 n₁，界面不具備全反射條件，光線無法被約束在纖芯。';
+  } else if (thDeg === 0) {
+    ctx.strokeStyle = '#ffe247';
+    ctx.lineWidth = 2.6;
+    ctx.beginPath();
+    ctx.moveTo(x0, cy); ctx.lineTo(x1, cy);
+    ctx.stroke();
+    drawArrowHead(ctx, (x0 + x1) / 2, cy, 0, '#ffe247');
+    document.getElementById('sub').textContent = '軸向正入射（θ=0°）：光線沿光纖中心軸直線穿透，不與界面發生反射。';
+  } else {
+    const tcRad = ray.thetaCore * Math.PI / 180;
+    const tanTc = Math.tan(tcRad);
+    let curX = x0, curY = cy, dirY = 1;
+    let intensity = 1.0;
+    let bounce = 0;
+
+    while (curX < x1 && bounce < 8) {
+      const targetY = dirY > 0 ? coreBot : coreTop;
+      const dy = targetY - curY;
+      const dx = Math.abs(dy) / tanTc;
+      let nextX = curX + dx;
+      let nextY = targetY;
+      let hitEnd = false;
+      if (nextX >= x1) {
+        nextY = curY + dirY * (x1 - curX) * tanTc;
+        nextX = x1;
+        hitEnd = true;
+      }
+
+      ctx.save();
+      if (ray.tir) {
+        ctx.strokeStyle = '#ffe247';
+        ctx.lineWidth = 2.4;
+      } else {
+        ctx.strokeStyle = 'rgba(255, 226, 71, ' + Math.max(0.12, intensity) + ')';
+        ctx.lineWidth = Math.max(1.2, 2.4 * intensity);
+      }
+      ctx.beginPath();
+      ctx.moveTo(curX, curY); ctx.lineTo(nextX, nextY);
+      ctx.stroke();
+
+      const segAng = Math.atan2(nextY - curY, nextX - curX);
+      drawArrowHead(ctx, (curX + nextX) / 2, (curY + nextY) / 2, segAng, ctx.strokeStyle);
+      ctx.restore();
+
+      if (hitEnd) break;
+
+      bounce++;
+
+      // 若不滿足全反射，畫折射漏出披覆層的光線
+      if (!ray.tir) {
+        const incRad = ray.incidence * Math.PI / 180;
+        const sinClad = (state.n1 / state.n2) * Math.sin(incRad);
+        if (sinClad <= 1.0) {
+          const cladAng = Math.asin(sinClad);
+          const leakLen = Math.min(cladH * 0.9, 50);
+          const leakX = nextX + leakLen * Math.sin(cladAng);
+          const leakY = nextY + dirY * leakLen * Math.cos(cladAng);
+
+          ctx.save();
+          ctx.strokeStyle = 'rgba(255, 84, 112, ' + Math.max(0.25, intensity * 0.8) + ')';
+          ctx.lineWidth = 1.8;
+          ctx.setLineDash([3, 3]);
+          ctx.beginPath();
+          ctx.moveTo(nextX, nextY); ctx.lineTo(leakX, leakY);
+          ctx.stroke();
+          ctx.setLineDash([]);
+          drawArrowHead(ctx, leakX, leakY, Math.atan2(leakY - nextY, leakX - nextX), 'rgba(255, 84, 112, ' + Math.max(0.3, intensity) + ')');
+
+          if (bounce === 1) {
+            ctx.fillStyle = '#ff5470';
+            ctx.font = 'bold 12px system-ui';
+            ctx.fillText('不符合全反射，光漏出去', leakX + 8, leakY + (dirY > 0 ? 14 : -6));
+          }
+          ctx.restore();
+        }
+        intensity *= 0.42;
+      }
+
+      if (bounce === 1) {
+        ctx.save();
+        ctx.strokeStyle = 'rgba(255, 255, 255, 0.4)';
+        ctx.lineWidth = 1;
+        ctx.setLineDash([3, 3]);
+        ctx.beginPath();
+        ctx.moveTo(nextX, nextY - 26); ctx.lineTo(nextX, nextY + 26);
+        ctx.stroke();
+        ctx.setLineDash([]);
+
+        ctx.fillStyle = ray.tir ? '#7CFFB2' : '#ff5470';
+        ctx.font = '12px system-ui';
+        ctx.fillText('界面入射角 θ_inc = ' + fmtSig(ray.incidence, 3) + '° (' + (ray.tir ? '≥ θc 全反射' : '< θc 折射漏失') + ')', nextX - 35, nextY + (dirY > 0 ? -12 : 20));
+        ctx.restore();
+      }
+
+      curX = nextX;
+      curY = nextY;
+      dirY = -dirY;
+    }
+
+    if (ray.tir) {
+      document.getElementById('sub').textContent = '✅ 入射角 θ=' + thDeg + '° 位於接受錐內（θ ≤ θa=' + fmtSig(acceptDeg(state.n1, state.n2, 1), 3) + '°）：界面入射角 ' + fmtSig(ray.incidence, 3) + '° ≥ 臨界角 ' + fmtSig(ray.critical, 3) + '°，光線在纖芯反覆全反射前進！';
+    } else {
+      document.getElementById('sub').textContent = '❌ 入射角 θ=' + thDeg + '° 超出接受錐（θ > θa=' + fmtSig(acceptDeg(state.n1, state.n2, 1), 3) + '°）：界面入射角 ' + fmtSig(ray.incidence, 3) + '° < 臨界角 ' + fmtSig(ray.critical, 3) + '°，不符合全反射，光漏出去！';
+    }
+  }
+}
+
+function drawOffsetScene() {
+  if (!scOffset) return;
+  const ctx = scOffset;
+  const W = ctx._w, H = ctx._h;
+
+  ctx.clearRect(0, 0, W, H);
+  ctx.fillStyle = '#0a1020';
+  ctx.fillRect(0, 0, W, H);
+
+  const cx = W * 0.28, cy = H * 0.5;
+  const d_um = state.dOffset;
+  const mfd_um = state.mfd;
+  const pxPerUm = 16;
+  const spotR = (mfd_um / 2) * pxPerUm;
+  const shiftY = d_um * pxPerUm;
+
+  // 1. 左側端面高斯光斑截面視圖
+  const g1 = ctx.createRadialGradient(cx, cy - shiftY / 2, 2, cx, cy - shiftY / 2, spotR);
+  g1.addColorStop(0, 'rgba(0, 229, 255, 0.85)');
+  g1.addColorStop(0.5, 'rgba(0, 229, 255, 0.35)');
+  g1.addColorStop(1, 'rgba(0, 229, 255, 0)');
+  ctx.fillStyle = g1;
+  ctx.beginPath();
+  ctx.arc(cx, cy - shiftY / 2, spotR, 0, Math.PI * 2);
+  ctx.fill();
+
+  const g2 = ctx.createRadialGradient(cx, cy + shiftY / 2, 2, cx, cy + shiftY / 2, spotR);
+  g2.addColorStop(0, 'rgba(255, 122, 69, 0.85)');
+  g2.addColorStop(0.5, 'rgba(255, 122, 69, 0.35)');
+  g2.addColorStop(1, 'rgba(255, 122, 69, 0)');
+  ctx.fillStyle = g2;
+  ctx.beginPath();
+  ctx.arc(cx, cy + shiftY / 2, spotR, 0, Math.PI * 2);
+  ctx.fill();
+
+  // 中心線與偏移箭頭標註
+  ctx.strokeStyle = 'rgba(255, 255, 255, 0.3)';
+  ctx.setLineDash([3, 3]);
+  ctx.beginPath();
+  ctx.moveTo(cx - spotR - 15, cy - shiftY / 2); ctx.lineTo(cx + spotR + 15, cy - shiftY / 2);
+  ctx.moveTo(cx - spotR - 15, cy + shiftY / 2); ctx.lineTo(cx + spotR + 15, cy + shiftY / 2);
+  ctx.stroke();
+  ctx.setLineDash([]);
+
+  if (d_um > 0.1) {
+    const dimX = cx + spotR + 25;
+    ctx.strokeStyle = '#ffb02e';
+    ctx.lineWidth = 1.5;
+    ctx.beginPath();
+    ctx.moveTo(dimX, cy - shiftY / 2); ctx.lineTo(dimX, cy + shiftY / 2);
+    ctx.stroke();
+    drawArrowHead(ctx, dimX, cy - shiftY / 2, -Math.PI / 2, '#ffb02e');
+    drawArrowHead(ctx, dimX, cy + shiftY / 2, Math.PI / 2, '#ffb02e');
+
+    ctx.fillStyle = '#ffb02e';
+    ctx.font = '12px system-ui';
+    ctx.fillText('d = ' + fmtSig(d_um, 3) + ' μm', dimX + 8, cy + 4);
+  }
+
+  ctx.fillStyle = '#00e5ff';
+  ctx.font = '12px system-ui';
+  ctx.fillText('光纖 1 模場 (MFD=' + fmtSig(mfd_um, 3) + 'μm)', cx - 80, cy - shiftY / 2 - spotR - 8);
+  ctx.fillStyle = '#ff7a45';
+  ctx.fillText('光纖 2 模場 (錯開 d)', cx - 80, cy + shiftY / 2 + spotR + 18);
+
+  // 2. 右側接合端面縱向示意
+  const rx1 = W * 0.58, rx2 = W * 0.94;
+  const rmid = (rx1 + rx2) / 2;
+  const coreThick = 24;
+
+  ctx.strokeStyle = 'rgba(100, 150, 220, 0.2)';
+  ctx.lineWidth = 1;
+  ctx.strokeRect(rx1, cy - 60, rmid - rx1, 120);
+  ctx.strokeRect(rmid, cy - 60, rx2 - rmid, 120);
+
+  // 左光纖纖芯
+  ctx.fillStyle = '#1b345f';
+  ctx.fillRect(rx1, cy - shiftY / 2 - coreThick / 2, rmid - rx1, coreThick);
+  ctx.strokeStyle = '#4ea1ff';
+  ctx.lineWidth = 1.5;
+  ctx.strokeRect(rx1, cy - shiftY / 2 - coreThick / 2, rmid - rx1, coreThick);
+
+  // 右光纖纖芯（偏移 shiftY）
+  ctx.fillStyle = '#3a2444';
+  ctx.fillRect(rmid, cy + shiftY / 2 - coreThick / 2, rx2 - rmid, coreThick);
+  ctx.strokeStyle = '#ff7a45';
+  ctx.strokeRect(rmid, cy + shiftY / 2 - coreThick / 2, rx2 - rmid, coreThick);
+
+  // 熔接接縫
+  ctx.strokeStyle = '#ffd13b';
+  ctx.lineWidth = 2;
+  ctx.beginPath();
+  ctx.moveTo(rmid, cy - 58); ctx.lineTo(rmid, cy + 58);
+  ctx.stroke();
+
+  ctx.fillStyle = '#ffd13b';
+  ctx.font = '12px system-ui';
+  ctx.fillText('熔接端面', rmid - 24, cy - 66);
+
+  const loss = offsetLossDB(d_um, mfd_um);
+  const eta = dBtoT(loss) * 100;
+  ctx.fillStyle = '#7CFFB2';
+  ctx.font = 'bold 13px system-ui';
+  ctx.fillText('接續損耗: ' + fmtSig(loss, 3) + ' dB　(耦合效率 η ≈ ' + fmtSig(eta, 3) + '%)', rx1, 26);
+}
+
+function refresh() {
+  // 同步滑桿 UI 顯示
+  const r_n1 = document.getElementById('r_n1');
+  if (r_n1) r_n1.value = state.n1;
+  const r_n2 = document.getElementById('r_n2');
+  if (r_n2) r_n2.value = state.n2;
+  const r_th = document.getElementById('r_theta');
+  if (r_th) r_th.value = state.theta;
+
+  document.getElementById('v_n1').textContent = fmtSig(state.n1, 3);
+  document.getElementById('v_n2').textContent = fmtSig(state.n2, 3);
+  document.getElementById('v_theta').textContent = fmtSig(state.theta, 3) + '°';
+
+  // 披覆層警告判斷
+  const warnEl = document.getElementById('nWarn');
+  if (state.n2 >= state.n1) {
+    warnEl.style.display = 'block';
+    warnEl.textContent = '⚠️ 披覆層必須比纖芯小（n₂ < n₁ 才能形成全反射）';
+  } else {
+    warnEl.style.display = 'none';
+  }
+
+  // 預設按鈕外觀高亮
+  const isTeach = Math.abs(state.n1 - 1.50) < 1e-4 && Math.abs(state.n2 - 1.40) < 1e-4;
+  const isSMF = Math.abs(state.n2 - 1.4436) < 1e-4 && Math.abs(fiberNA(state.n1, state.n2) - 0.14) < 2e-3;
+  const isMMF = Math.abs(state.n2 - 1.4436) < 1e-4 && Math.abs(fiberNA(state.n1, state.n2) - 0.20) < 2e-3;
+  document.getElementById('btnTeach').classList.toggle('on', isTeach);
+  document.getElementById('btnSMF').classList.toggle('on', isSMF);
+  document.getElementById('btnMMF').classList.toggle('on', isMMF);
+
+  // 第一部分主畫面與公式
+  updateFormula();
+  drawFiberScene();
+
+  // 小互動一：分貝與穿透率換算
+  const r_loss = document.getElementById('r_lossDB');
+  if (r_loss) r_loss.value = state.lossDB;
+  document.getElementById('v_lossDB').textContent = fmtSig(state.lossDB, 3) + ' dB';
+  document.getElementById('calc_db').textContent = fmtSig(state.lossDB, 3) + ' dB';
+  const tPercent = dBtoT(state.lossDB) * 100;
+  document.getElementById('calc_t').textContent = fmtSig(tPercent, 3) + ' %';
+  document.getElementById('calc_loss').textContent = fmtSig(100 - tPercent, 3) + ' %';
+  document.getElementById('meterFill').style.width = Math.min(100, Math.max(0, tPercent)) + '%';
+
+  // 小互動二：對芯偏移損耗
+  const r_d = document.getElementById('r_dOffset');
+  if (r_d) r_d.value = state.dOffset;
+  const r_mfd = document.getElementById('r_mfd');
+  if (r_mfd) r_mfd.value = state.mfd;
+
+  document.getElementById('v_dOffset').textContent = fmtSig(state.dOffset, 3) + ' μm';
+  document.getElementById('v_mfd').textContent = fmtSig(state.mfd, 3) + ' μm';
+  document.getElementById('calc_d').textContent = fmtSig(state.dOffset, 3) + ' μm';
+  const offLoss = offsetLossDB(state.dOffset, state.mfd);
+  document.getElementById('calc_offsetLoss').textContent = fmtSig(offLoss, 3) + ' dB';
+  document.getElementById('calc_eta').textContent = fmtSig(dBtoT(offLoss) * 100, 3) + ' %';
+  drawOffsetScene();
+
+  // 小互動三：鏈路預算
+  const r_km = document.getElementById('r_km');
+  if (r_km) r_km.value = state.km;
+  const r_dBkm = document.getElementById('r_dBperKm');
+  if (r_dBkm) r_dBkm.value = state.dBperKm;
+  const r_nsp = document.getElementById('r_nSplice');
+  if (r_nsp) r_nsp.value = state.nSplice;
+  const r_spdb = document.getElementById('r_spliceDB');
+  if (r_spdb) r_spdb.value = state.spliceDB;
+  const r_ncn = document.getElementById('r_nConn');
+  if (r_ncn) r_ncn.value = state.nConn;
+  const r_cndb = document.getElementById('r_connDB');
+  if (r_cndb) r_cndb.value = state.connDB;
+
+  document.getElementById('v_km').textContent = state.km + ' km';
+  document.getElementById('v_dBperKm').textContent = fmtSig(state.dBperKm, 3) + ' dB/km';
+  document.getElementById('v_nSplice').textContent = state.nSplice + ' 處';
+  document.getElementById('v_spliceDB').textContent = fmtSig(state.spliceDB, 3) + ' dB';
+  document.getElementById('v_nConn').textContent = state.nConn + ' 對';
+  document.getElementById('v_connDB').textContent = fmtSig(state.connDB, 3) + ' dB';
+
+  const fLoss = state.km * state.dBperKm;
+  const spLoss = state.nSplice * state.spliceDB;
+  const cnLoss = state.nConn * state.connDB;
+  const totalB = linkBudget(state.km, state.dBperKm, state.nSplice, state.spliceDB, state.nConn, state.connDB);
+  const totT = dBtoT(totalB) * 100;
+
+  document.getElementById('calc_fiberLoss').textContent = fmtSig(fLoss, 3) + ' dB';
+  document.getElementById('calc_spliceLoss').textContent = fmtSig(spLoss, 3) + ' dB';
+  document.getElementById('calc_connLoss').textContent = fmtSig(cnLoss, 3) + ' dB';
+  document.getElementById('calc_totalBudget').textContent = fmtSig(totalB, 3) + ' dB';
+  document.getElementById('calc_totalT').textContent = fmtSig(totT, 3) + ' %';
+}
+
+function applyPreset(name) {
+  if (name === 'teach') {
+    state.n1 = 1.50;
+    state.n2 = 1.40;
+  } else if (name === 'smf') {
+    state.n2 = 1.4436;
+    state.n1 = Math.sqrt(1.4436 * 1.4436 + 0.14 * 0.14);
+  } else if (name === 'mmf') {
+    state.n2 = 1.4436;
+    state.n1 = Math.sqrt(1.4436 * 1.4436 + 0.20 * 0.20);
+  }
+  refresh();
+}
+
+function setLossDB(val) {
+  state.lossDB = val;
+  refresh();
+}
+
+// 事件監聽與綁定
+document.getElementById('r_n1').addEventListener('input', e => {
+  state.n1 = parseFloat(e.target.value);
+  refresh();
+});
+document.getElementById('r_n2').addEventListener('input', e => {
+  state.n2 = parseFloat(e.target.value);
+  refresh();
+});
+document.getElementById('r_theta').addEventListener('input', e => {
+  state.theta = parseFloat(e.target.value);
+  refresh();
+});
+
+document.getElementById('r_lossDB').addEventListener('input', e => {
+  state.lossDB = parseFloat(e.target.value);
+  refresh();
+});
+
+document.getElementById('r_dOffset').addEventListener('input', e => {
+  state.dOffset = parseFloat(e.target.value);
+  refresh();
+});
+document.getElementById('r_mfd').addEventListener('input', e => {
+  state.mfd = parseFloat(e.target.value);
+  refresh();
+});
+
+document.getElementById('r_km').addEventListener('input', e => {
+  state.km = parseFloat(e.target.value);
+  refresh();
+});
+document.getElementById('r_dBperKm').addEventListener('input', e => {
+  state.dBperKm = parseFloat(e.target.value);
+  refresh();
+});
+document.getElementById('r_nSplice').addEventListener('input', e => {
+  state.nSplice = parseFloat(e.target.value);
+  refresh();
+});
+document.getElementById('r_spliceDB').addEventListener('input', e => {
+  state.spliceDB = parseFloat(e.target.value);
+  refresh();
+});
+document.getElementById('r_nConn').addEventListener('input', e => {
+  state.nConn = parseFloat(e.target.value);
+  refresh();
+});
+document.getElementById('r_connDB').addEventListener('input', e => {
+  state.connDB = parseFloat(e.target.value);
+  refresh();
+});
+
+window.addEventListener('load', () => {
+  setupCanvases();
+  refresh();
+});
+
+window.addEventListener('resize', () => {
+  setupCanvases();
+  refresh();
+});
+</script>
+</body>
+</html>
