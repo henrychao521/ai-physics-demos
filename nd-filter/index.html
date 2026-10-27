@@ -276,7 +276,7 @@ function updateFormula() {
 
   // 6. 可變 ND（馬呂斯定律）
   const malusVal = (cnd.T * 100);
-  html += frow('可變 ND 透光率 I', '(I₀/2)·cos²θ', `(1/2)·cos²(${fmtSig(state.theta,3)}°)`, `${fmtSig(malusVal, 3)} % I₀`);
+  html += frow('可變 ND 透射光強 I', '(I₀/2)·cos²θ', `(1/2)·cos²(${fmtSig(state.theta,3)}°)`, `${fmtSig(malusVal, 3)} % I₀`);
   html += frow('可變 ND 等效 OD', '−log₁₀(I / I₀)', `−log₁₀(${fmtSig(cnd.T,3)})`, isFinite(cnd.od) ? fmtSig(cnd.od, 3) : '∞ (消光)');
 
   // 7. 快門時間 t = t₀ × 10^OD

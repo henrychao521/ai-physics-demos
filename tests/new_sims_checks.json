@@ -238,6 +238,20 @@
  },
  {
   "slug": "induction-3d",
+  "name": "磁鐵翻轉（N 朝下）靠近時：磁通量大小增加、感應電流逆時針（+1）；遠離時減少、順時針（−1）",
+  "js": "const a=lenzInfo(-0.04,0.5,-1.2,0.03),b=lenzInfo(0.04,0.5,-1.2,0.03);return [a.change==='增加'?1:0,a.sense,b.change==='減少'?1:0,b.sense];",
+  "expect": [
+   1,
+   1,
+   1,
+   -1
+  ],
+  "tol": 0,
+  "rel": false,
+  "ref": "冷次定律（Argon 審查指出的翻轉情形）"
+ },
+ {
+  "slug": "induction-3d",
   "name": "等速穿越全程 ∫ε dt = −N·ΔΦ（梯形積分）",
   "js": "let s=0;const n=20000,dt=(0.25-(-0.3))/0.8/n;for(let i=0;i<n;i++){const za=-0.3+0.8*i*dt,zb=za+0.8*dt;s+=0.5*(emfAt(za,0.8,200,1.2,0.03)+emfAt(zb,0.8,200,1.2,0.03))*dt;}return s;",
   "expect": -3.549500072412083e-06,
