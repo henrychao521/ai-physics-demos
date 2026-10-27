@@ -1,0 +1,882 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>電流的磁效應 3D ｜ 安培右手定則・磁力線與指南針</title>
+<meta name="description" content="電流的磁效應 3D 互動模擬：直導線、圓線圈、螺線管的 3D 空間磁場分佈。結合必歐-沙伐數值疊加、安培右手定則 3D 圖示、動態電流亮點、空間磁力線與平面指南針陣列。">
+<link rel="icon" href="../assets/favicon.svg" type="image/svg+xml">
+<link rel="stylesheet" href="../assets/site.css">
+<script src="../assets/sim.js"></script>
+<script defer src="../assets/nav.js"></script>
+<style>
+  *{box-sizing:border-box}
+  html,body{margin:0;padding:0;background:var(--bg,#0a0e17);color:var(--txt,#e6edf3);font-family:"Noto Sans TC","PingFang TC","Microsoft JhengHei",system-ui,sans-serif}
+  a{color:var(--accent,#4fc3f7);text-decoration:none}
+  a:hover{text-decoration:underline}
+  .wrap{max-width:1120px;margin:0 auto;padding:18px 16px 60px}
+  header h1{font-size:1.5rem;margin:.2em 0}
+  header p{color:var(--muted,#8a99ad);margin:.2em 0 1em;line-height:1.6}
+  .badge{display:inline-block;background:var(--panel2,#1e2638);border:1px solid var(--line,#2a364f);color:var(--muted,#8a99ad);font-size:.72rem;padding:2px 8px;border-radius:99px;margin-right:6px}
+
+  .scene-box{width:100%;border-radius:16px;overflow:hidden;border:1px solid var(--line,#2a364f);box-shadow:0 18px 50px rgba(0,0,0,.45);background:#070a12}
+  #stage{width:100%;aspect-ratio:1.6;display:block}
+  .tip3d{color:var(--muted,#8a99ad);font-size:.8rem;text-align:center;margin:8px 0 14px;line-height:1.4}
+
+  .ctrl-group{display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-bottom:12px}
+  .ctrl-label{color:var(--muted,#8a99ad);font-size:.82rem;font-weight:600;margin-right:2px}
+  .pbtn{background:var(--panel2,#1e2638);color:var(--txt,#e6edf3);border:1px solid var(--line,#2a364f);min-height:44px;padding:8px 14px;border-radius:9px;cursor:pointer;font-size:.85rem;font-family:inherit;display:inline-flex;align-items:center;justify-content:center;transition:border-color .15s,background .15s}
+  .pbtn:hover{border-color:var(--accent,#4fc3f7)}
+  .pbtn.on{background:var(--accent,#4fc3f7);color:#04121c;border-color:var(--accent,#4fc3f7);font-weight:700}
+
+  .bar{display:flex;gap:14px;flex-wrap:wrap;align-items:flex-end;background:var(--panel,#131926);border:1px solid var(--line,#2a364f);border-radius:14px;padding:14px 16px;margin-top:12px}
+  .sld{flex:1;min-width:160px}
+  .sld label{display:flex;justify-content:space-between;font-size:.82rem;color:var(--muted,#8a99ad);margin-bottom:5px}
+  .sld label .v{color:var(--accent,#4fc3f7);font-variant-numeric:tabular-nums;font-weight:700}
+  .sld input{width:100%;accent-color:var(--accent,#4fc3f7);min-height:28px}
+
+  .modes{display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-top:14px}
+  .hint-box{flex:1;background:var(--panel,#131926);border:1px solid var(--line,#2a364f);border-radius:9px;padding:10px 14px;color:var(--muted,#8a99ad);font-size:.85rem;line-height:1.5}
+  .hint-box b{color:var(--accent,#4fc3f7)}
+
+  .formula{background:var(--panel,#131926);border:1px solid var(--line,#2a364f);border-radius:14px;padding:16px;margin-top:14px}
+  .formula h4{margin:0 0 12px;font-size:.95rem;color:var(--txt,#e6edf3)}
+  .frow{display:flex;flex-wrap:wrap;gap:8px 12px;align-items:baseline;padding:7px 0;border-bottom:1px solid rgba(160,180,255,.08);font-size:.86rem}
+  .frow:last-of-type{border-bottom:none}
+  .fname{color:var(--txt,#e6edf3);font-weight:600;min-width:130px}
+  .fsym{color:var(--accent,#4fc3f7);font-family:monospace;font-size:.92rem}
+  .fsub{color:var(--muted,#8a99ad);font-size:.82rem;flex:1;min-width:200px}
+  .fval{color:#7CFFB2;font-weight:700;font-variant-numeric:tabular-nums}
+  .frel{margin-top:10px;padding-top:10px;border-top:1px dashed var(--line,#2a364f);color:var(--muted,#8a99ad);font-size:.84rem;line-height:1.6}
+  .frel b{color:var(--txt,#e6edf3)}
+
+  .note{background:var(--panel,#131926);border-left:3px solid var(--accent2,#ffb02e);border-radius:8px;padding:12px 14px;color:var(--muted,#8a99ad);font-size:.86rem;line-height:1.7;margin-top:14px}
+  .note b{color:var(--txt,#e6edf3)}
+  .note code{background:rgba(255,255,255,.07);padding:2px 6px;border-radius:4px;color:#7CFFB2;font-size:.88em}
+
+  .back-link{margin-top:20px;text-align:center;font-size:.92rem}
+  footer{color:var(--muted,#8a99ad);font-size:.78rem;margin-top:24px;text-align:center;line-height:1.7}
+</style>
+</head>
+<body data-demo="電流的磁效應 3D">
+<div class="wrap">
+  <header>
+    <span class="badge">電磁・電流磁效應・3D</span>
+    <h1>電流的磁效應 3D ｜ 安培右手定則・磁力線與指南針</h1>
+    <p>透過立體空間視角探索<b>電流的磁效應</b>。觀察<b>直導線</b>周圍的同心圓磁場、<b>圓線圈</b>中心集中的磁力線，以及<b>螺線管</b>內部接近均勻、外如磁鐵的偶極磁場。本頁 3D 空間磁場由<b>必歐-沙伐定律數值疊加</b>計算，可自由拖曳旋轉、縮放視角並對照理論公式。</p>
+  </header>
+
+  <div class="scene-box">
+    <div id="stage"></div>
+  </div>
+  <p class="tip3d">拖曳旋轉、雙指或滾輪縮放、雙擊重設視角</p>
+
+  <div class="ctrl-group">
+    <span class="ctrl-label">模式：</span>
+    <button class="pbtn on" id="btnWire">直導線</button>
+    <button class="pbtn" id="btnLoop">圓線圈</button>
+    <button class="pbtn" id="btnSol">螺線管</button>
+    <button class="pbtn" id="btnDir">電流反向</button>
+    <button class="pbtn on" id="btnLines">顯示磁力線</button>
+    <button class="pbtn on" id="btnNeedles">顯示指南針</button>
+  </div>
+
+  <div class="ctrl-group">
+    <span class="ctrl-label">視角：</span>
+    <button class="pbtn" id="vIso">斜視</button>
+    <button class="pbtn" id="vFront">正視</button>
+    <button class="pbtn" id="vTop">俯視</button>
+    <button class="pbtn" id="vReset">重設</button>
+  </div>
+
+  <div class="bar" id="sliders">
+    <div class="sld" id="sld_I">
+      <label><span>電流 I</span><span class="v" id="v_I">5 A</span></label>
+      <input type="range" id="r_I" min="1" max="10" step="0.5" value="5">
+    </div>
+    <div class="sld" id="sld_R">
+      <label><span>線圈／螺線管半徑 R</span><span class="v" id="v_R">3 cm</span></label>
+      <input type="range" id="r_R" min="2" max="6" step="0.5" value="3">
+    </div>
+    <div class="sld" id="sld_len">
+      <label><span>螺線管長度 L</span><span class="v" id="v_len">20 cm</span></label>
+      <input type="range" id="r_len" min="8" max="30" step="1" value="20">
+    </div>
+    <div class="sld" id="sld_turns">
+      <label><span>螺線管匝數 N</span><span class="v" id="v_turns">10 匝</span></label>
+      <input type="range" id="r_turns" min="4" max="20" step="1" value="10">
+    </div>
+    <div class="sld" id="sld_r">
+      <label><span id="lbl_r">探針距離 r</span><span class="v" id="v_r">4 cm</span></label>
+      <input type="range" id="r_r" min="1" max="12" step="0.5" value="4">
+    </div>
+  </div>
+
+  <div class="modes">
+    <div class="hint-box" id="hintRH">
+      右手定則：握住導線，<b>拇指＝電流方向</b>，<b>四指繞向＝磁場方向</b>。
+    </div>
+  </div>
+
+  <div class="formula" id="formula"></div>
+
+  <div class="note">
+    <b>物理重點：</b>
+    1820 年厄斯特發現電流生磁。<b>直導線</b>周圍磁場呈同心圓環繞，大小 <code>B = μ₀I/(2πr)</code>，隨距離成反比（<code>B ∝ 1/r</code>）。
+    <b>圓線圈</b>將導線彎成環狀，各段微小電流在中心處產生的磁場方向一致疊加，中心 <code>B = μ₀I/(2R)</code>，比同半徑直導線強 <code>π</code> 倍。
+    <b>螺線管</b>由多圈環形導線串聯成螺旋，管內磁力線緊密平行，內部近乎均勻 <code>B = μ₀nI</code>（n＝N/L 為匝密度），管外磁場散開回繞，外觀與磁力線分佈與棒狀磁鐵完全相同。
+    <b>安培右手定則兩種握法：</b>直導線以拇指順電流、四指繞向為磁場；線圈與螺線管則以四指彎曲順著環繞電流、伸直的拇指即指向內部磁場方向（N 極端）。指南針在磁場中受力矩旋轉，平衡時其 <b>N 極（紅色）恆指向磁場 B 的切線方向</b>。本 3D 模擬的空間磁場大小皆由<b>必歐-沙伐定律對有限長導線微元嚴格數值疊加</b>計算，而非示意簡化繪製。
+  </div>
+
+  <div class="back-link">
+    <a href="../current-magnetism/">← 回到 2D 版「電流的磁效應」</a>
+  </div>
+
+  <footer>純前端 HTML / WebGL (three.js r160)。安培右手定則 3D 視角・必歐-沙伐定律空間數值積分。</footer>
+</div>
+
+<script>
+/*PHYS:BEGIN*/
+// 有效數字格式（公式面板、數值卡共用；驗收會用同一個函式比對畫面上的數字）
+function fmtSig(v, n) {
+  n = n || 3;
+  if (typeof v !== 'number' || !isFinite(v)) return String(v);
+  if (v === 0) return '0';
+  const a = Math.abs(v);
+  if (a >= 1e5 || a < 1e-3) {
+    let e = Math.floor(Math.log10(a)), m = v / Math.pow(10, e);
+    let ms = m.toFixed(n - 1);
+    if (Math.abs(parseFloat(ms)) >= 10) { e += 1; ms = (v / Math.pow(10, e)).toFixed(n - 1); }
+    const SUP = { '-': '⁻', '0': '⁰', '1': '¹', '2': '²', '3': '³', '4': '⁴', '5': '⁵', '6': '⁶', '7': '⁷', '8': '⁸', '9': '⁹' };
+    return ms + '×10' + String(e).split('').map(ch => SUP[ch]).join('');
+  }
+  const s = Number(v.toPrecision(n));
+  return a >= Math.pow(10, n - 1) ? String(Math.round(s)) : s.toPrecision(n);
+}
+
+// 電流的磁效應 3D：必歐-沙伐定律（有限直線段的解析積分）疊加成直導線、圓線圈、螺線管的磁場。
+// 單位：公尺、安培、特斯拉。座標：直導線沿 +y（電流向上）；圓線圈與螺線管的軸沿 x。
+const MU0 = 4 * Math.PI * 1e-7;
+function vsub(a, b) { return [a[0] - b[0], a[1] - b[1], a[2] - b[2]]; }
+function vcross(a, b) { return [a[1] * b[2] - a[2] * b[1], a[2] * b[0] - a[0] * b[2], a[0] * b[1] - a[1] * b[0]]; }
+function vdot(a, b) { return a[0] * b[0] + a[1] * b[1] + a[2] * b[2]; }
+function vlen(a) { return Math.hypot(a[0], a[1], a[2]); }
+// 線段 a→b、電流 I 在 p 點的磁場：B = μ₀I/(4πd)·(cosθ₁ − cosθ₂)，方向 dl × r̂
+function segB(p, a, b, I) {
+  const L = vsub(b, a), Ll = vlen(L);
+  if (Ll === 0) return [0, 0, 0];
+  const u = [L[0] / Ll, L[1] / Ll, L[2] / Ll];
+  const ap = vsub(p, a), s = vdot(ap, u);
+  const perp = [ap[0] - s * u[0], ap[1] - s * u[1], ap[2] - s * u[2]], d = vlen(perp);
+  if (d < 1e-9) return [0, 0, 0];
+  const c1 = s / Math.hypot(s, d), s2 = s - Ll, c2 = s2 / Math.hypot(s2, d);
+  const mag = MU0 * I / (4 * Math.PI * d) * (c1 - c2);
+  const dir = vcross(u, [perp[0] / d, perp[1] / d, perp[2] / d]);
+  return [mag * dir[0], mag * dir[1], mag * dir[2]];
+}
+// 折線（相鄰點連成線段）的總磁場
+function pathB(p, pts, I) {
+  let B = [0, 0, 0];
+  for (let i = 0; i + 1 < pts.length; i++) { const b = segB(p, pts[i], pts[i + 1], I); B[0] += b[0]; B[1] += b[1]; B[2] += b[2]; }
+  return B;
+}
+function wirePath(L) { return [[0, -L / 2, 0], [0, L / 2, 0]]; }                       // 電流 +y
+function loopPath(R, n, dir) {                                                          // 軸沿 x；dir=+1 時中心磁場 +x
+  const pts = [];
+  for (let j = 0; j <= n; j++) { const t = dir * 2 * Math.PI * j / n; pts.push([0, R * Math.cos(t), R * Math.sin(t)]); }
+  return pts;
+}
+function solenoidPath(R, len, turns, perTurn, dir) {                                    // 軸沿 x，從 −len/2 繞到 +len/2
+  const m = Math.max(1, Math.round(turns * perTurn)), pts = [];
+  for (let j = 0; j <= m; j++) { const s = j / m, t = dir * 2 * Math.PI * turns * s; pts.push([-len / 2 + len * s, R * Math.cos(t), R * Math.sin(t)]); }
+  return pts;
+}
+// model = {kind:'wire'|'loop'|'solenoid', I, dir(±1), R, len, turns, L}
+function buildPath(model) {
+  if (model.kind === 'wire') { const p = wirePath(model.L || 2); return model.dir < 0 ? p.reverse() : p; }
+  if (model.kind === 'loop') return loopPath(model.R, 180, model.dir);
+  return solenoidPath(model.R, model.len, model.turns, 36, model.dir);
+}
+function fieldAt(p, model, path) { return pathB(p, path || buildPath(model), model.I); }
+// 解析式（對照用）
+function BwireInf(I, r) { return MU0 * I / (2 * Math.PI * r); }
+function BloopCenter(I, R) { return MU0 * I / (2 * R); }
+function BloopAxis(I, R, x) { return MU0 * I * R * R / (2 * Math.pow(R * R + x * x, 1.5)); }
+function BsolCenter(I, turns, len, R) { return MU0 * I * turns / Math.sqrt(len * len + 4 * R * R); }   // 有限長螺線管中心
+function BsolIdeal(I, turns, len) { return MU0 * (turns / len) * I; }                                  // 無限長近似 μ₀nI
+// 指南針：N 極指向磁場方向（單位向量）
+function needleDir(B) { const m = vlen(B); return m > 0 ? [B[0] / m, B[1] / m, B[2] / m] : [1, 0, 0]; }
+// 磁力線追蹤：沿 B 的單位方向做中點法積分；離開 bounds（半邊長）、太靠近導線（|B| 過大）或繞回起點就停
+function traceFieldLine(start, model, path, ds, nmax, bound, sign) {
+  const pts = [start.slice()]; let p = start.slice(); sign = sign || 1;
+  for (let i = 0; i < nmax; i++) {
+    const b1 = needleDir(fieldAt(p, model, path));
+    const mid = [p[0] + sign * b1[0] * ds / 2, p[1] + sign * b1[1] * ds / 2, p[2] + sign * b1[2] * ds / 2];
+    const b2 = needleDir(fieldAt(mid, model, path));
+    p = [p[0] + sign * b2[0] * ds, p[1] + sign * b2[1] * ds, p[2] + sign * b2[2] * ds];
+    pts.push(p.slice());
+    if (Math.abs(p[0]) > bound || Math.abs(p[1]) > bound || Math.abs(p[2]) > bound) break;
+    if (i > 20 && vlen(vsub(p, start)) < ds * 0.9) { pts.push(start.slice()); break; }
+  }
+  return pts;
+}
+/*PHYS:END*/
+
+// 明確將 PHYS 函式與常數掛至 window 與 globalThis，供 ES module 與外部驗收調用
+Object.assign(window, {
+  fmtSig, MU0, vsub, vcross, vdot, vlen, segB, pathB,
+  wirePath, loopPath, solenoidPath, buildPath, fieldAt,
+  BwireInf, BloopCenter, BloopAxis, BsolCenter, BsolIdeal,
+  needleDir, traceFieldLine
+});
+</script>
+
+<script>
+// 全域狀態定義
+const state = {
+  mode: 'wire',       // 'wire' | 'loop' | 'solenoid'
+  I: 5,               // 1–10 A
+  dir: 1,             // +1 / -1
+  R: 3,               // 2–6 cm
+  len: 20,            // 8–30 cm
+  turns: 10,          // 4–20
+  r: 4,               // 1–12 cm
+  showLines: true,
+  showNeedles: true
+};
+window.state = state;
+
+function frow(n, sym, sub, val) {
+  return `<div class="frow"><span class="fname">${n}</span><span class="fsym">${sym}</span><span class="fsub">= ${sub}</span><span class="fval">${val}</span></div>`;
+}
+
+function updateFormula() {
+  const I = state.I;
+  const r_m = state.r / 100;
+  const R_m = state.R / 100;
+  const len_m = state.len / 100;
+  const model = {
+    kind: state.mode,
+    I: state.I,
+    dir: state.dir,
+    R: R_m,
+    len: len_m,
+    turns: state.turns,
+    L: 2.0
+  };
+  const path = buildPath(model);
+  const pPos = [r_m, 0, 0];
+  const B_num = vlen(fieldAt(pPos, model, path));
+
+  let html = `<h4>📐 計算公式（即時代入　μ₀ = 4π×10⁻⁷ T·m/A）</h4>`;
+
+  if (state.mode === 'wire') {
+    const B_inf = BwireInf(I, r_m);
+    html += frow('無限長導線 B', 'μ₀I / (2πr)', `(4π×10⁻⁷ × ${I}) / (2π × ${r_m} m) [${fmtSig(B_inf * 1e6, 3)} μT]`, fmtSig(B_inf, 3) + ' T');
+    html += frow('必歐-沙伐數值 (L=2m)', '∫ dB', `探針 (r=${state.r} cm) 處數值積分 [${fmtSig(B_num * 1e6, 3)} μT]`, fmtSig(B_num, 3) + ' T');
+    html += `<div class="frel">📈 <b>B ∝ I</b>：電流越大磁場等比增強　·　<b>B ∝ 1/r</b>：距離越遠磁場越弱　·　有限長導線在靠近中央處極接近無限長理論解析解。</div>`;
+  } else if (state.mode === 'loop') {
+    const B_cen = BloopCenter(I, R_m);
+    const B_axis = BloopAxis(I, R_m, r_m);
+    html += frow('圓線圈中心 B', 'μ₀I / (2R)', `(4π×10⁻⁷ × ${I}) / (2 × ${R_m} m) [${fmtSig(B_cen * 1e6, 3)} μT]`, fmtSig(B_cen, 3) + ' T');
+    html += frow('探針軸上解析 B', 'μ₀IR² / [2(R²+x²)^(3/2)]', `x = ${state.r} cm, R = ${state.R} cm [${fmtSig(B_axis * 1e6, 3)} μT]`, fmtSig(B_axis, 3) + ' T');
+    html += frow('必歐-沙伐數值', '∫ dB', `探針 (x=${state.r} cm) 處數值積分 [${fmtSig(B_num * 1e6, 3)} μT]`, fmtSig(B_num, 3) + ' T');
+    html += `<div class="frel">📈 <b>線圈中心 vs 直導線</b>：同半徑處線圈中心磁場剛好是直導線的 <b>π 倍</b>（約 3.14 倍）　·　沿軸向離開線圈中心，磁場隨距離立方反比劇烈衰減。</div>`;
+  } else {
+    const B_cen = BsolCenter(I, state.turns, len_m, R_m);
+    const B_idl = BsolIdeal(I, state.turns, len_m);
+    const n_density = state.turns / len_m;
+    html += frow('有限長螺線管中心 B', 'μ₀NI / √(L²+4R²)', `L=${len_m} m, R=${R_m} m, N=${state.turns} [${fmtSig(B_cen * 1e6, 3)} μT]`, fmtSig(B_cen, 3) + ' T');
+    html += frow('理想無限長 B', 'μ₀ n I', `n = ${fmtSig(n_density, 3)} 匝/m, I = ${I} A [${fmtSig(B_idl * 1e6, 3)} μT]`, fmtSig(B_idl, 3) + ' T');
+    html += frow('必歐-沙伐數值', '∫ dB', `探針 (軸上 x=${state.r} cm) 處數值積分 [${fmtSig(B_num * 1e6, 3)} μT]`, fmtSig(B_num, 3) + ' T');
+    html += `<div class="frel">📈 <b>有限長 vs 理想無限長</b>：中心磁場差異來自「有限長」效應（兩端漏磁開口使得磁力線向外發散）。當管長 L 遠大於半徑 R 時，修正係數 L/√(L²+4R²) 趨近 1，中心磁場收斂至理想值 μ₀nI。</div>`;
+  }
+
+  document.getElementById('formula').innerHTML = html;
+}
+
+function updateSlidersUI() {
+  document.getElementById('r_I').value = state.I;
+  document.getElementById('v_I').textContent = state.I + ' A';
+
+  document.getElementById('r_R').value = state.R;
+  document.getElementById('v_R').textContent = state.R + ' cm';
+
+  document.getElementById('r_len').value = state.len;
+  document.getElementById('v_len').textContent = state.len + ' cm';
+
+  document.getElementById('r_turns').value = state.turns;
+  document.getElementById('v_turns').textContent = state.turns + ' 匝';
+
+  document.getElementById('r_r').value = state.r;
+  document.getElementById('v_r').textContent = state.r + ' cm';
+
+  const sR = document.getElementById('sld_R');
+  const sLen = document.getElementById('sld_len');
+  const sTurns = document.getElementById('sld_turns');
+  const lblR = document.getElementById('lbl_r');
+
+  if (state.mode === 'wire') {
+    sR.style.display = 'none';
+    sLen.style.display = 'none';
+    sTurns.style.display = 'none';
+    lblR.textContent = '探針離導線距離 r';
+  } else if (state.mode === 'loop') {
+    sR.style.display = 'block';
+    sLen.style.display = 'none';
+    sTurns.style.display = 'none';
+    lblR.textContent = '探針軸上距離 x';
+  } else {
+    sR.style.display = 'block';
+    sLen.style.display = 'block';
+    sTurns.style.display = 'block';
+    lblR.textContent = '探針軸上距離 x';
+  }
+
+  ['btnWire', 'btnLoop', 'btnSol'].forEach(id => document.getElementById(id).classList.remove('on'));
+  if (state.mode === 'wire') document.getElementById('btnWire').classList.add('on');
+  if (state.mode === 'loop') document.getElementById('btnLoop').classList.add('on');
+  if (state.mode === 'solenoid') document.getElementById('btnSol').classList.add('on');
+
+  document.getElementById('btnLines').classList.toggle('on', state.showLines);
+  document.getElementById('btnNeedles').classList.toggle('on', state.showNeedles);
+
+  const hintEl = document.getElementById('hintRH');
+  if (state.mode === 'wire') {
+    hintEl.innerHTML = `右手定則（直導線）：<b>右手握住直導線</b>，<b>拇指指向電流方向</b>（${state.dir > 0 ? '+y 向上' : '−y 向下'}），<b>四指彎曲圍繞的方向即為磁場方向</b>。`;
+  } else if (state.mode === 'loop') {
+    hintEl.innerHTML = `右手定則（圓線圈）：<b>右手四指順著線圈電流環繞</b>，<b>伸直的拇指指向即為軸心磁場與 N 極方向</b>（目前指 ${state.dir > 0 ? '+x 向右' : '−x 向左'}）。`;
+  } else {
+    hintEl.innerHTML = `右手定則（螺線管）：<b>右手四指順著螺線管螺旋電流環繞</b>，<b>拇指所指的管口端為 N 極（磁場穿出）</b>，另一端為 S 極（磁場穿入）。`;
+  }
+}
+
+function refresh() {
+  updateSlidersUI();
+  updateFormula();
+  if (window.__render3d) {
+    window.__render3d(state);
+  }
+}
+
+// 事件綁定
+document.getElementById('btnWire').onclick = () => { state.mode = 'wire'; refresh(); };
+document.getElementById('btnLoop').onclick = () => { state.mode = 'loop'; refresh(); };
+document.getElementById('btnSol').onclick = () => { state.mode = 'solenoid'; refresh(); };
+document.getElementById('btnDir').onclick = () => { state.dir *= -1; refresh(); };
+document.getElementById('btnLines').onclick = () => { state.showLines = !state.showLines; refresh(); };
+document.getElementById('btnNeedles').onclick = () => { state.showNeedles = !state.showNeedles; refresh(); };
+
+document.getElementById('vIso').onclick = () => { window.view && window.view.setView(0.7, 1.15, 28); };
+document.getElementById('vFront').onclick = () => { window.view && window.view.setView(0, Math.PI / 2, 28); };
+document.getElementById('vTop').onclick = () => { window.view && window.view.setView(0, 0.05, 28); };
+document.getElementById('vReset').onclick = () => { window.view && window.view.resetView(); };
+
+document.getElementById('r_I').oninput = e => { state.I = parseFloat(e.target.value); refresh(); };
+document.getElementById('r_R').oninput = e => { state.R = parseFloat(e.target.value); refresh(); };
+document.getElementById('r_len').oninput = e => { state.len = parseFloat(e.target.value); refresh(); };
+document.getElementById('r_turns').oninput = e => { state.turns = parseInt(e.target.value, 10); refresh(); };
+document.getElementById('r_r').oninput = e => { state.r = parseFloat(e.target.value); refresh(); };
+
+window.addEventListener('load', () => {
+  refresh();
+});
+</script>
+
+<script type="module">
+import * as THREE from '../assets/vendor/three/three.module.min.js';
+import { createView } from '../assets/orbit3d.js';
+
+// 在模組作用域中提供 PHYS 函式的安全委派，確保相容獨立 .mjs 載入與測試環境
+const buildPath = (...args) => (window.buildPath || globalThis.buildPath)(...args);
+const fieldAt = (...args) => (window.fieldAt || globalThis.fieldAt)(...args);
+const needleDir = (...args) => (window.needleDir || globalThis.needleDir)(...args);
+const traceFieldLine = (...args) => (window.traceFieldLine || globalThis.traceFieldLine)(...args);
+const vlen = (...args) => (window.vlen || globalThis.vlen)(...args);
+const fmtSig = (...args) => (window.fmtSig || globalThis.fmtSig)(...args);
+
+const stage = document.getElementById('stage');
+const view = createView(THREE, stage, {
+  aspect: 1.6,
+  target: [0, 0, 0],
+  distance: 28,
+  theta: 0.7,
+  phi: 1.15,
+  minDistance: 4,
+  maxDistance: 90
+});
+window.view = view;
+
+// 場景主要群組
+const rootGroup = new THREE.Group();
+view.scene.add(rootGroup);
+
+const conductorGroup = new THREE.Group();
+const particlesGroup = new THREE.Group();
+const fieldLinesGroup = new THREE.Group();
+const needlesGroup = new THREE.Group();
+const probeGroup = new THREE.Group();
+const rhGroup = new THREE.Group();
+
+rootGroup.add(conductorGroup);
+rootGroup.add(particlesGroup);
+rootGroup.add(fieldLinesGroup);
+rootGroup.add(needlesGroup);
+rootGroup.add(probeGroup);
+
+// 將右手定則 3D 箭頭綁定到攝影機視野角落
+view.scene.add(view.camera);
+view.camera.add(rhGroup);
+
+// 共用材質
+const copperMat = new THREE.MeshStandardMaterial({
+  color: 0xdf8244,
+  metalness: 0.82,
+  roughness: 0.28
+});
+const lineMat = new THREE.LineBasicMaterial({
+  color: 0x4fc3f7,
+  transparent: true,
+  opacity: 0.55
+});
+const arrowHeadMat = new THREE.MeshBasicMaterial({ color: 0x64b5f6 });
+const probeMat = new THREE.MeshStandardMaterial({
+  color: 0xffffff,
+  roughness: 0.2,
+  metalness: 0.1
+});
+const needleNMat = new THREE.MeshBasicMaterial({ color: 0xff3b30 });
+const needleSMat = new THREE.MeshBasicMaterial({ color: 0xf5f7fa });
+const particleMat = new THREE.MeshBasicMaterial({ color: 0xffea00 });
+
+// 錐形幾何
+const arrowHeadGeo = new THREE.ConeGeometry(0.3, 0.7, 8);
+
+// 粒子數據
+const particles = [];
+let cachedGeomKey = '';
+
+// 右手定則小箭頭生成輔助函式
+function buildRHArrow(len, rCyl, rCone, lenCone, color) {
+  const g = new THREE.Group();
+  const cylGeo = new THREE.CylinderGeometry(rCyl, rCyl, len - lenCone, 12);
+  cylGeo.translate(0, (len - lenCone) / 2, 0);
+  const cyl = new THREE.Mesh(cylGeo, new THREE.MeshBasicMaterial({ color }));
+  const cGeo = new THREE.ConeGeometry(rCone, lenCone, 12);
+  cGeo.translate(0, len - lenCone / 2, 0);
+  const cMesh = new THREE.Mesh(cGeo, new THREE.MeshBasicMaterial({ color }));
+  g.add(cyl);
+  g.add(cMesh);
+  return g;
+}
+
+function buildRHCurvedArrow(radius, tubeRadius, arcAngle, color, dir) {
+  const g = new THREE.Group();
+  const torusGeo = new THREE.TorusGeometry(radius, tubeRadius, 8, 32, arcAngle);
+  const torus = new THREE.Mesh(torusGeo, new THREE.MeshBasicMaterial({ color }));
+  g.add(torus);
+
+  const headGeo = new THREE.ConeGeometry(tubeRadius * 2.8, tubeRadius * 5.2, 10);
+  const head = new THREE.Mesh(headGeo, new THREE.MeshBasicMaterial({ color }));
+  const tipX = radius * Math.cos(arcAngle);
+  const tipY = radius * Math.sin(arcAngle);
+  head.position.set(tipX, tipY, 0);
+
+  const tang = new THREE.Vector3(-Math.sin(arcAngle), Math.cos(arcAngle), 0);
+  if (dir < 0) tang.negate();
+  head.quaternion.setFromUnitVectors(new THREE.Vector3(0, 1, 0), tang);
+  g.add(head);
+  return g;
+}
+
+function updateRHWidget(st) {
+  while (rhGroup.children.length > 0) {
+    rhGroup.remove(rhGroup.children[0]);
+  }
+
+  // 放置在相機前方左上角
+  const aspect = view.camera.aspect || 1.6;
+  rhGroup.position.set(-2.8 * aspect, 2.0, -8);
+  rhGroup.scale.set(0.48, 0.48, 0.48);
+
+  const inner = new THREE.Group();
+  rhGroup.add(inner);
+
+  if (st.mode === 'wire') {
+    // 直導線：直箭頭=電流（金黃色）、環狀箭頭=磁場繞向（青藍色）
+    const straightArr = buildRHArrow(2.6, 0.08, 0.22, 0.5, 0xffd166);
+    if (st.dir < 0) {
+      straightArr.rotation.z = Math.PI;
+      straightArr.position.y = 1.3;
+    } else {
+      straightArr.position.y = -1.3;
+    }
+    inner.add(straightArr);
+
+    const curvedArr = buildRHCurvedArrow(0.9, 0.065, Math.PI * 1.5, 0x4fc3f7, st.dir);
+    curvedArr.rotation.x = Math.PI / 2;
+    if (st.dir < 0) curvedArr.rotation.y = Math.PI;
+    inner.add(curvedArr);
+  } else {
+    // 線圈與螺線管：四指環狀箭頭=電流繞向（金黃色）、拇指直箭頭=N極/內部磁場（紅色）
+    const curvedArr = buildRHCurvedArrow(0.95, 0.065, Math.PI * 1.5, 0xffd166, st.dir);
+    curvedArr.rotation.y = Math.PI / 2;
+    if (st.dir < 0) curvedArr.rotation.z = Math.PI;
+    inner.add(curvedArr);
+
+    const straightArr = buildRHArrow(2.6, 0.08, 0.22, 0.5, 0xff3b30);
+    straightArr.rotation.z = -Math.PI / 2;
+    if (st.dir < 0) {
+      straightArr.rotation.z = Math.PI / 2;
+      straightArr.position.x = 1.3;
+    } else {
+      straightArr.position.x = -1.3;
+    }
+    inner.add(straightArr);
+  }
+}
+
+// 螺線管路徑曲線類別（單位：cm）
+class SolenoidCurve extends THREE.Curve {
+  constructor(R_cm, len_cm, turns, dir) {
+    super();
+    this.R = R_cm;
+    this.len = len_cm;
+    this.turns = turns;
+    this.dir = dir;
+  }
+  getPoint(s, optionalTarget = new THREE.Vector3()) {
+    const t = this.dir * 2 * Math.PI * this.turns * s;
+    return optionalTarget.set(
+      -this.len / 2 + this.len * s,
+      this.R * Math.cos(t),
+      this.R * Math.sin(t)
+    );
+  }
+}
+
+function clearGroup(g) {
+  while (g.children.length > 0) {
+    const obj = g.children[0];
+    if (obj.geometry) obj.geometry.dispose();
+    g.remove(obj);
+  }
+}
+
+// 建立導線 3D 本體
+function rebuildConductor(st) {
+  clearGroup(conductorGroup);
+  particles.length = 0;
+
+  if (st.mode === 'wire') {
+    const wireH = 46; // 長度 46 cm
+    const geo = new THREE.CylinderGeometry(0.35, 0.35, wireH, 24);
+    const mesh = new THREE.Mesh(geo, copperMat);
+    conductorGroup.add(mesh);
+
+    // 沿 y 移動的亮點
+    const pCount = 10;
+    for (let i = 0; i < pCount; i++) {
+      const pMesh = new THREE.Mesh(new THREE.SphereGeometry(0.25, 8, 8), particleMat);
+      particlesGroup.add(pMesh);
+      particles.push({
+        mesh: pMesh,
+        u: i / pCount,
+        getPos: u => new THREE.Vector3(0, -wireH / 2 + wireH * u, 0)
+      });
+    }
+  } else if (st.mode === 'loop') {
+    const geo = new THREE.TorusGeometry(st.R, 0.32, 16, 72);
+    const mesh = new THREE.Mesh(geo, copperMat);
+    // Torus 預設在 x-y 平面，旋轉到 y-z 平面（軸沿 x）
+    mesh.rotation.y = Math.PI / 2;
+    conductorGroup.add(mesh);
+
+    const pCount = 14;
+    for (let i = 0; i < pCount; i++) {
+      const pMesh = new THREE.Mesh(new THREE.SphereGeometry(0.24, 8, 8), particleMat);
+      particlesGroup.add(pMesh);
+      particles.push({
+        mesh: pMesh,
+        u: i / pCount,
+        getPos: u => {
+          const t = st.dir * 2 * Math.PI * u;
+          return new THREE.Vector3(0, st.R * Math.cos(t), st.R * Math.sin(t));
+        }
+      });
+    }
+  } else {
+    const curve = new SolenoidCurve(st.R, st.len, st.turns, st.dir);
+    const segs = Math.max(90, Math.round(st.turns * 32));
+    const geo = new THREE.TubeGeometry(curve, segs, 0.24, 10, false);
+    const mesh = new THREE.Mesh(geo, copperMat);
+    conductorGroup.add(mesh);
+
+    const pCount = Math.max(16, st.turns * 2);
+    for (let i = 0; i < pCount; i++) {
+      const pMesh = new THREE.Mesh(new THREE.SphereGeometry(0.24, 8, 8), particleMat);
+      particlesGroup.add(pMesh);
+      particles.push({
+        mesh: pMesh,
+        u: i / pCount,
+        getPos: u => curve.getPoint(u)
+      });
+    }
+  }
+}
+
+// 建立磁力線
+function rebuildFieldLines(st) {
+  clearGroup(fieldLinesGroup);
+  if (!st.showLines) return;
+
+  const model = {
+    kind: st.mode,
+    I: st.I,
+    dir: st.dir,
+    R: st.R / 100,
+    len: st.len / 100,
+    turns: st.turns,
+    L: 2.0
+  };
+  const path = buildPath(model);
+
+  if (st.mode === 'wire') {
+    // 直導線同心圓磁力線
+    const radii = [2.2, 3.8, 6.0, 9.2];
+    const yLevels = [-8, 0, 8];
+    for (const yy of yLevels) {
+      for (const r_cm of radii) {
+        const pts = [];
+        const nSteps = 64;
+        for (let k = 0; k <= nSteps; k++) {
+          const ang = (k / nSteps) * Math.PI * 2;
+          // 安培右手定則：電流 +y 時，拇指向上，手指繞向自 +x 往 -z
+          pts.push(new THREE.Vector3(r_cm * Math.cos(ang), yy, -st.dir * r_cm * Math.sin(ang)));
+        }
+        const lineGeo = new THREE.BufferGeometry().setFromPoints(pts);
+        const lineMesh = new THREE.Line(lineGeo, lineMat);
+        fieldLinesGroup.add(lineMesh);
+
+        // 放置 3 個方向箭頭
+        for (let aIdx of [16, 36, 54]) {
+          const p1 = pts[aIdx];
+          const p2 = pts[aIdx + 1];
+          const cone = new THREE.Mesh(arrowHeadGeo, arrowHeadMat);
+          cone.position.copy(p1);
+          const tang = new THREE.Vector3().subVectors(p2, p1).normalize();
+          cone.quaternion.setFromUnitVectors(new THREE.Vector3(0, 1, 0), tang);
+          fieldLinesGroup.add(cone);
+        }
+      }
+    }
+  } else {
+    // 圓線圈與螺線管：使用 traceFieldLine 空間追蹤
+    const ds = (st.R / 100) / 12;
+    const nmax = 550;
+    const bound = (st.mode === 'solenoid' ? Math.max(st.len, st.R) / 100 : st.R / 100) * 3.4;
+
+    const starts_m = [];
+    const R_m = st.R / 100;
+    const fractions = [-0.8, -0.55, -0.3, 0, 0.3, 0.55, 0.8];
+    for (const f of fractions) {
+      starts_m.push([0, f * R_m, 0]);
+    }
+    starts_m.push([0, 0, 0.45 * R_m]);
+    starts_m.push([0, 0, -0.45 * R_m]);
+
+    for (const s_pt of starts_m) {
+      const fwd = traceFieldLine(s_pt, model, path, ds, nmax, bound, 1);
+      const bwd = traceFieldLine(s_pt, model, path, ds, nmax, bound, -1);
+      const full = bwd.slice(1).reverse().concat(fwd);
+      if (full.length < 4) continue;
+
+      const pts3d = full.map(p => new THREE.Vector3(p[0] * 100, p[1] * 100, p[2] * 100));
+      const lineGeo = new THREE.BufferGeometry().setFromPoints(pts3d);
+      const lineMesh = new THREE.Line(lineGeo, lineMat);
+      fieldLinesGroup.add(lineMesh);
+
+      // 每條線上放 2-3 個方向箭頭
+      const stepIdx = Math.floor(pts3d.length / 3);
+      for (let k = 1; k <= 2; k++) {
+        const idx = k * stepIdx;
+        if (idx + 1 < pts3d.length) {
+          const cone = new THREE.Mesh(arrowHeadGeo, arrowHeadMat);
+          cone.position.copy(pts3d[idx]);
+          const tang = new THREE.Vector3().subVectors(pts3d[idx + 1], pts3d[idx]).normalize();
+          cone.quaternion.setFromUnitVectors(new THREE.Vector3(0, 1, 0), tang);
+          fieldLinesGroup.add(cone);
+        }
+      }
+    }
+  }
+}
+
+// 建立指南針陣列
+function rebuildNeedles(st) {
+  clearGroup(needlesGroup);
+  if (!st.showNeedles) return;
+
+  const model = {
+    kind: st.mode,
+    I: st.I,
+    dir: st.dir,
+    R: st.R / 100,
+    len: st.len / 100,
+    turns: st.turns,
+    L: 2.0
+  };
+  const path = buildPath(model);
+
+  const needlePoints = [];
+
+  if (st.mode === 'wire') {
+    // 直導線：y=0 平面，7×7 格點
+    for (let ix = -3; ix <= 3; ix++) {
+      for (let iz = -3; iz <= 3; iz++) {
+        const x_cm = ix * 3.8;
+        const z_cm = iz * 3.8;
+        const d_cm = Math.hypot(x_cm, z_cm);
+        if (d_cm < 1.8) continue;
+        needlePoints.push(new THREE.Vector3(x_cm, 0, z_cm));
+      }
+    }
+  } else if (st.mode === 'loop') {
+    // 圓線圈：z=0 平面，9×7 格點
+    for (let ix = -4; ix <= 4; ix++) {
+      for (let iy = -3; iy <= 3; iy++) {
+        const x_cm = ix * 2.8;
+        const y_cm = iy * 2.5;
+        const distToWire = Math.hypot(x_cm, Math.abs(y_cm) - st.R);
+        if (distToWire < 1.2) continue;
+        needlePoints.push(new THREE.Vector3(x_cm, y_cm, 0));
+      }
+    }
+  } else {
+    // 螺線管：z=0 平面，9×7 格點
+    const xHalf = st.len / 2 + 5;
+    const yHalf = st.R + 4.5;
+    for (let ix = -4; ix <= 4; ix++) {
+      for (let iy = -3; iy <= 3; iy++) {
+        const x_cm = (ix / 4) * xHalf;
+        const y_cm = (iy / 3) * yHalf;
+        if (Math.abs(x_cm) <= st.len / 2 + 0.6 && Math.abs(Math.abs(y_cm) - st.R) < 1.0) continue;
+        needlePoints.push(new THREE.Vector3(x_cm, y_cm, 0));
+      }
+    }
+  }
+
+  // 雙圓錐指南針幾何（相接、N端向+y、S端向-y）
+  const cLen = 0.72;
+  const cR = 0.2;
+  const nGeo = new THREE.ConeGeometry(cR, cLen, 8);
+  nGeo.translate(0, cLen / 2, 0);
+  const sGeo = new THREE.ConeGeometry(cR, cLen, 8);
+  sGeo.translate(0, -cLen / 2, 0);
+  sGeo.rotateZ(Math.PI);
+
+  const nMesh = new THREE.InstancedMesh(nGeo, needleNMat, needlePoints.length);
+  const sMesh = new THREE.InstancedMesh(sGeo, needleSMat, needlePoints.length);
+
+  const dummy = new THREE.Object3D();
+  const upVec = new THREE.Vector3(0, 1, 0);
+
+  needlePoints.forEach((pt, i) => {
+    const p_m = [pt.x / 100, pt.y / 100, pt.z / 100];
+    const B = fieldAt(p_m, model, path);
+    const nd = needleDir(B);
+    const bVec = new THREE.Vector3(nd[0], nd[1], nd[2]);
+
+    dummy.position.copy(pt);
+    dummy.quaternion.setFromUnitVectors(upVec, bVec);
+    dummy.updateMatrix();
+
+    nMesh.setMatrixAt(i, dummy.matrix);
+    sMesh.setMatrixAt(i, dummy.matrix);
+  });
+
+  nMesh.instanceMatrix.needsUpdate = true;
+  sMesh.instanceMatrix.needsUpdate = true;
+  needlesGroup.add(nMesh);
+  needlesGroup.add(sMesh);
+}
+
+// 建立探針與磁場向量箭頭
+function rebuildProbe(st) {
+  clearGroup(probeGroup);
+
+  const pPos = new THREE.Vector3(st.r, 0, 0);
+  const pMesh = new THREE.Mesh(new THREE.SphereGeometry(0.4, 16, 16), probeMat);
+  pMesh.position.copy(pPos);
+  probeGroup.add(pMesh);
+
+  // 虛線連結探針與原點/軸
+  const lineGeo = new THREE.BufferGeometry().setFromPoints([new THREE.Vector3(0, 0, 0), pPos]);
+  const dashMat = new THREE.LineDashedMaterial({ color: 0x8a99ad, dashSize: 0.5, gapSize: 0.3 });
+  const dLine = new THREE.Line(lineGeo, dashMat);
+  dLine.computeLineDistances();
+  probeGroup.add(dLine);
+
+  // 探針處磁場
+  const model = {
+    kind: st.mode,
+    I: st.I,
+    dir: st.dir,
+    R: st.R / 100,
+    len: st.len / 100,
+    turns: st.turns,
+    L: 2.0
+  };
+  const path = buildPath(model);
+  const p_m = [st.r / 100, 0, 0];
+  const B = fieldAt(p_m, model, path);
+  const B_mag = vlen(B);
+  const bDir = needleDir(B);
+
+  // 對數縮放長度（1.6 cm ~ 6.5 cm）
+  const logLen = Math.max(1.6, Math.min(6.5, 2.0 + 1.1 * Math.log10(Math.max(B_mag, 1e-7) / 1e-7)));
+  const vDir = new THREE.Vector3(bDir[0], bDir[1], bDir[2]);
+
+  const arrowHelper = new THREE.ArrowHelper(vDir, pPos, logLen, 0x43d17a, Math.min(1.0, logLen * 0.35), 0.45);
+  probeGroup.add(arrowHelper);
+}
+
+// 核心渲染進入點
+window.__render3d = function(st) {
+  const geomKey = `${st.mode}_${st.dir}_${st.R}_${st.len}_${st.turns}`;
+  const geomChanged = (geomKey !== cachedGeomKey);
+
+  clearGroup(particlesGroup);
+  rebuildConductor(st);
+
+  if (geomChanged || !st.showLines) {
+    rebuildFieldLines(st);
+  }
+  rebuildNeedles(st);
+  rebuildProbe(st);
+  updateRHWidget(st);
+
+  cachedGeomKey = geomKey;
+};
+
+// 動畫循環（更新導線中電流亮點）
+view.onFrame((dt, t) => {
+  const currentSpeed = (window.state.I || 5) * 0.32;
+  const dirSign = (window.state.dir || 1);
+
+  for (let i = 0; i < particles.length; i++) {
+    const p = particles[i];
+    p.u += dirSign * currentSpeed * dt;
+    if (p.u > 1) p.u -= 1;
+    if (p.u < 0) p.u += 1;
+    p.mesh.position.copy(p.getPos(p.u));
+  }
+});
+
+// 立即執行首次 3D 渲染
+if (window.state) {
+  window.__render3d(window.state);
+}
+</script>
+</body>
+</html>
