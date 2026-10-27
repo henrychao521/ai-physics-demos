@@ -458,6 +458,7 @@ function step(dt) {
 function draw() {
   if (!sc) return;
   const W = sc._w, H = sc._h;
+  const isNarrow = W < 500;
 
   S.scene(sc, ATOM, {});
 
@@ -469,9 +470,14 @@ function draw() {
   sc.strokeRect(W * 0.05, H * 0.16, W * 0.9, H * 0.78);
   sc.setLineDash([]);
 
-  sc.font = '600 11px system-ui, sans-serif';
+  // 左下角：爐心邊界文字（確保靠左對齊並留至少 8px 邊距，避免被邊緣切除）
+  sc.textAlign = 'left';
+  sc.textBaseline = 'alphabetic';
+  sc.font = isNarrow ? '600 10px system-ui, sans-serif' : '600 11px system-ui, sans-serif';
   sc.fillStyle = 'rgba(255, 200, 160, 0.4)';
-  sc.fillText('⚡ 反應爐爐心邊界（中子逸散區）', W * 0.065, H * 0.92);
+  const borderLabel = isNarrow ? '⚡ 爐心邊界（逸散區）' : '⚡ 反應爐爐心邊界（中子逸散區）';
+  const borderX = Math.max(8, isNarrow ? 8 : W * 0.065);
+  sc.fillText(borderLabel, borderX, H * 0.92);
 
   // 繪製頂部控制棒（深入深度由 state.rod 決定）
   const rodDepth = H * 0.03 + state.rod * (H * 0.11);
@@ -498,8 +504,16 @@ function draw() {
     sc.fillRect(rx - 4, H * 0.03 + rodDepth - 3, 8, 3);
   }
 
+  // 頂部：控制棒吸收率文字（確保靠左對齊並留至少 8px 邊距，窄畫面縮短文字與縮小字級）
+  sc.textAlign = 'left';
+  sc.textBaseline = 'alphabetic';
+  sc.font = isNarrow ? '600 9.5px system-ui, sans-serif' : '600 11px system-ui, sans-serif';
   sc.fillStyle = 'rgba(180, 200, 230, 0.75)';
-  sc.fillText(`控制棒深度: ${(state.rod * 100).toFixed(0)}%（吸收率 ${state.rod.toFixed(2)}）`, W * 0.10, H * 0.07);
+  const rodLabel = isNarrow
+    ? `控制棒: ${(state.rod * 100).toFixed(0)}%（吸收 ${state.rod.toFixed(2)}）`
+    : `控制棒深度: ${(state.rod * 100).toFixed(0)}%（吸收率 ${state.rod.toFixed(2)}）`;
+  const rodTextX = Math.max(8, isNarrow ? 8 : W * 0.08);
+  sc.fillText(rodLabel, rodTextX, H * 0.07);
   sc.restore();
 
   // 繪製鈾核 (U-235)
@@ -522,6 +536,8 @@ function draw() {
       sc.textAlign = 'center';
       sc.textBaseline = 'middle';
       sc.fillText('²³⁵U', n.x, n.y);
+      sc.textAlign = 'left';
+      sc.textBaseline = 'alphabetic';
     } else {
       // 分裂碎片飛開示意
       const dist = 6 + (1 - n.fl) * 5;
