@@ -1,0 +1,1102 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>共振升壓與倍壓電路 ｜ 串聯 RLC 的 Q 倍電壓・Cockcroft–Walton</title>
+<meta name="description" content="用 LC 做倍壓？探索串聯 RLC 共振升壓（電容電壓高達 Q·Vs）與經典二極體電容倍壓電路（Cockcroft–Walton）之原理、波形與機制對比。">
+<link rel="icon" href="../assets/favicon.svg" type="image/svg+xml">
+<link rel="stylesheet" href="../assets/site.css">
+<script src="../assets/sim.js"></script>
+<script defer src="../assets/nav.js"></script>
+<style>
+  *{box-sizing:border-box}
+  html,body{margin:0;padding:0;background:var(--bg);color:var(--txt);font-family:"Noto Sans TC","PingFang TC","Microsoft JhengHei",system-ui,sans-serif}
+  a{color:var(--accent);text-decoration:none}
+  a:hover{text-decoration:underline}
+  .wrap{max-width:1120px;margin:0 auto;padding:18px 16px 60px}
+  header h1{font-size:1.5rem;margin:.25em 0}
+  header p{color:var(--muted);margin:.25em 0 1em;line-height:1.7;font-size:.92rem}
+  .badge{display:inline-block;background:var(--panel2);border:1px solid var(--line);color:var(--muted);font-size:.72rem;padding:2px 8px;border-radius:99px;margin-right:6px}
+  .scene-wrap{position:relative;border-radius:16px;overflow:hidden;border:1px solid var(--line);box-shadow:0 18px 50px rgba(0,0,0,.45);background:#060a17}
+  #scene{display:block;width:100%;touch-action:none}
+  .modes{display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-top:14px}
+  .modes span{color:var(--muted);font-size:.84rem;font-weight:600}
+  .pbtn{min-height:44px;background:var(--panel2);color:var(--txt);border:1px solid var(--line);padding:9px 15px;border-radius:10px;cursor:pointer;font-size:.85rem;font-family:inherit;display:inline-flex;align-items:center;justify-content:center;transition:all .15s ease}
+  .pbtn:hover{border-color:var(--accent);color:#fff}
+  .pbtn.on{background:var(--accent);color:#04121c;border-color:var(--accent);font-weight:700}
+  .bar{display:flex;gap:14px;flex-wrap:wrap;align-items:flex-end;background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:14px 16px;margin-top:14px}
+  .sld{flex:1;min-width:160px}
+  .sld label{display:flex;justify-content:space-between;font-size:.82rem;color:var(--muted);margin-bottom:6px}
+  .sld label .v{color:var(--accent);font-variant-numeric:tabular-nums;font-weight:700}
+  .sld input[type="range"]{width:100%;accent-color:var(--accent);cursor:pointer}
+  .sld select{width:100%;height:38px;background:var(--panel2);color:var(--txt);border:1px solid var(--line);border-radius:8px;padding:0 8px;font-family:inherit;font-size:.85rem;cursor:pointer}
+  .formula{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:14px 16px;margin-top:14px}
+  .formula h4{margin:0 0 10px;font-size:.92rem;color:var(--txt)}
+  .frow{display:flex;flex-wrap:wrap;align-items:baseline;gap:6px 14px;padding:6px 0;border-bottom:1px solid rgba(255,255,255,.05);font-size:.85rem}
+  .fname{color:var(--muted);min-width:140px}
+  .fsym{color:var(--accent);font-weight:600;min-width:160px}
+  .fsub{color:var(--muted);flex:1;font-family:monospace;font-size:.82rem}
+  .fval{color:var(--green);font-weight:700;font-variant-numeric:tabular-nums;text-align:right}
+  .frel{margin-top:12px;font-size:.84rem;color:var(--muted);line-height:1.7}
+  .frel b{color:var(--txt)}
+  .note{background:var(--panel);border-left:3px solid var(--accent2);border-radius:8px;padding:12px 16px;color:var(--muted);font-size:.86rem;line-height:1.7;margin-top:14px}
+  .note b{color:var(--txt)}
+  .note code{background:var(--bg2);padding:2px 6px;border-radius:5px;color:var(--green);font-size:.85em}
+  .cmp-table{width:100%;border-collapse:collapse;font-size:.84rem;margin-top:10px}
+  .cmp-table th,.cmp-table td{border:1px solid var(--line);padding:10px 12px;text-align:left;line-height:1.6}
+  .cmp-table th{background:var(--panel2);color:var(--txt);font-weight:700}
+  .cmp-table tr:nth-child(even) td{background:rgba(255,255,255,.02)}
+  .cmp-table td:first-child{font-weight:600;color:var(--accent);white-space:nowrap}
+  footer{color:var(--muted);font-size:.78rem;margin-top:28px;text-align:center;line-height:1.7}
+</style>
+</head>
+<body data-demo="共振升壓與倍壓電路">
+<div class="wrap">
+  <header>
+    <span class="badge">電磁・交流電路</span>
+    <h1>用 LC 做倍壓？共振升壓與二極體倍壓電路</h1>
+    <p>
+      許多人在學完 LC 振盪後常問：「能不能用 LC 電路設計倍壓電路？」
+      這裡需要先釐清一個常見的觀念盲點：工程上傳統所稱的<b>「倍壓電路」</b>（如 Villard、Greinacher、Cockcroft–Walton 電路）本質上是由<b>二極體＋電容</b>構成的電荷幫浦，<b>內部完全沒有電感</b>；
+      而 LC 電路所能實現的是<b>「共振升壓」</b>（串聯共振時感抗與容抗抵消，迴路電流達到峰值，電容與電感端電壓可高達電源的 <b>Q 倍</b>，是共振變壓器與特斯拉線圈的核心）。
+      本頁讓您直觀對比這兩種電壓放大機制的物理本質！
+    </p>
+  </header>
+
+  <div class="scene-wrap">
+    <canvas id="scene"></canvas>
+  </div>
+
+  <div class="modes">
+    <span>電路模式：</span>
+    <button class="pbtn on" id="mRLC">模式 A：LC 共振升壓（串聯 RLC）</button>
+    <button class="pbtn" id="mCW">模式 B：二極體倍壓（Cockcroft–Walton）</button>
+  </div>
+
+  <div class="modes" id="cwActions" style="display:none">
+    <span>倍壓控制：</span>
+    <button class="pbtn" id="btnStepHalf">單步半週期 (T/2)</button>
+    <button class="pbtn" id="btnPlayPause">暫停 ⏸</button>
+    <button class="pbtn" id="btnResetCW">重設電荷</button>
+  </div>
+
+  <!-- 模式 A 滑桿 -->
+  <div class="bar" id="barRLC">
+    <div class="sld">
+      <label><span>電源振幅 Vs</span><span class="v" id="v_Vs">2 V</span></label>
+      <input type="range" id="r_Vs" min="1" max="10" step="0.5" value="2">
+    </div>
+    <div class="sld">
+      <label><span>電感 L</span><span class="v" id="v_L">10 mH</span></label>
+      <input type="range" id="r_L" min="1" max="100" step="1" value="10">
+    </div>
+    <div class="sld">
+      <label><span>電容 C</span><span class="v" id="v_C">1 μF</span></label>
+      <input type="range" id="r_C" min="0.1" max="10" step="0.1" value="1">
+    </div>
+    <div class="sld">
+      <label><span>電阻 R</span><span class="v" id="v_R">5 Ω</span></label>
+      <input type="range" id="r_R" min="1" max="100" step="1" value="5">
+    </div>
+    <div class="sld">
+      <label><span>頻率比 f / f₀</span><span class="v" id="v_fr">1</span></label>
+      <input type="range" id="r_fr" min="0.2" max="3" step="0.05" value="1">
+    </div>
+  </div>
+
+  <!-- 模式 B 滑桿 -->
+  <div class="bar" id="barCW" style="display:none">
+    <div class="sld">
+      <label><span>倍壓級數 n</span><span class="v" id="v_n">1 級</span></label>
+      <input type="range" id="r_n" min="1" max="4" step="1" value="1">
+    </div>
+    <div class="sld">
+      <label><span>交流峰值 Vp</span><span class="v" id="v_Vp">10 V</span></label>
+      <input type="range" id="r_Vp" min="5" max="20" step="1" value="10">
+    </div>
+    <div class="sld">
+      <label><span>電源頻率 f</span><span class="v" id="v_f">50 Hz</span></label>
+      <input type="range" id="r_f" min="50" max="1000" step="10" value="50">
+    </div>
+    <div class="sld">
+      <label><span>每顆電容 C</span><span class="v" id="v_Cuf">100 μF</span></label>
+      <input type="range" id="r_Cuf" min="1" max="100" step="1" value="100">
+    </div>
+    <div class="sld">
+      <label><span>負載電阻 RL</span><span class="v" id="v_RL">空載 (∞)</span></label>
+      <select id="sel_RL">
+        <option value="Infinity">空載 (RL = ∞)</option>
+        <option value="100000">100 kΩ</option>
+        <option value="20000">20 kΩ</option>
+        <option value="5000">5 kΩ</option>
+      </select>
+    </div>
+    <div class="sld">
+      <label><span>二極體導通壓降 Vf</span><span class="v" id="v_Vf">0 V</span></label>
+      <select id="sel_Vf">
+        <option value="0">0 V（理想二極體）</option>
+        <option value="0.7">0.7 V（矽二極體）</option>
+      </select>
+    </div>
+  </div>
+
+  <div class="formula" id="formula"></div>
+
+  <div class="note" id="noteRLC">
+    <b>物理重點：</b>電容電壓比電源高 Q 倍，但能量沒有變多：電源只要補上電阻消耗的功率 I²R；這正是共振變壓器、特斯拉線圈、收音機選台的原理。高 Q 電路的電容電壓可能很危險。
+  </div>
+
+  <div class="note" style="margin-top:14px">
+    <b>物理重點：兩種電壓放大方法的機制比較表</b>
+    <div style="overflow-x:auto">
+      <table class="cmp-table">
+        <thead>
+          <tr>
+            <th>比較項目</th>
+            <th>LC 共振升壓（串聯 RLC）</th>
+            <th>二極體倍壓（Cockcroft–Walton）</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>需要的核心元件</td>
+            <td>交流電源、電感 L、電容 C、電阻 R（內阻損耗）</td>
+            <td>交流電源、二極體 D、電容 C（<b>完全不需要電感</b>）</td>
+          </tr>
+          <tr>
+            <td>升壓物理機制</td>
+            <td><b>LC 共振能量互換</b>：當頻率達 $f_0$ 時容抗與感抗等大反向抵消 ($X_L = X_C$)，迴路阻抗降至最小 $R$，電流大增使得電容電壓累積至 $Q\cdot V_s$。</td>
+            <td><b>二極體電荷接力泵送</b>：利用二極體單向導通性，正負半週交替時將電荷逐級向上「接力」推升，電容串接疊加直流電位差。</td>
+          </tr>
+          <tr>
+            <td>輸出電壓形式</td>
+            <td><b>高頻交流電 (AC)</b>，頻率為輸入交流頻率 $f_0$。</td>
+            <td><b>高壓直流電 (DC)</b>，帶有微小漣波。</td>
+          </tr>
+          <tr>
+            <td>承受負載能力</td>
+            <td><b>極度敏感</b>：外接負載等效於大幅增加迴路損耗，會迅速拉低品質因數 $Q$，使共振升壓幅度急遽縮小。</td>
+            <td><b>中等</b>：可持續輸出直流微安至毫安電流，但壓降與漣波隨級數劇增（$\Delta V \propto I n^3$）。</td>
+          </tr>
+          <tr>
+            <td>典型工程用途</td>
+            <td>收音機射頻選台、共振變壓器、特斯拉線圈 (Tesla Coil)、無線電感應加熱、Qi 無線充電。</td>
+            <td>影印機與雷射印表機碳粉吸附高壓、陰極射線管 (CRT)、X 光機高壓源、粒子加速器 (Cockcroft–Walton 加速器)、電蚊拍。</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <p class="ext-links" style="margin-top:16px;font-size:.9rem;color:var(--muted)">
+    <a href="../lc-oscillation/">← 回到「LC 振盪電路」</a>
+  </p>
+  <footer>純前端 HTML5 / Canvas 物理模擬。依微分方程數值分析與傳輸方程即時解析。</footer>
+</div>
+
+<script>
+/*PHYS:BEGIN*/
+// 有效數字格式（公式面板、數值卡共用；驗收會用同一個函式比對畫面上的數字）
+function fmtSig(v, n) {
+  n = n || 3;
+  if (typeof v !== 'number' || !isFinite(v)) return String(v);
+  if (v === 0) return '0';
+  const a = Math.abs(v);
+  if (a >= 1e5 || a < 1e-3) {
+    let e = Math.floor(Math.log10(a)), m = v / Math.pow(10, e);
+    let ms = m.toFixed(n - 1);
+    if (Math.abs(parseFloat(ms)) >= 10) { e += 1; ms = (v / Math.pow(10, e)).toFixed(n - 1); }
+    const SUP = { '-': '⁻', '0': '⁰', '1': '¹', '2': '²', '3': '³', '4': '⁴', '5': '⁵', '6': '⁶', '7': '⁷', '8': '⁸', '9': '⁹' };
+    return ms + '×10' + String(e).split('').map(ch => SUP[ch]).join('');
+  }
+  const s = Number(v.toPrecision(n));
+  return a >= Math.pow(10, n - 1) ? String(Math.round(s)) : s.toPrecision(n);
+}
+
+// 「LC 能不能倍壓？」兩種把電壓變高的電路。
+// (1) 串聯 RLC 共振升壓：交流源 Vs（振幅）接 R、L、C 串聯。穩態 I = Vs/|Z|、|Z| = √(R² + (ωL − 1/ωC)²)、V_C = I/(ωC)。
+//     在 f₀ = 1/(2π√(LC)) 時 V_C = Q·Vs，Q = (1/R)√(L/C)。能量沒有變多：電容電壓高，但電源只需補電阻消耗的功率。
+// (2) 二極體–電容倍壓（Villard／Greinacher 半波倍壓、Cockcroft–Walton n 級）：沒有電感，靠二極體把每半週的電荷「接力」堆到下一顆電容。
+//     n 級空載理想輸出 2n·Vp；有負載時的壓降與漣波可用 Kuffel 等人的近似式估計。
+function rlcSeries(Vs, f, R, L, C) {
+  const w = 2 * Math.PI * f, X = w * L - 1 / (w * C), Z = Math.hypot(R, X), I = Vs / Z;
+  return { w, X, Z, I, VC: I / (w * C), VL: I * w * L, VR: I * R, phaseDeg: Math.atan2(X, R) * 180 / Math.PI,
+           f0: 1 / (2 * Math.PI * Math.sqrt(L * C)), Q: Math.sqrt(L / C) / R, gain: I / (w * C) / Vs };
+}
+// 從靜止開始的暫態（RK4）：L·q'' + R·q' + q/C = Vs·sin(ωt)；回傳取樣的 t 與 vC 陣列
+function rlcTransient(Vs, f, R, L, C, tEnd, nOut) {
+  const w = 2 * Math.PI * f, T = 1 / f, f0 = 1 / (2 * Math.PI * Math.sqrt(L * C));
+  const dt = Math.min(T, 1 / f0) / 200, steps = Math.ceil(tEnd / dt), every = Math.max(1, Math.floor(steps / (nOut || 600)));
+  let q = 0, i = 0, t = 0; const ts = [], vc = [];
+  const acc = (tt, qq, ii) => (Vs * Math.sin(w * tt) - R * ii - qq / C) / L;
+  for (let s = 0; s <= steps; s++) {
+    if (s % every === 0) { ts.push(t); vc.push(q / C); }
+    const k1q = i, k1i = acc(t, q, i);
+    const k2q = i + 0.5 * dt * k1i, k2i = acc(t + dt / 2, q + 0.5 * dt * k1q, i + 0.5 * dt * k1i);
+    const k3q = i + 0.5 * dt * k2i, k3i = acc(t + dt / 2, q + 0.5 * dt * k2q, i + 0.5 * dt * k2i);
+    const k4q = i + dt * k3i, k4i = acc(t + dt, q + dt * k3q, i + dt * k3i);
+    q += dt / 6 * (k1q + 2 * k2q + 2 * k3q + k4q); i += dt / 6 * (k1i + 2 * k2i + 2 * k3i + k4i); t += dt;
+  }
+  return { t: ts, vc };
+}
+// ---- Cockcroft–Walton n 級（n=1 即 Villard／Greinacher 半波倍壓）----
+// 節點：S＝交流源（對地 Vp·sin ωt，已知）；x₁…xₙ（振盪柱）、y₁…yₙ（平滑柱，yₙ 為輸出）；y₀＝地。
+// 電容：C(S–x₁)、C(x_{k−1}–x_k)；C(地–y₁)、C(y_{k−1}–y_k)。二極體：y_{k−1}→x_k、x_k→y_k（箭頭為順向）。負載 RL 接 yₙ 對地。
+// 二極體為分段線性：順向電壓降 Vf、導通電導 Gon、截止電導 Goff。以後退尤拉法＋節點分析求解。
+function cwCreate(n, opt) {
+  const o = Object.assign({ Vp: 10, f: 50, C: 100e-6, RL: Infinity, Vf: 0, Gon: 100, Goff: 1e-9 }, opt || {});
+  return { n, o, t: 0, v: new Array(2 * n).fill(0), on: new Array(2 * n).fill(false), vS: 0 };   // v[k-1]=x_k、v[n+k-1]=y_k
+}
+function cwSolveLinear(A, b) {   // 高斯消去（部分選主元）
+  const m = b.length;
+  for (let c = 0; c < m; c++) {
+    let p = c; for (let r = c + 1; r < m; r++) if (Math.abs(A[r][c]) > Math.abs(A[p][c])) p = r;
+    [A[c], A[p]] = [A[p], A[c]]; [b[c], b[p]] = [b[p], b[c]];
+    for (let r = c + 1; r < m; r++) { const k = A[r][c] / A[c][c]; if (!k) continue; for (let j = c; j < m; j++) A[r][j] -= k * A[c][j]; b[r] -= k * b[c]; }
+  }
+  const x = new Array(m).fill(0);
+  for (let r = m - 1; r >= 0; r--) { let s = b[r]; for (let j = r + 1; j < m; j++) s -= A[r][j] * x[j]; x[r] = s / A[r][r]; }
+  return x;
+}
+function cwStep(st, dt) {
+  const { n, o } = st, m = 2 * n, t1 = st.t + dt, vS = o.Vp * Math.sin(2 * Math.PI * o.f * t1);
+  const X = k => k === 0 ? -2 : k - 1;            // x_k 的未知數索引（x₀ 代表 S：-2）
+  const Y = k => k === 0 ? -1 : n + k - 1;        // y_k 的未知數索引（y₀ 代表地：-1）
+  const volt = (idx, vec, s) => idx === -1 ? 0 : idx === -2 ? s : vec[idx];
+  const caps = [], diodes = [];
+  for (let k = 1; k <= n; k++) { caps.push([X(k - 1), X(k)]); caps.push([Y(k - 1), Y(k)]); diodes.push([Y(k - 1), X(k)]); diodes.push([X(k), Y(k)]); }
+  const vPrev = st.v.slice(), sPrev = st.vS; let on = st.on.slice(), v = st.v.slice();
+  for (let it = 0; it < 30; it++) {
+    const A = Array.from({ length: m }, () => new Array(m).fill(0)), b = new Array(m).fill(0);
+    const stamp = (a, c, G, I) => {   // 在 a、c 之間：電導 G，以及從 a 流向 c 的電流源 I（已知）
+      const va = a, vc = c;   // 索引：≥0 未知節點、-1 地、-2 交流源 S
+      if (va >= 0) { A[va][va] += G; b[va] -= I; } if (vc >= 0) { A[vc][vc] += G; b[vc] += I; }
+      if (va >= 0 && vc >= 0) { A[va][vc] -= G; A[vc][va] -= G; }
+      if (va >= 0 && vc === -2) b[va] += G * vS; if (vc >= 0 && va === -2) b[vc] += G * vS;
+    };
+    const Gc = o.C / dt;
+    for (const [a, c] of caps) { const vp = volt(a, vPrev, sPrev) - volt(c, vPrev, sPrev); stamp(a, c, Gc, -Gc * vp); }
+    diodes.forEach(([a, c], j) => { if (on[j]) stamp(a, c, o.Gon, -o.Gon * o.Vf); else stamp(a, c, o.Goff, 0); });
+    if (isFinite(o.RL)) stamp(Y(n), -1, 1 / o.RL, 0);
+    v = cwSolveLinear(A, b);
+    const next = diodes.map(([a, c]) => volt(a, v, vS) - volt(c, v, vS) > o.Vf);   // 導通條件：順向電壓 > Vf（導通時即電流 > 0）
+    if (next.every((x, j) => x === on[j])) break;
+    on = next;
+  }
+  st.v = v; st.on = on; st.t = t1; st.vS = vS;
+  return st;
+}
+function cwRun(n, opt, cycles, perCycle) {   // 跑 cycles 個週期，回傳最後狀態與輸出電壓歷程（每週期取 perCycle 點）
+  const st = cwCreate(n, opt), N = perCycle || 400, dt = 1 / st.o.f / N, out = [];
+  for (let c = 0; c < cycles; c++) for (let s = 0; s < N; s++) { cwStep(st, dt); out.push(st.v[2 * n - 1]); }
+  return { st, out };
+}
+// 近似式（大電容、穩態）：輸出電流 I、每顆電容 C、頻率 f 時，壓降 ΔV ≈ (I/fC)(2n³/3 + n²/2 − n/6)、漣波峰對峰 δV ≈ (I/fC)·n(n+1)/2
+function cwDrop(I, f, C, n) { return I / (f * C) * (2 * n ** 3 / 3 + n * n / 2 - n / 6); }
+function cwRipple(I, f, C, n) { return I / (f * C) * n * (n + 1) / 2; }
+/*PHYS:END*/
+
+// 全域狀態物件
+const state = {
+  mode: 'rlc',
+  // 模式 A: 串聯 RLC
+  Vs: 2,       // V
+  L: 10,       // mH
+  C: 1,        // μF
+  R: 5,        // Ω
+  fr: 1,       // 頻率比 f/f0
+  // 模式 B: Cockcroft-Walton
+  n: 1,        // 級數 1-4
+  Vp: 10,      // V
+  f: 50,       // Hz
+  Cuf: 100,    // μF
+  RL: Infinity,// 負載
+  Vf: 0        // 二極體壓降
+};
+window.state = state;
+
+let sc = null;
+let cwState = null;
+let historyV = [];
+let isRunning = true;
+let animPhase = 0;
+let cachedTransient = null;
+let cachedTransKey = '';
+
+const cvEl = document.getElementById('scene');
+
+function setupCanvases() {
+  cvEl.style.width = '100%';
+  const w = cvEl.parentElement.clientWidth;
+  const aspect = w < 680 ? 1.05 : 1.68;
+  sc = SIM.setup(cvEl, w, Math.round(w / aspect));
+}
+
+function frow(name, sym, sub, val) {
+  return `<div class="frow"><span class="fname">${name}</span><span class="fsym">${sym}</span><span class="fsub">= ${sub}</span><span class="fval">${val}</span></div>`;
+}
+
+function updateFormula() {
+  const el = document.getElementById('formula');
+  if (state.mode === 'rlc') {
+    const L_SI = state.L * 1e-3;
+    const C_SI = state.C * 1e-6;
+    const f0 = 1 / (2 * Math.PI * Math.sqrt(L_SI * C_SI));
+    const f = state.fr * f0;
+    const rlc = rlcSeries(state.Vs, f, state.R, L_SI, C_SI);
+
+    let html = `<h4>📐 串聯 RLC 共振升壓計算（即時代入物理方程）</h4>`;
+    html += frow('共振頻率 f₀', '1 / (2π√(LC))', `1 / (2π√(${fmtSig(L_SI,3)}·${fmtSig(C_SI,3)}))`, fmtSig(rlc.f0, 3) + ' Hz');
+    html += frow('品質因數 Q', '(1/R) · √(L/C)', `(1/${fmtSig(state.R,3)}) · √(${fmtSig(L_SI,3)} / ${fmtSig(C_SI,3)})`, fmtSig(rlc.Q, 3));
+    html += frow('目前電源頻率 f', 'fr · f₀', `${fmtSig(state.fr,3)} · ${fmtSig(rlc.f0,3)}`, fmtSig(f, 3) + ' Hz');
+    html += frow('電路總阻抗 |Z|', '√(R² + (ωL − 1/ωC)²)', `√(${fmtSig(state.R,3)}² + (${fmtSig(rlc.X,3)})²)`, fmtSig(rlc.Z, 3) + ' Ω');
+    html += frow('迴路電流振幅 I', 'Vs / |Z|', `${fmtSig(state.Vs,3)} / ${fmtSig(rlc.Z,3)}`, fmtSig(rlc.I, 3) + ' A');
+    html += frow('電容電壓振幅 V_C', 'I / (ωC)', `${fmtSig(rlc.I,3)} / (${fmtSig(rlc.w,3)}·${fmtSig(C_SI,3)})`, fmtSig(rlc.VC, 3) + ' V');
+    html += frow('電感電壓振幅 V_L', 'I · ωL', `${fmtSig(rlc.I,3)} · ${fmtSig(rlc.w,3)}·${fmtSig(L_SI,3)}`, fmtSig(rlc.VL, 3) + ' V');
+    html += frow('電壓增益 Gain', 'V_C / Vs', `${fmtSig(rlc.VC,3)} / ${fmtSig(state.Vs,3)}`, fmtSig(rlc.gain, 3) + ' 倍');
+    html += `<div class="frel">📈 <b>物理本質：</b>當 $f = f_0$ 時，電感感抗與電容容抗完全抵消（相位差 180° 相消），整條迴路阻抗降至極小純電阻 $R$。迴路湧入超大電流 $I = V_s/R$，進而在電容與電感端累積出<b>高達 Q·Vs 的高壓</b>！</div>`;
+    el.innerHTML = html;
+  } else {
+    const n = state.n;
+    const Vp = state.Vp;
+    const Vf = state.Vf;
+    const C_SI = state.Cuf * 1e-6;
+    const idealV = 2 * n * Vp;
+    const dropVfV = 2 * n * Math.max(0, Vp - Vf);
+    const currVout = cwState ? cwState.v[2 * n - 1] : idealV;
+    const I = isFinite(state.RL) ? Math.max(0, currVout) / state.RL : 0;
+    const dV = isFinite(state.RL) ? cwDrop(I, state.f, C_SI, n) : 0;
+    const rip = isFinite(state.RL) ? cwRipple(I, state.f, C_SI, n) : 0;
+
+    let html = `<h4>📐 Cockcroft–Walton 倍壓電路即時計算</h4>`;
+    html += frow('空載理想輸出', '2n · Vp', `2 · ${n} · ${fmtSig(Vp,3)}`, fmtSig(idealV, 3) + ' V');
+    html += frow('扣除二極體壓降', '2n · (Vp − Vf)', `2 · ${n} · (${fmtSig(Vp,3)} − ${fmtSig(Vf,3)})`, fmtSig(dropVfV, 3) + ' V');
+    html += frow('負載輸出電流 I', 'v(yₙ) / RL', isFinite(state.RL) ? `${fmtSig(currVout,3)} / ${fmtSig(state.RL,3)}` : '空載 (RL = ∞)', isFinite(state.RL) ? fmtSig(I, 3) + ' A' : '0 A');
+    html += frow('有載理論壓降 ΔV', '(I/fC)(2n³/3 + n²/2 − n/6)', isFinite(state.RL) ? `(${fmtSig(I,3)} / (${fmtSig(state.f,3)}·${fmtSig(C_SI,3)})) · ${fmtSig(2*n*n*n/3 + n*n/2 - n/6, 3)}` : '空載無壓降', fmtSig(dV, 3) + ' V');
+    html += frow('有載漣波峰對峰 δV', '(I/fC) · n(n+1)/2', isFinite(state.RL) ? `(${fmtSig(I,3)} / (${fmtSig(state.f,3)}·${fmtSig(C_SI,3)})) · ${(n*(n+1)/2)}` : '空載無漣波', fmtSig(rip, 3) + ' V');
+    html += frow('目前模擬即時輸出', '節點分析數值解 v(yₙ)', '後退尤拉高斯消去', fmtSig(currVout, 3) + ' V');
+    html += `<div class="frel">📘 <b>近似式：</b>Kuffel、Zaengl、Kuffel《High Voltage Engineering: Fundamentals》。負載越大（電流 I 增加）或級數 n 越多，內部壓降以 $n^3$、漣波以 $n^2$ 劇烈惡化，因此大功率高壓電路通常採用高頻交流電 (如數十 kHz) 並加大電容。</div>`;
+    el.innerHTML = html;
+  }
+}
+
+function refresh() {
+  const isRLC = state.mode === 'rlc';
+  document.getElementById('mRLC').classList.toggle('on', isRLC);
+  document.getElementById('mCW').classList.toggle('on', !isRLC);
+  document.getElementById('barRLC').style.display = isRLC ? 'flex' : 'none';
+  document.getElementById('barCW').style.display = isRLC ? 'none' : 'flex';
+  document.getElementById('cwActions').style.display = isRLC ? 'none' : 'flex';
+  document.getElementById('noteRLC').style.display = isRLC ? 'block' : 'none';
+
+  if (isRLC) {
+    document.getElementById('r_Vs').value = state.Vs;
+    document.getElementById('v_Vs').textContent = fmtSig(state.Vs, 3) + ' V';
+    document.getElementById('r_L').value = state.L;
+    document.getElementById('v_L').textContent = fmtSig(state.L, 3) + ' mH';
+    document.getElementById('r_C').value = state.C;
+    document.getElementById('v_C').textContent = fmtSig(state.C, 3) + ' μF';
+    document.getElementById('r_R').value = state.R;
+    document.getElementById('v_R').textContent = fmtSig(state.R, 3) + ' Ω';
+    document.getElementById('r_fr').value = state.fr;
+    const f0_approx = 1 / (2 * Math.PI * Math.sqrt(state.L * 1e-3 * state.C * 1e-6));
+    document.getElementById('v_fr').textContent = `${fmtSig(state.fr, 3)} (${fmtSig(state.fr * f0_approx, 3)} Hz)`;
+  } else {
+    document.getElementById('r_n').value = state.n;
+    document.getElementById('v_n').textContent = state.n + ' 級';
+    document.getElementById('r_Vp').value = state.Vp;
+    document.getElementById('v_Vp').textContent = fmtSig(state.Vp, 3) + ' V';
+    document.getElementById('r_f').value = state.f;
+    document.getElementById('v_f').textContent = fmtSig(state.f, 3) + ' Hz';
+    document.getElementById('r_Cuf').value = state.Cuf;
+    document.getElementById('v_Cuf').textContent = fmtSig(state.Cuf, 3) + ' μF';
+    document.getElementById('sel_RL').value = isFinite(state.RL) ? String(state.RL) : 'Infinity';
+    document.getElementById('sel_Vf').value = String(state.Vf);
+    document.getElementById('v_RL').textContent = isFinite(state.RL) ? (state.RL >= 1000 ? (state.RL / 1000) + ' kΩ' : state.RL + ' Ω') : '空載 (∞)';
+    document.getElementById('v_Vf').textContent = state.Vf + ' V';
+
+    if (!cwState || cwState.n !== state.n) {
+      cwState = cwCreate(state.n, {
+        Vp: state.Vp,
+        f: state.f,
+        C: state.Cuf * 1e-6,
+        RL: state.RL,
+        Vf: state.Vf
+      });
+      historyV = [cwState.v[2 * state.n - 1]];
+    } else {
+      cwState.o.Vp = state.Vp;
+      cwState.o.f = state.f;
+      cwState.o.C = state.Cuf * 1e-6;
+      cwState.o.RL = state.RL;
+      cwState.o.Vf = state.Vf;
+    }
+  }
+
+  updateFormula();
+  draw();
+}
+
+// 繪製函數
+function draw() {
+  if (!sc) return;
+  const ctx = sc;
+  const W = ctx._w, H = ctx._h;
+
+  ctx.fillStyle = '#060a17';
+  ctx.fillRect(0, 0, W, H);
+
+  // 繪製微弱格線背景
+  ctx.strokeStyle = 'rgba(255,255,255,0.03)';
+  ctx.lineWidth = 1;
+  for (let x = 0; x < W; x += 40) { ctx.beginPath(); ctx.moveTo(x, 0); ctx.lineTo(x, H); ctx.stroke(); }
+  for (let y = 0; y < H; y += 40) { ctx.beginPath(); ctx.moveTo(0, y); ctx.lineTo(W, y); ctx.stroke(); }
+
+  if (state.mode === 'rlc') {
+    drawModeRLC(ctx, W, H);
+  } else {
+    drawModeCW(ctx, W, H);
+  }
+}
+
+// 模式 A：串聯 RLC
+function drawModeRLC(ctx, W, H) {
+  const isMobile = W < 680;
+  const L_SI = state.L * 1e-3, C_SI = state.C * 1e-6;
+  const f0 = 1 / (2 * Math.PI * Math.sqrt(L_SI * C_SI));
+  const f = state.fr * f0;
+  const rlc = rlcSeries(state.Vs, f, state.R, L_SI, C_SI);
+
+  const leftW = isMobile ? W : W * 0.44;
+  const rightX = isMobile ? 0 : W * 0.46;
+  const rightW = isMobile ? W : W * 0.52;
+
+  // --- 1. 左側：電路圖 ---
+  const cx = leftW / 2;
+  const cy = isMobile ? H * 0.24 : H * 0.50;
+  const rw = isMobile ? leftW * 0.72 : leftW * 0.68;
+  const rh = isMobile ? H * 0.32 : H * 0.54;
+  const x1 = cx - rw / 2, x2 = cx + rw / 2;
+  const y1 = cy - rh / 2, y2 = cy + rh / 2;
+
+  // 標題
+  ctx.fillStyle = '#e6efff';
+  ctx.font = 'bold 14px system-ui';
+  ctx.fillText('串聯 RLC 交流電路圖', x1, isMobile ? 22 : y1 - 24);
+
+  // 導線矩形
+  ctx.strokeStyle = '#2b3d68';
+  ctx.lineWidth = 3;
+  ctx.strokeRect(x1, y1, rw, rh);
+
+  // 動態電流電荷微粒流動
+  const curAmp = rlc.I;
+  const phase = animPhase;
+  const iNow = curAmp * Math.sin(phase - rlc.phaseDeg * Math.PI / 180);
+  const perimeter = 2 * (rw + rh);
+  const numDots = 14;
+  ctx.fillStyle = '#ffce54';
+  for (let d = 0; d < numDots; d++) {
+    const s = ((d / numDots) * perimeter + (phase * 24 * (iNow >= 0 ? 1 : -1))) % perimeter;
+    const pos = (s + perimeter) % perimeter;
+    let px = x1, py = y1;
+    if (pos < rw) { px = x1 + pos; py = y1; }
+    else if (pos < rw + rh) { px = x2; py = y1 + (pos - rw); }
+    else if (pos < 2 * rw + rh) { px = x2 - (pos - (rw + rh)); py = y2; }
+    else { px = x1; py = y2 - (pos - (2 * rw + rh)); }
+    ctx.beginPath();
+    ctx.arc(px, py, Math.min(4.5, 2 + Math.abs(iNow) * 1.5), 0, Math.PI * 2);
+    ctx.fill();
+  }
+
+  // 元件 1：交流源 (左垂直邊中央)
+  const srcY = cy;
+  ctx.fillStyle = '#060a17';
+  ctx.fillRect(x1 - 18, srcY - 20, 36, 40);
+  ctx.strokeStyle = '#4cc2ff';
+  ctx.lineWidth = 2.5;
+  ctx.beginPath();
+  ctx.arc(x1, srcY, 16, 0, Math.PI * 2);
+  ctx.stroke();
+  // 正弦波形
+  ctx.beginPath();
+  for (let dx = -9; dx <= 9; dx += 1) {
+    const dy = -Math.sin(dx / 9 * Math.PI) * 7;
+    if (dx === -9) ctx.moveTo(x1 + dx, srcY + dy);
+    else ctx.lineTo(x1 + dx, srcY + dy);
+  }
+  ctx.stroke();
+  ctx.fillStyle = '#4cc2ff';
+  ctx.font = 'bold 12px system-ui';
+  ctx.fillText(`Vs = ${fmtSig(state.Vs, 3)} V`, x1 - 58, srcY + 4);
+
+  // 元件 2：電阻 R (頂部水平邊中央)
+  const resX = cx;
+  ctx.fillStyle = '#060a17';
+  ctx.fillRect(resX - 26, y1 - 12, 52, 24);
+  ctx.strokeStyle = '#ffb02e';
+  ctx.lineWidth = 2.5;
+  ctx.beginPath();
+  ctx.moveTo(resX - 24, y1);
+  const zStep = 48 / 6;
+  for (let z = 1; z <= 6; z++) {
+    ctx.lineTo(resX - 24 + z * zStep - zStep / 2, y1 + (z % 2 === 1 ? -9 : 9));
+  }
+  ctx.lineTo(resX + 24, y1);
+  ctx.stroke();
+  ctx.fillStyle = '#ffb02e';
+  ctx.font = '12px system-ui';
+  ctx.fillText(`R = ${state.R} Ω`, resX - 20, y1 - 16);
+  ctx.fillStyle = '#d0d8ec';
+  ctx.fillText(`VR = ${fmtSig(rlc.VR, 3)} V`, resX - 24, y1 + 24);
+
+  // 元件 3：電感 L (右垂直邊中央)
+  const indY = cy;
+  ctx.fillStyle = '#060a17';
+  ctx.fillRect(x2 - 14, indY - 26, 28, 52);
+  ctx.strokeStyle = '#43d17a';
+  ctx.lineWidth = 2.5;
+  for (let c = 0; c < 4; c++) {
+    ctx.beginPath();
+    ctx.arc(x2, indY - 18 + c * 12, 7, -Math.PI / 2, Math.PI / 2, false);
+    ctx.stroke();
+  }
+  ctx.fillStyle = '#43d17a';
+  ctx.font = '12px system-ui';
+  ctx.fillText(`L = ${state.L} mH`, x2 + 12, indY - 8);
+  ctx.fillStyle = '#d0d8ec';
+  ctx.fillText(`VL = ${fmtSig(rlc.VL, 3)} V`, x2 + 12, indY + 12);
+
+  // 元件 4：電容 C (底部水平邊中央)
+  const capX = cx;
+  ctx.fillStyle = '#060a17';
+  ctx.fillRect(capX - 20, y2 - 16, 40, 32);
+  ctx.strokeStyle = '#ff5470';
+  ctx.lineWidth = 3;
+  ctx.beginPath();
+  ctx.moveTo(capX - 6, y2 - 14); ctx.lineTo(capX - 6, y2 + 14);
+  ctx.moveTo(capX + 6, y2 - 14); ctx.lineTo(capX + 6, y2 + 14);
+  ctx.stroke();
+  ctx.fillStyle = '#ff5470';
+  ctx.font = '12px system-ui';
+  ctx.fillText(`C = ${state.C} μF`, capX - 18, y2 + 28);
+  // 電容電壓放大標示（共振時特別高光）
+  const isBoost = rlc.gain >= 1.5;
+  ctx.fillStyle = isBoost ? '#7CFFB2' : '#ffb02e';
+  ctx.font = `bold ${isBoost ? 13 : 12}px system-ui`;
+  ctx.fillText(`VC = ${fmtSig(rlc.VC, 3)} V${isBoost ? ' (Q倍升壓!)' : ''}`, capX - 34, y2 - 20);
+
+  // --- 2. 右上：頻率響應圖 ---
+  const g1X = rightX + 16, g1W = rightW - 32;
+  const g1Y = isMobile ? H * 0.50 : 26;
+  const g1H = isMobile ? H * 0.22 : H * 0.42;
+
+  ctx.fillStyle = 'rgba(13,21,39,0.7)';
+  ctx.strokeStyle = 'var(--line)';
+  ctx.lineWidth = 1;
+  ctx.fillRect(g1X, g1Y, g1W, g1H);
+  ctx.strokeRect(g1X, g1Y, g1W, g1H);
+
+  ctx.fillStyle = '#e6efff';
+  ctx.font = 'bold 12px system-ui';
+  ctx.fillText('頻率響應：電壓放大倍數 (Gain = V_C / Vs)', g1X + 10, g1Y + 18);
+
+  const plot1X = g1X + 44, plot1W = g1W - 54;
+  const plot1Y = g1Y + 28, plot1H = g1H - 46;
+  const maxGain = Math.max(rlc.Q * 1.25, 4.0);
+
+  // 網格與對數橫軸 (0.1 f0 到 10 f0)
+  ctx.strokeStyle = 'rgba(255,255,255,0.08)';
+  ctx.fillStyle = '#8ba2cc';
+  ctx.font = '10px monospace';
+  const decades = [0.1, 0.2, 0.5, 1.0, 2.0, 5.0, 10.0];
+  decades.forEach(dec => {
+    const u = Math.log10(dec); // -1 到 +1
+    const gx = plot1X + ((u + 1) / 2) * plot1W;
+    ctx.beginPath(); ctx.moveTo(gx, plot1Y); ctx.lineTo(gx, plot1Y + plot1H); ctx.stroke();
+    if (dec === 0.1 || dec === 1.0 || dec === 10.0) {
+      ctx.fillText(dec === 1 ? 'f₀' : dec + 'f₀', gx - 8, plot1Y + plot1H + 12);
+    }
+  });
+
+  // 縱軸刻度
+  ctx.beginPath(); ctx.moveTo(plot1X, plot1Y); ctx.lineTo(plot1X, plot1Y + plot1H); ctx.stroke();
+  ctx.fillText('0', plot1X - 16, plot1Y + plot1H + 3);
+  ctx.fillText(fmtSig(maxGain, 2), plot1X - 28, plot1Y + 10);
+
+  // 繪製響應曲線
+  ctx.strokeStyle = '#4cc2ff';
+  ctx.lineWidth = 2.5;
+  ctx.beginPath();
+  const N_PTS = 80;
+  for (let i = 0; i <= N_PTS; i++) {
+    const u = -1 + (2 * i) / N_PTS;
+    const f_i = f0 * Math.pow(10, u);
+    const r_i = rlcSeries(state.Vs, f_i, state.R, L_SI, C_SI);
+    const px = plot1X + ((u + 1) / 2) * plot1W;
+    const py = plot1Y + plot1H - (r_i.gain / maxGain) * plot1H;
+    if (i === 0) ctx.moveTo(px, py); else ctx.lineTo(px, py);
+  }
+  ctx.stroke();
+
+  // 標記 f0 處峰值
+  const f0X = plot1X + 0.5 * plot1W;
+  ctx.strokeStyle = 'rgba(255,107,157,0.5)';
+  ctx.setLineDash([3, 3]);
+  ctx.beginPath(); ctx.moveTo(f0X, plot1Y); ctx.lineTo(f0X, plot1Y + plot1H); ctx.stroke();
+  ctx.setLineDash([]);
+  ctx.fillStyle = '#ff6b9d';
+  ctx.font = '10px system-ui';
+  ctx.fillText(`峰值≈Q (${fmtSig(rlc.Q, 3)})`, f0X + 4, plot1Y + 14);
+
+  // 當前頻率亮點
+  const curU = Math.log10(state.fr);
+  const curDotX = plot1X + ((curU + 1) / 2) * plot1W;
+  const curDotY = plot1Y + plot1H - (rlc.gain / maxGain) * plot1H;
+  ctx.fillStyle = '#7CFFB2';
+  ctx.beginPath(); ctx.arc(curDotX, curDotY, 5.5, 0, Math.PI * 2); ctx.fill();
+  ctx.fillText(`Gain=${fmtSig(rlc.gain, 3)}×`, curDotX + 8, curDotY - 4);
+
+  // --- 3. 右下：暫態響應圖 ---
+  const g2X = rightX + 16, g2W = rightW - 32;
+  const g2Y = isMobile ? H * 0.74 : H * 0.52;
+  const g2H = isMobile ? H * 0.23 : H * 0.44;
+
+  ctx.fillStyle = 'rgba(13,21,39,0.7)';
+  ctx.strokeStyle = 'var(--line)';
+  ctx.lineWidth = 1;
+  ctx.fillRect(g2X, g2Y, g2W, g2H);
+  ctx.strokeRect(g2X, g2Y, g2W, g2H);
+
+  ctx.fillStyle = '#e6efff';
+  ctx.font = 'bold 12px system-ui';
+  ctx.fillText('暫態響應：v_C(t) 啟動振盪與包絡增長', g2X + 10, g2Y + 18);
+
+  const plot2X = g2X + 44, plot2W = g2W - 54;
+  const plot2Y = g2Y + 28, plot2H = g2H - 46;
+
+  // 計算 RK4 暫態
+  const tau = (2 * L_SI) / state.R; // 包絡時間常數 2L/R
+  const tEnd = Math.max(4.5 * tau, 12 / f);
+  const transKey = `${state.Vs}_${state.L}_${state.C}_${state.R}_${state.fr}`;
+  if (transKey !== cachedTransKey || !cachedTransient) {
+    cachedTransient = rlcTransient(state.Vs, f, state.R, L_SI, C_SI, tEnd, 300);
+    cachedTransKey = transKey;
+  }
+
+  const { t: ts, vc } = cachedTransient;
+  const vPeak = Math.max(rlc.VC * 1.15, 2.0);
+
+  // 零電壓中軸
+  const midY = plot2Y + plot2H / 2;
+  ctx.strokeStyle = 'rgba(255,255,255,0.15)';
+  ctx.beginPath(); ctx.moveTo(plot2X, midY); ctx.lineTo(plot2X + plot2W, midY); ctx.stroke();
+  ctx.fillStyle = '#8ba2cc';
+  ctx.font = '10px monospace';
+  ctx.fillText('0V', plot2X - 20, midY + 3);
+  ctx.fillText(`+${fmtSig(vPeak, 2)}V`, plot2X - 38, plot2Y + 8);
+  ctx.fillText(`-${fmtSig(vPeak, 2)}V`, plot2X - 38, plot2Y + plot2H);
+
+  // 繪製漸增包絡線 ±Q·Vs·(1 - e^(-t/tau))
+  ctx.strokeStyle = 'rgba(255,107,157,0.45)';
+  ctx.setLineDash([4, 4]);
+  ctx.beginPath();
+  for (let j = 0; j <= 50; j++) {
+    const tt = (j / 50) * tEnd;
+    const env = rlc.VC * (1 - Math.exp(-tt / tau));
+    const ex = plot2X + (tt / tEnd) * plot2W;
+    const ey = midY - (env / vPeak) * (plot2H / 2);
+    if (j === 0) ctx.moveTo(ex, ey); else ctx.lineTo(ex, ey);
+  }
+  ctx.stroke();
+  ctx.beginPath();
+  for (let j = 0; j <= 50; j++) {
+    const tt = (j / 50) * tEnd;
+    const env = rlc.VC * (1 - Math.exp(-tt / tau));
+    const ex = plot2X + (tt / tEnd) * plot2W;
+    const ey = midY + (env / vPeak) * (plot2H / 2);
+    if (j === 0) ctx.moveTo(ex, ey); else ctx.lineTo(ex, ey);
+  }
+  ctx.stroke();
+  ctx.setLineDash([]);
+
+  // 繪製 v_C(t) 暫態曲線
+  ctx.strokeStyle = '#7CFFB2';
+  ctx.lineWidth = 1.6;
+  ctx.beginPath();
+  for (let k = 0; k < ts.length; k++) {
+    const px = plot2X + (ts[k] / tEnd) * plot2W;
+    const py = midY - (vc[k] / vPeak) * (plot2H / 2);
+    if (k === 0) ctx.moveTo(px, py); else ctx.lineTo(px, py);
+  }
+  ctx.stroke();
+
+  // 標記包絡常數說明
+  ctx.fillStyle = '#ff6b9d';
+  ctx.font = '10px system-ui';
+  ctx.fillText(`包絡常數 2L/R = ${fmtSig(tau * 1000, 3)} ms`, plot2X + plot2W - 160, plot2Y + 12);
+}
+
+// 模式 B：Cockcroft–Walton 倍壓
+function drawModeCW(ctx, W, H) {
+  const isMobile = W < 680;
+  const n = state.n;
+  const st = cwState;
+  if (!st) return;
+
+  const leftW = isMobile ? W : W * 0.58;
+  const rightX = isMobile ? 0 : W * 0.60;
+  const rightW = isMobile ? W : W * 0.38;
+
+  // --- 1. 左側：階梯電路 ---
+  ctx.fillStyle = '#e6efff';
+  ctx.font = 'bold 14px system-ui';
+  ctx.fillText(`Cockcroft–Walton ${n} 級倍壓電路階梯圖`, 20, 24);
+
+  const colX = isMobile ? leftW * 0.22 : leftW * 0.24;
+  const colY = isMobile ? leftW * 0.52 : leftW * 0.56;
+  const baseY = isMobile ? H * 0.45 : H * 0.82;
+  const topY = isMobile ? H * 0.08 : H * 0.16;
+  const stepH = (baseY - topY) / n;
+
+  // 節點座標計算
+  const nodeS = { x: colX, y: baseY };
+  const nodeG = { x: colY, y: baseY };
+  const nodesX = [], nodesY = [];
+  for (let k = 1; k <= n; k++) {
+    nodesX.push({ x: colX, y: baseY - (k - 0.5) * stepH });
+    nodesY.push({ x: colY, y: baseY - k * stepH });
+  }
+
+  // 繪製地線 (y0 處)
+  ctx.strokeStyle = '#2b3d68';
+  ctx.lineWidth = 2.5;
+  ctx.beginPath();
+  ctx.moveTo(colY - 20, baseY); ctx.lineTo(colY + 20, baseY);
+  ctx.moveTo(colY - 12, baseY + 6); ctx.lineTo(colY + 12, baseY + 6);
+  ctx.moveTo(colY - 5, baseY + 12); ctx.lineTo(colY + 5, baseY + 12);
+  ctx.stroke();
+
+  // 交流源 S (在 S 節點左下方)
+  ctx.strokeStyle = '#4cc2ff';
+  ctx.lineWidth = 2;
+  ctx.beginPath();
+  ctx.arc(nodeS.x - 28, nodeS.y, 14, 0, Math.PI * 2);
+  ctx.stroke();
+  ctx.beginPath();
+  ctx.moveTo(nodeS.x - 38, nodeS.y); ctx.lineTo(nodeS.x - 18, nodeS.y);
+  ctx.stroke();
+  // 內部波形
+  ctx.beginPath();
+  for (let dx = -8; dx <= 8; dx += 1) {
+    const dy = -Math.sin(dx / 8 * Math.PI) * 5;
+    if (dx === -8) ctx.moveTo(nodeS.x - 28 + dx, nodeS.y + dy);
+    else ctx.lineTo(nodeS.x - 28 + dx, nodeS.y + dy);
+  }
+  ctx.stroke();
+  ctx.fillStyle = '#4cc2ff';
+  ctx.font = '11px system-ui';
+  ctx.fillText(`S: ${fmtSig(st.vS, 3)}V`, nodeS.x - 52, nodeS.y + 26);
+
+  // 繪製電容
+  function drawCap(p1, p2, vDiff, label) {
+    const mx = (p1.x + p2.x) / 2, my = (p1.y + p2.y) / 2;
+    ctx.strokeStyle = '#2b3d68';
+    ctx.lineWidth = 2.5;
+    ctx.beginPath(); ctx.moveTo(p1.x, p1.y); ctx.lineTo(mx, my - 7); ctx.stroke();
+    ctx.beginPath(); ctx.moveTo(mx, my + 7); ctx.lineTo(p2.x, p2.y); ctx.stroke();
+
+    ctx.strokeStyle = '#ff5470';
+    ctx.lineWidth = 3;
+    ctx.beginPath();
+    ctx.moveTo(mx - 10, my - 7); ctx.lineTo(mx + 10, my - 7);
+    ctx.moveTo(mx - 10, my + 7); ctx.lineTo(mx + 10, my + 7);
+    ctx.stroke();
+
+    ctx.fillStyle = '#d0d8ec';
+    ctx.font = '10px monospace';
+    ctx.fillText(`${label}`, mx + 14, my - 2);
+    ctx.fillStyle = '#ffb02e';
+    ctx.fillText(`${fmtSig(vDiff, 3)}V`, mx + 14, my + 10);
+  }
+
+  // 左柱電容 C(S-x1), C(x_{k-1}-x_k)
+  for (let k = 1; k <= n; k++) {
+    const pPrev = (k === 1) ? nodeS : nodesX[k - 2];
+    const pNext = nodesX[k - 1];
+    const vPrev = (k === 1) ? st.vS : st.v[k - 2];
+    const vNext = st.v[k - 1];
+    drawCap(pPrev, pNext, Math.abs(vNext - vPrev), `C${2 * k - 1}`);
+  }
+
+  // 右柱電容 C(地-y1), C(y_{k-1}-y_k)
+  for (let k = 1; k <= n; k++) {
+    const pPrev = (k === 1) ? nodeG : nodesY[k - 2];
+    const pNext = nodesY[k - 1];
+    const vPrev = (k === 1) ? 0 : st.v[n + k - 2];
+    const vNext = st.v[n + k - 1];
+    drawCap(pPrev, pNext, Math.abs(vNext - vPrev), `C${2 * k}`);
+  }
+
+  // 繪製二極體 (Z字連接)
+  function drawDiode(pA, pC, isOn, dIdx) {
+    const dx = pC.x - pA.x, dy = pC.y - pA.y;
+    const len = Math.hypot(dx, dy);
+    const mx = pA.x + dx * 0.5, my = pA.y + dy * 0.5;
+    const ang = Math.atan2(dy, dx);
+
+    ctx.strokeStyle = isOn ? '#7CFFB2' : '#334870';
+    ctx.lineWidth = isOn ? 3.5 : 1.8;
+    ctx.beginPath(); ctx.moveTo(pA.x, pA.y); ctx.lineTo(pC.x, pC.y); ctx.stroke();
+
+    // 二極體三角形與陰極棒
+    ctx.save();
+    ctx.translate(mx, my);
+    ctx.rotate(ang);
+    ctx.fillStyle = isOn ? '#7CFFB2' : '#52709e';
+    ctx.strokeStyle = isOn ? '#fff' : '#52709e';
+    ctx.lineWidth = 2;
+    // 順向三角形
+    ctx.beginPath();
+    ctx.moveTo(6, 0); ctx.lineTo(-8, -7); ctx.lineTo(-8, 7);
+    ctx.closePath();
+    ctx.fill();
+    // 陰極線
+    ctx.beginPath();
+    ctx.moveTo(7, -8); ctx.lineTo(7, 8);
+    ctx.stroke();
+
+    if (isOn) {
+      // 導通發光效果
+      ctx.shadowColor = '#7CFFB2';
+      ctx.shadowBlur = 10;
+      ctx.stroke();
+    }
+    ctx.restore();
+  }
+
+  // 二極體 y_{k-1} -> x_k (導通由右往左上)
+  // 二極體 x_k -> y_k (導通由左往右上)
+  for (let k = 1; k <= n; k++) {
+    const pyPrev = (k === 1) ? nodeG : nodesY[k - 2];
+    const pxCurr = nodesX[k - 1];
+    const pyCurr = nodesY[k - 1];
+    const onD1 = st.on[2 * (k - 1)];
+    const onD2 = st.on[2 * (k - 1) + 1];
+    drawDiode(pyPrev, pxCurr, onD1, 2 * (k - 1) + 1);
+    drawDiode(pxCurr, pyCurr, onD2, 2 * (k - 1) + 2);
+  }
+
+  // 繪製節點電位標記圓點
+  for (let k = 1; k <= n; k++) {
+    const px = nodesX[k - 1], py = nodesY[k - 1];
+    // x_k 節點
+    ctx.fillStyle = '#ffce54';
+    ctx.beginPath(); ctx.arc(px.x, px.y, 4, 0, Math.PI * 2); ctx.fill();
+    ctx.font = '10px monospace';
+    ctx.fillText(`x${k}:${fmtSig(st.v[k - 1], 3)}V`, px.x - 52, px.y + 3);
+
+    // y_k 節點
+    ctx.fillStyle = (k === n) ? '#7CFFB2' : '#4cc2ff';
+    ctx.beginPath(); ctx.arc(py.x, py.y, 5, 0, Math.PI * 2); ctx.fill();
+    ctx.font = `${k === n ? 'bold 11px' : '10px'} monospace`;
+    ctx.fillText(`y${k}:${fmtSig(st.v[n + k - 1], 3)}V`, py.x + 8, py.y + 3);
+  }
+
+  // 負載電阻 RL (從 yn 接往右側下拉至地)
+  const topYn = nodesY[n - 1];
+  const loadX = colY + (isMobile ? 36 : 60);
+  ctx.strokeStyle = '#2b3d68';
+  ctx.lineWidth = 2.5;
+  ctx.beginPath();
+  ctx.moveTo(topYn.x, topYn.y); ctx.lineTo(loadX, topYn.y);
+  ctx.lineTo(loadX, topYn.y + 20);
+  ctx.stroke();
+  // 電阻鋸齒
+  ctx.strokeStyle = isFinite(state.RL) ? '#ffb02e' : '#556a8f';
+  ctx.lineWidth = 2;
+  const resTop = topYn.y + 20, resH = 44;
+  ctx.beginPath();
+  ctx.moveTo(loadX, resTop);
+  for (let s = 1; s <= 5; s++) {
+    ctx.lineTo(loadX + (s % 2 === 1 ? 7 : -7), resTop + s * (resH / 5));
+  }
+  ctx.lineTo(loadX, resTop + resH);
+  ctx.stroke();
+  // 往下接地
+  ctx.strokeStyle = '#2b3d68';
+  ctx.beginPath();
+  ctx.moveTo(loadX, resTop + resH); ctx.lineTo(loadX, baseY);
+  ctx.lineTo(colY, baseY);
+  ctx.stroke();
+
+  ctx.fillStyle = isFinite(state.RL) ? '#ffb02e' : '#8ba2cc';
+  ctx.font = '11px system-ui';
+  ctx.fillText(isFinite(state.RL) ? `RL=${state.RL / 1000}kΩ` : 'RL=空載', loadX - 18, resTop + resH + 16);
+
+  // --- 2. 右側：輸出電壓即時歷程圖 ---
+  const gX = rightX + 10, gW = rightW - 24;
+  const gY = isMobile ? H * 0.50 : 26;
+  const gH = isMobile ? H * 0.46 : H * 0.82;
+
+  ctx.fillStyle = 'rgba(13,21,39,0.7)';
+  ctx.strokeStyle = 'var(--line)';
+  ctx.lineWidth = 1;
+  ctx.fillRect(gX, gY, gW, gH);
+  ctx.strokeRect(gX, gY, gW, gH);
+
+  ctx.fillStyle = '#e6efff';
+  ctx.font = 'bold 12px system-ui';
+  ctx.fillText(`輸出端電壓 v(y${n}) 歷程曲線`, gX + 12, gY + 20);
+
+  const pX = gX + 44, pW = gW - 54;
+  const pY = gY + 36, pH = gH - 60;
+  const idealV = 2 * n * state.Vp;
+  const maxV = Math.max(idealV * 1.25, 20);
+
+  // 網格刻度
+  ctx.strokeStyle = 'rgba(255,255,255,0.08)';
+  ctx.fillStyle = '#8ba2cc';
+  ctx.font = '10px monospace';
+  ctx.beginPath(); ctx.moveTo(pX, pY + pH); ctx.lineTo(pX + pW, pY + pH); ctx.stroke();
+  ctx.fillText('0V', pX - 22, pY + pH + 3);
+  ctx.fillText(`${fmtSig(maxV, 2)}V`, pX - 38, pY + 10);
+
+  // 繪製理想 2n·Vp 虛線
+  const idealY = pY + pH - (idealV / maxV) * pH;
+  ctx.strokeStyle = 'rgba(124,255,178,0.55)';
+  ctx.setLineDash([4, 4]);
+  ctx.beginPath(); ctx.moveTo(pX, idealY); ctx.lineTo(pX + pW, idealY); ctx.stroke();
+  ctx.setLineDash([]);
+  ctx.fillStyle = '#7CFFB2';
+  ctx.fillText(`理想 2n·Vp = ${idealV}V`, pX + pW - 130, idealY - 4);
+
+  // 繪製歷史曲線
+  if (historyV.length > 1) {
+    ctx.strokeStyle = '#4cc2ff';
+    ctx.lineWidth = 2.2;
+    ctx.beginPath();
+    for (let k = 0; k < historyV.length; k++) {
+      const qx = pX + (k / (historyV.length - 1)) * pW;
+      const qy = pY + pH - (Math.max(0, historyV[k]) / maxV) * pH;
+      if (k === 0) ctx.moveTo(qx, qy); else ctx.lineTo(qx, qy);
+    }
+    ctx.stroke();
+
+    // 當前最新輸出高光點
+    const curVal = historyV[historyV.length - 1];
+    const curPy = pY + pH - (Math.max(0, curVal) / maxV) * pH;
+    ctx.fillStyle = '#ffce54';
+    ctx.beginPath(); ctx.arc(pX + pW, curPy, 5, 0, Math.PI * 2); ctx.fill();
+    ctx.fillText(`${fmtSig(curVal, 3)}V`, pX + pW - 55, curPy - 8);
+  }
+}
+
+// 模擬動態迴圈
+let lastFrameTime = performance.now();
+function anim(now) {
+  requestAnimationFrame(anim);
+  if (!sc) return;
+
+  const dtSec = (now - lastFrameTime) / 1000;
+  lastFrameTime = now;
+
+  if (state.mode === 'rlc') {
+    // 模式 A：動畫電流流動
+    animPhase += dtSec * 2 * Math.PI * Math.min(3, Math.max(0.4, state.fr));
+    draw();
+  } else {
+    // 模式 B：倍壓電路即時推展
+    if (isRunning && cwState) {
+      // 每秒推進約 1 週期，動畫放慢易於觀察 (每週期 200 步)
+      const perSecSteps = 200;
+      const stepsToRun = Math.max(1, Math.min(8, Math.round(dtSec * perSecSteps)));
+      const dtSim = 1 / (cwState.o.f * 200);
+      for (let s = 0; s < stepsToRun; s++) {
+        cwStep(cwState, dtSim);
+        historyV.push(cwState.v[2 * state.n - 1]);
+        if (historyV.length > 250) historyV.shift();
+      }
+      updateFormula();
+      draw();
+    }
+  }
+}
+
+// 單步半週期控制
+function stepHalfCycle() {
+  if (state.mode !== 'cw' || !cwState) return;
+  isRunning = false;
+  document.getElementById('btnPlayPause').textContent = '播放 ▶';
+  const steps = 100; // 200 步一週期，100 步剛好半週期
+  const dtSim = 1 / (cwState.o.f * 200);
+  for (let s = 0; s < steps; s++) {
+    cwStep(cwState, dtSim);
+    historyV.push(cwState.v[2 * state.n - 1]);
+    if (historyV.length > 250) historyV.shift();
+  }
+  refresh();
+}
+
+// 事件綁定
+document.getElementById('mRLC').onclick = () => { state.mode = 'rlc'; refresh(); };
+document.getElementById('mCW').onclick = () => { state.mode = 'cw'; refresh(); };
+
+document.getElementById('btnStepHalf').onclick = stepHalfCycle;
+document.getElementById('btnPlayPause').onclick = function () {
+  isRunning = !isRunning;
+  this.textContent = isRunning ? '暫停 ⏸' : '播放 ▶';
+};
+document.getElementById('btnResetCW').onclick = () => {
+  if (cwState) {
+    cwState.t = 0;
+    cwState.v.fill(0);
+    cwState.on.fill(false);
+    cwState.vS = 0;
+    historyV = [0];
+    refresh();
+  }
+};
+
+// 模式 A 滑桿監聽
+['Vs', 'L', 'C', 'R', 'fr'].forEach(k => {
+  const inp = document.getElementById('r_' + k);
+  inp.addEventListener('input', e => {
+    state[k] = parseFloat(e.target.value);
+    refresh();
+  });
+});
+
+// 模式 B 滑桿/選單監聽
+['n', 'Vp', 'f', 'Cuf'].forEach(k => {
+  const inp = document.getElementById('r_' + k);
+  inp.addEventListener('input', e => {
+    state[k] = parseFloat(e.target.value);
+    refresh();
+  });
+});
+
+document.getElementById('sel_RL').addEventListener('change', e => {
+  state.RL = e.target.value === 'Infinity' ? Infinity : parseFloat(e.target.value);
+  refresh();
+});
+
+document.getElementById('sel_Vf').addEventListener('change', e => {
+  state.Vf = parseFloat(e.target.value);
+  refresh();
+});
+
+window.addEventListener('load', () => {
+  setupCanvases();
+  refresh();
+  requestAnimationFrame(anim);
+});
+
+window.addEventListener('resize', () => {
+  setupCanvases();
+  draw();
+});
+</script>
+</body>
+</html>
