@@ -1,0 +1,953 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>熱傳導材料比較 ｜ 銅・鋁・鐵・玻璃・水・木頭・空氣・傅立葉定律</title>
+<meta name="description" content="熱傳導材料比較互動模擬：依據傅立葉定律與一維熱傳導方程式，即時比較金屬（銅、鋁、鐵）、水、橡木、保麗龍、空氣等材料的熱導率與溫度傳遞速度。">
+<link rel="icon" href="../assets/favicon.svg" type="image/svg+xml">
+<link rel="stylesheet" href="../assets/site.css">
+<script src="../assets/sim.js"></script>
+<script defer src="../assets/nav.js"></script>
+<style>
+  *{box-sizing:border-box}
+  html,body{margin:0;padding:0;background:var(--bg);color:var(--txt);font-family:"Noto Sans TC","PingFang TC","Microsoft JhengHei",system-ui,sans-serif}
+  a{color:var(--accent);text-decoration:none}
+  a:hover{text-decoration:underline}
+  .wrap{max-width:1120px;margin:0 auto;padding:18px 16px 60px}
+  header h1{font-size:1.5rem;margin:.2em 0}
+  header p{color:var(--muted);margin:.2em 0 1em;line-height:1.6}
+  .badge{display:inline-block;background:var(--panel2);border:1px solid var(--line);color:var(--muted);font-size:12px;padding:3px 10px;border-radius:99px;margin-bottom:8px}
+
+  /* 區塊容器：純流式排版，無疊合元素 */
+  .card{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:16px;margin-top:16px;box-shadow:0 8px 24px rgba(0,0,0,.25)}
+  .card h3{margin:0 0 10px;font-size:1.15rem;color:var(--txt);display:flex;align-items:center;gap:8px}
+
+  /* 畫布外層 */
+  .canvas-box{width:100%;border-radius:12px;overflow:hidden;border:1px solid var(--line);background:#070b18}
+  canvas{display:block;width:100%}
+
+  /* 按鈕與選單列（按鈕高至少 44px） */
+  .control-row{display:flex;flex-wrap:wrap;gap:10px;align-items:center;margin-top:12px}
+  .pbtn{min-height:44px;background:var(--panel2);color:var(--txt);border:1px solid var(--line);padding:8px 14px;border-radius:10px;cursor:pointer;font-size:14px;font-family:inherit;display:inline-flex;align-items:center;justify-content:center;transition:background .2s,border-color .2s}
+  .pbtn:hover{border-color:var(--accent)}
+  .pbtn.on{background:var(--accent);color:#04121c;border-color:var(--accent);font-weight:700}
+  
+  /* 速度控制群組 */
+  .speed-group{display:flex;flex-wrap:wrap;gap:6px;align-items:center}
+  .speed-title{font-size:13px;color:var(--muted);margin-right:2px}
+  .speed-btn{min-width:54px;min-height:44px;padding:6px 10px}
+
+  /* 時間顯示卡（排在畫布下方，不疊在畫布上） */
+  .time-card{display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px;background:var(--panel2);border:1px solid var(--line);border-radius:10px;padding:10px 14px;margin-top:12px}
+  .time-card .t-label{font-size:14px;color:var(--muted)}
+  .time-card .t-val{font-size:1.1rem;font-weight:700;color:var(--accent);font-variant-numeric:tabular-nums}
+
+  /* 棒子選擇區 */
+  .rods-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:10px;margin-top:12px}
+  .rod-select-item{background:var(--panel2);border:1px solid var(--line);border-radius:10px;padding:8px 12px;display:flex;flex-direction:column;gap:6px}
+  .rod-select-item label{font-size:13px;color:var(--muted);font-weight:600}
+  .c-select{min-height:44px;background:var(--bg2);color:var(--txt);border:1px solid var(--line);border-radius:8px;padding:8px 10px;font-size:14px;font-family:inherit;width:100%}
+
+  /* 滑桿列 */
+  .bar{display:flex;gap:14px;flex-wrap:wrap;align-items:flex-end;background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:14px 16px;margin-top:16px}
+  .sld{flex:1;min-width:180px}
+  .sld label{display:flex;justify-content:space-between;font-size:13px;color:var(--muted);margin-bottom:6px}
+  .sld label .v{color:var(--accent);font-variant-numeric:tabular-nums;font-weight:700}
+  .sld input{width:100%;min-height:36px;accent-color:var(--accent)}
+
+  /* 公式面板樣式（照規範） */
+  .formula{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:14px 16px;margin-top:16px}
+  .formula h4{margin:0 0 10px;font-size:15px;color:var(--accent)}
+  .frow{display:flex;flex-wrap:wrap;gap:8px;align-items:center;padding:7px 0;border-bottom:1px solid rgba(255,255,255,.06);font-size:13px;line-height:1.5}
+  .frow:last-child{border-bottom:none}
+  .fname{color:var(--txt);font-weight:600;min-width:110px}
+  .fsym{color:var(--muted);font-family:monospace}
+  .fsub{color:var(--muted)}
+  .fval{color:var(--accent);font-weight:700;margin-left:auto}
+  .frel{margin-top:10px;padding-top:10px;border-top:1px dashed var(--line);font-size:13px;color:var(--muted);line-height:1.65}
+
+  /* 接觸面溫度與溫度計區 */
+  .contact-box{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:14px;margin-top:12px}
+  .contact-res{background:var(--panel2);border:1px solid var(--line);border-radius:10px;padding:12px 14px;display:flex;flex-direction:column;justify-content:center}
+  .contact-res .r-title{font-size:13px;color:var(--muted);margin-bottom:4px}
+  .contact-res .r-temp{font-size:1.6rem;font-weight:800;color:var(--accent)}
+  .contact-res .r-desc{font-size:13px;color:var(--muted);margin-top:6px;line-height:1.5}
+
+  /* 表格樣式 */
+  .table-wrap{overflow-x:auto;margin-top:12px;border-radius:10px;border:1px solid var(--line)}
+  .mat-table{width:100%;border-collapse:collapse;font-size:13px;text-align:left;background:var(--panel2)}
+  .mat-table th,.mat-table td{padding:9px 12px;border-bottom:1px solid var(--line)}
+  .mat-table th{background:rgba(0,0,0,.3);color:var(--txt);font-weight:600}
+  .mat-table tr:last-child td{border-bottom:none}
+  .mat-table tr:hover td{background:rgba(255,255,255,.03)}
+
+  /* 物理重點與出處說明 */
+  .note{background:var(--panel);border-left:3px solid var(--accent2);border-radius:8px;padding:12px 14px;color:var(--muted);font-size:14px;line-height:1.75;margin-top:16px}
+  .note b{color:var(--txt)}
+  .note code{background:var(--bg2);padding:2px 6px;border-radius:5px;color:var(--green);font-size:.9em}
+  .source-box{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:16px;margin-top:16px}
+  .source-box h3{margin:0 0 10px;font-size:1.1rem;color:var(--txt)}
+  .source-text{font-size:14px;color:var(--muted);line-height:1.75}
+
+  footer{color:var(--muted);font-size:13px;margin-top:28px;text-align:center;line-height:1.8}
+  .ext-links{margin-top:16px;font-size:14px;color:var(--muted)}
+</style>
+</head>
+<body data-demo="熱傳導材料比較">
+<div class="wrap">
+  <header>
+    <span class="badge">熱學・熱傳導</span>
+    <h1>熱傳導：木頭、水、金屬比一比</h1>
+    <p>金屬真的導熱很快嗎？木頭和水又差了多少倍？本模擬根據<b>傅立葉定律</b>與一維暫態擴散方程，即時模擬不同材料橫棒在左端 <b>100 °C 熱源</b>與右端 <b>0 °C 冰水</b>之間的溫度演變與穩態熱流。</p>
+  </header>
+
+  <!-- 第一區：並排棒子溫度分布動畫 -->
+  <div class="card">
+    <h3>🧪 並排熱傳導模擬（左端 100 °C・右端 0 °C）</h3>
+    <div class="canvas-box">
+      <canvas id="scene"></canvas>
+    </div>
+
+    <!-- 實際經過時間（依規範放置於畫布下方，不覆蓋畫布） -->
+    <div class="time-card">
+      <span class="t-label">⏱️ 模擬實際經過時間：</span>
+      <span class="t-val" id="elapsedDisplay">0.00 秒</span>
+      <span style="font-size:13px;color:var(--muted)" id="timeHuman">（共用真實時間軸）</span>
+    </div>
+
+    <!-- 動畫與倍速按鈕 -->
+    <div class="control-row">
+      <button class="pbtn on" id="btnPlay">暫停</button>
+      <button class="pbtn" id="btnReset">重設（回 0 °C、時間歸零）</button>
+      <div class="speed-group" style="margin-left:auto">
+        <span class="speed-title">倍速：</span>
+        <button class="pbtn speed-btn" data-spd="1">×1</button>
+        <button class="pbtn speed-btn on" data-spd="10">×10</button>
+        <button class="pbtn speed-btn" data-spd="100">×100</button>
+        <button class="pbtn speed-btn" data-spd="1000">×1000</button>
+        <button class="pbtn speed-btn" data-spd="10000">×10000</button>
+      </div>
+    </div>
+
+    <!-- 4 根棒子的材料下拉選單 -->
+    <div class="rods-grid">
+      <div class="rod-select-item">
+        <label>棒 1 材料：</label>
+        <select class="c-select" id="sel_rod_0"></select>
+      </div>
+      <div class="rod-select-item">
+        <label>棒 2 材料：</label>
+        <select class="c-select" id="sel_rod_1"></select>
+      </div>
+      <div class="rod-select-item">
+        <label>棒 3 材料：</label>
+        <select class="c-select" id="sel_rod_2"></select>
+      </div>
+      <div class="rod-select-item">
+        <label>棒 4 材料：</label>
+        <select class="c-select" id="sel_rod_3"></select>
+      </div>
+    </div>
+  </div>
+
+  <!-- 滑桿列 -->
+  <div class="bar">
+    <div class="sld">
+      <label><span>棒長 L（兩端溫差固定 100 °C）</span><span class="v" id="v_L">10 cm</span></label>
+      <input type="range" id="r_L" min="2" max="20" step="1" value="10">
+    </div>
+    <div class="sld" style="max-width:240px">
+      <label><span>截面積 A（固定規格）</span><span class="v">1.00 cm²</span></label>
+      <div style="font-size:13px;color:var(--muted);padding-top:8px">A = 1×10⁻⁴ m²（各棒相同）</div>
+    </div>
+  </div>
+
+  <!-- 計算公式（即時代入） -->
+  <div class="formula" id="formula"></div>
+
+  <!-- 第二區：k 值對數長條圖 -->
+  <div class="card">
+    <h3>📊 熱導率 k 值比較（11 種材料・橫軸對數刻度）</h3>
+    <p style="font-size:13px;color:var(--muted);margin:0 0 10px">
+      銅的熱導率為 401 W/(m·K)，而靜止空氣僅約 0.026 W/(m·K)，相差超過 15,000 倍！採用對數刻度才能在同一畫面中完整呈現巨大跨度。
+    </p>
+    <div class="canvas-box">
+      <canvas id="barCanvas"></canvas>
+    </div>
+  </div>
+
+  <!-- 第三區：為什麼金屬摸起來比較冷？ -->
+  <div class="card">
+    <h3>❄️ 為什麼金屬摸起來比木頭冷？（熱滲透率 e）</h3>
+    <p style="font-size:14px;color:var(--muted);margin:0 0 10px;line-height:1.6">
+      冬天摸室溫下的鐵欄杆感覺刺骨冰冷，但摸木頭卻覺得溫和，然而兩者溫度完全相同（皆為室溫 20 °C）！這是因為人體皮膚感測到的是<b>接觸瞬間的介面溫度 T<sub>c</sub></b>。
+    </p>
+
+    <div class="contact-box">
+      <div class="rod-select-item">
+        <label>人體組織（以 37 °C 近似）：</label>
+        <select class="c-select" id="sel_mat1"></select>
+        <small style="color:var(--muted);margin-top:4px;font-size:12px">※ 用水近似人體組織，只是示意（人體含水率高，熱物性與水接近）。</small>
+      </div>
+      <div class="rod-select-item">
+        <label>接觸物體（室溫 20 °C）：</label>
+        <select class="c-select" id="sel_mat2"></select>
+        <div style="display:flex;gap:6px;margin-top:6px">
+          <button class="pbtn" style="min-height:44px;padding:4px 10px;font-size:13px" id="btnQuickCu">點選：銅</button>
+          <button class="pbtn" style="min-height:44px;padding:4px 10px;font-size:13px" id="btnQuickOak">點選：橡木</button>
+          <button class="pbtn" style="min-height:44px;padding:4px 10px;font-size:13px" id="btnQuickEps">點選：保麗龍</button>
+        </div>
+      </div>
+      <div class="contact-res">
+        <div class="r-title">接觸面瞬時溫度 T<sub>c</sub>：</div>
+        <div class="r-temp" id="tcVal">-- °C</div>
+        <div class="r-desc" id="tcDesc">計算中...</div>
+      </div>
+    </div>
+
+    <div class="canvas-box" style="margin-top:14px">
+      <canvas id="contactCanvas"></canvas>
+    </div>
+
+    <div class="note" style="margin-top:12px">
+      <b>物理原理解析：</b>當手指接觸物體時，介面溫度滿足 <code>T_c = (e₁T₁ + e₂T₂)/(e₁ + e₂)</code>。材料的 k、ρ、c 越大，其熱滲透率 <code>e = √(kρc)</code> 越大，代表它能以極大速率把手的熱帶走，使接觸面溫度越接近物體初溫。金屬銅的 e 高達 37,100，瞬間將接觸面拉低至約 20.7 °C（讓人感到冰冷刺骨）；橡木的 e 僅約 470，接觸面仍有 33.1 °C（溫和舒適）；保麗龍的 e 只有約 28，接觸面高達 36.6 °C，甚至感覺微溫。
+    </div>
+  </div>
+
+  <!-- 物理重點 -->
+  <div class="note">
+    <b>物理重點：</b>熱傳導靠分子碰撞或自由電子把能量往低溫處傳。金屬含有大量<b>自由電子</b>，能以極快速度傳遞動能，所以熱導率 <code>k</code> 巨大；木頭、保麗龍、靜止空氣因缺乏自由電子且構造疏鬆，是極好的<b>隔熱材料</b>；水的 k 比空氣大約 24 倍，但仍遠小於金屬。注意：這裡的水與空氣只計算<b>熱傳導</b>；在真實世界中，流體（水與空氣）受熱會產生<b>熱對流</b>，熱傳遞的速度會比純傳導快得多（國中課程：熱的傳播方式有<b>傳導</b>、<b>對流</b>、<b>輻射</b>）。
+  </div>
+
+  <!-- 資料出處 -->
+  <div class="source-box">
+    <h3>📚 資料出處</h3>
+    <div class="source-text">
+      熱導率、密度、比熱取自 Y. A. Çengel 與 A. J. Ghajar，《Heat and Mass Transfer: Fundamentals and Applications》第 5 版（McGraw-Hill, 2015）附錄：表 A-3（金屬，300 K）、表 A-6（發泡聚苯乙烯）、表 A-8（冰、窗玻璃、木材橫紋）、表 A-9（水，25 °C）、表 A-15（空氣，1 atm、25 °C）。木材是垂直纖維（橫紋）方向；數值會隨溫度、含水率、成分改變。
+    </div>
+    <div class="table-wrap">
+      <table class="mat-table">
+        <thead>
+          <tr>
+            <th>材料名稱</th>
+            <th>熱導率 k [W/(m·K)]</th>
+            <th>密度 ρ [kg/m³]</th>
+            <th>比熱 c [J/(kg·K)]</th>
+            <th>熱滲透率 e [J/(m²·K·s<sup>1/2</sup>)]</th>
+            <th>文獻出處（Çengel 附錄）</th>
+          </tr>
+        </thead>
+        <tbody id="matTableBody"></tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- 延伸連結 -->
+  <p class="ext-links">
+    <a href="../heat-transfer/">← 回到「熱傳導與熱平衡」</a>
+  </p>
+
+  <footer>
+    熱傳導材料比較互動模擬 ｜ 依據傅立葉熱傳導定律與顯式有限差分法（FTCS）即時計算 ｜ 純前端 Canvas 繪製
+  </footer>
+</div>
+
+<script>
+/*PHYS:BEGIN*/
+// 有效數字格式（公式面板、數值卡共用；驗收會用同一個函式比對畫面上的數字）
+function fmtSig(v, n) {
+  n = n || 3;
+  if (typeof v !== 'number' || !isFinite(v)) return String(v);
+  if (v === 0) return '0';
+  const a = Math.abs(v);
+  if (a >= 1e5 || a < 1e-3) {
+    let e = Math.floor(Math.log10(a)), m = v / Math.pow(10, e);
+    let ms = m.toFixed(n - 1);
+    if (Math.abs(parseFloat(ms)) >= 10) { e += 1; ms = (v / Math.pow(10, e)).toFixed(n - 1); }
+    const SUP = { '-': '⁻', '0': '⁰', '1': '¹', '2': '²', '3': '³', '4': '⁴', '5': '⁵', '6': '⁶', '7': '⁷', '8': '⁸', '9': '⁹' };
+    return ms + '×10' + String(e).split('').map(ch => SUP[ch]).join('');
+  }
+  const s = Number(v.toPrecision(n));
+  return a >= Math.pow(10, n - 1) ? String(Math.round(s)) : s.toPrecision(n);
+}
+
+// 熱傳導（傅立葉定律）與材料比較。物性表：Çengel & Ghajar《Heat and Mass Transfer: Fundamentals and Applications》第 5 版
+// （McGraw-Hill, 2015）附錄：表 A-3（金屬，300 K）、A-6（隔熱材料）、A-8（雜項材料）、A-9（飽和水，25 °C）、A-15（1 atm 空氣，25 °C）。
+// k：熱導率 W/(m·K)；rho：密度 kg/m³；cp：比熱 J/(kg·K)。木材為「橫紋」（垂直纖維）方向。
+const MATERIALS = [
+  { id: 'cu', name: '銅', k: 401, rho: 8933, cp: 385, src: '表 A-3 純銅 300 K' },
+  { id: 'al', name: '鋁', k: 237, rho: 2702, cp: 903, src: '表 A-3 純鋁 300 K' },
+  { id: 'fe', name: '鐵', k: 80.2, rho: 7870, cp: 447, src: '表 A-3 純鐵 300 K' },
+  { id: 'ss', name: '不鏽鋼（304）', k: 14.9, rho: 7900, cp: 477, src: '表 A-3 AISI 304 300 K' },
+  { id: 'ice', name: '冰（0 °C）', k: 1.88, rho: 920, cp: 2040, src: '表 A-8 冰 273 K' },
+  { id: 'glass', name: '窗玻璃', k: 0.7, rho: 2800, cp: 750, src: '表 A-8 玻璃（窗）' },
+  { id: 'water', name: '水（25 °C）', k: 0.607, rho: 997, cp: 4180, src: '表 A-9 飽和水 25 °C' },
+  { id: 'oak', name: '橡木（橫紋）', k: 0.17, rho: 545, cp: 2385, src: '表 A-8 橡木 橫紋' },
+  { id: 'pine', name: '黃松木（橫紋）', k: 0.15, rho: 640, cp: 2805, src: '表 A-8 黃松 橫紋' },
+  { id: 'eps', name: '保麗龍（發泡聚苯乙烯）', k: 0.040, rho: 16, cp: 1200, src: '表 A-6 發泡聚苯乙烯（模塑珠粒）' },
+  { id: 'air', name: '空氣（25 °C，靜止）', k: 0.02551, rho: 1.184, cp: 1007, src: '表 A-15 空氣 1 atm 25 °C' },
+];
+function matById(id) { return MATERIALS.find(m => m.id === id); }
+// 傅立葉定律：穩態熱流 q = k·A·ΔT / L（W）
+function fourierFlux(k, A, dT, L) { return k * A * dT / L; }
+function diffusivity(m) { return m.k / (m.rho * m.cp); }                  // 熱擴散率 α = k/(ρc)，m²/s
+function diffusionTime(m, L) { return L * L / diffusivity(m); }           // 特徵時間 L²/α（秒）
+function effusivity(m) { return Math.sqrt(m.k * m.rho * m.cp); }           // 熱滲透率 e = √(kρc)
+// 兩個半無限大物體突然接觸，接觸面溫度 = (e₁T₁ + e₂T₂)/(e₁ + e₂)（「金屬摸起來比木頭冷」的原因）
+function contactTemp(m1, T1, m2, T2) { const e1 = effusivity(m1), e2 = effusivity(m2); return (e1 * T1 + e2 * T2) / (e1 + e2); }
+// 一維棒的暫態：顯式差分（FTCS），兩端固定溫度。T 為節點溫度陣列（含兩端），r = α·dt/dx² 必須 ≤ 0.5
+function rodStep(T, alpha, dx, dt, Thot, Tcold) {
+  const r = alpha * dt / (dx * dx), n = T.length, out = new Array(n);
+  out[0] = Thot; out[n - 1] = Tcold;
+  for (let i = 1; i < n - 1; i++) out[i] = T[i] + r * (T[i - 1] - 2 * T[i] + T[i + 1]);
+  return out;
+}
+// 推進實際時間 tReal 秒：自動切成穩定的小步（r ≤ 0.4）
+function rodAdvance(T, m, L, tReal, Thot, Tcold) {
+  const n = T.length, dx = L / (n - 1), alpha = diffusivity(m), dtMax = 0.4 * dx * dx / alpha;
+  const steps = Math.max(1, Math.ceil(tReal / dtMax)), dt = tReal / steps;
+  let cur = T;
+  for (let s = 0; s < steps; s++) cur = rodStep(cur, alpha, dx, dt, Thot, Tcold);
+  return cur;
+}
+function rodSteady(n, Thot, Tcold) { const out = []; for (let i = 0; i < n; i++) out.push(Thot + (Tcold - Thot) * i / (n - 1)); return out; }
+// 棒中段 x（0–L）的解析暫態解（初溫 Tcold，t=0 時熱端升到 Thot）：傅立葉級數，取前 nTerms 項
+function rodExact(x, t, m, L, Thot, Tcold, nTerms) {
+  const a = diffusivity(m), d = Thot - Tcold; let s = Thot - d * x / L;
+  for (let k = 1; k <= (nTerms || 200); k++) s -= 2 * d / (k * Math.PI) * Math.sin(k * Math.PI * x / L) * Math.exp(-a * (k * Math.PI / L) ** 2 * t);
+  return s;
+}
+/*PHYS:END*/
+
+// ---- 全域狀態物件 ----
+const NODES_COUNT = 21; // 節點數量（dx = L/20）
+function makeInitialRod() {
+  const arr = new Array(NODES_COUNT).fill(0);
+  arr[0] = 100; // t=0 時左端熱源為 100 °C
+  return arr;
+}
+
+const state = {
+  L: 10,                 // 棒長（公分），預設 10 cm（範圍 2–20）
+  A: 1,                  // 截面積（固定 1 cm²，計算時為 1e-4 m²）
+  rods: ['cu', 'fe', 'water', 'oak'], // 預設 4 根棒子
+  speed: 10,             // 時間倍速（1, 10, 100, 1000, 10000）
+  running: true,         // 是否播放中
+  time: 0,               // 實際經過秒數
+  T: [makeInitialRod(), makeInitialRod(), makeInitialRod(), makeInitialRod()],
+  mat1: 'water',         // 接觸面比較：手指（水）37 °C
+  mat2: 'cu',            // 接觸面比較：冷物體 20 °C
+};
+window.state = state;
+
+// 重設全域函式
+function resetRods() {
+  state.time = 0;
+  state.T = state.rods.map(() => makeInitialRod());
+  refresh();
+}
+window.resetRods = resetRods;
+
+// 溫度對應色階函式（0 °C 深藍 → 100 °C 鮮紅）
+function tempColor(T) {
+  const t = Math.max(0, Math.min(100, T)) / 100;
+  const hue = (1 - t) * 230; // 0: 230 (藍) -> 1: 0 (紅)
+  const lit = 42 + t * 14;
+  return `hsl(${hue}, 92%, ${lit}%)`;
+}
+
+// 人類可讀時間格式
+function fmtDuration(sec) {
+  if (sec < 60) return fmtSig(sec, 3) + ' 秒';
+  if (sec < 3600) {
+    const m = Math.floor(sec / 60);
+    const s = (sec % 60).toFixed(1);
+    return `${m} 分 ${s} 秒（${fmtSig(sec, 3)} 秒）`;
+  }
+  const h = (sec / 3600).toFixed(2);
+  return `${h} 小時（${fmtSig(sec, 3)} 秒）`;
+}
+
+function fmtTau(sec) {
+  if (sec < 60) return `約 ${fmtSig(sec, 3)} 秒`;
+  if (sec < 3600) return `約 ${fmtSig(sec / 60, 3)} 分鐘`;
+  return `約 ${fmtSig(sec / 3600, 3)} 小時`;
+}
+
+// 畫布 Context
+let ctxSim, ctxBar, ctxContact;
+
+function setupCanvases() {
+  const isNarrow = window.innerWidth <= 640;
+  ctxSim = SIM.fit(document.getElementById('scene'), isNarrow ? 1.05 : 1.6);
+  ctxBar = SIM.fit(document.getElementById('barCanvas'), isNarrow ? 0.95 : 1.7);
+  ctxContact = SIM.fit(document.getElementById('contactCanvas'), isNarrow ? 2.0 : 3.4);
+}
+
+// ---- 下拉選單與資料表初始化 ----
+function populateSelects() {
+  for (let i = 0; i < 4; i++) {
+    const sel = document.getElementById(`sel_rod_${i}`);
+    if (!sel) continue;
+    sel.innerHTML = '';
+    MATERIALS.forEach(m => {
+      const opt = document.createElement('option');
+      opt.value = m.id;
+      opt.textContent = `${m.name}（k = ${m.k}）`;
+      if (m.id === state.rods[i]) opt.selected = true;
+      sel.appendChild(opt);
+    });
+    sel.onchange = e => {
+      state.rods[i] = e.target.value;
+      state.T[i] = makeInitialRod();
+      refresh();
+    };
+  }
+
+  // 第三區選單
+  const sel1 = document.getElementById('sel_mat1');
+  const sel2 = document.getElementById('sel_mat2');
+  if (sel1 && sel2) {
+    sel1.innerHTML = '';
+    sel2.innerHTML = '';
+    MATERIALS.forEach(m => {
+      const o1 = document.createElement('option');
+      o1.value = m.id;
+      o1.textContent = `${m.name}（k = ${m.k}）`;
+      if (m.id === state.mat1) o1.selected = true;
+      sel1.appendChild(o1);
+
+      const o2 = document.createElement('option');
+      o2.value = m.id;
+      o2.textContent = `${m.name}（k = ${m.k}）`;
+      if (m.id === state.mat2) o2.selected = true;
+      sel2.appendChild(o2);
+    });
+    sel1.onchange = e => { state.mat1 = e.target.value; refresh(); };
+    sel2.onchange = e => { state.mat2 = e.target.value; refresh(); };
+  }
+
+  // 資料出處表格
+  const tbody = document.getElementById('matTableBody');
+  if (tbody) {
+    tbody.innerHTML = '';
+    MATERIALS.forEach(m => {
+      const tr = document.createElement('tr');
+      const eVal = effusivity(m);
+      tr.innerHTML = `
+        <td style="font-weight:600;color:var(--txt)">${m.name}</td>
+        <td style="color:var(--accent);font-weight:700">${fmtSig(m.k, 3)}</td>
+        <td>${fmtSig(m.rho, 3)}</td>
+        <td>${fmtSig(m.cp, 3)}</td>
+        <td style="color:var(--green)">${fmtSig(eVal, 3)}</td>
+        <td style="color:var(--muted)">${m.src}</td>
+      `;
+      tbody.appendChild(tr);
+    });
+  }
+}
+
+// ---- 公式面板即時代入 ----
+function updateFormula() {
+  const el = document.getElementById('formula');
+  if (!el) return;
+  const L_m = state.L / 100;
+  const A_m2 = 1e-4; // 1 cm²
+  const dT = 100;    // 100 °C - 0 °C
+
+  let html = `<h4>📐 計算公式（即時代入　截面積 A = 1 cm² = 1×10⁻⁴ m²，兩端溫差 ΔT = 100 K，長度 L = ${state.L} cm）</h4>`;
+
+  state.rods.forEach((id, idx) => {
+    const m = matById(id);
+    if (!m) return;
+    const q = fourierFlux(m.k, A_m2, dT, L_m);
+    const alpha = diffusivity(m);
+    const tau = diffusionTime(m, L_m);
+
+    html += `<div class="frow">
+      <span class="fname">棒 ${idx + 1}：${m.name}</span>
+      <span class="fsym">q = kAΔT/L</span>
+      <span class="fsub">= (${fmtSig(m.k, 3)} · 10⁻⁴ · 100) / ${fmtSig(L_m, 3)}</span>
+      <span class="fval">穩態熱流 q = ${fmtSig(q, 3)} W ｜ α = ${fmtSig(alpha, 3)} m²/s ｜ 特徵時間 τ = ${fmtSig(tau, 3)} s（${fmtTau(tau)}）</span>
+    </div>`;
+  });
+
+  html += `<div class="frel">
+    📈 <b>傅立葉熱傳導定律 q = kAΔT/L</b>：熱導率 k 越高、截面積 A 越大、長度 L 越短，穩態時每秒傳輸的熱能量（瓦特 W）越大。<br>
+    ⏱️ <b>熱擴散率 α = k/(ρc) 與特徵時間 τ = L²/α</b>：決定溫度曲線變化的速度。金屬（銅、鋁）具有極大擴散率，數十秒內即可逼近穩態直線；而水與橡木的 α 極小，需要數十分鐘甚至數小時才能完成傳導平衡。
+  </div>`;
+
+  el.innerHTML = html;
+}
+
+// ---- 第一畫布：並排棒子動畫繪製 ----
+function drawSim() {
+  if (!ctxSim) return;
+  const ctx = ctxSim;
+  const W = ctx._w, H = ctx._h;
+
+  ctx.fillStyle = '#060a17';
+  ctx.fillRect(0, 0, W, H);
+
+  // 左右熱源與冷源邊界
+  const resW = Math.max(50, Math.min(84, W * 0.1));
+  const xLeft = resW;
+  const xRight = W - resW;
+  const rodW = xRight - xLeft;
+
+  // 左端熱源（100 °C 紅）
+  const gHot = ctx.createLinearGradient(0, 0, xLeft, 0);
+  gHot.addColorStop(0, '#c71f37');
+  gHot.addColorStop(1, '#ff4757');
+  ctx.fillStyle = gHot;
+  ctx.fillRect(0, 0, xLeft, H);
+
+  ctx.fillStyle = '#fff';
+  ctx.font = 'bold 12px system-ui';
+  ctx.textAlign = 'center';
+  ctx.fillText('100 °C', xLeft / 2, H / 2 - 10);
+  ctx.font = '11px system-ui';
+  ctx.fillText('熱源', xLeft / 2, H / 2 + 10);
+
+  // 右端冰水（0 °C 藍）
+  const gCold = ctx.createLinearGradient(xRight, 0, W, 0);
+  gCold.addColorStop(0, '#1e90ff');
+  gCold.addColorStop(1, '#0052cc');
+  ctx.fillStyle = gCold;
+  ctx.fillRect(xRight, 0, resW, H);
+
+  ctx.fillStyle = '#fff';
+  ctx.font = 'bold 12px system-ui';
+  ctx.textAlign = 'center';
+  ctx.fillText('0 °C', xRight + resW / 2, H / 2 - 10);
+  ctx.font = '11px system-ui';
+  ctx.fillText('冰水', xRight + resW / 2, H / 2 + 10);
+
+  // 繪製各根棒子
+  const numRods = state.rods.length;
+  const rowH = H / numRods;
+
+  for (let r = 0; r < numRods; r++) {
+    const m = matById(state.rods[r]);
+    if (!m) continue;
+    const T = state.T[r] || makeInitialRod();
+    const yTop = r * rowH;
+
+    // 分隔線
+    if (r > 0) {
+      ctx.strokeStyle = 'rgba(255,255,255,.07)';
+      ctx.lineWidth = 1;
+      ctx.beginPath();
+      ctx.moveTo(xLeft, yTop);
+      ctx.lineTo(xRight, yTop);
+      ctx.stroke();
+    }
+
+    // 標籤：材料名稱與 k 值
+    ctx.textAlign = 'left';
+    ctx.font = 'bold 12px system-ui';
+    ctx.fillStyle = '#ffffff';
+    ctx.fillText(`${r + 1}. ${m.name}`, xLeft + 8, yTop + 16);
+    ctx.font = '11px system-ui';
+    ctx.fillStyle = 'var(--muted)';
+    ctx.fillText(`k = ${fmtSig(m.k, 3)} W/(m·K)`, xLeft + 110, yTop + 16);
+
+    // 曲線區域與棒子區域配置
+    const plotTop = yTop + 24;
+    const plotH = Math.max(16, rowH * 0.38);
+    const plotBot = plotTop + plotH;
+
+    // 穩態參考虛線（100 -> 0 的對角直線）
+    ctx.strokeStyle = 'rgba(255,255,255,.18)';
+    ctx.setLineDash([3, 3]);
+    ctx.lineWidth = 1;
+    ctx.beginPath();
+    ctx.moveTo(xLeft, plotTop);
+    ctx.lineTo(xRight, plotBot);
+    ctx.stroke();
+    ctx.setLineDash([]);
+
+    // 繪製溫度曲線 T(x)
+    ctx.beginPath();
+    for (let i = 0; i < NODES_COUNT; i++) {
+      const px = xLeft + (i / (NODES_COUNT - 1)) * rodW;
+      const py = plotBot - (T[i] / 100) * plotH;
+      if (i === 0) ctx.moveTo(px, py);
+      else ctx.lineTo(px, py);
+    }
+    ctx.strokeStyle = '#ffce54';
+    ctx.lineWidth = 2;
+    ctx.stroke();
+
+    // 填入曲線微光
+    ctx.lineTo(xRight, plotBot);
+    ctx.lineTo(xLeft, plotBot);
+    ctx.closePath();
+    ctx.fillStyle = 'rgba(255, 206, 84, 0.08)';
+    ctx.fill();
+
+    // 橫棒主體（填色階）
+    const barTop = plotBot + 5;
+    const barH = Math.max(12, rowH * 0.3);
+    const gRod = ctx.createLinearGradient(xLeft, 0, xRight, 0);
+    for (let i = 0; i < NODES_COUNT; i++) {
+      gRod.addColorStop(i / (NODES_COUNT - 1), tempColor(T[i]));
+    }
+    ctx.fillStyle = gRod;
+    ctx.fillRect(xLeft, barTop, rodW, barH);
+
+    // 棒子外框與立體高光
+    ctx.strokeStyle = 'rgba(255,255,255,.25)';
+    ctx.lineWidth = 1;
+    ctx.strokeRect(xLeft, barTop, rodW, barH);
+
+    const gHighlight = ctx.createLinearGradient(0, barTop, 0, barTop + barH);
+    gHighlight.addColorStop(0, 'rgba(255,255,255,.28)');
+    gHighlight.addColorStop(0.4, 'rgba(255,255,255,.05)');
+    gHighlight.addColorStop(1, 'rgba(0,0,0,.35)');
+    ctx.fillStyle = gHighlight;
+    ctx.fillRect(xLeft, barTop, rodW, barH);
+  }
+}
+
+// ---- 第二畫布：k 值對數長條圖 ----
+function drawBarChart() {
+  if (!ctxBar) return;
+  const ctx = ctxBar;
+  const W = ctx._w, H = ctx._h;
+
+  ctx.fillStyle = '#060a17';
+  ctx.fillRect(0, 0, W, H);
+
+  const isNarrow = W < 500;
+  const leftM = isNarrow ? 90 : 130;
+  const rightM = isNarrow ? 85 : 120;
+  const topM = 34;
+  const botM = 30;
+  const chartW = W - leftM - rightM;
+  const chartH = H - topM - botM;
+
+  // 對數刻度範圍：0.01 到 1000（跨 5 個數量級）
+  const logMin = -2; // log10(0.01)
+  const logMax = 3;  // log10(1000)
+  const logSpan = logMax - logMin;
+
+  function xLog(val) {
+    const v = Math.max(0.01, Math.min(1000, val));
+    const t = (Math.log10(v) - logMin) / logSpan;
+    return leftM + t * chartW;
+  }
+
+  // 垂直網格與刻度標籤
+  const decades = [0.01, 0.1, 1, 10, 100, 1000];
+  ctx.textAlign = 'center';
+  ctx.font = '10px system-ui';
+
+  decades.forEach(d => {
+    const gx = xLog(d);
+    ctx.strokeStyle = 'rgba(255,255,255,.12)';
+    ctx.lineWidth = 1;
+    ctx.beginPath();
+    ctx.moveTo(gx, topM - 6);
+    ctx.lineTo(gx, topM + chartH);
+    ctx.stroke();
+
+    ctx.fillStyle = 'var(--muted)';
+    ctx.fillText(String(d), gx, topM - 12);
+  });
+
+  // 次刻度
+  for (let exp = -2; exp < 3; exp++) {
+    const base = Math.pow(10, exp);
+    for (let m = 2; m <= 9; m++) {
+      const gx = xLog(m * base);
+      ctx.strokeStyle = 'rgba(255,255,255,.04)';
+      ctx.beginPath();
+      ctx.moveTo(gx, topM);
+      ctx.lineTo(gx, topM + chartH);
+      ctx.stroke();
+    }
+  }
+
+  // 軸標題
+  ctx.fillStyle = 'var(--muted)';
+  ctx.font = '11px system-ui';
+  ctx.textAlign = 'right';
+  ctx.fillText('k 值 [W/(m·K)] →', leftM + chartW, topM - 12);
+
+  // 繪製 11 條材料長條
+  const n = MATERIALS.length;
+  const barGap = chartH / n;
+  const barThickness = Math.max(8, barGap * 0.62);
+
+  MATERIALS.forEach((m, i) => {
+    const yCenter = topM + (i + 0.5) * barGap;
+    const yBar = yCenter - barThickness / 2;
+    const bx = xLog(m.k);
+    const isSelected = state.rods.includes(m.id);
+
+    // 材料名稱
+    ctx.textAlign = 'right';
+    ctx.font = isSelected ? 'bold 12px system-ui' : '11px system-ui';
+    ctx.fillStyle = isSelected ? 'var(--accent)' : 'var(--txt)';
+    ctx.fillText(m.name, leftM - 8, yCenter + 4);
+
+    // 長條本體顏色
+    let col = '#4a69bd';
+    if (m.k >= 80) col = '#ff5470';       // 金屬導熱優良（紅）
+    else if (m.k >= 10) col = '#ff9f43';  // 不鏽鋼（橙）
+    else if (m.k >= 0.5) col = '#1dd1a1'; // 冰、水、玻璃（青綠）
+    else col = '#54a0ff';                 // 木頭、保麗龍、空氣（藍）
+
+    ctx.fillStyle = col;
+    ctx.beginPath();
+    ctx.roundRect ? ctx.roundRect(leftM, yBar, Math.max(2, bx - leftM), barThickness, 4)
+                  : ctx.fillRect(leftM, yBar, Math.max(2, bx - leftM), barThickness);
+    ctx.fill();
+
+    // 被選中標記
+    if (isSelected) {
+      ctx.strokeStyle = '#fff';
+      ctx.lineWidth = 1.5;
+      ctx.stroke();
+    }
+
+    // 數值與單位
+    ctx.textAlign = 'left';
+    ctx.font = isSelected ? 'bold 11px system-ui' : '10px system-ui';
+    ctx.fillStyle = isSelected ? '#ffffff' : 'rgba(255,255,255,.8)';
+    ctx.fillText(`${fmtSig(m.k, 3)} W/(m·K)`, bx + 6, yCenter + 4);
+  });
+}
+
+// ---- 第三區：接觸面溫度計繪製 ----
+function drawContact() {
+  const m1 = matById(state.mat1) || matById('water');
+  const m2 = matById(state.mat2) || matById('cu');
+  const Tc = contactTemp(m1, 37, m2, 20);
+  const e1 = effusivity(m1);
+  const e2 = effusivity(m2);
+
+  // 數值卡即時更新
+  const tcVal = document.getElementById('tcVal');
+  const tcDesc = document.getElementById('tcDesc');
+  if (tcVal) tcVal.textContent = `${fmtSig(Tc, 3)} °C`;
+  if (tcDesc) {
+    if (Tc < 24) {
+      tcDesc.innerHTML = `<b style="color:#6cd0ff">❄️ 冰涼感極強！</b>${m2.name} 的熱滲透率 e₂=${fmtSig(e2, 3)} 遠大於手的 e₁=${fmtSig(e1, 3)}，瞬間將介面拉向物體初溫。`;
+    } else if (Tc > 32) {
+      tcDesc.innerHTML = `<b style="color:#ffb02e">♨️ 溫和不冰！</b>${m2.name} 的 e₂=${fmtSig(e2, 3)} 很小，吸熱速率慢，接觸面維持接近體溫。`;
+    } else {
+      tcDesc.innerHTML = `微涼感受。接觸面溫度處於兩者之間。`;
+    }
+  }
+
+  if (!ctxContact) return;
+  const ctx = ctxContact;
+  const W = ctx._w, H = ctx._h;
+
+  ctx.fillStyle = '#060a17';
+  ctx.fillRect(0, 0, W, H);
+
+  // 溫度計刻度範圍：15 °C 到 40 °C
+  const tMin = 15, tMax = 40;
+  const padL = 60, padR = 60;
+  const gaugeW = W - padL - padR;
+  const gaugeY = H * 0.52;
+  const gaugeH = 22;
+
+  function xFromT(t) {
+    return padL + ((t - tMin) / (tMax - tMin)) * gaugeW;
+  }
+
+  // 溫度計漸層底色（15 藍 → 40 紅）
+  const gTherm = ctx.createLinearGradient(padL, 0, padL + gaugeW, 0);
+  for (let t = tMin; t <= tMax; t += 2) {
+    gTherm.addColorStop((t - tMin) / (tMax - tMin), tempColor((t - 15) * 4));
+  }
+  ctx.fillStyle = gTherm;
+  ctx.beginPath();
+  ctx.roundRect ? ctx.roundRect(padL, gaugeY, gaugeW, gaugeH, 11) : ctx.fillRect(padL, gaugeY, gaugeW, gaugeH);
+  ctx.fill();
+
+  ctx.strokeStyle = 'rgba(255,255,255,.3)';
+  ctx.lineWidth = 1.5;
+  ctx.stroke();
+
+  // 刻度線（15, 20, 25, 30, 35, 37, 40）
+  [15, 20, 25, 30, 35, 37, 40].forEach(t => {
+    const x = xFromT(t);
+    ctx.strokeStyle = (t === 20 || t === 37) ? '#fff' : 'rgba(255,255,255,.25)';
+    ctx.lineWidth = (t === 20 || t === 37) ? 2 : 1;
+    ctx.beginPath();
+    ctx.moveTo(x, gaugeY + gaugeH);
+    ctx.lineTo(x, gaugeY + gaugeH + 8);
+    ctx.stroke();
+
+    ctx.fillStyle = (t === 20 || t === 37) ? '#fff' : 'var(--muted)';
+    ctx.font = (t === 20 || t === 37) ? 'bold 11px system-ui' : '10px system-ui';
+    ctx.textAlign = 'center';
+    ctx.fillText(`${t}°C`, x, gaugeY + gaugeH + 20);
+  });
+
+  // 標註室溫 20 °C 與體溫 37 °C
+  const x20 = xFromT(20);
+  ctx.fillStyle = '#6cd0ff';
+  ctx.font = '11px system-ui';
+  ctx.textAlign = 'center';
+  ctx.fillText('物體室溫 20 °C', x20, gaugeY - 18);
+
+  const x37 = xFromT(37);
+  ctx.fillStyle = '#ff7a45';
+  ctx.fillText('手指體溫 37 °C', x37, gaugeY - 18);
+
+  // 指針：標示接觸面溫度 Tc
+  const xTc = xFromT(Tc);
+  ctx.fillStyle = '#ffd32a';
+  ctx.beginPath();
+  ctx.moveTo(xTc, gaugeY + gaugeH / 2);
+  ctx.lineTo(xTc - 8, gaugeY - 12);
+  ctx.lineTo(xTc + 8, gaugeY - 12);
+  ctx.closePath();
+  ctx.fill();
+  ctx.strokeStyle = '#000';
+  ctx.lineWidth = 1;
+  ctx.stroke();
+
+  // 指針標籤
+  ctx.fillStyle = '#ffd32a';
+  ctx.font = 'bold 13px system-ui';
+  ctx.textAlign = 'center';
+  ctx.fillText(`介面 Tc = ${fmtSig(Tc, 3)} °C`, xTc, gaugeY - 16);
+}
+
+// ---- 全域更新函式 refresh() ----
+function refresh() {
+  // 1. 同步長度滑桿
+  const sldL = document.getElementById('r_L');
+  const vL = document.getElementById('v_L');
+  if (sldL && sldL.value !== String(state.L)) sldL.value = state.L;
+  if (vL) vL.textContent = `${state.L} cm`;
+
+  // 2. 同步按鈕文字與狀態
+  const btnPlay = document.getElementById('btnPlay');
+  if (btnPlay) {
+    btnPlay.textContent = state.running ? '暫停' : '開始';
+    btnPlay.className = state.running ? 'pbtn on' : 'pbtn';
+  }
+
+  // 3. 同步倍速按鈕
+  document.querySelectorAll('.speed-btn').forEach(btn => {
+    const spd = parseFloat(btn.getAttribute('data-spd'));
+    if (spd === state.speed) btn.classList.add('on');
+    else btn.classList.remove('on');
+  });
+
+  // 4. 同步棒子選單
+  for (let i = 0; i < 4; i++) {
+    const sel = document.getElementById(`sel_rod_${i}`);
+    if (sel && sel.value !== state.rods[i]) sel.value = state.rods[i];
+  }
+
+  // 5. 同步第三區選單
+  const s1 = document.getElementById('sel_mat1');
+  const s2 = document.getElementById('sel_mat2');
+  if (s1 && s1.value !== state.mat1) s1.value = state.mat1;
+  if (s2 && s2.value !== state.mat2) s2.value = state.mat2;
+
+  // 6. 確保 state.T 陣列與 rods 長度相符
+  while (state.T.length < state.rods.length) {
+    state.T.push(makeInitialRod());
+  }
+
+  // 7. 更新時間顯示
+  const elTime = document.getElementById('elapsedDisplay');
+  const elHuman = document.getElementById('timeHuman');
+  if (elTime) elTime.textContent = fmtSig(state.time, 3) + ' 秒';
+  if (elHuman) elHuman.textContent = `（約 ${fmtDuration(state.time)}）`;
+
+  // 8. 即時更新公式與重畫
+  updateFormula();
+  drawSim();
+  drawBarChart();
+  drawContact();
+}
+window.refresh = refresh;
+
+// ---- 互動事件監聽綁定 ----
+document.getElementById('r_L').addEventListener('input', e => {
+  state.L = parseFloat(e.target.value);
+  refresh();
+});
+
+document.getElementById('btnPlay').addEventListener('click', () => {
+  state.running = !state.running;
+  refresh();
+});
+
+document.getElementById('btnReset').addEventListener('click', () => {
+  resetRods();
+});
+
+document.querySelectorAll('.speed-btn').forEach(btn => {
+  btn.addEventListener('click', () => {
+    state.speed = parseFloat(btn.getAttribute('data-spd'));
+    refresh();
+  });
+});
+
+// 第三區快捷按鈕
+document.getElementById('btnQuickCu').onclick = () => { state.mat2 = 'cu'; refresh(); };
+document.getElementById('btnQuickOak').onclick = () => { state.mat2 = 'oak'; refresh(); };
+document.getElementById('btnQuickEps').onclick = () => { state.mat2 = 'eps'; refresh(); };
+
+// ---- 動畫循環（使用 requestAnimationFrame） ----
+let lastTime = null;
+
+function animate(now) {
+  if (lastTime === null) lastTime = now;
+  const dtWall = Math.min((now - lastTime) / 1000, 0.05); // 限制單幀最大時間
+  lastTime = now;
+
+  if (state.running) {
+    const dtReal = dtWall * state.speed;
+    state.time += dtReal;
+
+    const L_m = state.L / 100;
+    for (let r = 0; r < state.rods.length; r++) {
+      const m = matById(state.rods[r]);
+      if (m && state.T[r]) {
+        state.T[r] = rodAdvance(state.T[r], m, L_m, dtReal, 100, 0);
+      }
+    }
+
+    // 更新時間標籤與棒子動畫
+    const elTime = document.getElementById('elapsedDisplay');
+    const elHuman = document.getElementById('timeHuman');
+    if (elTime) elTime.textContent = fmtSig(state.time, 3) + ' 秒';
+    if (elHuman) elHuman.textContent = `（約 ${fmtDuration(state.time)}）`;
+
+    drawSim();
+  }
+
+  requestAnimationFrame(animate);
+}
+
+// ---- 視窗載入與尺寸變化 ----
+window.addEventListener('load', () => {
+  populateSelects();
+  setupCanvases();
+  refresh();
+  requestAnimationFrame(animate);
+});
+
+window.addEventListener('resize', () => {
+  setupCanvases();
+  drawSim();
+  drawBarChart();
+  drawContact();
+});
+</script>
+</body>
+</html>
