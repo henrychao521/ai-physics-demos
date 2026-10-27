@@ -1,0 +1,901 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ND 減光鏡 ｜ T=10^(−OD)・減光級數・偏振片可變 ND・馬呂斯定律</title>
+<meta name="description" content="ND 減光鏡（中性密度濾鏡）與偏振片的可變 ND 比較互動模擬：光學密度 OD、穿透率 T=10^(−OD)、疊加級數、穿透光譜 T(λ)、馬呂斯定律與攝影長曝光絲絹瀑布效果。">
+<link rel="icon" href="../assets/favicon.svg" type="image/svg+xml">
+<link rel="stylesheet" href="../assets/site.css">
+<script src="../assets/sim.js"></script>
+<script defer src="../assets/nav.js"></script>
+<style>
+  *{box-sizing:border-box}
+  html,body{margin:0;padding:0;background:var(--bg,#0a0f1d);color:var(--txt,#e2ecfc);font-family:"Noto Sans TC","PingFang TC","Microsoft JhengHei",system-ui,sans-serif}
+  a{color:var(--accent,#4cc2ff);text-decoration:none}
+  a:hover{text-decoration:underline}
+  .wrap{max-width:1120px;margin:0 auto;padding:18px 16px 60px}
+  header h1{font-size:1.5rem;margin:.2em 0}
+  header p{color:var(--muted,#8ca2c4);margin:.2em 0 1em;line-height:1.6}
+  .badge{display:inline-block;background:var(--panel2,#182238);border:1px solid var(--line,rgba(140,175,255,0.18));color:var(--muted,#8ca2c4);font-size:.72rem;padding:2px 8px;border-radius:99px;margin-right:6px}
+
+  .sec-card{background:var(--panel,#101726);border:1px solid var(--line,rgba(140,175,255,0.18));border-radius:14px;padding:16px;margin-top:18px}
+  .sec-card h2{font-size:1.15rem;margin:0 0 8px;color:var(--txt,#e2ecfc);display:flex;align-items:center;gap:8px}
+  .sec-card p.desc{color:var(--muted,#8ca2c4);font-size:.86rem;line-height:1.6;margin:0 0 12px}
+
+  .canvas-box{border-radius:12px;overflow:hidden;border:1px solid var(--line,rgba(140,175,255,0.18));background:#060a14}
+  canvas{display:block;width:100%;touch-action:none}
+
+  .ctrl-bar{display:flex;gap:10px;flex-wrap:wrap;align-items:center;margin-top:12px}
+  .ctrl-group{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+  .pbtn{background:var(--panel2,#182238);color:var(--txt,#e2ecfc);border:1px solid var(--line,rgba(140,175,255,0.18));padding:8px 14px;border-radius:9px;cursor:pointer;font-size:.85rem;font-family:inherit;min-height:44px;display:inline-flex;align-items:center;justify-content:center;transition:all .15s}
+  .pbtn:hover{border-color:var(--accent,#4cc2ff);color:#fff}
+  .pbtn.on{background:var(--accent,#4cc2ff);color:#04121c;border-color:var(--accent,#4cc2ff);font-weight:700}
+  select.psel{background:var(--panel2,#182238);color:var(--txt,#e2ecfc);border:1px solid var(--line,rgba(140,175,255,0.18));padding:8px 12px;border-radius:9px;font-size:.85rem;font-family:inherit;min-height:44px}
+
+  .status-tag{background:rgba(76,194,255,0.1);border:1px solid rgba(76,194,255,0.3);color:var(--accent,#4cc2ff);padding:6px 12px;border-radius:8px;font-size:.84rem;display:inline-flex;align-items:center;gap:6px}
+
+  .bar{display:flex;gap:14px;flex-wrap:wrap;align-items:flex-end;background:var(--panel,#101726);border:1px solid var(--line,rgba(140,175,255,0.18));border-radius:14px;padding:14px 16px;margin-top:14px}
+  .sld{flex:1;min-width:180px}
+  .sld label{display:flex;justify-content:space-between;font-size:.82rem;color:var(--muted,#8ca2c4);margin-bottom:6px}
+  .sld label .v{color:var(--accent,#4cc2ff);font-variant-numeric:tabular-nums;font-weight:700}
+  .sld input[type="range"]{width:100%;height:6px;accent-color:var(--accent,#4cc2ff);cursor:pointer;margin:10px 0;min-height:24px}
+
+  .formula{background:var(--panel,#101726);border:1px solid var(--line,rgba(140,175,255,0.18));border-radius:14px;padding:14px 16px;margin-top:16px}
+  .formula h4{margin:0 0 10px;font-size:.92rem;color:var(--accent,#4cc2ff)}
+  .frow{display:flex;gap:12px;flex-wrap:wrap;padding:6px 0;border-bottom:1px solid rgba(140,175,255,0.08);align-items:center;font-size:.84rem}
+  .frow:last-child{border-bottom:none}
+  .fname{color:var(--txt,#e2ecfc);min-width:120px;font-weight:600}
+  .fsym{color:var(--accent2,#7cffb2);min-width:140px;font-family:Consolas,monospace}
+  .fsub{color:var(--muted,#8ca2c4);flex:1;min-width:160px;font-family:Consolas,monospace}
+  .fval{color:#ffcf56;font-weight:700;font-variant-numeric:tabular-nums;min-width:100px;text-align:right}
+
+  .note{background:var(--panel,#101726);border-left:3px solid var(--accent2,#7cffb2);border-radius:8px;padding:12px 14px;color:var(--muted,#8ca2c4);font-size:.86rem;line-height:1.7;margin-top:16px}
+  .note b{color:var(--txt,#e2ecfc)}
+  .note code{background:rgba(124,255,178,0.12);padding:1px 6px;border-radius:4px;color:var(--accent2,#7cffb2);font-size:.88em}
+
+  footer{color:var(--muted,#8ca2c4);font-size:.78rem;margin-top:28px;text-align:center;line-height:1.7}
+</style>
+</head>
+<body data-demo="ND 減光鏡">
+<div class="wrap">
+  <header>
+    <span class="badge">光學・偏振・攝影</span>
+    <h1>ND 減光鏡與偏振片可變 ND</h1>
+    <p><b>ND 減光鏡（中性密度濾鏡）</b>以相同比例減弱可見光各波長（維持色彩中性）；光學密度 <b>OD</b> 為對數刻度，多片疊加時 <b>OD 相加、穿透率 T 相乘</b>。兩片偏振片旋轉夾角亦可構成<b>可變 ND</b>，遵循<b>馬呂斯定律</b>。</p>
+  </header>
+
+  <!-- 第一部分：主畫布與穿透光譜 -->
+  <div class="sec-card">
+    <h2>1. ND 減光鏡（最多 3 片疊加） vs 彩色濾鏡</h2>
+    <p class="desc">白光光源發射紅、綠、藍三色光束。經過 ND 濾鏡槽時，三色<b>等比例衰減</b>（顏色不變，中性）；對照切換為「彩色濾鏡」時僅特定波段通過。右側顯示感光元件與穿透比例。</p>
+    
+    <div class="canvas-box">
+      <canvas id="cvMain" style="aspect-ratio:2.1"></canvas>
+    </div>
+
+    <div class="ctrl-bar">
+      <div class="ctrl-group">
+        <label for="selND" style="font-size:.84rem;color:var(--muted)">選擇規格：</label>
+        <select id="selND" class="psel">
+          <option value="0.3">ND2 (OD 0.3 · 減 1 級)</option>
+          <option value="0.6">ND4 (OD 0.6 · 減 2 級)</option>
+          <option value="0.9" selected>ND8 (OD 0.9 · 減 3 級)</option>
+          <option value="1.2">ND16 (OD 1.2 · 減 4 級)</option>
+          <option value="1.8">ND64 (OD 1.8 · 減 6 級)</option>
+          <option value="3.0">ND1000 (OD 3.0 · 減 10 級)</option>
+        </select>
+        <button id="btnAddND" class="pbtn">＋ 加一片濾鏡</button>
+        <button id="btnRemoveND" class="pbtn">－ 移除最後一片</button>
+        <button id="btnToggleColor" class="pbtn">換成彩色濾鏡</button>
+      </div>
+      <div id="slotStatus" class="status-tag">目前濾鏡槽：1 片</div>
+    </div>
+
+    <div style="margin-top:14px">
+      <p class="desc" style="margin-bottom:6px"><b>穿透光譜 T(λ)（400–700 nm）：</b>ND 濾鏡為平直線（各波長同 T）；彩色濾鏡為鐘形曲線（選擇性穿透）。</p>
+      <div class="canvas-box">
+        <canvas id="cvSpec" style="aspect-ratio:2.6"></canvas>
+      </div>
+      <div class="ctrl-bar">
+        <span style="font-size:.84rem;color:var(--muted)">縱軸座標：</span>
+        <button id="btnSpecLin" class="pbtn on">線性穿透率 T (0–100%)</button>
+        <button id="btnSpecOD" class="pbtn">對數光學密度 OD</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- 第二部分：兩片偏振片當可變 ND -->
+  <div class="sec-card">
+    <h2>2. 用兩片偏振片當「可變 ND」與馬呂斯定律</h2>
+    <p class="desc">非偏振光通過第一片垂直偏振片後成為垂直線偏振光（強度剩 I₀/2）；再通過夾角 θ 的第二片偏振片時，透射強度遵守<b>馬呂斯定律</b> <code>I = (I₀/2)·cos²θ</code>。旋轉角度即可連續調節透光量。</p>
+    
+    <div class="canvas-box">
+      <canvas id="cvPol" style="aspect-ratio:2.1"></canvas>
+    </div>
+
+    <div class="bar" style="margin-top:10px">
+      <div class="sld">
+        <label><span>第二片偏振片旋轉角度 θ（相對於第一片）</span><span class="v" id="vTheta">0°</span></label>
+        <input type="range" id="sldTheta" min="0" max="90" step="1" value="0">
+      </div>
+      <div class="ctrl-group">
+        <button class="pbtn" onclick="setTheta(0)">0° (最大)</button>
+        <button class="pbtn" onclick="setTheta(45)">45°</button>
+        <button class="pbtn" onclick="setTheta(60)">60°</button>
+        <button class="pbtn" onclick="setTheta(85)">85° (暗紋)</button>
+        <button class="pbtn" onclick="setTheta(90)">90° (消光)</button>
+      </div>
+    </div>
+
+    <div class="note" style="margin-top:12px;border-left-color:var(--accent)">
+      可變 ND 減光鏡就是兩片偏振片疊在一起旋轉；轉到接近 90° 時，實際產品會出現不均勻的『X 形』暗紋、顏色也不再完全中性。
+    </div>
+  </div>
+
+  <!-- 第三部分：攝影曝光補償與長曝光瀑布 -->
+  <div class="sec-card">
+    <h2>3. 攝影曝光補償與長曝光「絲絹瀑布」模擬</h2>
+    <p class="desc">在強光下欲獲得<b>長曝光</b>或<b>大光圈淺景深</b>，必須加裝 ND 鏡阻擋多餘進光量。快門時間需乘上 10^OD 才能維持相同曝光值。</p>
+
+    <div class="canvas-box">
+      <canvas id="cvWater" style="aspect-ratio:2.2"></canvas>
+    </div>
+
+    <div class="ctrl-bar">
+      <label for="selT0" style="font-size:.84rem;color:var(--muted)">基準快門時間 t₀（無濾鏡時）：</label>
+      <select id="selT0" class="psel">
+        <option value="0.001">1/1000 s</option>
+        <option value="0.002">1/500 s</option>
+        <option value="0.004">1/250 s</option>
+        <option value="0.008">1/125 s</option>
+        <option value="0.01" selected>1/100 s</option>
+        <option value="0.01667">1/60 s</option>
+        <option value="0.03333">1/30 s</option>
+        <option value="0.06667">1/15 s</option>
+        <option value="0.125">1/8 s</option>
+        <option value="0.25">1/4 s</option>
+        <option value="0.5">1/2 s</option>
+        <option value="1.0">1 s</option>
+      </select>
+      <div id="shutterResult" class="status-tag">需補償快門：1/12.5 s</div>
+    </div>
+  </div>
+
+  <!-- 計算公式面板 -->
+  <div class="formula" id="formula"></div>
+
+  <!-- 物理重點 -->
+  <div class="note">
+    <b>物理重點：</b>「中性」的意思是各波長減弱比例相同，顏色不變；OD 是對數尺度所以疊片相加；偏振片則是依振動方向篩選，線偏振光通過時遵守馬呂斯定律 I = I₀cos²θ；ND 減光鏡常見用途：白天長曝光、大光圈拍攝、拍日食要用專門的太陽濾鏡（ND 不夠安全，不可直接看太陽）。
+  </div>
+
+  <p style="margin-top:16px;font-size:.9rem"><a href="../polarization/">← 回到「偏振」</a></p>
+  <footer>純前端 HTML / Canvas 物理模擬。嚴格依光學穿透率、光學密度對數疊加與馬呂斯定律計算。</footer>
+</div>
+
+<script>
+/*PHYS:BEGIN*/
+// 有效數字格式（公式面板、數值卡共用；驗收會用同一個函式比對畫面上的數字）
+function fmtSig(v, n) {
+  n = n || 3;
+  if (typeof v !== 'number' || !isFinite(v)) return String(v);
+  if (v === 0) return '0';
+  const a = Math.abs(v);
+  if (a >= 1e5 || a < 1e-3) {
+    let e = Math.floor(Math.log10(a)), m = v / Math.pow(10, e);
+    let ms = m.toFixed(n - 1);
+    if (Math.abs(parseFloat(ms)) >= 10) { e += 1; ms = (v / Math.pow(10, e)).toFixed(n - 1); }
+    const SUP = { '-': '⁻', '0': '⁰', '1': '¹', '2': '²', '3': '³', '4': '⁴', '5': '⁵', '6': '⁶', '7': '⁷', '8': '⁸', '9': '⁹' };
+    return ms + '×10' + String(e).split('').map(ch => SUP[ch]).join('');
+  }
+  const s = Number(v.toPrecision(n));
+  return a >= Math.pow(10, n - 1) ? String(Math.round(s)) : s.toPrecision(n);
+}
+
+// ND（中性密度）減光鏡：對各波長「一樣比例」地減弱光強度。光學密度 OD 與穿透率 T：T = 10^(−OD)。
+// 攝影常用「ND 倍數」N = 1/T（ND2、ND4、ND8、ND64、ND1000），減光級數（stop）= log₂(1/T) = OD / log₁₀2。
+// 疊兩片：OD 相加、T 相乘。和偏振片不同：偏振片只讓某個振動方向通過，線偏振光通過時遵守馬呂斯定律 I = I₀·cos²θ。
+// 可變 ND（兩片偏振片）：非偏振光通過第一片剩 I₀/2，再通過夾角 θ 的第二片剩 (I₀/2)·cos²θ。
+function ndT(od) { return Math.pow(10, -od); }
+function ndOD(T) { return -Math.log10(T); }
+function ndStops(od) { return od / Math.log10(2); }
+function ndFromFactor(N) { return { T: 1 / N, od: Math.log10(N), stops: Math.log2(N) }; }
+function stackOD(ods) { const od = ods.reduce((a, b) => a + b, 0); return { od, T: ndT(od), stops: ndStops(od) }; }
+function malus(I0, thetaDeg) { const c = Math.cos(thetaDeg * Math.PI / 180); return I0 * c * c; }
+function crossedND(I0, thetaDeg) { const I = malus(I0 / 2, thetaDeg); return { I, T: I / I0, od: I > 0 ? ndOD(I / I0) : Infinity, stops: I > 0 ? Math.log2(I0 / I) : Infinity }; }
+// 曝光補償：加了 OD 的減光鏡，要維持同樣曝光量，快門時間要乘上 1/T = 10^OD
+function shutterAfter(t0, od) { return t0 * Math.pow(10, od); }
+// 穿透光譜（示意）：理想 ND 在 400–700 nm 都是同一個 T；color 濾鏡用一條高斯穿透曲線對照
+function spectrumND(od, lambdas) { return lambdas.map(() => ndT(od)); }
+function spectrumColor(center, width, lambdas) { return lambdas.map(l => Math.exp(-(((l - center) / width) ** 2))); }
+/*PHYS:END*/
+
+// 全域 State 依照規格定義
+const state = {
+  filters: [0.9],         // 濾鏡陣列，每片為 OD 值，預設 ND8 (0.9)
+  filterType: 'nd',       // 'nd' 或 'color'
+  specScale: 'linear',    // 'linear' 或 'od'
+  theta: 0,               // 偏振片夾角 0–90°
+  t0: 0.01                // 基準快門 1/100 s
+};
+window.state = state;
+
+// 畫布 Context
+let ctxMain, ctxSpec, ctxPol, ctxWater;
+const S = SIM;
+
+function setupAllCanvases() {
+  ctxMain = S.fit(document.getElementById('cvMain'), 2.1);
+  ctxSpec = S.fit(document.getElementById('cvSpec'), 2.6);
+  ctxPol = S.fit(document.getElementById('cvPol'), 2.1);
+  ctxWater = S.fit(document.getElementById('cvWater'), 2.2);
+}
+
+// 格式化快門時間
+function fmtShutter(t) {
+  if (t <= 0) return '0 s';
+  if (t < 0.75) {
+    const denom = Math.round(1 / t);
+    return `1/${denom} s`;
+  }
+  if (t < 60) return `${fmtSig(t, 3)} s`;
+  const m = Math.floor(t / 60), s = Math.round(t % 60);
+  return `${m} 分 ${s} 秒`;
+}
+
+function frow(n, sym, sub, val) {
+  return `<div class="frow"><span class="fname">${n}</span><span class="fsym">${sym}</span><span class="fsub">= ${sub}</span><span class="fval">${val}</span></div>`;
+}
+
+// ---- 公式面板更新 ----
+function updateFormula() {
+  const ods = (state.filters && Array.isArray(state.filters)) ? state.filters : [];
+  const st = stackOD(ods);
+  const cnd = crossedND(1.0, state.theta);
+  const tAft = shutterAfter(state.t0, st.od);
+
+  let html = `<h4>📐 計算公式（即時代入驗證）</h4>`;
+  
+  // 1. 每片穿透率 T = 10^(−OD)
+  const pieceStr = ods.length ? ods.map(o => `10^(−${fmtSig(o,3)})=${fmtSig(ndT(o)*100,3)}%`).join(', ') : '無濾鏡 (10⁰=100%)';
+  html += frow('單片穿透率 T', '10^(−OD)', pieceStr, ods.length ? `${fmtSig(ndT(ods[0]),3)}` : '1');
+
+  // 2. 總 OD = ΣOD
+  const sumSub = ods.length ? ods.map(o => fmtSig(o,3)).join(' + ') : '0';
+  html += frow('總光學密度 OD', 'Σ OD', sumSub, fmtSig(st.od, 3));
+
+  // 3. 總穿透率 T = ΠT (%)
+  html += frow('總穿透率 T', 'Π T = 10^(−ΣOD)', `10^(−${fmtSig(st.od,3)})`, `${fmtSig(st.T * 100, 3)} %`);
+
+  // 4. 減光級數 stops = OD / log₁₀2
+  html += frow('減光級數 (EV)', 'OD / log₁₀2', `${fmtSig(st.od,3)} / 0.3010`, `${fmtSig(st.stops, 3)} 級`);
+
+  // 5. ND 倍數 N = 1/T
+  html += frow('ND 標稱倍數 N', '1 / T', `1 / ${fmtSig(st.T,3)}`, `ND ${fmtSig(1 / (st.T || 1e-9), 3)}`);
+
+  // 6. 可變 ND（馬呂斯定律）
+  const malusVal = (cnd.T * 100);
+  html += frow('可變 ND 透光率 I', '(I₀/2)·cos²θ', `(1/2)·cos²(${fmtSig(state.theta,3)}°)`, `${fmtSig(malusVal, 3)} % I₀`);
+  html += frow('可變 ND 等效 OD', '−log₁₀(I / I₀)', `−log₁₀(${fmtSig(cnd.T,3)})`, isFinite(cnd.od) ? fmtSig(cnd.od, 3) : '∞ (消光)');
+
+  // 7. 快門時間 t = t₀ × 10^OD
+  html += frow('曝光補償快門 t', 't₀ × 10^(OD)', `${fmtSig(state.t0,3)} s × 10^(${fmtSig(st.od,3)})`, `${fmtShutter(tAft)} (${fmtSig(tAft,3)}s)`);
+
+  document.getElementById('formula').innerHTML = html;
+}
+
+// ---- 繪製主畫布（白光 -> 濾鏡槽 -> 感光元件） ----
+function drawMain() {
+  const ctx = ctxMain, W = ctx._w, H = ctx._h;
+  ctx.clearRect(0, 0, W, H);
+
+  // 背景
+  const bgGrad = ctx.createLinearGradient(0, 0, 0, H);
+  bgGrad.addColorStop(0, '#0c1224'); bgGrad.addColorStop(1, '#060a14');
+  ctx.fillStyle = bgGrad; ctx.fillRect(0, 0, W, H);
+
+  // 軌道光軸
+  const cy = H * 0.48;
+  ctx.strokeStyle = 'rgba(140,175,255,0.14)';
+  ctx.lineWidth = 1; ctx.setLineDash([4, 4]);
+  ctx.beginPath(); ctx.moveTo(20, cy); ctx.lineTo(W - 20, cy); ctx.stroke();
+  ctx.setLineDash([]);
+
+  // 左側：白光光源
+  const srcX = W * 0.09, srcR = Math.min(24, H * 0.16);
+  const srcGrad = ctx.createRadialGradient(srcX, cy, 2, srcX, cy, srcR * 1.5);
+  srcGrad.addColorStop(0, '#ffffff');
+  srcGrad.addColorStop(0.3, '#fff4d6');
+  srcGrad.addColorStop(0.7, 'rgba(255,200,100,0.4)');
+  srcGrad.addColorStop(1, 'rgba(255,200,100,0)');
+  ctx.fillStyle = srcGrad; ctx.beginPath(); ctx.arc(srcX, cy, srcR * 1.5, 0, Math.PI * 2); ctx.fill();
+
+  ctx.fillStyle = '#ffeed0'; ctx.beginPath(); ctx.arc(srcX, cy, srcR * 0.7, 0, Math.PI * 2); ctx.fill();
+  ctx.fillStyle = '#8ca2c4'; ctx.font = '12px system-ui'; ctx.textAlign = 'center';
+  ctx.fillText('白光光源', srcX, cy + srcR + 18);
+
+  // 濾鏡槽位置（最多 3 片）
+  const slotXs = [W * 0.32, W * 0.47, W * 0.62];
+  const slotW = 16, slotH = Math.min(100, H * 0.62);
+  const ods = (state.filters && Array.isArray(state.filters)) ? state.filters : [];
+
+  // 感光板位置
+  const sensorX = W * 0.82, sensorW = 14, sensorH = Math.min(110, H * 0.68);
+
+  // 計算各段光強
+  // 段 0: srcX -> slotXs[0]
+  // 段 1: slotXs[0] -> slotXs[1]
+  // 段 2: slotXs[1] -> slotXs[2]
+  // 段 3: slotXs[2] -> sensorX
+  const segXs = [srcX + srcR * 0.7, slotXs[0], slotXs[1], slotXs[2], sensorX];
+
+  // 三色波長：紅 650nm, 綠 530nm, 藍 450nm
+  const isColor = (state.filterType === 'color');
+  let cumT_R = 1.0, cumT_G = 1.0, cumT_B = 1.0;
+
+  for (let s = 0; s < 3; s++) {
+    const xStart = segXs[s], xEnd = segXs[s + 1];
+
+    // 繪製該區段的 R, G, B 三條細光束
+    drawBeamStrip(ctx, xStart, cy - 9, xEnd, cy - 9, '#ff4757', cumT_R);
+    drawBeamStrip(ctx, xStart, cy, xEnd, cy, '#2ed573', cumT_G);
+    drawBeamStrip(ctx, xStart, cy + 9, xEnd, cy + 9, '#1e90ff', cumT_B);
+
+    // 穿過第 s 片濾鏡
+    if (s < ods.length) {
+      const od = ods[s];
+      if (isColor && s === 0) {
+        // 第一片若為彩色濾鏡（綠色濾鏡）
+        const spec = spectrumColor(530, 45, [650, 530, 450]);
+        cumT_R *= spec[0];
+        cumT_G *= spec[1];
+        cumT_B *= spec[2];
+      } else {
+        const factor = ndT(od);
+        cumT_R *= factor;
+        cumT_G *= factor;
+        cumT_B *= factor;
+      }
+    }
+  }
+
+  // 最後一段（第 3 槽到感光板）
+  drawBeamStrip(ctx, segXs[3], cy - 9, segXs[4], cy - 9, '#ff4757', cumT_R);
+  drawBeamStrip(ctx, segXs[3], cy, segXs[4], cy, '#2ed573', cumT_G);
+  drawBeamStrip(ctx, segXs[3], cy + 9, segXs[4], cy + 9, '#1e90ff', cumT_B);
+
+  // 繪製濾鏡槽與濾鏡片
+  slotXs.forEach((sx, idx) => {
+    const hasFilter = idx < ods.length;
+    // 槽支架
+    ctx.strokeStyle = 'rgba(140,175,255,0.25)'; ctx.lineWidth = 1.5;
+    ctx.strokeRect(sx - slotW / 2, cy - slotH / 2, slotW, slotH);
+
+    if (hasFilter) {
+      const od = ods[idx];
+      let fillCol;
+      if (isColor && idx === 0) {
+        fillCol = 'rgba(46, 213, 115, 0.7)';
+      } else {
+        // ND 鏡：中性灰，OD 越大越深
+        const alpha = Math.min(0.85, 0.25 + od * 0.2);
+        fillCol = `rgba(18, 22, 32, ${alpha})`;
+      }
+      ctx.fillStyle = fillCol;
+      ctx.fillRect(sx - slotW / 2 + 1, cy - slotH / 2 + 1, slotW - 2, slotH - 2);
+
+      // 標籤
+      ctx.fillStyle = '#fff'; ctx.font = 'bold 12px system-ui'; ctx.textAlign = 'center';
+      const label = (isColor && idx === 0) ? '綠色濾鏡' : `ND${Math.round(1 / ndT(od))}`;
+      ctx.fillText(label, sx, cy - slotH / 2 - 10);
+      ctx.fillStyle = 'var(--accent2)'; ctx.font = '11px system-ui';
+      ctx.fillText(`OD ${fmtSig(od, 2)}`, sx, cy + slotH / 2 + 16);
+    } else {
+      ctx.fillStyle = 'rgba(140,175,255,0.4)'; ctx.font = '12px system-ui'; ctx.textAlign = 'center';
+      ctx.fillText(`槽 ${idx + 1}`, sx, cy + slotH / 2 + 16);
+      ctx.fillStyle = 'rgba(140,175,255,0.18)';
+      ctx.fillText('(空)', sx, cy + 4);
+    }
+  });
+
+  // 感光元件 (CMOS / 眼)
+  ctx.fillStyle = '#1e293b';
+  ctx.strokeStyle = '#4cc2ff'; ctx.lineWidth = 2;
+  ctx.fillRect(sensorX, cy - sensorH / 2, sensorW, sensorH);
+  ctx.strokeRect(sensorX, cy - sensorH / 2, sensorW, sensorH);
+
+  // 感光網格紋
+  ctx.strokeStyle = 'rgba(76,194,255,0.3)'; ctx.lineWidth = 1;
+  for (let gy = cy - sensorH / 2 + 8; gy < cy + sensorH / 2; gy += 10) {
+    ctx.beginPath(); ctx.moveTo(sensorX + 2, gy); ctx.lineTo(sensorX + sensorW - 2, gy); ctx.stroke();
+  }
+  ctx.fillStyle = '#8ca2c4'; ctx.font = '12px system-ui'; ctx.textAlign = 'center';
+  ctx.fillText('感光元件', sensorX + sensorW / 2, cy + sensorH / 2 + 18);
+
+  // 右側亮度長條計 (Meter)
+  const meterX = W * 0.92, meterW = 16, meterH = sensorH;
+  const totalT = (cumT_R + cumT_G + cumT_B) / 3;
+  ctx.fillStyle = 'rgba(255,255,255,0.06)';
+  ctx.fillRect(meterX, cy - meterH / 2, meterW, meterH);
+  ctx.strokeStyle = 'rgba(140,175,255,0.2)'; ctx.strokeRect(meterX, cy - meterH / 2, meterW, meterH);
+
+  // 填充亮度
+  const fillH = Math.max(2, meterH * Math.min(1.0, totalT));
+  const mGrad = ctx.createLinearGradient(0, cy + meterH / 2, 0, cy - meterH / 2);
+  mGrad.addColorStop(0, '#2ed573'); mGrad.addColorStop(0.7, '#ffcf56'); mGrad.addColorStop(1, '#ff4757');
+  ctx.fillStyle = mGrad;
+  ctx.fillRect(meterX + 1, cy + meterH / 2 - fillH, meterW - 2, fillH);
+
+  // 剩下 xx% 標籤
+  ctx.fillStyle = '#ffcf56'; ctx.font = 'bold 12px system-ui'; ctx.textAlign = 'left';
+  ctx.fillText(`剩下`, meterX - 10, cy - meterH / 2 - 18);
+  ctx.fillText(`${fmtSig(totalT * 100, 3)}%`, meterX - 18, cy - meterH / 2 - 5);
+}
+
+function drawBeamStrip(ctx, x1, y, x2, y2, color, trans) {
+  if (trans <= 1e-4) return;
+  ctx.save();
+  ctx.strokeStyle = color;
+  ctx.globalAlpha = Math.min(1.0, Math.max(0.08, trans));
+  ctx.lineWidth = Math.max(1.8, 4 * Math.sqrt(trans));
+  ctx.beginPath(); ctx.moveTo(x1, y); ctx.lineTo(x2, y2); ctx.stroke();
+  ctx.restore();
+}
+
+// ---- 繪製穿透光譜 T(λ)（400–700 nm） ----
+function drawSpectrum() {
+  const ctx = ctxSpec, W = ctx._w, H = ctx._h;
+  ctx.clearRect(0, 0, W, H);
+
+  // 留邊距
+  const padL = 60, padR = 24, padT = 24, padB = 42;
+  const gw = W - padL - padR, gh = H - padT - padB;
+
+  // 背景網格
+  ctx.fillStyle = '#080d1a'; ctx.fillRect(padL, padT, gw, gh);
+  ctx.strokeStyle = 'rgba(140,175,255,0.12)'; ctx.lineWidth = 1;
+
+  const isLinear = (state.specScale === 'linear');
+  const ods = (state.filters && Array.isArray(state.filters)) ? state.filters : [];
+  const totOD = stackOD(ods).od;
+
+  // 縱軸格線
+  ctx.fillStyle = '#8ca2c4'; ctx.font = '11px system-ui'; ctx.textAlign = 'right';
+  if (isLinear) {
+    for (let p = 0; p <= 100; p += 25) {
+      const y = padT + gh * (1 - p / 100);
+      ctx.beginPath(); ctx.moveTo(padL, y); ctx.lineTo(padL + gw, y); ctx.stroke();
+      ctx.fillText(`${p}%`, padL - 8, y + 4);
+    }
+  } else {
+    // OD 對數座標 (0 到 3.0)
+    for (let odVal = 0; odVal <= 3.0; odVal += 1.0) {
+      const y = padT + gh * (odVal / 3.0); // 0 在上方或下方皆可，這裡 0 在頂端 (高穿透)，3 在底端
+      ctx.beginPath(); ctx.moveTo(padL, y); ctx.lineTo(padL + gw, y); ctx.stroke();
+      ctx.fillText(`OD ${odVal.toFixed(1)}`, padL - 8, y + 4);
+    }
+  }
+
+  // 橫軸波長標籤 (400 to 700 nm)
+  const lMin = 400, lMax = 700;
+  ctx.textAlign = 'center';
+  for (let l = 400; l <= 700; l += 50) {
+    const x = padL + gw * ((l - lMin) / (lMax - lMin));
+    ctx.strokeStyle = 'rgba(140,175,255,0.12)';
+    ctx.beginPath(); ctx.moveTo(x, padT); ctx.lineTo(x, padT + gh); ctx.stroke();
+    ctx.fillText(`${l}nm`, x, padT + gh + 16);
+  }
+
+  // 波長彩虹條（底部）
+  const rBarH = 6;
+  const gradRainbow = ctx.createLinearGradient(padL, 0, padL + gw, 0);
+  gradRainbow.addColorStop(0.0, '#782eff'); // 400
+  gradRainbow.addColorStop(0.18, '#1e70ff'); // 450
+  gradRainbow.addColorStop(0.35, '#00d084'); // 500
+  gradRainbow.addColorStop(0.55, '#2ecc71'); // 550
+  gradRainbow.addColorStop(0.72, '#f1c40f'); // 600
+  gradRainbow.addColorStop(0.88, '#e67e22'); // 650
+  gradRainbow.addColorStop(1.0, '#e74c3c'); // 700
+  ctx.fillStyle = gradRainbow;
+  ctx.fillRect(padL, padT + gh + 22, gw, rBarH);
+
+  // 計算曲線
+  const N_PTS = 150;
+  const lambdas = [];
+  for (let i = 0; i <= N_PTS; i++) {
+    lambdas.push(lMin + (i / N_PTS) * (lMax - lMin));
+  }
+
+  // 1. ND 濾鏡光譜 (平直)
+  const ndCurve = spectrumND(totOD, lambdas);
+
+  ctx.lineWidth = 3;
+  ctx.strokeStyle = '#4cc2ff';
+  ctx.beginPath();
+  lambdas.forEach((l, i) => {
+    const x = padL + gw * ((l - lMin) / (lMax - lMin));
+    const val = ndCurve[i];
+    let y;
+    if (isLinear) {
+      y = padT + gh * (1 - Math.max(0, Math.min(1, val)));
+    } else {
+      const curOD = Math.min(3.0, ndOD(Math.max(1e-4, val)));
+      y = padT + gh * (curOD / 3.0);
+    }
+    if (i === 0) ctx.moveTo(x, y); else ctx.lineTo(x, y);
+  });
+  ctx.stroke();
+
+  // 若切換為彩色濾鏡，繪製綠色濾鏡鐘形曲線
+  if (state.filterType === 'color') {
+    const colCurve = spectrumColor(530, 45, lambdas);
+    ctx.lineWidth = 2.5;
+    ctx.strokeStyle = '#2ed573';
+    ctx.setLineDash([5, 4]);
+    ctx.beginPath();
+    lambdas.forEach((l, i) => {
+      const x = padL + gw * ((l - lMin) / (lMax - lMin));
+      const val = colCurve[i];
+      let y;
+      if (isLinear) {
+        y = padT + gh * (1 - Math.max(0, Math.min(1, val)));
+      } else {
+        const curOD = Math.min(3.0, ndOD(Math.max(1e-3, val)));
+        y = padT + gh * (curOD / 3.0);
+      }
+      if (i === 0) ctx.moveTo(x, y); else ctx.lineTo(x, y);
+    });
+    ctx.stroke();
+    ctx.setLineDash([]);
+  }
+
+  // 圖例說明
+  ctx.font = '12px system-ui'; ctx.textAlign = 'left';
+  ctx.fillStyle = '#4cc2ff';
+  ctx.fillText(`— ND 減光鏡（平直中性直線，OD=${fmtSig(totOD, 2)}）`, padL + 12, padT + 20);
+  if (state.filterType === 'color') {
+    ctx.fillStyle = '#2ed573';
+    ctx.fillText(`-- 彩色濾鏡（高斯鐘形穿透，中心 530nm）`, padL + 12, padT + 38);
+  }
+}
+
+// ---- 繪製偏振片可變 ND 畫布 ----
+function drawPolarizer() {
+  const ctx = ctxPol, W = ctx._w, H = ctx._h;
+  ctx.clearRect(0, 0, W, H);
+
+  const bgGrad = ctx.createLinearGradient(0, 0, 0, H);
+  bgGrad.addColorStop(0, '#0c1224'); bgGrad.addColorStop(1, '#060a14');
+  ctx.fillStyle = bgGrad; ctx.fillRect(0, 0, W, H);
+
+  // 左半邊：光學系統模擬；右半邊：馬呂斯定律曲線
+  const benchW = W * 0.58;
+  const cy = H * 0.48;
+
+  // 1. 非偏振光源
+  const srcX = benchW * 0.12;
+  ctx.fillStyle = '#ffeed0'; ctx.beginPath(); ctx.arc(srcX, cy, 14, 0, Math.PI * 2); ctx.fill();
+  ctx.fillStyle = '#8ca2c4'; ctx.font = '11px system-ui'; ctx.textAlign = 'center';
+  ctx.fillText('非偏振光', srcX, cy + 32);
+
+  // 非偏振光振動箭頭（星狀）
+  ctx.strokeStyle = '#ffcf56'; ctx.lineWidth = 1.2;
+  for (let a = 0; a < Math.PI; a += Math.PI / 4) {
+    const dx = Math.cos(a) * 16, dy = Math.sin(a) * 16;
+    ctx.beginPath(); ctx.moveTo(srcX + dx, cy + dy); ctx.lineTo(srcX - dx, cy - dy); ctx.stroke();
+  }
+
+  // 第一片偏振片（垂直軸 0°）
+  const pol1X = benchW * 0.38, polR = Math.min(38, H * 0.28);
+  drawPolarizerDisc(ctx, pol1X, cy, polR, 0, '固定垂直軸 (0°)');
+
+  // 中間光束（垂直偏振）
+  ctx.strokeStyle = 'rgba(76,194,255,0.7)'; ctx.lineWidth = 3;
+  ctx.beginPath(); ctx.moveTo(srcX + 18, cy); ctx.lineTo(pol1X - polR, cy); ctx.stroke();
+  ctx.beginPath(); ctx.moveTo(pol1X + polR, cy); ctx.lineTo(benchW * 0.68 - polR, cy); ctx.stroke();
+
+  // 垂直振動向量
+  const midX = (pol1X + benchW * 0.68) / 2;
+  ctx.strokeStyle = '#4cc2ff'; ctx.lineWidth = 2;
+  ctx.beginPath(); ctx.moveTo(midX, cy - 14); ctx.lineTo(midX, cy + 14); ctx.stroke();
+
+  // 第二片可轉偏振片
+  const pol2X = benchW * 0.68;
+  drawPolarizerDisc(ctx, pol2X, cy, polR, state.theta, `旋轉軸 θ=${state.theta}°`);
+
+  // 出射光與馬呂斯結果
+  const cnd = crossedND(1.0, state.theta);
+  const outX = benchW * 0.94;
+  ctx.strokeStyle = `rgba(124,255,178, ${Math.max(0.08, cnd.T)})`;
+  ctx.lineWidth = Math.max(1, 4 * Math.sqrt(cnd.T));
+  ctx.beginPath(); ctx.moveTo(pol2X + polR, cy); ctx.lineTo(outX, cy); ctx.stroke();
+
+  // 受光屏 / 視窗
+  ctx.fillStyle = '#101726'; ctx.strokeStyle = 'rgba(140,175,255,0.3)'; ctx.lineWidth = 1.5;
+  ctx.beginPath(); ctx.arc(outX, cy, 22, 0, Math.PI * 2); ctx.fill(); ctx.stroke();
+
+  // 繪製光斑亮度與十字暗紋（接近 90° 時呈現 X 紋）
+  const spotGrad = ctx.createRadialGradient(outX, cy, 2, outX, cy, 20);
+  const br = Math.min(1.0, cnd.T * 2);
+  spotGrad.addColorStop(0, `rgba(255,255,255,${br * 0.9})`);
+  spotGrad.addColorStop(1, `rgba(76,194,255,${br * 0.15})`);
+  ctx.fillStyle = spotGrad; ctx.beginPath(); ctx.arc(outX, cy, 20, 0, Math.PI * 2); ctx.fill();
+
+  if (state.theta >= 75) {
+    // 示意大角度下的 X 暗紋瑕疵
+    const xAlpha = (state.theta - 75) / 15 * 0.75;
+    ctx.strokeStyle = `rgba(10, 14, 24, ${xAlpha})`; ctx.lineWidth = 5;
+    ctx.beginPath();
+    ctx.moveTo(outX - 16, cy - 16); ctx.lineTo(outX + 16, cy + 16);
+    ctx.moveTo(outX + 16, cy - 16); ctx.lineTo(outX - 16, cy + 16);
+    ctx.stroke();
+    ctx.fillStyle = '#ff4757'; ctx.font = '10px system-ui'; ctx.textAlign = 'center';
+    ctx.fillText('X 暗紋', outX, cy + 34);
+  }
+
+  // ----------------- 右半邊：馬呂斯定律曲線 -----------------
+  const gLeft = benchW + 36, gRight = W - 24, gTop = 32, gBottom = H - 36;
+  const gw = gRight - gLeft, gh = gBottom - gTop;
+
+  // 曲線座標框
+  ctx.fillStyle = '#080d1a'; ctx.fillRect(gLeft, gTop, gw, gh);
+  ctx.strokeStyle = 'rgba(140,175,255,0.14)'; ctx.lineWidth = 1;
+  ctx.strokeRect(gLeft, gTop, gw, gh);
+
+  // 曲線坐標軸標籤
+  ctx.fillStyle = '#8ca2c4'; ctx.font = '11px system-ui'; ctx.textAlign = 'right';
+  ctx.fillText('50% I₀', gLeft - 6, gTop + 10);
+  ctx.fillText('25%', gLeft - 6, gTop + gh * 0.5 + 4);
+  ctx.fillText('0', gLeft - 6, gBottom);
+
+  ctx.textAlign = 'center';
+  ctx.fillText('0°', gLeft, gBottom + 16);
+  ctx.fillText('45°', gLeft + gw * 0.5, gBottom + 16);
+  ctx.fillText('90°', gRight, gBottom + 16);
+  ctx.fillText('偏振片夾角 θ', gLeft + gw * 0.5, gBottom + 28);
+
+  // 馬呂斯曲線 (I₀/2)·cos²θ
+  ctx.strokeStyle = '#7cffb2'; ctx.lineWidth = 2.5;
+  ctx.beginPath();
+  for (let th = 0; th <= 90; th += 1) {
+    const x = gLeft + gw * (th / 90);
+    const Ifrac = 0.5 * Math.pow(Math.cos(th * Math.PI / 180), 2); // 最大為 0.5
+    const y = gTop + gh * (1 - Ifrac / 0.5);
+    if (th === 0) ctx.moveTo(x, y); else ctx.lineTo(x, y);
+  }
+  ctx.stroke();
+
+  // 當前角度指示點
+  const curX = gLeft + gw * (state.theta / 90);
+  const curIfrac = 0.5 * Math.pow(Math.cos(state.theta * Math.PI / 180), 2);
+  const curY = gTop + gh * (1 - curIfrac / 0.5);
+
+  ctx.strokeStyle = 'rgba(255,207,86,0.6)'; ctx.setLineDash([3, 3]);
+  ctx.beginPath(); ctx.moveTo(curX, gBottom); ctx.lineTo(curX, curY); ctx.lineTo(gLeft, curY); ctx.stroke();
+  ctx.setLineDash([]);
+
+  ctx.fillStyle = '#ffcf56'; ctx.beginPath(); ctx.arc(curX, curY, 5, 0, Math.PI * 2); ctx.fill();
+  ctx.font = 'bold 11px system-ui'; ctx.textAlign = 'left';
+  ctx.fillText(`${fmtSig(cnd.T * 100, 3)}%`, curX + 8, curY - 4);
+}
+
+function drawPolarizerDisc(ctx, cx, cy, r, angleDeg, label) {
+  // 鏡框
+  ctx.fillStyle = 'rgba(20, 28, 48, 0.7)';
+  ctx.strokeStyle = '#4cc2ff'; ctx.lineWidth = 2;
+  ctx.beginPath(); ctx.arc(cx, cy, r, 0, Math.PI * 2); ctx.fill(); ctx.stroke();
+
+  // 格線表示偏振透射軸
+  ctx.save();
+  ctx.translate(cx, cy);
+  ctx.rotate(angleDeg * Math.PI / 180);
+  ctx.strokeStyle = 'rgba(76,194,255,0.4)'; ctx.lineWidth = 1.2;
+  for (let x = -r + 8; x <= r - 8; x += 10) {
+    const len = Math.sqrt(Math.max(0, r * r - x * x));
+    ctx.beginPath(); ctx.moveTo(x, -len); ctx.lineTo(x, len); ctx.stroke();
+  }
+  // 透射軸主箭頭
+  ctx.strokeStyle = '#ffcf56'; ctx.lineWidth = 2;
+  ctx.beginPath(); ctx.moveTo(0, -r + 4); ctx.lineTo(0, r - 4); ctx.stroke();
+  ctx.restore();
+
+  ctx.fillStyle = '#8ca2c4'; ctx.font = '11px system-ui'; ctx.textAlign = 'center';
+  ctx.fillText(label, cx, cy + r + 18);
+}
+
+// ---- 第三部分：長曝光瀑布動畫模擬 ----
+let waterAnimId;
+const waterLines = [];
+const N_WATER = 90;
+for (let i = 0; i < N_WATER; i++) {
+  waterLines.push({
+    x: 0.25 + Math.random() * 0.5,
+    y: Math.random(),
+    speed: 0.008 + Math.random() * 0.015,
+    len: 0.05 + Math.random() * 0.12,
+    alpha: 0.3 + Math.random() * 0.6
+  });
+}
+
+function animWaterfall() {
+  drawWaterfallScene();
+  waterAnimId = requestAnimationFrame(animWaterfall);
+}
+
+function drawWaterfallScene() {
+  const ctx = ctxWater, W = ctx._w, H = ctx._h;
+  ctx.clearRect(0, 0, W, H);
+
+  // 背景：深色峽谷岩壁
+  const rockGrad = ctx.createLinearGradient(0, 0, W, 0);
+  rockGrad.addColorStop(0, '#0a0d16');
+  rockGrad.addColorStop(0.2, '#151d2d');
+  rockGrad.addColorStop(0.5, '#0e1422');
+  rockGrad.addColorStop(0.8, '#151d2d');
+  rockGrad.addColorStop(1, '#0a0d16');
+  ctx.fillStyle = rockGrad; ctx.fillRect(0, 0, W, H);
+
+  // 當前快門時間
+  const ods = (state.filters && Array.isArray(state.filters)) ? state.filters : [];
+  const totOD = stackOD(ods).od;
+  const tAft = shutterAfter(state.t0, totOD);
+
+  // 長曝光強度 (0: 瞬間定格水珠 -> 1: 絲絹水流)
+  // 當 t >= 0.5s 時呈現完全絲絹化
+  const blurFactor = Math.min(1.0, Math.max(0, Math.log10(tAft / 0.005) / 2.5));
+
+  const fallX = W * 0.32, fallW = W * 0.36;
+
+  // 繪製瀑布水體基底
+  if (blurFactor > 0.15) {
+    // 絲絹狀漸層底流
+    const silkGrad = ctx.createLinearGradient(0, 0, 0, H);
+    silkGrad.addColorStop(0, `rgba(220, 245, 255, ${blurFactor * 0.45})`);
+    silkGrad.addColorStop(0.5, `rgba(180, 230, 255, ${blurFactor * 0.6})`);
+    silkGrad.addColorStop(1, `rgba(220, 245, 255, ${blurFactor * 0.5})`);
+    ctx.fillStyle = silkGrad;
+    ctx.fillRect(fallX, 10, fallW, H - 35);
+  }
+
+  // 流動水線 / 水珠
+  waterLines.forEach(l => {
+    l.y += l.speed;
+    if (l.y > 1.0) { l.y = 0; l.x = 0.25 + Math.random() * 0.5; }
+
+    const px = fallX + (l.x - 0.25) * (fallW / 0.5);
+    const py = l.y * (H - 40);
+
+    if (blurFactor < 0.3) {
+      // 短快門：離散水珠顆粒
+      ctx.fillStyle = `rgba(255, 255, 255, ${l.alpha})`;
+      ctx.beginPath(); ctx.arc(px, py, 1.8, 0, Math.PI * 2); ctx.fill();
+    } else {
+      // 長曝光：拉長的半透明絲狀光軌
+      const trail = l.len * H * (1 + blurFactor * 4);
+      const strGrad = ctx.createLinearGradient(px, py - trail, px, py);
+      strGrad.addColorStop(0, 'rgba(255, 255, 255, 0)');
+      strGrad.addColorStop(1, `rgba(240, 250, 255, ${l.alpha * (0.3 + blurFactor * 0.5)})`);
+      ctx.strokeStyle = strGrad;
+      ctx.lineWidth = 1.2 + blurFactor * 2.5;
+      ctx.beginPath(); ctx.moveTo(px, Math.max(0, py - trail)); ctx.lineTo(px, py); ctx.stroke();
+    }
+  });
+
+  // 底部水潭與雲霧波浪
+  const poolGrad = ctx.createLinearGradient(0, H - 40, 0, H);
+  poolGrad.addColorStop(0, 'rgba(20, 35, 60, 0.7)');
+  poolGrad.addColorStop(1, '#080d18');
+  ctx.fillStyle = poolGrad; ctx.fillRect(0, H - 40, W, 40);
+
+  // 水氣瀰漫
+  const mistA = 0.15 + blurFactor * 0.45;
+  ctx.fillStyle = `rgba(200, 235, 255, ${mistA})`;
+  ctx.beginPath(); ctx.ellipse(W * 0.5, H - 28, fallW * 0.75, 18, 0, 0, Math.PI * 2); ctx.fill();
+
+  // 視窗資訊浮水標籤
+  ctx.fillStyle = 'rgba(8, 12, 22, 0.75)';
+  ctx.strokeStyle = 'rgba(140,175,255,0.25)'; ctx.lineWidth = 1;
+  ctx.fillRect(16, 16, 260, 48); ctx.strokeRect(16, 16, 260, 48);
+
+  ctx.fillStyle = '#ffcf56'; ctx.font = 'bold 12px system-ui'; ctx.textAlign = 'left';
+  ctx.fillText(`快門：${fmtShutter(tAft)}（補償 +${fmtSig(ndStops(totOD), 2)} EV）`, 26, 35);
+  ctx.fillStyle = '#8ca2c4'; ctx.font = '11px system-ui';
+  ctx.fillText(blurFactor > 0.4 ? '📷 長曝光效果：流水柔化成絲絹狀' : '📷 高速快門效果：水珠清晰定格', 26, 52);
+}
+
+// ---- 全域更新函式 refresh() ----
+function refresh() {
+  // 防呆與規格一致
+  if (!state.filters || !Array.isArray(state.filters)) state.filters = [0.9];
+  if (typeof state.theta !== 'number') state.theta = 0;
+  if (typeof state.t0 !== 'number') state.t0 = 0.01;
+
+  // 更新 DOM 狀態文字
+  const ods = state.filters;
+  const st = stackOD(ods);
+  document.getElementById('slotStatus').textContent = `濾鏡槽：${ods.length}/3 片 (總 OD ${fmtSig(st.od, 2)})`;
+  document.getElementById('vTheta').textContent = `${state.theta}°`;
+
+  const tAft = shutterAfter(state.t0, st.od);
+  document.getElementById('shutterResult').textContent = `需補償快門：${fmtShutter(tAft)}`;
+
+  // 同步按鈕樣式
+  document.getElementById('btnToggleColor').textContent = (state.filterType === 'color') ? '換回 ND 濾鏡' : '換成彩色濾鏡';
+  document.getElementById('btnToggleColor').classList.toggle('on', state.filterType === 'color');
+  document.getElementById('btnSpecLin').classList.toggle('on', state.specScale === 'linear');
+  document.getElementById('btnSpecOD').classList.toggle('on', state.specScale === 'od');
+
+  const sldTh = document.getElementById('sldTheta');
+  if (sldTh && parseFloat(sldTh.value) !== state.theta) sldTh.value = state.theta;
+
+  // 更新各區塊
+  updateFormula();
+  drawMain();
+  drawSpectrum();
+  drawPolarizer();
+}
+
+// 供按鈕調用
+function setTheta(th) {
+  state.theta = th;
+  refresh();
+}
+
+// 事件綁定
+window.addEventListener('load', () => {
+  setupAllCanvases();
+
+  // 1. ND 濾鏡操作
+  document.getElementById('btnAddND').addEventListener('click', () => {
+    if (state.filters.length >= 3) return;
+    const sel = parseFloat(document.getElementById('selND').value);
+    state.filters.push(sel);
+    refresh();
+  });
+
+  document.getElementById('btnRemoveND').addEventListener('click', () => {
+    if (state.filters.length > 0) {
+      state.filters.pop();
+      refresh();
+    }
+  });
+
+  document.getElementById('btnToggleColor').addEventListener('click', () => {
+    state.filterType = (state.filterType === 'color' ? 'nd' : 'color');
+    refresh();
+  });
+
+  // 2. 光譜座標切換
+  document.getElementById('btnSpecLin').addEventListener('click', () => {
+    state.specScale = 'linear';
+    refresh();
+  });
+  document.getElementById('btnSpecOD').addEventListener('click', () => {
+    state.specScale = 'od';
+    refresh();
+  });
+
+  // 3. 偏振片角度滑桿
+  document.getElementById('sldTheta').addEventListener('input', (e) => {
+    state.theta = parseFloat(e.target.value);
+    refresh();
+  });
+
+  // 4. 攝影快門選單
+  document.getElementById('selT0').addEventListener('change', (e) => {
+    state.t0 = parseFloat(e.target.value);
+    refresh();
+  });
+
+  refresh();
+  animWaterfall();
+});
+
+window.addEventListener('resize', () => {
+  setupAllCanvases();
+  refresh();
+});
+</script>
+</body>
+</html>
