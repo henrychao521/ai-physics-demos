@@ -1,0 +1,1046 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>史特靈引擎 ｜ 等溫＋等容循環・回熱器・與卡諾效率比較</title>
+<meta name="description" content="史特靈引擎互動模擬：β 型史特靈引擎剖面動畫（配氣活塞、動力活塞、回熱器）、等溫與等容四衝程循環、P-V 圖、熱量與功長條圖、回熱器效率與卡諾效率比較、施密特分析。">
+<link rel="icon" href="../assets/favicon.svg" type="image/svg+xml">
+<link rel="stylesheet" href="../assets/site.css">
+<script src="../assets/sim.js"></script>
+<script defer src="../assets/nav.js"></script>
+<style>
+  *{box-sizing:border-box}
+  html,body{margin:0;padding:0;background:var(--bg,#080a18);color:var(--txt,#e2e8f0);font-family:"Noto Sans TC","PingFang TC","Microsoft JhengHei",system-ui,sans-serif;font-size:15px}
+  a{color:var(--accent,#00e5a3);text-decoration:none}
+  a:hover{text-decoration:underline}
+  .wrap{max-width:1120px;margin:0 auto;padding:18px 16px 60px}
+  header h1{font-size:1.5rem;margin:.2em 0}
+  header p{color:var(--muted,#94a3b8);margin:.2em 0 1em;line-height:1.6}
+  .badge{display:inline-block;background:var(--panel2,#18223d);border:1px solid var(--line,rgba(160,180,255,.2));color:var(--muted,#94a3b8);font-size:12px;padding:4px 10px;border-radius:99px;margin-right:6px}
+
+  .sim-grid{display:grid;grid-template-columns:1.15fr 1fr;gap:14px;align-items:start}
+  @media(max-width:860px){.sim-grid{grid-template-columns:1fr}}
+
+  .card{background:var(--panel,#12182b);border:1px solid var(--line,rgba(160,180,255,.18));border-radius:14px;overflow:hidden;box-shadow:0 12px 36px rgba(0,0,0,.4);margin-bottom:14px}
+  .card-head{padding:10px 14px;background:var(--panel2,#18223d);border-bottom:1px solid var(--line,rgba(160,180,255,.12));font-size:14px;font-weight:700;color:var(--txt,#f1f5f9);display:flex;justify-content:space-between;align-items:center}
+  .card-status{padding:9px 13px;background:rgba(8,10,24,.65);border-top:1px solid var(--line,rgba(160,180,255,.12));font-size:13px;color:#c9d6ea;line-height:1.5}
+  canvas{display:block;width:100%;touch-action:none}
+
+  .btn-bar{display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-top:14px}
+  .pbtn{background:var(--panel2,#18223d);color:var(--txt,#e2e8f0);border:1px solid var(--line,rgba(160,180,255,.25));padding:10px 16px;border-radius:9px;cursor:pointer;font-size:14px;font-family:inherit;min-height:44px;display:inline-flex;align-items:center;justify-content:center;transition:all .18s ease}
+  .pbtn:hover{border-color:var(--accent,#00e5a3);color:#fff}
+  .pbtn.on{background:var(--accent,#00e5a3);color:#04121c;border-color:var(--accent,#00e5a3);font-weight:700}
+
+  .bar{display:flex;gap:14px;flex-wrap:wrap;align-items:flex-end;background:var(--panel,#12182b);border:1px solid var(--line,rgba(160,180,255,.18));border-radius:14px;padding:14px 16px;margin-top:14px}
+  .sld{flex:1;min-width:160px}
+  .sld label{display:flex;justify-content:space-between;font-size:13px;color:var(--muted,#94a3b8);margin-bottom:6px}
+  .sld label .v{color:var(--accent,#00e5a3);font-variant-numeric:tabular-nums;font-weight:700}
+  .sld input{width:100%;accent-color:var(--accent,#00e5a3);height:24px;cursor:pointer}
+
+  .formula{background:var(--panel,#12182b);border:1px solid var(--line,rgba(160,180,255,.18));border-radius:14px;padding:16px;margin-top:14px}
+  .formula h4{margin:0 0 12px;font-size:15px;color:var(--txt,#f1f5f9)}
+  .frow{display:flex;flex-wrap:wrap;align-items:baseline;gap:8px 12px;padding:8px 0;border-bottom:1px dashed rgba(160,180,255,.14);font-size:13px}
+  .frow:last-of-type{border-bottom:none}
+  .fname{font-weight:700;color:#a5b4fc;min-width:140px}
+  .fsym{font-family:"Courier New",Courier,monospace;color:#fca5a5;font-weight:600}
+  .fsub{color:var(--muted,#94a3b8);flex:1;min-width:180px}
+  .fval{font-weight:700;color:var(--accent,#00e5a3);font-variant-numeric:tabular-nums}
+  .frel{margin-top:12px;padding-top:10px;border-top:1px solid var(--line,rgba(160,180,255,.18));color:var(--muted,#94a3b8);font-size:13px;line-height:1.6}
+  .frel b{color:var(--txt,#f1f5f9)}
+
+  .note{background:var(--panel,#12182b);border-left:3px solid var(--accent2,#38bdf8);border-radius:8px;padding:14px 16px;color:var(--muted,#94a3b8);font-size:13px;line-height:1.75;margin-top:14px}
+  .note b{color:var(--txt,#f1f5f9)}
+  .note code{background:rgba(255,255,255,.07);padding:2px 6px;border-radius:5px;color:var(--green,#4ade80);font-size:.86em}
+  .note ul{margin:8px 0 0;padding-left:20px}
+  .note li{margin-bottom:8px}
+
+  footer{color:var(--muted,#94a3b8);font-size:12px;margin-top:26px;text-align:center;line-height:1.8}
+  .back-nav{margin-top:18px;text-align:center;font-size:14px}
+</style>
+</head>
+<body data-demo="史特靈引擎">
+<div class="wrap">
+  <header>
+    <span class="badge">熱學・熱機</span>
+    <h1>史特靈引擎（等溫＋等容循環・回熱器・卡諾效率）</h1>
+    <p>史特靈引擎（Stirling Engine）是閉循環外部加熱熱機。汽缸內鬆配合的<b>配氣活塞</b>把同一團氣體在<b>熱端</b>與<b>冷端</b>之間推移，
+       底部的<b>動力活塞</b>對外做功，兩者以 90° 相位差連動。配氣通道中的<b>回熱器（Regenerator）</b>能在等容降溫時儲存熱量、等容升溫時原封不動釋回，使理想循環熱效率達到<b>卡諾極限</b>！</p>
+  </header>
+
+  <div class="sim-grid">
+    <div class="card">
+      <div class="card-head">
+        <span>⚙️ β 型史特靈引擎剖面運作模擬</span>
+        <span id="badgeMode" style="font-size:12px;color:var(--accent,#00e5a3)">理想四段循環</span>
+      </div>
+      <canvas id="scene" style="aspect-ratio:1.2"></canvas>
+      <div class="card-status" id="engineStatus">載入中...</div>
+    </div>
+
+    <div>
+      <div class="card">
+        <div class="card-head">
+          <span>📈 P–V 狀態圖與熱力學循環</span>
+          <span style="font-size:12px;color:#fca5a5">閉合循環做功</span>
+        </div>
+        <canvas id="cvPV" style="aspect-ratio:1.35"></canvas>
+      </div>
+
+      <div class="card">
+        <div class="card-head">
+          <span>📊 能量流動與熱效率比較</span>
+          <span style="font-size:12px;color:#7dd3fc">η vs 卡諾效率</span>
+        </div>
+        <canvas id="cvBar" style="aspect-ratio:1.35"></canvas>
+      </div>
+    </div>
+  </div>
+
+  <div class="btn-bar">
+    <button id="btnIdeal" class="pbtn on">理想循環</button>
+    <button id="btnCrank" class="pbtn">正弦曲柄（施密特分析）</button>
+    <button id="btnPlay" class="pbtn">暫停</button>
+    <button id="btnRegen" class="pbtn on">回熱器 開／關</button>
+  </div>
+
+  <div class="bar" id="sliders"></div>
+
+  <div class="formula" id="formula"></div>
+
+  <div class="note">
+    <b>物理重點：</b>
+    <ul>
+      <li><b>為什麼需要配氣活塞（Displacer）？</b> 史特靈引擎為閉循環外部加熱熱機，固定質量的氣體完全封閉於氣缸內。配氣活塞與氣缸壁為鬆配合，本身不密封也不對外做功，其核心功能為<b>把同一團工作氣體在熱端（加熱區）與冷端（散熱區）之間來回推送</b>，讓氣體週期性地交替吸收高溫熱量與排放低溫熱量。</li>
+      <li><b>回熱器（Regenerator）如何達成卡諾效率？</b> 2→3 等容降溫過程，氣體通過細金屬網格回熱器，將顯熱 <code>Qv = nCv(Th−Tc)</code> 暫存於網格中；4→1 等容升溫過程，氣體逆向流經回熱器，再將儲存的熱量完全拿回來。因此在理想回熱（ε=1）下，<b>引擎只在 1→2 等溫膨脹向外界熱源吸熱、3→4 等溫壓縮向低溫熱庫放熱</b>，完全避開了非等溫熱交換造成的不可逆熵增，故<b>理論效率恰等於卡諾極限 1 − Tc/Th</b>！</li>
+      <li><b>實際引擎與卡諾極限的差距：</b> 真實史特靈引擎的活塞由曲軸連續驅動（如施密特等溫分析），氣體無法在容積極值處瞬間停頓，使得 P–V 曲線角鈍化為平滑圓環；加上熱交換時間有限、工作氣體流動阻力與機構摩擦損失，其實際運轉效率遠低於卡諾效率。</li>
+      <li><b>熱力學第二定律的根本限制：</b> 克耳文－普朗克表述指出，不可能製造出一種循環運作的熱機，只自單一熱庫吸熱並完全轉變為對外做功而不留下任何其他影響。因此<b>熱不能完全轉成功</b>，引擎必須持續向冷端散熱放熱，冷端散熱片是熱機運作不可或缺的條件。</li>
+    </ul>
+  </div>
+
+  <div class="back-nav">
+    <a href="../heat-engine/">← 回到「熱機・卡諾循環」</a>
+  </div>
+
+  <footer>純前端 HTML5 / Canvas 模擬。依據熱力學理想史特靈循環與施密特等溫理論精確計算。</footer>
+</div>
+
+<script>
+/*PHYS:BEGIN*/
+// 有效數字格式（公式面板、數值卡共用；驗收會用同一個函式比對畫面上的數字）
+function fmtSig(v, n) {
+  n = n || 3;
+  if (typeof v !== 'number' || !isFinite(v)) return String(v);
+  if (v === 0) return '0';
+  const a = Math.abs(v);
+  if (a >= 1e5 || a < 1e-3) {
+    let e = Math.floor(Math.log10(a)), m = v / Math.pow(10, e);
+    let ms = m.toFixed(n - 1);
+    if (Math.abs(parseFloat(ms)) >= 10) { e += 1; ms = (v / Math.pow(10, e)).toFixed(n - 1); }
+    const SUP = { '-': '⁻', '0': '⁰', '1': '¹', '2': '²', '3': '³', '4': '⁴', '5': '⁵', '6': '⁶', '7': '⁷', '8': '⁸', '9': '⁹' };
+    return ms + '×10' + String(e).split('').map(ch => SUP[ch]).join('');
+  }
+  const s = Number(v.toPrecision(n));
+  return a >= Math.pow(10, n - 1) ? String(Math.round(s)) : s.toPrecision(n);
+}
+
+// 史特靈引擎。(1) 理想史特靈循環：兩條等溫線＋兩條等容線，n 莫耳理想氣體。
+//   1→2 Th 等溫膨脹（Vmin→Vmax）吸熱 nR·Th·ln r，2→3 Vmax 等容降溫（熱交給回熱器），
+//   3→4 Tc 等溫壓縮放熱 nR·Tc·ln r，4→1 Vmin 等容升溫（從回熱器拿回熱）。r = Vmax/Vmin。
+//   淨功 W = nR(Th−Tc)ln r。回熱器效率 ε（0–1）：等容兩段的熱 Qv = n·Cv·(Th−Tc) 有 ε 由回熱器內部交換，其餘 (1−ε)Qv 要由熱源補。
+//   ε = 1 時效率 = 1 − Tc/Th（等於卡諾效率）。
+// (2) 正弦曲柄的 β 型引擎（配氣活塞領先動力活塞 90°）用施密特等溫分析：熱腔、冷腔各自等溫、全機壓力相同。
+const R_GAS = 8.314462618;
+function stirlingIdeal(p) {   // p = {n, Th, Tc, Vmin, Vmax, cvR（Cv 以 R 為單位：單原子 1.5、雙原子 2.5）, regen（0–1）}
+  const r = p.Vmax / p.Vmin, L = Math.log(r), n = p.n, Cv = p.cvR * R_GAS;
+  const W12 = n * R_GAS * p.Th * L, W34 = -n * R_GAS * p.Tc * L, Qv = n * Cv * (p.Th - p.Tc);
+  const W = W12 + W34, Qh = W12 + (1 - p.regen) * Qv, Qc = -W34 + (1 - p.regen) * Qv;
+  const states = [{ V: p.Vmin, T: p.Th }, { V: p.Vmax, T: p.Th }, { V: p.Vmax, T: p.Tc }, { V: p.Vmin, T: p.Tc }]
+    .map(s => ({ V: s.V, T: s.T, P: n * R_GAS * s.T / s.V }));
+  return { W, Qh, Qc, Qv, Qregen: p.regen * Qv, eta: W / Qh, etaCarnot: 1 - p.Tc / p.Th, states };
+}
+// 理想循環動畫：s ∈ [0,4) 依序為四段。displacer：1＝氣體在熱端、0＝氣體在冷端；V、T、P 為當下狀態。
+function idealPhase(s, p) {
+  s = ((s % 4) + 4) % 4; const seg = Math.floor(s), x = s - seg, r = p.Vmax / p.Vmin;
+  let V, T, displacer;
+  if (seg === 0) { V = p.Vmin * Math.pow(r, x); T = p.Th; displacer = 1; }
+  else if (seg === 1) { V = p.Vmax; T = p.Th + (p.Tc - p.Th) * x; displacer = 1 - x; }
+  else if (seg === 2) { V = p.Vmax * Math.pow(r, -x); T = p.Tc; displacer = 0; }
+  else { V = p.Vmin; T = p.Tc + (p.Th - p.Tc) * x; displacer = x; }
+  return { seg, V, T, P: p.n * R_GAS * T / V, displacer, piston: (V - p.Vmin) / (p.Vmax - p.Vmin) };
+}
+// 施密特分析：g = {VD 配氣活塞掃過體積, VP 動力活塞掃過體積, Vdh 熱端死體積, Vdc 冷端死體積, Vr 回熱器體積}，θ 曲柄角（弧度）
+function schmidtVolumes(theta, g) {
+  const Vh = g.Vdh + g.VD / 2 * (1 - Math.cos(theta));
+  const Vc = g.Vdc + g.VD / 2 * (1 + Math.cos(theta)) + g.VP / 2 * (1 - Math.cos(theta - Math.PI / 2));
+  return { Vh, Vc, V: Vh + Vc + g.Vr };
+}
+function schmidtP(theta, g, n, Th, Tc) {
+  const v = schmidtVolumes(theta, g), Tr = (Th - Tc) / Math.log(Th / Tc);   // 回熱器取對數平均溫度
+  return n * R_GAS / (v.Vh / Th + v.Vc / Tc + g.Vr / Tr);
+}
+function schmidtWork(g, n, Th, Tc, steps) {   // ∮P dV（梯形法），曲柄角增加的方向
+  const N = steps || 720; let W = 0;
+  for (let i = 0; i < N; i++) {
+    const a = 2 * Math.PI * i / N, b = 2 * Math.PI * (i + 1) / N;
+    W += 0.5 * (schmidtP(a, g, n, Th, Tc) + schmidtP(b, g, n, Th, Tc)) * (schmidtVolumes(b, g).V - schmidtVolumes(a, g).V);
+  }
+  return W;
+}
+/*PHYS:END*/
+
+const state = {
+  mode: 'ideal',     // 'ideal' 理想循環 | 'crank' 正弦曲柄
+  running: true,
+  Th: 600,           // 熱端溫度 350–900 K
+  Tc: 300,           // 冷端溫度 250–400 K
+  ratio: 2,          // 壓縮比 Vmax/Vmin 1.2–4
+  regen: 1,          // 回熱器效率 0–1
+  gas: 'mono',       // 'mono' 氦 cvR=1.5 | 'di' 空氣 cvR=2.5
+  speed: 1           // 動畫速度
+};
+window.state = state;
+
+const N_IDEAL = 0.05;      // 0.05 mol
+const V_MIN = 1e-4;        // 1×10⁻⁴ m³
+const G_SCHMIDT = { VD: 1e-4, VP: 1e-4, Vdh: 2e-5, Vdc: 2e-5, Vr: 1e-5 };
+const N_SCHMIDT = 0.01;    // 0.01 mol
+
+const slidersDef = [
+  { id: 'Th', name: '熱端溫度 Th', min: 350, max: 900, step: 10, unit: 'K' },
+  { id: 'Tc', name: '冷端溫度 Tc', min: 250, max: 400, step: 10, unit: 'K' },
+  { id: 'ratio', name: '壓縮比 (Vmax/Vmin)', min: 1.2, max: 4, step: 0.1, unit: '' },
+  { id: 'regen', name: '回熱器效率 ε', min: 0, max: 1, step: 0.05, unit: '' },
+  { id: 'speed', name: '動畫播放速度', min: 0.2, max: 3, step: 0.1, unit: '×' }
+];
+
+let animId = null;
+let lastTimestamp = 0;
+let phaseS = 0;
+let crankTheta = 0;
+
+let ctxEngine = null, ctxPV = null, ctxBar = null;
+const S = window.SIM || {
+  fit: function(cv, aspect) {
+    cv.style.width = '100%';
+    const dpr = window.devicePixelRatio || 1;
+    const w = cv.parentElement ? cv.parentElement.clientWidth : 500;
+    const h = Math.round(w / (aspect || 1.3));
+    cv.width = Math.round(w * dpr);
+    cv.height = Math.round(h * dpr);
+    cv.style.height = h + 'px';
+    const ctx = cv.getContext('2d');
+    ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+    ctx._w = w; ctx._h = h; ctx._dpr = dpr;
+    return ctx;
+  }
+};
+
+function buildSliders() {
+  const container = document.getElementById('sliders');
+  container.innerHTML = '';
+
+  slidersDef.forEach(s => {
+    const div = document.createElement('div');
+    div.className = 'sld';
+    div.innerHTML = `
+      <label>
+        <span>${s.name}</span>
+        <span class="v" id="v_${s.id}">${state[s.id]}${s.unit ? ' ' + s.unit : ''}</span>
+      </label>
+      <input type="range" id="r_${s.id}" min="${s.min}" max="${s.max}" step="${s.step}" value="${state[s.id]}">
+    `;
+    container.appendChild(div);
+
+    div.querySelector('input').addEventListener('input', e => {
+      state[s.id] = parseFloat(e.target.value);
+      refresh();
+    });
+  });
+
+  const gasDiv = document.createElement('div');
+  gasDiv.className = 'sld';
+  gasDiv.innerHTML = `
+    <label>
+      <span>工作氣體</span>
+      <span class="v" id="v_gas">${state.gas === 'di' ? '雙原子 (空氣)' : '單原子 (氦)'}</span>
+    </label>
+    <div style="display:flex;gap:6px">
+      <button type="button" id="btnGasMono" class="pbtn on" style="flex:1;min-height:36px;padding:4px 6px">單原子 (He)</button>
+      <button type="button" id="btnGasDi" class="pbtn" style="flex:1;min-height:36px;padding:4px 6px">雙原子 (空氣)</button>
+    </div>
+  `;
+  container.appendChild(gasDiv);
+
+  document.getElementById('btnGasMono').addEventListener('click', () => { state.gas = 'mono'; refresh(); });
+  document.getElementById('btnGasDi').addEventListener('click', () => { state.gas = 'di'; refresh(); });
+}
+
+function frow(name, sym, sub, val) {
+  return `<div class="frow"><span class="fname">${name}</span><span class="fsym">${sym}</span><span class="fsub">= ${sub}</span><span class="fval">${val}</span></div>`;
+}
+
+function refresh() {
+  if (state.Th <= state.Tc) {
+    state.Th = state.Tc + 10;
+  }
+
+  slidersDef.forEach(s => {
+    const inp = document.getElementById('r_' + s.id);
+    if (inp && parseFloat(inp.value) !== state[s.id]) inp.value = state[s.id];
+    const valEl = document.getElementById('v_' + s.id);
+    if (valEl) {
+      if (s.id === 'regen') {
+        valEl.textContent = fmtSig(state.regen, 3) + ' (' + Math.round(state.regen * 100) + ' %)';
+      } else {
+        valEl.textContent = fmtSig(state[s.id], 3) + (s.unit ? ' ' + s.unit : '');
+      }
+    }
+  });
+
+  const btnMono = document.getElementById('btnGasMono');
+  const btnDi = document.getElementById('btnGasDi');
+  const vGas = document.getElementById('v_gas');
+  if (state.gas === 'di') {
+    if (btnDi) btnDi.classList.add('on');
+    if (btnMono) btnMono.classList.remove('on');
+    if (vGas) vGas.textContent = '雙原子 (空氣 cv=2.5R)';
+  } else {
+    state.gas = 'mono';
+    if (btnMono) btnMono.classList.add('on');
+    if (btnDi) btnDi.classList.remove('on');
+    if (vGas) vGas.textContent = '單原子 (氦 cv=1.5R)';
+  }
+
+  const btnIdeal = document.getElementById('btnIdeal');
+  const btnCrank = document.getElementById('btnCrank');
+  const btnPlay = document.getElementById('btnPlay');
+  const btnRegen = document.getElementById('btnRegen');
+  const badgeMode = document.getElementById('badgeMode');
+
+  if (state.mode === 'crank') {
+    if (btnCrank) btnCrank.classList.add('on');
+    if (btnIdeal) btnIdeal.classList.remove('on');
+    if (badgeMode) badgeMode.textContent = '正弦曲柄・施密特分析';
+  } else {
+    state.mode = 'ideal';
+    if (btnIdeal) btnIdeal.classList.add('on');
+    if (btnCrank) btnCrank.classList.remove('on');
+    if (badgeMode) badgeMode.textContent = '理想等溫等容循環';
+  }
+
+  if (btnPlay) btnPlay.textContent = state.running ? '暫停' : '播放';
+  if (btnRegen) {
+    if (state.regen >= 0.5) btnRegen.classList.add('on'); else btnRegen.classList.remove('on');
+  }
+
+  const cvR = state.gas === 'di' ? 2.5 : 1.5;
+  const pIdeal = {
+    n: N_IDEAL,
+    Th: state.Th,
+    Tc: state.Tc,
+    Vmin: V_MIN,
+    Vmax: V_MIN * state.ratio,
+    cvR: cvR,
+    regen: state.regen
+  };
+  const resIdeal = stirlingIdeal(pIdeal);
+  const resIdeal0 = stirlingIdeal({ ...pIdeal, regen: 0 });
+  const W_schmidt = schmidtWork(G_SCHMIDT, N_SCHMIDT, state.Th, state.Tc, 180);
+
+  updateFormula(resIdeal, resIdeal0, pIdeal, W_schmidt);
+
+  drawEngine();
+  drawPV();
+  drawBar();
+}
+
+function updateFormula(res, res0, p, W_schmidt) {
+  const r = state.ratio;
+  const n = p.n;
+  const W12 = n * R_GAS * state.Th * Math.log(r);
+  const W34_abs = n * R_GAS * state.Tc * Math.log(r);
+  const Qv = res.Qv;
+  const eps = state.regen;
+
+  let html = `<h4>📐 計算公式（即時代入，工作氣體 n = ${fmtSig(n,3)} mol，R = 8.314 J/(mol·K)，Cv = ${fmtSig(p.cvR,3)}R）</h4>`;
+
+  html += frow(
+    '淨做功 W',
+    'nR(Th − Tc) ln r',
+    `${fmtSig(n, 3)} · 8.314 · (${state.Th} − ${state.Tc}) · ln(${fmtSig(r, 3)})`,
+    `${fmtSig(res.W, 3)} J`
+  );
+
+  html += frow(
+    '高溫吸熱 Qh',
+    'nRTh ln r + (1 − ε)nCv(Th − Tc)',
+    `${fmtSig(W12, 3)} + (1 − ${fmtSig(eps, 3)}) · ${fmtSig(Qv, 3)}`,
+    `${fmtSig(res.Qh, 3)} J`
+  );
+
+  html += frow(
+    '低溫放熱 Qc',
+    'nRTc ln r + (1 − ε)nCv(Th − Tc)',
+    `${fmtSig(W34_abs, 3)} + (1 − ${fmtSig(eps, 3)}) · ${fmtSig(Qv, 3)}`,
+    `${fmtSig(res.Qc, 3)} J`
+  );
+
+  html += frow(
+    '熱效率 η',
+    'W / Qh',
+    `${fmtSig(res.W, 3)} / ${fmtSig(res.Qh, 3)}`,
+    `${fmtSig(res.eta * 100, 3)} %`
+  );
+
+  html += frow(
+    '卡諾極限 η_Carnot',
+    '1 − Tc / Th',
+    `1 − ${state.Tc} / ${state.Th}`,
+    `${fmtSig(res.etaCarnot * 100, 3)} %`
+  );
+
+  html += `<div class="frel">
+    💡 <b>回熱器定理：</b>當 <b>ε = 1（完美回熱）</b>時，等容降溫放出的熱量 <code>Qv = ${fmtSig(Qv, 3)} J</code> 全部被回熱器內部吸收並於等容升溫時完整釋回，氣體僅在等溫段與外界熱源交換熱量，因此 <b>ε=1（完美回熱）時 η 等於卡諾效率</b>（${fmtSig(res.etaCarnot * 100, 3)} %）。當 ε < 1 時，回熱不足部分必須由熱源額外供熱補償，使 η 降至 ${fmtSig(res.eta * 100, 3)} %（若無回熱器 ε=0 則僅 ${fmtSig(res0.eta * 100, 3)} %）。
+    <br>⚙️ <b>正弦曲柄模式施密特做功：</b><code>W_schmidt = ${fmtSig(W_schmidt, 3)} J</code>（活塞連續運動無法在極值處瞬間停留，P–V 環鈍化，包圍面積比同溫差理想循環小）。
+  </div>`;
+
+  document.getElementById('formula').innerHTML = html;
+}
+
+function setupCanvases() {
+  const cvE = document.getElementById('scene');
+  const cvP = document.getElementById('cvPV');
+  const cvB = document.getElementById('cvBar');
+
+  if (cvE) ctxEngine = S.fit(cvE, 1.25);
+  if (cvP) ctxPV = S.fit(cvP, 1.35);
+  if (cvB) ctxBar = S.fit(cvB, 1.35);
+}
+
+function animLoop(timestamp) {
+  if (!lastTimestamp) lastTimestamp = timestamp;
+  const dt = Math.min((timestamp - lastTimestamp) / 1000, 0.1);
+  lastTimestamp = timestamp;
+
+  if (state.running) {
+    if (state.mode === 'ideal') {
+      phaseS = (phaseS + dt * state.speed * 0.75) % 4;
+    } else {
+      crankTheta = (crankTheta + dt * state.speed * 2.4) % (Math.PI * 2);
+    }
+  }
+
+  drawEngine();
+  drawPV();
+
+  animId = requestAnimationFrame(animLoop);
+}
+
+function drawEngine() {
+  if (!ctxEngine) return;
+  const ctx = ctxEngine, W = ctx._w, H = ctx._h;
+
+  ctx.fillStyle = '#080d1a';
+  ctx.fillRect(0, 0, W, H);
+
+  const cx = W * 0.40;
+  const cylR = Math.min(W * 0.15, 50);
+  const cyTop = 28;
+  const cylH = Math.min(H * 0.54, 240);
+  const cyBot = cyTop + cylH;
+
+  const cvR = state.gas === 'di' ? 2.5 : 1.5;
+  const pIdeal = { n: N_IDEAL, Th: state.Th, Tc: state.Tc, Vmin: V_MIN, Vmax: V_MIN * state.ratio, cvR, regen: state.regen };
+
+  let dispFrac, pistonFrac, currP, currV, currT, phaseName = '', flowDir = 0;
+
+  if (state.mode === 'ideal') {
+    const ph = idealPhase(phaseS, pIdeal);
+    dispFrac = ph.displacer;
+    pistonFrac = ph.piston;
+    currP = ph.P; currV = ph.V; currT = ph.T;
+    const segNames = [
+      '衝程 1 → 2：等溫膨脹（熱端吸熱，動力活塞下行做功）',
+      '衝程 2 → 3：等容降溫（配氣活塞下推，氣體經回熱器放熱至冷端）',
+      '衝程 3 → 4：等溫壓縮（外力對冷氣體做功，動力活塞上行）',
+      '衝程 4 → 1：等容升溫（配氣活塞上推，氣體經回熱器吸熱回熱端）'
+    ];
+    phaseName = segNames[ph.seg];
+    if (ph.seg === 1) flowDir = 1;
+    else if (ph.seg === 3) flowDir = -1;
+  } else {
+    const vols = schmidtVolumes(crankTheta, G_SCHMIDT);
+    dispFrac = (vols.Vh - G_SCHMIDT.Vdh) / G_SCHMIDT.VD;
+    dispFrac = Math.max(0, Math.min(1, dispFrac));
+    pistonFrac = 0.5 * (1 - Math.cos(crankTheta - Math.PI / 2));
+    currP = schmidtP(crankTheta, G_SCHMIDT, N_SCHMIDT, state.Th, state.Tc);
+    currV = vols.V;
+    currT = (state.Th + state.Tc) / 2;
+    phaseName = `正弦曲柄模式：曲柄角 θ = ${Math.round((crankTheta * 180 / Math.PI) % 360)}°（配氣活塞領先動力活塞 90°）`;
+    flowDir = Math.sin(crankTheta) > 0 ? -1 : 1;
+  }
+
+  const statusEl = document.getElementById('engineStatus');
+  if (statusEl) {
+    statusEl.innerHTML = `<b>${phaseName}</b><br>全機壓力 P = <code>${fmtSig(currP / 1e3, 3)} kPa</code> ｜ 氣缸容積 V = <code>${fmtSig(currV * 1e6, 3)} cm³</code>`;
+  }
+
+  const hotH = cylH * 0.40;
+  const gHot = ctx.createLinearGradient(0, cyTop, 0, cyTop + hotH);
+  gHot.addColorStop(0, 'rgba(255, 60, 30, 0.28)');
+  gHot.addColorStop(1, 'rgba(255, 60, 30, 0.04)');
+  ctx.fillStyle = gHot;
+  ctx.fillRect(cx - cylR - 10, cyTop - 8, cylR * 2 + 20, hotH + 8);
+
+  ctx.strokeStyle = '#ff5470';
+  ctx.lineWidth = 2.5;
+  for (let y = cyTop + 4; y < cyTop + hotH - 12; y += 12) {
+    ctx.beginPath();
+    ctx.arc(cx - cylR - 6, y, 4, -Math.PI / 2, Math.PI / 2);
+    ctx.stroke();
+  }
+  ctx.fillStyle = '#ff6b81';
+  ctx.font = 'bold 12px system-ui';
+  ctx.fillText('🔥 熱端 (Th=' + state.Th + ' K)', cx - cylR - 8, cyTop - 12);
+
+  const coldY = cyTop + hotH;
+  const coldH = cylH - hotH;
+  ctx.fillStyle = 'rgba(56, 189, 248, 0.12)';
+  ctx.fillRect(cx - cylR - 8, coldY, cylR * 2 + 16, coldH);
+
+  ctx.fillStyle = '#38bdf8';
+  for (let fy = coldY + 8; fy < cyBot - 6; fy += 14) {
+    ctx.fillRect(cx - cylR - 16, fy, 14, 4);
+    ctx.fillRect(cx + cylR + 2, fy, 14, 4);
+  }
+  ctx.fillStyle = '#7dd3fc';
+  ctx.font = 'bold 12px system-ui';
+  ctx.fillText('❄️ 冷端 (Tc=' + state.Tc + ' K)', cx - cylR - 8, cyBot + 16);
+
+  const regX = cx + cylR + 22;
+  const regW = Math.min(W * 0.07, 20);
+  const regTop = cyTop + 12;
+  const regBot = cyBot - 16;
+
+  ctx.strokeStyle = 'rgba(180, 200, 240, 0.45)';
+  ctx.lineWidth = 4;
+  ctx.beginPath();
+  ctx.moveTo(cx + cylR, regTop + 6); ctx.lineTo(regX, regTop + 6);
+  ctx.moveTo(cx + cylR, regBot - 6); ctx.lineTo(regX, regBot - 6);
+  ctx.stroke();
+
+  const gReg = ctx.createLinearGradient(0, regTop, 0, regBot);
+  gReg.addColorStop(0, '#ff4d4d');
+  gReg.addColorStop(0.5, '#eab308');
+  gReg.addColorStop(1, '#38bdf8');
+  ctx.fillStyle = gReg;
+  ctx.fillRect(regX, regTop, regW, regBot - regTop);
+
+  ctx.strokeStyle = 'rgba(0, 0, 0, 0.35)';
+  ctx.lineWidth = 1;
+  for (let my = regTop; my < regBot; my += 5) {
+    ctx.beginPath(); ctx.moveTo(regX, my); ctx.lineTo(regX + regW, my + 3); ctx.stroke();
+    ctx.beginPath(); ctx.moveTo(regX, my + 3); ctx.lineTo(regX + regW, my); ctx.stroke();
+  }
+  ctx.strokeStyle = 'rgba(255, 255, 255, 0.4)';
+  ctx.strokeRect(regX, regTop, regW, regBot - regTop);
+
+  if (flowDir !== 0) {
+    ctx.fillStyle = '#ffffff';
+    const arrowOffset = (Date.now() / 250) % 1;
+    for (let k = 0; k < 3; k++) {
+      let ay = regTop + 15 + ((k + (flowDir > 0 ? arrowOffset : (1 - arrowOffset))) % 3) * ((regBot - regTop - 30) / 3);
+      ctx.beginPath();
+      if (flowDir > 0) {
+        ctx.moveTo(regX + regW / 2, ay + 6);
+        ctx.lineTo(regX + 3, ay); ctx.lineTo(regX + regW - 3, ay);
+      } else {
+        ctx.moveTo(regX + regW / 2, ay - 6);
+        ctx.lineTo(regX + 3, ay); ctx.lineTo(regX + regW - 3, ay);
+      }
+      ctx.closePath();
+      ctx.fill();
+    }
+  }
+
+  ctx.strokeStyle = 'rgba(255, 255, 255, 0.6)';
+  ctx.lineWidth = 2.5;
+  ctx.beginPath();
+  ctx.moveTo(cx - cylR, cyTop); ctx.lineTo(cx - cylR, cyBot);
+  ctx.moveTo(cx + cylR, cyTop); ctx.lineTo(cx + cylR, cyBot);
+  ctx.stroke();
+
+  ctx.fillStyle = '#475569';
+  ctx.fillRect(cx - cylR - 4, cyTop - 6, (cylR + 4) * 2, 8);
+
+  const dispH = Math.min(cylH * 0.28, 52);
+  const dispTravel = Math.min(cylH * 0.22, 42);
+  const dispY = cyTop + 14 + dispFrac * dispTravel;
+
+  const pwrH = 24;
+  const pwrTravel = Math.min(cylH * 0.20, 38);
+  const pwrY = cyTop + 14 + dispH + dispTravel + 16 + pistonFrac * pwrTravel;
+
+  const seed = 42;
+  function rand(i) { const x = Math.sin(seed + i * 9.1) * 10000; return x - Math.floor(x); }
+
+  const hotChamberH = Math.max(8, dispY - cyTop);
+  ctx.fillStyle = '#ff6b6b';
+  for (let i = 0; i < 28; i++) {
+    const px = cx - cylR + 6 + rand(i) * (cylR * 2 - 12);
+    const py = cyTop + 4 + rand(i + 30) * (hotChamberH - 8) + (Math.sin(Date.now() / 80 + i) * 2);
+    ctx.beginPath(); ctx.arc(px, py, 2.2, 0, Math.PI * 2); ctx.fill();
+  }
+
+  const coldChamberH = Math.max(8, pwrY - (dispY + dispH));
+  ctx.fillStyle = '#38bdf8';
+  for (let i = 0; i < 28; i++) {
+    const px = cx - cylR + 6 + rand(i + 60) * (cylR * 2 - 12);
+    const py = (dispY + dispH) + 4 + rand(i + 90) * (coldChamberH - 8) + (Math.sin(Date.now() / 160 + i) * 1);
+    ctx.beginPath(); ctx.arc(px, py, 2.2, 0, Math.PI * 2); ctx.fill();
+  }
+
+  ctx.fillStyle = '#64748b';
+  ctx.fillRect(cx - cylR + 4, dispY, (cylR - 4) * 2, dispH);
+  ctx.strokeStyle = '#94a3b8';
+  ctx.lineWidth = 1.5;
+  ctx.strokeRect(cx - cylR + 4, dispY, (cylR - 4) * 2, dispH);
+
+  ctx.strokeStyle = '#cbd5e1';
+  ctx.lineWidth = 2.5;
+  ctx.beginPath();
+  ctx.moveTo(cx, dispY + dispH);
+  ctx.lineTo(cx, cyBot + 24);
+  ctx.stroke();
+
+  ctx.fillStyle = '#334155';
+  ctx.fillRect(cx - cylR + 1, pwrY, (cylR - 1) * 2, pwrH);
+  ctx.strokeStyle = '#38bdf8';
+  ctx.lineWidth = 2;
+  ctx.strokeRect(cx - cylR + 1, pwrY, (cylR - 1) * 2, pwrH);
+
+  ctx.strokeStyle = 'rgba(0, 0, 0, 0.5)';
+  ctx.lineWidth = 1.5;
+  ctx.beginPath();
+  ctx.moveTo(cx - cylR + 1, pwrY + 8); ctx.lineTo(cx + cylR - 1, pwrY + 8);
+  ctx.moveTo(cx - cylR + 1, pwrY + 16); ctx.lineTo(cx + cylR - 1, pwrY + 16);
+  ctx.stroke();
+
+  const flyX = cx;
+  const flyY = Math.min(cyBot + 65, H - 42);
+  const flyR = Math.min(W * 0.12, 36);
+  const flyAngle = state.mode === 'ideal' ? phaseS * (Math.PI / 2) : crankTheta;
+
+  ctx.strokeStyle = '#475569';
+  ctx.lineWidth = 4;
+  ctx.beginPath(); ctx.arc(flyX, flyY, flyR, 0, Math.PI * 2); ctx.stroke();
+  ctx.fillStyle = 'rgba(30, 41, 59, 0.7)';
+  ctx.fill();
+
+  ctx.strokeStyle = 'rgba(148, 163, 184, 0.4)';
+  ctx.lineWidth = 2;
+  for (let k = 0; k < 4; k++) {
+    const fa = flyAngle + k * Math.PI / 2;
+    ctx.beginPath();
+    ctx.moveTo(flyX, flyY);
+    ctx.lineTo(flyX + Math.cos(fa) * flyR, flyY + Math.sin(fa) * flyR);
+    ctx.stroke();
+  }
+
+  const pinD_ang = flyAngle;
+  const pinP_ang = flyAngle - Math.PI / 2;
+  const pinDx = flyX + flyR * 0.65 * Math.cos(pinD_ang);
+  const pinDy = flyY + flyR * 0.65 * Math.sin(pinD_ang);
+  const pinPx = flyX + flyR * 0.85 * Math.cos(pinP_ang);
+  const pinPy = flyY + flyR * 0.85 * Math.sin(pinP_ang);
+
+  ctx.strokeStyle = '#38bdf8';
+  ctx.lineWidth = 3.5;
+  ctx.beginPath();
+  ctx.moveTo(cx, pwrY + pwrH);
+  ctx.lineTo(pinPx, pinPy);
+  ctx.stroke();
+
+  ctx.strokeStyle = '#e2e8f0';
+  ctx.lineWidth = 2;
+  ctx.beginPath();
+  ctx.moveTo(cx, cyBot + 24);
+  ctx.lineTo(pinDx, pinDy);
+  ctx.stroke();
+
+  ctx.fillStyle = '#ffb02e';
+  ctx.beginPath(); ctx.arc(pinPx, pinPy, 4, 0, Math.PI * 2); ctx.fill();
+  ctx.fillStyle = '#94a3b8';
+  ctx.beginPath(); ctx.arc(pinDx, pinDy, 3.5, 0, Math.PI * 2); ctx.fill();
+  ctx.fillStyle = '#cbd5e1';
+  ctx.beginPath(); ctx.arc(flyX, flyY, 5, 0, Math.PI * 2); ctx.fill();
+
+  ctx.font = '12px system-ui';
+
+  ctx.fillStyle = '#eab308';
+  ctx.fillText('回熱器 (細網格)', regX - 10, regTop - 6);
+
+  ctx.fillStyle = '#cbd5e1';
+  const tagDispY = Math.max(cyTop + 36, dispY + dispH / 2);
+  ctx.fillText('配氣活塞：把氣體在熱端與冷端之間推來推去', cx - cylR - 10, tagDispY - 14);
+  ctx.strokeStyle = 'rgba(203, 213, 225, 0.4)';
+  ctx.lineWidth = 1;
+  ctx.beginPath();
+  ctx.moveTo(cx - cylR - 10, tagDispY - 8);
+  ctx.lineTo(cx - cylR + 6, dispY + dispH / 2);
+  ctx.stroke();
+
+  ctx.fillStyle = '#38bdf8';
+  const tagPwrY = Math.max(cyTop + cylH * 0.72, pwrY + pwrH / 2);
+  ctx.fillText('動力活塞：對外做功', cx - cylR - 10, tagPwrY + 14);
+  ctx.strokeStyle = 'rgba(56, 189, 248, 0.4)';
+  ctx.beginPath();
+  ctx.moveTo(cx - cylR - 10, tagPwrY + 8);
+  ctx.lineTo(cx - cylR + 4, pwrY + pwrH / 2);
+  ctx.stroke();
+
+  ctx.fillStyle = '#94a3b8';
+  ctx.fillText('曲軸飛輪 (配氣活塞領先 90°)', flyX + flyR + 8, flyY + 4);
+}
+
+function drawPV() {
+  if (!ctxPV) return;
+  const ctx = ctxPV, W = ctx._w, H = ctx._h;
+
+  ctx.fillStyle = '#080d1a';
+  ctx.fillRect(0, 0, W, H);
+
+  const padL = 55, padR = 25, padT = 24, padB = 40;
+  const plotW = W - padL - padR;
+  const plotH = H - padT - padB;
+
+  const cvR = state.gas === 'di' ? 2.5 : 1.5;
+  const pIdeal = { n: N_IDEAL, Th: state.Th, Tc: state.Tc, Vmin: V_MIN, Vmax: V_MIN * state.ratio, cvR, regen: state.regen };
+  const res = stirlingIdeal(pIdeal);
+  const states = res.states;
+
+  let vMin, vMax, pMin, pMax;
+
+  if (state.mode === 'ideal') {
+    vMin = V_MIN * 0.75;
+    vMax = pIdeal.Vmax * 1.15;
+    pMin = 0;
+    pMax = states[0].P * 1.15;
+  } else {
+    vMin = G_SCHMIDT.Vdh * 0.8;
+    vMax = (G_SCHMIDT.Vdh + G_SCHMIDT.Vdc + G_SCHMIDT.VD + G_SCHMIDT.VP + G_SCHMIDT.Vr) * 1.1;
+    pMin = 0;
+    pMax = schmidtP(0, G_SCHMIDT, N_SCHMIDT, state.Th, state.Tc) * 1.25;
+  }
+
+  function vx(v) { return padL + (v - vMin) / (vMax - vMin) * plotW; }
+  function py(p) { return padT + (1 - (p - pMin) / (pMax - pMin)) * plotH; }
+
+  ctx.strokeStyle = 'rgba(160, 180, 255, 0.12)';
+  ctx.lineWidth = 1;
+  ctx.font = '12px system-ui';
+  ctx.fillStyle = '#94a3b8';
+
+  for (let k = 1; k <= 4; k++) {
+    const vVal = vMin + (vMax - vMin) * (k / 4);
+    const x = vx(vVal);
+    ctx.beginPath(); ctx.moveTo(x, padT); ctx.lineTo(x, padT + plotH); ctx.stroke();
+    ctx.fillText(fmtSig(vVal * 1e6, 2), x - 12, padT + plotH + 16);
+  }
+
+  for (let k = 1; k <= 4; k++) {
+    const pVal = pMin + (pMax - pMin) * (k / 4);
+    const y = py(pVal);
+    ctx.beginPath(); ctx.moveTo(padL, y); ctx.lineTo(padL + plotW, y); ctx.stroke();
+    ctx.fillText(fmtSig(pVal / 1e3, 2), padL - 46, y + 4);
+  }
+
+  ctx.strokeStyle = 'rgba(255, 255, 255, 0.4)';
+  ctx.lineWidth = 1.5;
+  ctx.beginPath();
+  ctx.moveTo(padL, padT); ctx.lineTo(padL, padT + plotH); ctx.lineTo(padL + plotW, padT + plotH);
+  ctx.stroke();
+
+  ctx.fillStyle = '#cbd5e1';
+  ctx.fillText('P (kPa)', padL - 10, padT - 8);
+  ctx.fillText('V (cm³)', padL + plotW - 20, padT + plotH + 34);
+
+  if (state.mode === 'ideal') {
+    ctx.lineWidth = 1.5;
+
+    ctx.setLineDash([4, 4]);
+    ctx.strokeStyle = 'rgba(255, 84, 112, 0.4)';
+    ctx.beginPath();
+    for (let i = 0; i <= 60; i++) {
+      const v = vMin + (vMax - vMin) * (i / 60);
+      const p = pIdeal.n * R_GAS * state.Th / v;
+      if (i === 0) ctx.moveTo(vx(v), py(p)); else ctx.lineTo(vx(v), py(p));
+    }
+    ctx.stroke();
+
+    ctx.strokeStyle = 'rgba(76, 194, 255, 0.4)';
+    ctx.beginPath();
+    for (let i = 0; i <= 60; i++) {
+      const v = vMin + (vMax - vMin) * (i / 60);
+      const p = pIdeal.n * R_GAS * state.Tc / v;
+      if (i === 0) ctx.moveTo(vx(v), py(p)); else ctx.lineTo(vx(v), py(p));
+    }
+    ctx.stroke();
+    ctx.setLineDash([]);
+
+    ctx.beginPath();
+    for (let i = 0; i <= 30; i++) {
+      const v = states[0].V + (states[1].V - states[0].V) * (i / 30);
+      const p = pIdeal.n * R_GAS * state.Th / v;
+      if (i === 0) ctx.moveTo(vx(v), py(p)); else ctx.lineTo(vx(v), py(p));
+    }
+    ctx.lineTo(vx(states[2].V), py(states[2].P));
+    for (let i = 0; i <= 30; i++) {
+      const v = states[2].V + (states[3].V - states[2].V) * (i / 30);
+      const p = pIdeal.n * R_GAS * state.Tc / v;
+      ctx.lineTo(vx(v), py(p));
+    }
+    ctx.closePath();
+
+    ctx.fillStyle = 'rgba(0, 229, 163, 0.16)';
+    ctx.fill();
+
+    ctx.lineWidth = 2.5;
+
+    ctx.strokeStyle = '#ff5470';
+    ctx.beginPath();
+    for (let i = 0; i <= 30; i++) {
+      const v = states[0].V + (states[1].V - states[0].V) * (i / 30);
+      const p = pIdeal.n * R_GAS * state.Th / v;
+      if (i === 0) ctx.moveTo(vx(v), py(p)); else ctx.lineTo(vx(v), py(p));
+    }
+    ctx.stroke();
+
+    ctx.strokeStyle = '#38bdf8';
+    ctx.beginPath(); ctx.moveTo(vx(states[1].V), py(states[1].P)); ctx.lineTo(vx(states[2].V), py(states[2].P)); ctx.stroke();
+
+    ctx.strokeStyle = '#4cc2ff';
+    ctx.beginPath();
+    for (let i = 0; i <= 30; i++) {
+      const v = states[2].V + (states[3].V - states[2].V) * (i / 30);
+      const p = pIdeal.n * R_GAS * state.Tc / v;
+      if (i === 0) ctx.moveTo(vx(v), py(p)); else ctx.lineTo(vx(v), py(p));
+    }
+    ctx.stroke();
+
+    ctx.strokeStyle = '#f59e0b';
+    ctx.beginPath(); ctx.moveTo(vx(states[3].V), py(states[3].P)); ctx.lineTo(vx(states[0].V), py(states[0].P)); ctx.stroke();
+
+    const pts = [
+      { p: states[0], txt: '①', ox: -16, oy: -8, col: '#ff5470' },
+      { p: states[1], txt: '②', ox: 10, oy: -8, col: '#ff5470' },
+      { p: states[2], txt: '③', ox: 10, oy: 14, col: '#4cc2ff' },
+      { p: states[3], txt: '④', ox: -16, oy: 14, col: '#4cc2ff' }
+    ];
+    pts.forEach(pt => {
+      const x = vx(pt.p.V), y = py(pt.p.P);
+      ctx.fillStyle = pt.col;
+      ctx.beginPath(); ctx.arc(x, y, 4.5, 0, Math.PI * 2); ctx.fill();
+      ctx.font = 'bold 13px system-ui';
+      ctx.fillText(pt.txt, x + pt.ox, y + pt.oy);
+    });
+
+    ctx.font = '12px system-ui';
+    ctx.fillStyle = 'rgba(255, 84, 112, 0.85)';
+    ctx.fillText('等溫線 Th = ' + state.Th + ' K', vx(states[1].V) - 40, py(states[1].P) - 16);
+    ctx.fillStyle = 'rgba(76, 194, 255, 0.85)';
+    ctx.fillText('等溫線 Tc = ' + state.Tc + ' K', vx(states[2].V) - 40, py(states[2].P) + 24);
+
+    ctx.fillStyle = 'var(--accent,#00e5a3)';
+    ctx.font = 'bold 13px system-ui';
+    const midX = (vx(states[0].V) + vx(states[1].V)) / 2 - 30;
+    const midY = (py(states[0].P) + py(states[2].P)) / 2;
+    ctx.fillText('淨功 W = ' + fmtSig(res.W, 3) + ' J', midX, midY);
+
+    const curState = idealPhase(phaseS, pIdeal);
+    const cxP = vx(curState.V), cyP = py(curState.P);
+    ctx.fillStyle = '#ffffff';
+    ctx.beginPath(); ctx.arc(cxP, cyP, 6, 0, Math.PI * 2); ctx.fill();
+    ctx.strokeStyle = 'var(--accent,#00e5a3)';
+    ctx.lineWidth = 2.5;
+    ctx.beginPath(); ctx.arc(cxP, cyP, 9, 0, Math.PI * 2); ctx.stroke();
+
+  } else {
+    const N_PTS = 180;
+    const pts = [];
+    ctx.beginPath();
+    for (let i = 0; i <= N_PTS; i++) {
+      const th = 2 * Math.PI * i / N_PTS;
+      const v = schmidtVolumes(th, G_SCHMIDT).V;
+      const p = schmidtP(th, G_SCHMIDT, N_SCHMIDT, state.Th, state.Tc);
+      const px = vx(v), pyPt = py(p);
+      pts.push({ v, p, px, pyPt });
+      if (i === 0) ctx.moveTo(px, pyPt); else ctx.lineTo(px, pyPt);
+    }
+    ctx.closePath();
+
+    ctx.fillStyle = 'rgba(255, 176, 46, 0.18)';
+    ctx.fill();
+    ctx.strokeStyle = '#ffb02e';
+    ctx.lineWidth = 2.5;
+    ctx.stroke();
+
+    const W_s = schmidtWork(G_SCHMIDT, N_SCHMIDT, state.Th, state.Tc, 180);
+
+    ctx.fillStyle = '#ffb02e';
+    ctx.font = 'bold 13px system-ui';
+    ctx.fillText('施密特 P–V 環（正弦連續運動）', padL + 16, padT + 24);
+    ctx.fillStyle = '#cbd5e1';
+    ctx.font = '12px system-ui';
+    ctx.fillText('施密特淨功 W = ' + fmtSig(W_s, 3) + ' J', padL + 16, padT + 44);
+    ctx.fillStyle = 'rgba(255, 255, 255, 0.65)';
+    ctx.fillText('因活塞連續簡諧運動無停頓，轉角圓滑鈍化，', padL + 16, padT + 64);
+    ctx.fillText('包圍之淨功面積顯著小於同溫差之理想循環。', padL + 16, padT + 80);
+
+    const curV = schmidtVolumes(crankTheta, G_SCHMIDT).V;
+    const curP = schmidtP(crankTheta, G_SCHMIDT, N_SCHMIDT, state.Th, state.Tc);
+    const cxP = vx(curV), cyP = py(curP);
+
+    ctx.fillStyle = '#ffffff';
+    ctx.beginPath(); ctx.arc(cxP, cyP, 6, 0, Math.PI * 2); ctx.fill();
+    ctx.strokeStyle = '#ffb02e';
+    ctx.lineWidth = 2.5;
+    ctx.beginPath(); ctx.arc(cxP, cyP, 9, 0, Math.PI * 2); ctx.stroke();
+  }
+}
+
+function drawBar() {
+  if (!ctxBar) return;
+  const ctx = ctxBar, W = ctx._w, H = ctx._h;
+
+  ctx.fillStyle = '#080d1a';
+  ctx.fillRect(0, 0, W, H);
+
+  const cvR = state.gas === 'di' ? 2.5 : 1.5;
+  const pIdeal = { n: N_IDEAL, Th: state.Th, Tc: state.Tc, Vmin: V_MIN, Vmax: V_MIN * state.ratio, cvR, regen: state.regen };
+  const res = stirlingIdeal(pIdeal);
+  const res0 = stirlingIdeal({ ...pIdeal, regen: 0 });
+
+  const isWide = W >= 460;
+  const pad = 16;
+
+  if (isWide) {
+    const colW = (W - pad * 3) / 2;
+    drawEnergyBars(ctx, pad, pad, colW, H - pad * 2, res);
+    drawEfficiencyBars(ctx, pad * 2 + colW, pad, colW, H - pad * 2, res, res0);
+  } else {
+    const rowH = (H - pad * 3) / 2;
+    drawEnergyBars(ctx, pad, pad, W - pad * 2, rowH, res);
+    drawEfficiencyBars(ctx, pad, pad * 2 + rowH, W - pad * 2, rowH, res, res0);
+  }
+}
+
+function drawEnergyBars(ctx, x, y, w, h, res) {
+  ctx.font = 'bold 12px system-ui';
+  ctx.fillStyle = '#cbd5e1';
+  ctx.fillText('🔥 熱量與做功分配 (單位：J)', x, y + 12);
+
+  const items = [
+    { label: '吸熱 Qh', val: res.Qh, col: '#ff5470' },
+    { label: '淨功 W', val: 'var(--accent,#00e5a3)' },
+    { label: '放熱 Qc', val: res.Qc, col: '#38bdf8' },
+    { label: '回熱 Qregen', val: res.Qregen, col: '#eab308' }
+  ];
+
+  const maxVal = Math.max(res.Qh, res.Qregen, 1) * 1.15;
+  const barAreaY = y + 26;
+  const barH = 14;
+  const gap = Math.min(24, (h - 32) / 4);
+
+  items.forEach((it, idx) => {
+    const by = barAreaY + idx * gap;
+    ctx.font = '12px system-ui';
+    ctx.fillStyle = '#94a3b8';
+    ctx.fillText(it.label, x, by + 11);
+
+    const barW = Math.max(2, (it.val / maxVal) * (w - 110));
+    const bx = x + 72;
+
+    ctx.fillStyle = 'rgba(255, 255, 255, 0.08)';
+    ctx.fillRect(bx, by, w - 110, barH);
+
+    ctx.fillStyle = it.col;
+    ctx.fillRect(bx, by, barW, barH);
+
+    ctx.fillStyle = '#ffffff';
+    ctx.font = '12px system-ui';
+    ctx.fillText(fmtSig(it.val, 3) + ' J', bx + barW + 6, by + 11);
+  });
+}
+
+function drawEfficiencyBars(ctx, x, y, w, h, res, res0) {
+  ctx.font = 'bold 12px system-ui';
+  ctx.fillStyle = '#cbd5e1';
+  ctx.fillText('📈 熱機效率比較 (與卡諾極限)', x, y + 12);
+
+  const items = [
+    { label: `η (當前 ε=${fmtSig(state.regen, 2)})`, val: res.eta * 100, col: 'var(--accent,#00e5a3)' },
+    { label: 'η (無回熱 ε=0)', val: res0.eta * 100, col: '#f59e0b' },
+    { label: '卡諾極限 η_Carnot', val: res.etaCarnot * 100, col: '#f43f5e' }
+  ];
+
+  const barAreaY = y + 26;
+  const barH = 16;
+  const gap = Math.min(28, (h - 40) / 3);
+
+  items.forEach((it, idx) => {
+    const by = barAreaY + idx * gap;
+    ctx.font = '12px system-ui';
+    ctx.fillStyle = '#94a3b8';
+    ctx.fillText(it.label, x, by + 12);
+
+    const maxW = w - 130;
+    const barW = Math.max(2, (Math.min(it.val, 100) / 100) * maxW);
+    const bx = x + 88;
+
+    ctx.fillStyle = 'rgba(255, 255, 255, 0.08)';
+    ctx.fillRect(bx, by, maxW, barH);
+
+    ctx.fillStyle = it.col;
+    ctx.fillRect(bx, by, barW, barH);
+
+    ctx.fillStyle = '#ffffff';
+    ctx.font = 'bold 12px system-ui';
+    ctx.fillText(fmtSig(it.val, 3) + ' %', bx + barW + 6, by + 12);
+  });
+
+  const carnotX = x + 88 + (res.etaCarnot) * (w - 130);
+  ctx.strokeStyle = 'rgba(244, 63, 94, 0.45)';
+  ctx.setLineDash([3, 3]);
+  ctx.beginPath();
+  ctx.moveTo(carnotX, barAreaY - 4); ctx.lineTo(carnotX, barAreaY + gap * 3 - 8);
+  ctx.stroke();
+  ctx.setLineDash([]);
+}
+
+function initButtons() {
+  document.getElementById('btnIdeal').addEventListener('click', () => { state.mode = 'ideal'; refresh(); });
+  document.getElementById('btnCrank').addEventListener('click', () => { state.mode = 'crank'; refresh(); });
+  document.getElementById('btnPlay').addEventListener('click', () => { state.running = !state.running; refresh(); });
+  document.getElementById('btnRegen').addEventListener('click', () => {
+    state.regen = state.regen >= 0.5 ? 0 : 1;
+    refresh();
+  });
+}
+
+window.addEventListener('load', () => {
+  buildSliders();
+  initButtons();
+  setupCanvases();
+  refresh();
+  requestAnimationFrame(animLoop);
+});
+
+window.addEventListener('resize', () => {
+  setupCanvases();
+  refresh();
+});
+</script>
+</body>
+</html>
