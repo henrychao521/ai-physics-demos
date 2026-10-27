@@ -1,0 +1,863 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>軍隊過橋的共振 ｜ 齊步走 vs 便步走・受迫振動</title>
+<meta name="description" content="軍隊過橋共振互動模擬：齊步走與便步走的受迫振動差異。包含吊橋第一振動模態變形、共振頻率曲線與60秒時間歷程模擬，回顧布勞頓吊橋與倫敦千禧橋的歷史事實。">
+<link rel="icon" href="../assets/favicon.svg" type="image/svg+xml">
+<link rel="stylesheet" href="../assets/site.css">
+<script src="../assets/sim.js"></script>
+<script defer src="../assets/nav.js"></script>
+<style>
+  *{box-sizing:border-box}
+  html,body{margin:0;padding:0;background:var(--bg);color:var(--txt);font-family:"Noto Sans TC","PingFang TC","Microsoft JhengHei",system-ui,sans-serif}
+  a{color:var(--accent)}
+  .wrap{max-width:1120px;margin:0 auto;padding:18px 16px 60px}
+  header h1{font-size:1.5rem;margin:.2em 0}
+  header p{color:var(--muted);margin:.2em 0 1em;line-height:1.6}
+  .badge{display:inline-block;background:var(--panel2);border:1px solid var(--line);color:var(--muted);font-size:.72rem;padding:2px 8px;border-radius:99px;margin-right:6px}
+  
+  .scene-wrap{border-radius:16px;overflow:hidden;border:1px solid var(--line);box-shadow:0 18px 50px rgba(0,0,0,.45);background:var(--panel)}
+  #scene{display:block;width:100%;touch-action:none}
+  
+  .hud-bar{display:flex;flex-wrap:wrap;justify-content:space-between;align-items:center;gap:10px;padding:10px 14px;background:var(--panel2);border-bottom:1px solid var(--line);font-size:.84rem}
+  .hud-val{color:var(--accent);font-weight:700;font-variant-numeric:tabular-nums}
+  .hud-sub{color:var(--muted)}
+  
+  .btn-bar{display:flex;gap:8px;flex-wrap:wrap;align-items:center;padding:12px 14px;background:var(--panel)}
+  .pbtn{background:var(--panel2);color:var(--txt);border:1px solid var(--line);padding:8px 14px;border-radius:9px;cursor:pointer;font-size:.85rem;font-family:inherit;min-height:44px;display:inline-flex;align-items:center;justify-content:center;transition:border-color .15s, background .15s}
+  .pbtn:hover{border-color:var(--accent)}
+  .pbtn.on{background:var(--accent);color:#04121c;border-color:var(--accent);font-weight:700}
+  
+  .charts-grid{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-top:14px}
+  @media(max-width:768px){.charts-grid{grid-template-columns:1fr}}
+  .chart-card{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:12px 14px;display:flex;flex-direction:column;gap:8px}
+  .chart-title{font-size:.86rem;font-weight:700;color:var(--txt);display:flex;justify-content:space-between}
+  .chart-title span{font-size:.78rem;font-weight:400;color:var(--muted)}
+  .chart-card canvas{display:block;width:100%}
+
+  .bar{display:flex;gap:14px;flex-wrap:wrap;align-items:flex-end;background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:14px 16px;margin-top:14px}
+  .sld{flex:1;min-width:160px}
+  .sld label{display:flex;justify-content:space-between;font-size:.82rem;color:var(--muted);margin-bottom:5px}
+  .sld label .v{color:var(--accent);font-variant-numeric:tabular-nums;font-weight:700}
+  .sld input{width:100%;accent-color:var(--accent);min-height:24px}
+  
+  .formula{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:14px 16px;margin-top:14px}
+  .formula h4{margin:0 0 10px;font-size:.92rem;color:var(--txt)}
+  .frow{display:flex;flex-wrap:wrap;gap:8px 14px;align-items:baseline;padding:6px 0;border-bottom:1px solid rgba(255,255,255,.05);font-size:.84rem}
+  .frow:last-child{border-bottom:none}
+  .fname{color:var(--muted);min-width:140px}
+  .fsym{color:#8bb2ff;font-family:monospace}
+  .fsub{color:var(--muted);font-size:.8rem}
+  .fval{margin-left:auto;color:var(--accent);font-weight:700;font-variant-numeric:tabular-nums}
+  .frel{margin-top:10px;padding:8px 12px;background:rgba(255,255,255,.03);border-radius:8px;font-size:.82rem;color:var(--muted);line-height:1.6}
+
+  .note{background:var(--panel);border-left:3px solid var(--accent2);border-radius:8px;padding:12px 14px;color:var(--muted);font-size:.86rem;line-height:1.7;margin-top:14px}
+  .note b{color:var(--txt)}.note code{background:var(--bg2);padding:1px 6px;border-radius:5px;color:var(--green);font-size:.85em}
+  
+  .history-sec{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:16px 18px;margin-top:14px}
+  .history-sec h3{margin:0 0 12px;font-size:1.05rem;color:var(--txt)}
+  .history-item{margin-bottom:14px;font-size:.86rem;line-height:1.7;color:var(--muted)}
+  .history-item b{color:var(--txt)}
+  .history-alert{padding:10px 14px;border-radius:8px;background:rgba(255,180,46,.08);border-left:3px solid #ffb02e;color:#ffdca8;font-size:.84rem;line-height:1.6}
+
+  footer{color:var(--muted);font-size:.78rem;margin-top:24px;text-align:center;line-height:1.7}
+</style>
+</head>
+<body data-demo="軍隊過橋的共振">
+<div class="wrap">
+  <header>
+    <span class="badge">波動・共振</span>
+    <h1>軍隊過橋的共振 ｜ 齊步走 vs 便步走・受迫振動</h1>
+    <p>軍隊齊步行進時，整齊劃一的步伐對橋梁施加週期性的推力。若步頻接近橋梁的自然頻率，將引發<b>受迫振動與共振</b>。本頁以單一模態簡化模型對比「齊步走（同步同相，力呈 ∝ N 相加）」與「便步走（相位打亂，等效力僅 ∝ √N）」，並考證歷史上的真實事件。</p>
+  </header>
+
+  <div class="scene-wrap">
+    <div class="hud-bar">
+      <div>
+        <span class="hud-sub">模式：</span>
+        <span id="hudMode" class="hud-val">齊步走（垂直振動）</span>
+      </div>
+      <div>
+        <span class="hud-sub">中央真實位移：</span>
+        <span id="hudDisp" class="hud-val">0.00 cm</span>
+      </div>
+      <div>
+        <span class="hud-sub">視覺放大倍率：</span>
+        <span id="hudAmp" class="hud-val">×60 倍</span>
+      </div>
+    </div>
+    
+    <canvas id="scene" style="width:100%;aspect-ratio:2.2"></canvas>
+    
+    <div class="btn-bar">
+      <button class="pbtn on" id="btnInStep">齊步走</button>
+      <button class="pbtn" id="btnBreakStep">便步走</button>
+      <button class="pbtn" id="btnLateral">垂直振動／側向擺動</button>
+      <button class="pbtn" id="btnPlayPause">暫停</button>
+      <button class="pbtn" id="btnReset">重新開始</button>
+    </div>
+  </div>
+
+  <div class="bar" id="sliders"></div>
+
+  <div class="charts-grid">
+    <div class="chart-card">
+      <div class="chart-title">
+        <span>頻率響應曲線（穩態振幅 vs 頻率）</span>
+        <span id="chartResLegend">標註 fₙ 與目前步頻</span>
+      </div>
+      <canvas id="chartRes" style="width:100%;aspect-ratio:1.6"></canvas>
+    </div>
+    <div class="chart-card">
+      <div class="chart-title">
+        <span>60 秒時間歷程（從靜止開始）</span>
+        <span>齊步走 vs 便步走</span>
+      </div>
+      <canvas id="chartTime" style="width:100%;aspect-ratio:1.6"></canvas>
+    </div>
+  </div>
+
+  <div class="formula" id="formula"></div>
+
+  <div class="note">
+    <b>物理重點：</b>受迫振動、共振、阻尼的角色（ζ 越小共振峰越高越尖）、為什麼便步走有效（打亂相位與頻率，力量不再同步相加）。
+    當外力驅動頻率接近系統的自然振動頻率（<code>r = f/fₙ ≈ 1</code>）時，系統吸收能量的效率最高，振幅會被大幅放大。
+    橋梁的結構阻尼通常極低（<code>ζ ≈ 0.005–0.02</code>），使共振峰非常尖銳。
+    在<b>齊步走</b>時，全員步伐頻率與相位完全一致，每人推力直接同向相加（<code>F₀ ∝ N</code>）；而在<b>便步走（break step）</b>時，各人相位隨機分佈、步頻略有散佈，各推力互相干涉抵消，向量和的大小平均縮減至 <code>∝ √N</code>，使共振無法持續累積。
+  </div>
+
+  <div class="history-sec">
+    <h3>🏛 歷史上的例子（照事實寫）</h3>
+    <div class="history-item">
+      <b>1831 年 4 月 12 日，英國曼徹斯特附近的布勞頓吊橋（Broughton Suspension Bridge）：</b><br>
+      第 60 步兵團（60th Rifle Corps）74 名士兵四人一排齊步過橋，感覺橋隨步伐振動，有人還刻意配合節奏踏步，振動加大，橋的一端塌落。無人死亡、約 20 人受傷。事後調查發現一根固定拉鍊的螺栓（鍛造不良）斷裂，結論是「齊步行進的振動促成螺栓斷裂，但它遲早也會壞」。之後英國陸軍下令部隊過橋時要「便步走」（break step）。
+    </div>
+    <div class="history-item">
+      <b>2000 年 6 月 10 日倫敦千禧橋（Millennium Bridge）啟用事件：</b><br>
+      啟用當天，大量行人使橋<b>側向</b>擺動，6 月 12 日關閉。工程團隊（Arup）稱為「同步側向激振」：橋開始擺動時行人不自覺調整步伐跟著擺，又把擺動推得更大。側向頻率低於約 1.3 Hz 的橋都可能發生（側向步伐力的頻率約是步頻的一半）。後來加裝 37 組黏滯阻尼器與 52 組調諧質量阻尼器，2002 年 2 月 22 日重新開放。
+    </div>
+    <div class="history-alert">
+      ⚠️ <b>真實工程提醒：</b>真實橋梁的破壞通常是結構缺陷、荷載、共振等多種因素一起造成；這個模擬只示範「週期性推力頻率接近自然頻率時振幅會變大」。
+    </div>
+  </div>
+
+  <div class="history-sec" style="margin-top:14px">
+    <h3>📚 模型與出處</h3>
+    <p style="margin:0;font-size:.85rem;color:var(--muted);line-height:1.7">
+      步行荷載用法國 Sétra《Footbridges: Assessment of vibrational behaviour of footbridges under pedestrian loading》（2006）的簡化模型（每人垂直一次諧波約 280 N、側向約 35 N）；布勞頓吊橋與千禧橋的事實整理自 Wikipedia 條目與 P. Dallard 等，〈The London Millennium Footbridge〉，The Structural Engineer 79(22)，2001。
+    </p>
+  </div>
+
+  <p class="ext-links" style="margin-top:14px;font-size:.9rem;color:var(--muted)">
+    <a href="../resonance/">← 回到「受迫振盪與共振」</a>
+  </p>
+  <footer>純前端 HTML / Canvas（SIM 工具庫）。依 Sétra 步行力學與單自由度模態動力學數值計算。</footer>
+</div>
+
+<script>
+/*PHYS:BEGIN*/
+// 有效數字格式（公式面板、數值卡共用；驗收會用同一個函式比對畫面上的數字）
+function fmtSig(v, n) {
+  n = n || 3;
+  if (typeof v !== 'number' || !isFinite(v)) return String(v);
+  if (v === 0) return '0';
+  const a = Math.abs(v);
+  if (a >= 1e5 || a < 1e-3) {
+    let e = Math.floor(Math.log10(a)), m = v / Math.pow(10, e);
+    let ms = m.toFixed(n - 1);
+    if (Math.abs(parseFloat(ms)) >= 10) { e += 1; ms = (v / Math.pow(10, e)).toFixed(n - 1); }
+    const SUP = { '-': '⁻', '0': '⁰', '1': '¹', '2': '²', '3': '³', '4': '⁴', '5': '⁵', '6': '⁶', '7': '⁷', '8': '⁸', '9': '⁹' };
+    return ms + '×10' + String(e).split('').map(ch => SUP[ch]).join('');
+  }
+  const s = Number(v.toPrecision(n));
+  return a >= Math.pow(10, n - 1) ? String(Math.round(s)) : s.toPrecision(n);
+}
+
+// 軍隊過橋的共振：把橋面的第一個振動模態當成一個有阻尼的彈簧振子（模態質量 M、自然頻率 fn、阻尼比 ζ），
+// 行人每一步給橋一個週期性的推力。採用法國 Sétra《Footbridges》(2006) 指引的步行荷載模型：每人垂直方向一次諧波振幅約 280 N（約為體重 700 N 的 0.4 倍）、
+// 側向（頻率為步頻的一半）約 35 N。步頻常見約 1.6–2.4 Hz（平均約 2 Hz）。
+// 齊步走：N 人同相，力量直接相加 → 振幅 ∝ N。便步走（打亂步伐）：相位隨機，總力的大小平均只 ∝ √N，而且各人步頻不同，難以持續推同一個頻率。
+function bridgeK(M, fn) { return M * (2 * Math.PI * fn) ** 2; }
+// 穩態振幅 X = (F0/K) / √((1 − r²)² + (2ζr)²)，r = f/fn
+function bridgeAmp(f, F0, M, fn, zeta) { const r = f / fn; return F0 / bridgeK(M, fn) / Math.sqrt((1 - r * r) ** 2 + (2 * zeta * r) ** 2); }
+function resonancePeakAmp(F0, M, fn, zeta) { return F0 / (bridgeK(M, fn) * 2 * zeta); }   // r=1 時
+// 可重現的亂數（便步走的相位、步頻）
+function mulberry32(seed) { let a = seed >>> 0; return function () { a = (a + 0x6D2B79F5) >>> 0; let t = a; t = Math.imul(t ^ (t >>> 15), t | 1); t ^= t + Math.imul(t ^ (t >>> 7), t | 61); return ((t ^ (t >>> 14)) >>> 0) / 4294967296; }; }
+// 行人隊伍：inStep=true 時全員同步頻 fs、同相；false 時相位均勻亂數、步頻 fs·(1 + spread·常態亂數)
+function makeCrowd(N, fs, inStep, spread, seed) {
+  const rnd = mulberry32(seed || 1), people = [];
+  for (let i = 0; i < N; i++) {
+    if (inStep) { people.push({ f: fs, phi: 0 }); continue; }
+    const u1 = Math.max(1e-12, rnd()), u2 = rnd(), g = Math.sqrt(-2 * Math.log(u1)) * Math.cos(2 * Math.PI * u2);
+    people.push({ f: fs * (1 + (spread == null ? 0.05 : spread) * g), phi: 2 * Math.PI * rnd() });
+  }
+  return people;
+}
+// 時間 t 的總力（N）。lateral=true 時用側向荷載（每人 35 N、頻率 = 步頻/2）
+function crowdForce(t, people, lateral) {
+  const amp = lateral ? 35 : 280; let F = 0;
+  for (const p of people) F += amp * Math.sin(2 * Math.PI * (lateral ? p.f / 2 : p.f) * t + p.phi);
+  return F;
+}
+// 數值積分（RK4）M x'' + c x' + K x = F(t)，從靜止開始；回傳取樣的時間、位移
+function simulateBridge(p, people, tEnd, dt, lateral) {
+  const K = bridgeK(p.M, p.fn), c = 2 * p.zeta * Math.sqrt(K * p.M);
+  let x = 0, v = 0, t = 0; const ts = [0], xs = [0];
+  const a = (tt, xx, vv) => (crowdForce(tt, people, lateral) - c * vv - K * xx) / p.M;
+  const n = Math.ceil(tEnd / dt), every = Math.max(1, Math.floor(n / 1500));
+  for (let i = 1; i <= n; i++) {
+    const k1x = v, k1v = a(t, x, v), k2x = v + dt / 2 * k1v, k2v = a(t + dt / 2, x + dt / 2 * k1x, v + dt / 2 * k1v);
+    const k3x = v + dt / 2 * k2v, k3v = a(t + dt / 2, x + dt / 2 * k2x, v + dt / 2 * k2v), k4x = v + dt * k3v, k4v = a(t + dt, x + dt * k3x, v + dt * k3v);
+    x += dt / 6 * (k1x + 2 * k2x + 2 * k3x + k4x); v += dt / 6 * (k1v + 2 * k2v + 2 * k3v + k4v); t += dt;
+    if (i % every === 0) { ts.push(t); xs.push(x); }
+  }
+  return { t: ts, x: xs };
+}
+function maxAbs(arr, from) { let m = 0; for (let i = from || 0; i < arr.length; i++) m = Math.max(m, Math.abs(arr[i])); return m; }
+/*PHYS:END*/
+
+// ---- 系統狀態 ----
+const state = {
+  fs: 2.0,       // 步頻 1.4–2.6 Hz（預設 2.0）
+  fn: 2.0,       // 橋的自然頻率 1.2–3 Hz（預設 2.0）
+  zeta: 0.01,    // 阻尼比 0.005–0.1（預設 0.01）
+  N: 74,         // 人數 10–150（預設 74）
+  M: 40,         // 模態質量 10–100 公噸（預設 40，存公噸）
+  inStep: true,  // true 齊步／false 便步
+  lateral: false // false 垂直／true 側向
+};
+window.state = state;
+
+const sliderConfigs = [
+  { id: 'fs', name: '步頻 fₛ', min: 1.4, max: 2.6, step: 0.05, unit: 'Hz' },
+  { id: 'fn', name: '橋自然頻率 fₙ', min: 1.2, max: 3.0, step: 0.05, unit: 'Hz' },
+  { id: 'zeta', name: '結構阻尼比 ζ', min: 0.005, max: 0.1, step: 0.005, unit: '' },
+  { id: 'N', name: '過橋人數 N', min: 10, max: 150, step: 1, unit: '人' },
+  { id: 'M', name: '模態質量 M', min: 10, max: 100, step: 2, unit: '公噸' }
+];
+
+const sBar = document.getElementById('sliders');
+sliderConfigs.forEach(s => {
+  const d = document.createElement('div');
+  d.className = 'sld';
+  d.innerHTML = `<label><span>${s.name}</span><span class="v" id="v_${s.id}">${state[s.id]} ${s.unit}</span></label>
+    <input type="range" id="r_${s.id}" min="${s.min}" max="${s.max}" step="${s.step}" value="${state[s.id]}">`;
+  sBar.appendChild(d);
+  d.querySelector('input').addEventListener('input', e => {
+    state[s.id] = parseFloat(e.target.value);
+    document.getElementById('v_' + s.id).textContent = `${state[s.id]} ${s.unit}`;
+    refresh();
+  });
+});
+
+// UI 控制項與畫布上下文
+let scCtx, cResCtx, cTimeCtx;
+let isPlaying = true;
+let simTime = 0;
+let liveX = 0, liveV = 0;
+let crowd = [];
+let simDataIn = null, simDataBreak = null;
+const VIS_MAG = 60; // 視覺放大 60 倍
+
+function frow(n, sym, sub, val) {
+  return `<div class="frow"><span class="fname">${n}</span><span class="fsym">${sym}</span><span class="fsub">= ${sub}</span><span class="fval">${val}</span></div>`;
+}
+
+function updateFormula() {
+  const M_kg = state.M * 1000;
+  const K = bridgeK(M_kg, state.fn);
+  const unitF = state.lateral ? 35 : 280;
+  const F0 = state.N * unitF;
+  const f_drive = state.lateral ? state.fs / 2 : state.fs;
+  const r = f_drive / state.fn;
+  const X_steady = bridgeAmp(f_drive, F0, M_kg, state.fn, state.zeta);
+  const X_res = resonancePeakAmp(F0, M_kg, state.fn, state.zeta);
+  const F0_walk = Math.sqrt(state.N) * unitF;
+  const X_walk_res = resonancePeakAmp(F0_walk, M_kg, state.fn, state.zeta);
+
+  let html = `<h4>📐 計算公式（即時代入物理模型）</h4>`;
+  html += frow('模態勁度 K', 'M(2πfₙ)²', `${fmtSig(M_kg, 3)} kg × (2π × ${fmtSig(state.fn, 3)})²`, `${fmtSig(K, 3)} N/m`);
+  html += frow('齊步總推力 F₀', state.lateral ? 'N × 35 N' : 'N × 280 N', `${state.N} × ${unitF} N`, `${fmtSig(F0, 3)} N`);
+  html += frow('步頻比 r', state.lateral ? '(fₛ/2) / fₙ' : 'fₛ / fₙ', `${fmtSig(f_drive, 3)} / ${fmtSig(state.fn, 3)}`, `${fmtSig(r, 3)}`);
+  html += frow('穩態振幅 X', '(F₀/K) / √((1−r²)²+(2ζr)²)', `(${fmtSig(F0, 3)}/${fmtSig(K, 3)}) / √(…)`, `${fmtSig(X_steady, 3)} m (${fmtSig(X_steady * 100, 3)} cm)`);
+  html += frow('共振最大振幅 X_res', 'F₀ / (2ζK)', `${fmtSig(F0, 3)} / (2 × ${fmtSig(state.zeta, 3)} × ${fmtSig(K, 3)})`, `${fmtSig(X_res, 3)} m (${fmtSig(X_res * 100, 3)} cm)`);
+  html += frow('便步走等效 F₀', '√N × ' + unitF + ' N', `√${state.N} × ${unitF} N`, `約 ${fmtSig(F0_walk, 3)} N`);
+  html += frow('便步走共振等效振幅', 'F₀,eq / (2ζK)', `${fmtSig(F0_walk, 3)} / (2 × ${fmtSig(state.zeta, 3)} × ${fmtSig(K, 3)})`, `${fmtSig(X_walk_res, 3)} m (${fmtSig(X_walk_res * 100, 3)} cm)`);
+  
+  html += `<div class="frel">📈 <b>受迫振動核心機制：</b>驅動頻率接近自然頻率（r ≈ 1）時，分母因式趨近最小值 2ζr，阻尼比 ζ 越小共振峰越陡峭高聳。齊步走每人相位完全一致，推力以 <b>N</b> 線性增加；便步走時步伐相位隨機打亂，力量呈隨機向量疊加，等效總推力僅約 <b>√N</b>，且步頻散佈無法持續推動單一頻率！</div>`;
+  document.getElementById('formula').innerHTML = html;
+}
+
+function updateSlidersFromState() {
+  sliderConfigs.forEach(s => {
+    const inp = document.getElementById('r_' + s.id);
+    const vEl = document.getElementById('v_' + s.id);
+    if (inp) inp.value = state[s.id];
+    if (vEl) vEl.textContent = `${state[s.id]} ${s.unit}`;
+  });
+  
+  document.getElementById('btnInStep').classList.toggle('on', !!state.inStep);
+  document.getElementById('btnBreakStep').classList.toggle('on', !state.inStep);
+  
+  const latBtn = document.getElementById('btnLateral');
+  latBtn.classList.toggle('on', !!state.lateral);
+  latBtn.textContent = state.lateral ? '側向擺動（每人 35 N, fₛ/2）' : '垂直振動（每人 280 N, fₛ）';
+
+  const modeStr = (state.inStep ? '齊步走' : '便步走') + '（' + (state.lateral ? '側向擺動' : '垂直振動') + '）';
+  document.getElementById('hudMode').textContent = modeStr;
+  document.getElementById('hudAmp').textContent = `×${VIS_MAG} 倍`;
+}
+
+function recomputeSimulations() {
+  crowd = makeCrowd(state.N, state.fs, state.inStep, 0.05, 7);
+  const M_kg = state.M * 1000;
+  const p = { M: M_kg, fn: state.fn, zeta: state.zeta };
+  
+  const crowdIn = makeCrowd(state.N, state.fs, true, 0.05, 7);
+  const crowdBreak = makeCrowd(state.N, state.fs, false, 0.05, 7);
+  
+  simDataIn = simulateBridge(p, crowdIn, 60, 0.02, state.lateral);
+  simDataBreak = simulateBridge(p, crowdBreak, 60, 0.02, state.lateral);
+}
+
+// ---- 主畫布繪製：側視吊橋與士兵行進 ----
+function drawBridgeScene() {
+  if (!scCtx) return;
+  const W = scCtx._w, H = scCtx._h;
+  
+  // 背景星空／水岸微光
+  const sky = scCtx.createLinearGradient(0, 0, 0, H);
+  sky.addColorStop(0, '#091024');
+  sky.addColorStop(0.7, '#070b18');
+  sky.addColorStop(1, '#040711');
+  scCtx.fillStyle = sky;
+  scCtx.fillRect(0, 0, W, H);
+  
+  // 遠山與水面
+  const waterY = H * 0.84;
+  const water = scCtx.createLinearGradient(0, waterY, 0, H);
+  water.addColorStop(0, '#0a1630');
+  water.addColorStop(1, '#050a14');
+  scCtx.fillStyle = water;
+  scCtx.fillRect(0, waterY, W, H - waterY);
+  
+  // 水面微波
+  scCtx.strokeStyle = 'rgba(100, 150, 255, 0.12)';
+  scCtx.lineWidth = 1;
+  for (let wy = waterY + 6; wy < H; wy += 8) {
+    scCtx.beginPath();
+    scCtx.moveTo(0, wy);
+    scCtx.lineTo(W, wy);
+    scCtx.stroke();
+  }
+
+  // 吊橋幾何參數
+  const deckBaseY = H * 0.62;
+  const spanX0 = W * 0.12;
+  const spanX1 = W * 0.88;
+  const spanL = spanX1 - spanX0;
+  const tower1X = spanX0 + spanL * 0.15;
+  const tower2X = spanX0 + spanL * 0.85;
+  const towerTopY = H * 0.16;
+  const towerBottomY = waterY + 10;
+  
+  // 第一模態變形：y(s) = x(t) * sin(π * s)
+  // 視覺位移放大 VIS_MAG 倍
+  const pxPerMeter = 180;
+  const visualDisplacementPx = liveX * VIS_MAG * pxPerMeter;
+  
+  function getDeckY(x) {
+    if (x < tower1X || x > tower2X) return deckBaseY;
+    const s = (x - tower1X) / (tower2X - tower1X);
+    return deckBaseY - visualDisplacementPx * Math.sin(Math.PI * s);
+  }
+
+  // 繪製橋墩與兩座懸索主塔
+  function drawTower(tx) {
+    const tw = Math.max(14, W * 0.024);
+    scCtx.fillStyle = '#1c253d';
+    scCtx.fillRect(tx - tw / 2, towerTopY, tw, towerBottomY - towerTopY);
+    scCtx.strokeStyle = 'rgba(160, 195, 255, 0.35)';
+    scCtx.lineWidth = 1.5;
+    scCtx.strokeRect(tx - tw / 2, towerTopY, tw, towerBottomY - towerTopY);
+    
+    // 桁架交叉支撐
+    scCtx.beginPath();
+    for (let ty = towerTopY; ty < deckBaseY; ty += 24) {
+      scCtx.moveTo(tx - tw / 2, ty);
+      scCtx.lineTo(tx + tw / 2, ty + 24);
+      scCtx.moveTo(tx + tw / 2, ty);
+      scCtx.lineTo(tx - tw / 2, ty + 24);
+    }
+    scCtx.stroke();
+    
+    // 塔頂鞍座
+    scCtx.fillStyle = '#ffce54';
+    scCtx.beginPath();
+    scCtx.arc(tx, towerTopY, 4, 0, Math.PI * 2);
+    scCtx.fill();
+  }
+  
+  drawTower(tower1X);
+  drawTower(tower2X);
+
+  // 主纜（拋物線懸索）
+  const cableSagY = deckBaseY - 6;
+  function getCableY(x) {
+    if (x <= tower1X) {
+      const t = (x - spanX0) / (tower1X - spanX0);
+      return deckBaseY + (towerTopY - deckBaseY) * t;
+    } else if (x >= tower2X) {
+      const t = (x - tower2X) / (spanX1 - tower2X);
+      return towerTopY + (deckBaseY - towerTopY) * t;
+    } else {
+      const t = (x - tower1X) / (tower2X - tower1X);
+      const mid = 0.5;
+      const u = (t - mid) / mid;
+      return cableSagY - (cableSagY - towerTopY) * (1 - u * u);
+    }
+  }
+
+  // 垂直吊索（Hangers）
+  scCtx.strokeStyle = 'rgba(160, 190, 240, 0.4)';
+  scCtx.lineWidth = 1.2;
+  const hangerCount = 28;
+  for (let i = 1; i < hangerCount; i++) {
+    const hx = tower1X + (tower2X - tower1X) * (i / hangerCount);
+    const cy = getCableY(hx);
+    const dy = getDeckY(hx);
+    scCtx.beginPath();
+    scCtx.moveTo(hx, cy);
+    scCtx.lineTo(hx, dy);
+    scCtx.stroke();
+  }
+
+  // 繪製主纜本體
+  scCtx.strokeStyle = '#4cc2ff';
+  scCtx.lineWidth = 2.5;
+  scCtx.beginPath();
+  for (let x = spanX0; x <= spanX1; x += 4) {
+    const cy = getCableY(x);
+    if (x === spanX0) scCtx.moveTo(x, cy);
+    else scCtx.lineTo(x, cy);
+  }
+  scCtx.stroke();
+
+  // 繪製橋面（桁架梁）
+  scCtx.beginPath();
+  scCtx.strokeStyle = '#c5d7ed';
+  scCtx.lineWidth = 5;
+  for (let x = spanX0; x <= spanX1; x += 4) {
+    const dy = getDeckY(x);
+    if (x === spanX0) scCtx.moveTo(x, dy);
+    else scCtx.lineTo(x, dy);
+  }
+  scCtx.stroke();
+  
+  // 橋面底部邊框
+  scCtx.strokeStyle = 'rgba(255,255,255,0.2)';
+  scCtx.lineWidth = 1;
+  scCtx.stroke();
+
+  // 兩端橋台基座
+  scCtx.fillStyle = '#141c2e';
+  scCtx.fillRect(0, deckBaseY - 2, spanX0, waterY - deckBaseY + 12);
+  scCtx.fillRect(spanX1, deckBaseY - 2, W - spanX1, waterY - deckBaseY + 12);
+  scCtx.strokeStyle = 'rgba(120,150,210,0.4)';
+  scCtx.strokeRect(0, deckBaseY - 2, spanX0, waterY - deckBaseY + 12);
+  scCtx.strokeRect(spanX1, deckBaseY - 2, W - spanX1, waterY - deckBaseY + 12);
+
+  // 繪製士兵隊伍
+  // 隊伍走在主跨橋面上（tower1X 到 tower2X）
+  const marchW = tower2X - tower1X;
+  const drawN = Math.min(state.N, 32);
+  for (let i = 0; i < drawN; i++) {
+    const ratio = (i + 0.5) / drawN;
+    // 隊伍行進平移動畫
+    const walkSpeed = 0.04;
+    const progress = (ratio + simTime * walkSpeed) % 1.0;
+    const px = tower1X + progress * marchW;
+    const py = getDeckY(px);
+    
+    // 步伐相位
+    let legAngle = 0;
+    if (state.inStep) {
+      const f_drive = state.lateral ? state.fs / 2 : state.fs;
+      legAngle = Math.sin(2 * Math.PI * f_drive * simTime) * 0.55;
+    } else {
+      const person = crowd[i % crowd.length];
+      const pFreq = state.lateral ? person.f / 2 : person.f;
+      legAngle = Math.sin(2 * Math.PI * pFreq * simTime + person.phi) * 0.55;
+    }
+
+    // 繪製人形
+    const figH = Math.max(16, Math.min(22, H * 0.08));
+    const headR = figH * 0.18;
+    const torsoY = py - figH * 0.45;
+    const headY = py - figH + headR;
+
+    // 士兵軀幹
+    scCtx.strokeStyle = state.inStep ? '#ffb02e' : '#a0c0ff';
+    scCtx.lineWidth = 2;
+    scCtx.beginPath();
+    scCtx.moveTo(px, py - figH * 0.45);
+    scCtx.lineTo(px, py - figH + headR * 2);
+    scCtx.stroke();
+
+    // 頭部與步兵帽
+    scCtx.fillStyle = '#ffe082';
+    scCtx.beginPath();
+    scCtx.arc(px, headY, headR, 0, Math.PI * 2);
+    scCtx.fill();
+    // 綠色步兵軍帽（60th Rifle Corps）
+    scCtx.fillStyle = '#2e7d32';
+    scCtx.fillRect(px - headR * 1.1, headY - headR * 1.1, headR * 2.2, headR * 0.7);
+
+    // 雙腿擺動
+    const legLen = figH * 0.45;
+    // 左腿
+    scCtx.beginPath();
+    scCtx.moveTo(px, torsoY);
+    scCtx.lineTo(px - Math.sin(legAngle) * legLen, py);
+    scCtx.stroke();
+    // 右腿
+    scCtx.beginPath();
+    scCtx.moveTo(px, torsoY);
+    scCtx.lineTo(px + Math.sin(legAngle) * legLen, py);
+    scCtx.stroke();
+  }
+
+  // 畫面中央位移指標與小字說明
+  const midX = (tower1X + tower2X) / 2;
+  const midY = getDeckY(midX);
+  
+  // 中央位移標籤
+  const dispCm = liveX * 100;
+  document.getElementById('hudDisp').textContent = `${(dispCm >= 0 ? '+' : '')}${fmtSig(dispCm, 3)} cm`;
+
+  // 繪製位移參考虛線
+  scCtx.save();
+  scCtx.strokeStyle = 'rgba(255, 84, 112, 0.45)';
+  scCtx.setLineDash([4, 4]);
+  scCtx.beginPath();
+  scCtx.moveTo(midX, deckBaseY);
+  scCtx.lineTo(midX, midY);
+  scCtx.stroke();
+  scCtx.restore();
+
+  // 中央節點光點
+  scCtx.fillStyle = Math.abs(dispCm) > 5 ? '#ff5470' : '#43d17a';
+  scCtx.beginPath();
+  scCtx.arc(midX, midY, 4, 0, Math.PI * 2);
+  scCtx.fill();
+
+  // 畫布上方小字
+  scCtx.font = '12px system-ui, sans-serif';
+  scCtx.fillStyle = 'rgba(255,255,255,0.75)';
+  scCtx.fillText(`中央位移 x(t)：${(dispCm >= 0 ? '+' : '')}${fmtSig(dispCm, 3)} cm（視覺放大 ×${VIS_MAG}）`, midX - 110, deckBaseY - 32);
+  if (state.lateral) {
+    scCtx.fillStyle = '#ffce54';
+    scCtx.fillText(`【側向擺動模式】步頻減半（${fmtSig(state.fs / 2, 3)} Hz）、每人推力 35 N`, midX - 120, deckBaseY - 14);
+  }
+}
+
+// ---- 下方圖表 1：共振曲線（頻率響應） ----
+function drawResonanceChart() {
+  if (!cResCtx) return;
+  const ctx = cResCtx, W = ctx._w, H = ctx._h;
+  ctx.clearRect(0, 0, W, H);
+  
+  const pad = { l: 44, r: 16, t: 20, b: 26 };
+  const plotW = W - pad.l - pad.r;
+  const plotH = H - pad.t - pad.b;
+  
+  const fMin = 1.0, fMax = 3.0;
+  const M_kg = state.M * 1000;
+  const unitF = state.lateral ? 35 : 280;
+  const F0_step = state.N * unitF;
+  const F0_walk = Math.sqrt(state.N) * unitF;
+  
+  // 計算最大 Y 尺度（取共振峰附近）
+  const peakVal = resonancePeakAmp(F0_step, M_kg, state.fn, state.zeta);
+  const yMax = Math.max(1e-4, peakVal * 1.15);
+  
+  function toX(f) { return pad.l + ((f - fMin) / (fMax - fMin)) * plotW; }
+  function toY(amp) { return pad.t + (1 - Math.min(yMax, Math.max(0, amp)) / yMax) * plotH; }
+
+  // 網格線與座標軸
+  ctx.strokeStyle = 'rgba(255,255,255,0.08)';
+  ctx.lineWidth = 1;
+  ctx.fillStyle = 'rgba(255,255,255,0.45)';
+  ctx.font = '11px system-ui';
+  
+  // X 軸刻度
+  for (let f = 1.0; f <= 3.0; f += 0.5) {
+    const x = toX(f);
+    ctx.beginPath();
+    ctx.moveTo(x, pad.t);
+    ctx.lineTo(x, pad.t + plotH);
+    ctx.stroke();
+    ctx.fillText(`${f.toFixed(1)} Hz`, x - 14, H - 8);
+  }
+  
+  // Y 軸刻度
+  for (let i = 0; i <= 4; i++) {
+    const v = (yMax * (i / 4));
+    const y = toY(v);
+    ctx.beginPath();
+    ctx.moveTo(pad.l, y);
+    ctx.lineTo(pad.l + plotW, y);
+    ctx.stroke();
+    ctx.fillText(`${fmtSig(v * 100, 2)}cm`, 4, y + 4);
+  }
+
+  // 曲線 1：便步走等效曲線（F0 = √N * unitF，灰色虛線）
+  ctx.save();
+  ctx.strokeStyle = '#8a99ad';
+  ctx.lineWidth = 1.8;
+  ctx.setLineDash([4, 4]);
+  ctx.beginPath();
+  for (let px = 0; px <= plotW; px += 2) {
+    const f = fMin + (px / plotW) * (fMax - fMin);
+    const amp = bridgeAmp(f, F0_walk, M_kg, state.fn, state.zeta);
+    const y = toY(amp);
+    if (px === 0) ctx.moveTo(pad.l + px, y);
+    else ctx.lineTo(pad.l + px, y);
+  }
+  ctx.stroke();
+  ctx.restore();
+
+  // 曲線 2：齊步走曲線（F0 = N * unitF，亮藍色）
+  ctx.strokeStyle = '#4cc2ff';
+  ctx.lineWidth = 2.4;
+  ctx.beginPath();
+  for (let px = 0; px <= plotW; px += 2) {
+    const f = fMin + (px / plotW) * (fMax - fMin);
+    const amp = bridgeAmp(f, F0_step, M_kg, state.fn, state.zeta);
+    const y = toY(amp);
+    if (px === 0) ctx.moveTo(pad.l + px, y);
+    else ctx.lineTo(pad.l + px, y);
+  }
+  ctx.stroke();
+
+  // 標註橋自然頻率 fₙ
+  const fnX = toX(state.fn);
+  ctx.save();
+  ctx.strokeStyle = '#43d17a';
+  ctx.lineWidth = 1.5;
+  ctx.setLineDash([3, 3]);
+  ctx.beginPath();
+  ctx.moveTo(fnX, pad.t);
+  ctx.lineTo(fnX, pad.t + plotH);
+  ctx.stroke();
+  ctx.fillStyle = '#43d17a';
+  ctx.fillText(`fₙ=${state.fn}Hz`, fnX + 4, pad.t + 14);
+  ctx.restore();
+
+  // 標註目前驅動頻率（垂直 fₛ，側向 fₛ/2）
+  const curF = state.lateral ? state.fs / 2 : state.fs;
+  const curX = toX(curF);
+  const curAmp = bridgeAmp(curF, state.inStep ? F0_step : F0_walk, M_kg, state.fn, state.zeta);
+  const curY = toY(curAmp);
+
+  ctx.strokeStyle = '#ffb02e';
+  ctx.lineWidth = 1.5;
+  ctx.beginPath();
+  ctx.moveTo(curX, pad.t);
+  ctx.lineTo(curX, pad.t + plotH);
+  ctx.stroke();
+  
+  ctx.fillStyle = '#ffb02e';
+  ctx.beginPath();
+  ctx.arc(curX, curY, 4.5, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.fillText(`目前頻率 ${curF.toFixed(2)}Hz`, Math.min(plotW + pad.l - 90, curX + 6), curY - 6);
+
+  // 圖例
+  ctx.font = '11px system-ui';
+  ctx.fillStyle = '#4cc2ff';
+  ctx.fillText('— 齊步走 (∝ N)', pad.l + 8, pad.t + 14);
+  ctx.fillStyle = '#8a99ad';
+  ctx.fillText('-- 便步走等效 (∝ √N，隨機相位時平均 ∝ √N)', pad.l + 8, pad.t + 28);
+}
+
+// ---- 下方圖表 2：60 秒時間歷程 ----
+function drawTimeChart() {
+  if (!cTimeCtx || !simDataIn || !simDataBreak) return;
+  const ctx = cTimeCtx, W = ctx._w, H = ctx._h;
+  ctx.clearRect(0, 0, W, H);
+  
+  const pad = { l: 44, r: 16, t: 20, b: 26 };
+  const plotW = W - pad.l - pad.r;
+  const plotH = H - pad.t - pad.b;
+  
+  const maxIn = maxAbs(simDataIn.x);
+  const maxBr = maxAbs(simDataBreak.x);
+  const yRange = Math.max(0.01, Math.max(maxIn, maxBr) * 1.1);
+  
+  function toX(t) { return pad.l + (t / 60) * plotW; }
+  function toY(x) { return pad.t + (0.5 - (x / (2 * yRange))) * plotH; }
+
+  // 網格線
+  ctx.strokeStyle = 'rgba(255,255,255,0.08)';
+  ctx.lineWidth = 1;
+  ctx.fillStyle = 'rgba(255,255,255,0.45)';
+  ctx.font = '11px system-ui';
+
+  // 時間 X 軸
+  for (let t = 0; t <= 60; t += 10) {
+    const x = toX(t);
+    ctx.beginPath();
+    ctx.moveTo(x, pad.t);
+    ctx.lineTo(x, pad.t + plotH);
+    ctx.stroke();
+    ctx.fillText(`${t}s`, x - 8, H - 8);
+  }
+  
+  // 位移中心零線與上下界
+  const yZero = toY(0);
+  ctx.strokeStyle = 'rgba(255,255,255,0.18)';
+  ctx.beginPath();
+  ctx.moveTo(pad.l, yZero);
+  ctx.lineTo(pad.l + plotW, yZero);
+  ctx.stroke();
+  
+  ctx.fillText(`+${fmtSig(yRange * 100, 2)}cm`, 4, pad.t + 10);
+  ctx.fillText('0', 4, yZero + 4);
+  ctx.fillText(`-${fmtSig(yRange * 100, 2)}cm`, 4, pad.t + plotH);
+
+  // 繪製便步走歷程（紫色／灰藍色）
+  ctx.strokeStyle = '#c06bff';
+  ctx.lineWidth = 1.4;
+  ctx.beginPath();
+  for (let i = 0; i < simDataBreak.t.length; i++) {
+    const px = toX(simDataBreak.t[i]);
+    const py = toY(simDataBreak.x[i]);
+    if (i === 0) ctx.moveTo(px, py);
+    else ctx.lineTo(px, py);
+  }
+  ctx.stroke();
+
+  // 繪製齊步走歷程（亮青色／金色）
+  ctx.strokeStyle = '#4cc2ff';
+  ctx.lineWidth = 1.8;
+  ctx.beginPath();
+  for (let i = 0; i < simDataIn.t.length; i++) {
+    const px = toX(simDataIn.t[i]);
+    const py = toY(simDataIn.x[i]);
+    if (i === 0) ctx.moveTo(px, py);
+    else ctx.lineTo(px, py);
+  }
+  ctx.stroke();
+
+  // 當前模擬時間掃描線
+  const curT = simTime % 60;
+  const curLineX = toX(curT);
+  ctx.strokeStyle = '#ffce54';
+  ctx.lineWidth = 1.2;
+  ctx.setLineDash([2, 2]);
+  ctx.beginPath();
+  ctx.moveTo(curLineX, pad.t);
+  ctx.lineTo(curLineX, pad.t + plotH);
+  ctx.stroke();
+  ctx.setLineDash([]);
+
+  // 圖例
+  ctx.font = '11px system-ui';
+  ctx.fillStyle = '#4cc2ff';
+  ctx.fillText('— 齊步走（共振時一路長大）', pad.l + 8, pad.t + 14);
+  ctx.fillStyle = '#c06bff';
+  ctx.fillText('— 便步走（相位雜亂無法累積）', pad.l + 8, pad.t + 28);
+}
+
+// ---- 全域更新入口 ----
+function refresh() {
+  updateSlidersFromState();
+  updateFormula();
+  recomputeSimulations();
+  drawBridgeScene();
+  drawResonanceChart();
+  drawTimeChart();
+}
+
+// 實時動力學模擬步進（RK4）
+let lastStamp = 0;
+function animate(stamp) {
+  if (!lastStamp) lastStamp = stamp;
+  const dtReal = Math.min(0.04, (stamp - lastStamp) / 1000);
+  lastStamp = stamp;
+
+  if (isPlaying) {
+    const M_kg = state.M * 1000;
+    const K = bridgeK(M_kg, state.fn);
+    const c = 2 * state.zeta * Math.sqrt(K * M_kg);
+    const subSteps = 4;
+    const dtSub = dtReal / subSteps;
+    
+    for (let s = 0; s < subSteps; s++) {
+      const a = (tt, xx, vv) => (crowdForce(tt, crowd, state.lateral) - c * vv - K * xx) / M_kg;
+      const k1x = liveV;
+      const k1v = a(simTime, liveX, liveV);
+      const k2x = liveV + dtSub / 2 * k1v;
+      const k2v = a(simTime + dtSub / 2, liveX + dtSub / 2 * k1x, liveV + dtSub / 2 * k1v);
+      const k3x = liveV + dtSub / 2 * k2v;
+      const k3v = a(simTime + dtSub / 2, liveX + dtSub / 2 * k2x, liveV + dtSub / 2 * k2v);
+      const k4x = liveV + dtSub * k3v;
+      const k4v = a(simTime + dtSub, liveX + dtSub * k3x, liveV + dtSub * k3v);
+      
+      liveX += dtSub / 6 * (k1x + 2 * k2x + 2 * k3x + k4x);
+      liveV += dtSub / 6 * (k1v + 2 * k2v + 2 * k3v + k4v);
+      simTime += dtSub;
+    }
+  }
+
+  drawBridgeScene();
+  drawTimeChart();
+  requestAnimationFrame(animate);
+}
+
+// 按鈕事件綁定
+document.getElementById('btnInStep').addEventListener('click', () => {
+  state.inStep = true;
+  refresh();
+});
+document.getElementById('btnBreakStep').addEventListener('click', () => {
+  state.inStep = false;
+  refresh();
+});
+document.getElementById('btnLateral').addEventListener('click', () => {
+  state.lateral = !state.lateral;
+  refresh();
+});
+document.getElementById('btnPlayPause').addEventListener('click', function() {
+  isPlaying = !isPlaying;
+  this.textContent = isPlaying ? '暫停' : '播放';
+});
+document.getElementById('btnReset').addEventListener('click', () => {
+  simTime = 0;
+  liveX = 0;
+  liveV = 0;
+  refresh();
+});
+
+function setupCanvases() {
+  scCtx = SIM.fit(document.getElementById('scene'), 2.2);
+  cResCtx = SIM.fit(document.getElementById('chartRes'), 1.6);
+  cTimeCtx = SIM.fit(document.getElementById('chartTime'), 1.6);
+}
+
+window.addEventListener('load', () => {
+  setupCanvases();
+  refresh();
+  requestAnimationFrame(animate);
+});
+
+window.addEventListener('resize', () => {
+  setupCanvases();
+  refresh();
+});
+</script>
+</body>
+</html>
