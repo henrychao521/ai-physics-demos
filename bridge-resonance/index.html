@@ -361,7 +361,7 @@ function drawBridgeScene() {
   const spanL = spanX1 - spanX0;
   const tower1X = spanX0 + spanL * 0.15;
   const tower2X = spanX0 + spanL * 0.85;
-  const towerTopY = H * 0.16;
+  const towerTopY = Math.max(H * 0.16, 46);   // 小畫布（手機）留出上方兩行文字的位置，塔頂與主纜不和文字重疊
   const towerBottomY = waterY + 10;
   
   // 第一模態變形：y(s) = x(t) * sin(π * s)
@@ -562,9 +562,13 @@ function drawBridgeScene() {
   scCtx.textAlign = 'left';
   scCtx.fillStyle = 'rgba(255,255,255,0.75)';
   scCtx.fillText(`中央位移 x(t)：${(dispCm >= 0 ? '+' : '')}${fmtSig(dispCm, 3)} cm（視覺放大 ×${fmtSig(visGain, 2)}）`, 10, 18);   // 放在畫布左上角，不壓在橋面與吊索上
-  if (state.lateral) {
+  if (state.lateral) {   // 第二行，同樣放在畫布左上角（原本在橋面上，手機上壓到吊索與斜拉索）
+    const lab = `【側向擺動模式】步頻減半（${fmtSig(state.fs / 2, 3)} Hz）、每人推力 35 N`;
+    let fs = 12;
+    scCtx.font = `${fs}px system-ui, sans-serif`;
+    while (fs > 9 && scCtx.measureText(lab).width > W - 20) { fs -= 0.5; scCtx.font = `${fs}px system-ui, sans-serif`; }
     scCtx.fillStyle = '#ffce54';
-    scCtx.fillText(`【側向擺動模式】步頻減半（${fmtSig(state.fs / 2, 3)} Hz）、每人推力 35 N`, midX - 120, deckBaseY - 14);
+    scCtx.fillText(lab, 10, 35);
   }
 }
 
