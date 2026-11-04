@@ -207,9 +207,16 @@ function draw(){
   // labels
   g.fillStyle='#6b7785';g.font='13px sans-serif';
   g.fillText(`光源數：${n}`,16,24);
-  // shadow darkness metric: min illumination under obstacle vs max
-  let minU=Infinity; for(let i=ob.x-ob.r;i<ob.x+ob.r;i++){if(i>=0&&i<cols)minU=Math.min(minU,I[i]);}
-  const darkness=Math.max(0,100-Math.round(minU/norm*100));
+  // 陰影濃度：遮擋物正下方「實際照度 ÷ 同一點沒被擋時的照度」取最低值。
+  // 分母用同一點的無遮擋照度，遮擋物移到兩側時才不會把燈光本來就變暗的部分算成陰影；
+  // 索引取整數，拖曳後 obX 是小數也不會出現 NaN%。
+  let minRatio=Infinity;
+  for(let i=Math.max(0,Math.ceil(ob.x-ob.r));i<Math.min(cols,ob.x+ob.r);i++){
+    let u=0;
+    for(const s of L){const dx=i-s.x,dy=tableY-s.y,r2=dx*dx+dy*dy;u+=Math.max(0,dy)/Math.sqrt(r2)/r2*1e5;}
+    if(u>0)minRatio=Math.min(minRatio,I[i]/u);
+  }
+  const darkness=minRatio===Infinity?0:Math.max(0,100-Math.round(minRatio*100));
   g.fillStyle=darkness>60?'#ff8a8a':(darkness>25?'#ffce54':'#7CFFB2');
   g.fillText(`遮擋物正下方陰影濃度：約 ${darkness}%`,16,44);
 }
